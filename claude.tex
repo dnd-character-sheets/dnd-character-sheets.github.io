@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[margin=7mm]{geometry}
 \usepackage{tikz}
+\usepackage{times}
 \usepackage{xcolor}
 \usepackage{environ}
 \usetikzlibrary{calc}
@@ -1869,3 +1870,27 @@ You're getting there.  That overlay option is no good.  Try these changes:
   - Explicitly give the dimensions of the tikzpicture as \textwidth, \textheight.  No other options to the tikzpicture environment.
   - Correct the section widths by using the widths in my original example
   - Place the sections at the locations originally used in the example, even though that will likely leave some blank space on the page
+
+
+OK, I've done some geometry for you.  But eventually I'm going to need
+two versions, one for casters and one for noncasters.  Let's talk
+parameter:
+
+  - \rightx is the X coordinate of the right column, the same for both sheets
+  - Similarly for \rightwidth and \leftwidth
+  - Y coordinates and heights are going to vary between casters and noncasters
+
+For now, let's handle this by creating boolean flag \ifcaster, and use
+that to control the geometries of sections as needed.
+
+Please extract the geometries from the code I'm about to paste, and
+please also use the alternate geometries in comments where available,
+according to \ifcaster.  Then redo the example using \castertrue.
+
+As noted, you'll also need to use the geometry package with a margin
+of 7mm.
+
+Finally, correct the internal minipage environments so (1) there is a
+some space between them and the containing box, and (2) the text
+appears at the top of the box, not the bottom.
+
