@@ -330,10 +330,11 @@
 
 
 \newenvironment{attackstab}
-  {\renewcommand\arraystretch{1.5}%
+  {\renewcommand\arraystretch{1.2}%
+   \tabcolsep=0.5\tabcolsep
    \small
-   \begin{tabular}{cccccc}
-   \multicolumn1{l}{\textsf{NAME}}&
+   \begin{tabular}{@{}cccccc@{}}
+   \multicolumn1{@{}l}{\textsf{NAME}}&
    \textsf{ATTACK}&
    \textsf{DAMAGE}&
    \textsf{TYPE}&
