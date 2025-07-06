@@ -1,3 +1,574 @@
+%%\documentclass{article}
+%%\usepackage[margin=7mm]{geometry}
+%%\usepackage{tikz}
+%%\usepackage{xcolor}
+%%\usepackage{environ}
+%%\usetikzlibrary{calc}
+%%
+%%% Define colors for different sections
+%%\colorlet{stats}{blue!10!white}
+%%\colorlet{proficiencies}{yellow!12!white}
+%%\colorlet{attacks}{orange!25!white}
+%%\colorlet{magic}{red!12!white}
+%%\colorlet{mypurple}{red!40!blue}
+%%\colorlet{features}{magenta!16!white}
+%%\colorlet{playername}{green!90!yellow!8!white}
+%%\colorlet{teal}{blue!40!green}
+%%\colorlet{equipment}{playername}
+%%
+%%% Caster/noncaster flag
+%%\newif\ifcaster
+%%\castertrue  % Set to true for caster example
+%%
+%%% Geometry parameters
+%%\newlength\leftwidth
+%%\newlength\rightwidth
+%%\newlength\rightx
+%%\setlength\leftwidth{6.5cm}
+%%\setlength\rightwidth{12.8cm}
+%%\setlength\rightx{7.15cm}
+%%
+%%% Decorative box macro for D&D character sheets
+%%% Usage: \dndbox{x}{y}{width}{height}
+%%% where (x,y) is the lower-left corner
+%%\newcommand{\dndbox}[4]{%
+%%  % Parameters: #1 = x, #2 = y, #3 = width, #4 = height
+%%  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
+%%  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
+%%  
+%%  % Convert dimensions to cm for calculations
+%%  \pgfmathsetmacro{\widthcm}{#3/10}
+%%  \pgfmathsetmacro{\heightcm}{#4/10}
+%%  
+%%  % Define coordinates
+%%  \coordinate (ll) at (#1, #2);
+%%  \coordinate (lr) at ($(ll) + (\widthcm, 0)$);
+%%  \coordinate (ul) at ($(ll) + (0, \heightcm)$);
+%%  \coordinate (ur) at ($(ll) + (\widthcm, \heightcm)$);
+%%  
+%%  % Main outer frame (heavy lines)
+%%  \draw[line width=1.5pt] 
+%%    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
+%%    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
+%%    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
+%%    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
+%%  
+%%  % Corner decorations (ornate corners)
+%%  % Lower-left corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
+%%    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
+%%    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
+%%    
+%%  % Lower-right corner
+%%  \draw[line width=1.5pt] 
+%%    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
+%%    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
+%%    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
+%%    
+%%  % Upper-right corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
+%%    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
+%%    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
+%%    
+%%  % Upper-left corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
+%%    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
+%%    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
+%%  
+%%  % Inner frame lines (lighter)
+%%  \draw[line width=0.5pt]
+%%    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
+%%  
+%%  % Double line effect on sides
+%%  \draw[line width=0.3pt]
+%%    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
+%%    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
+%%}
+%%
+%%% dndsection environment - stores parameters for use inside tikzpicture
+%%\newcommand{\dndsectionx}{}
+%%\newcommand{\dndsectiony}{}
+%%\newcommand{\dndsectionwidth}{}
+%%\newcommand{\dndsectionheight}{}
+%%\newcommand{\dndsectiontitle}{}
+%%\newcommand{\dndsectioncolor}{}
+%%
+%%\NewEnviron{dndsection}[6]{%
+%%  \renewcommand{\dndsectionx}{#1}%
+%%  \renewcommand{\dndsectiony}{#2}%
+%%  \renewcommand{\dndsectionwidth}{#3}%
+%%  \renewcommand{\dndsectionheight}{#4}%
+%%  \renewcommand{\dndsectiontitle}{#5}%
+%%  \renewcommand{\dndsectioncolor}{#6}%
+%%  
+%%  % Convert dimensions to cm for calculations
+%%  \pgfmathsetmacro{\widthcm}{#3/10}
+%%  \pgfmathsetmacro{\heightcm}{#4/10}
+%%  \pgfmathsetmacro{\fboxsepcm}{\fboxsep/28.453} % Convert fboxsep from pt to cm
+%%  
+%%  % Fill background
+%%  \fill[\dndsectioncolor] ($(#1, #2) + (0.1, 0.1)$) rectangle ($(#1, #2) + (\widthcm - 0.1, \heightcm - 0.1)$);
+%%  
+%%  % Draw the decorative box
+%%  \dndbox{#1}{#2}{#3}{#4}
+%%  
+%%  % Place the title at the bottom center
+%%  \node[font=\footnotesize\scshape, anchor=south] at ($(#1, #2) + (\widthcm/2, 0.05)$) {#5};
+%%  
+%%  % Calculate minipage width with fboxsep margins
+%%  \pgfmathsetmacro{\minipagewidth}{\widthcm - 2*\fboxsepcm - 0.4}
+%%  
+%%  % Place content in a minipage at the TOP of the box with fboxsep spacing
+%%  \node[anchor=north west, inner sep=0] at ($(#1, #2) + (\fboxsepcm + 0.2, \heightcm - \fboxsepcm - 0.2)$) {%
+%%    \begin{minipage}{\minipagewidth cm}%
+%%      \BODY%
+%%    \end{minipage}%
+%%  };
+%%}
+%%
+%%% Specific section environments with fixed positions
+%%% Use different body names to avoid conflicts
+%%
+%%% ATTACKS section
+%%\environbodyname\attacksbody
+%%\NewEnviron{attackssection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{152mm}{\rightwidth}{48mm}{ATTACKS}{attacks}
+%%      \attacksbody
+%%    \end{dndsection}
+%%  \else
+%%    \begin{dndsection}{\rightx}{128mm}{\rightwidth}{48mm}{ATTACKS}{attacks}
+%%      \attacksbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% FEATURES section
+%%\environbodyname\featuresbody
+%%\NewEnviron{featuressection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{0mm}{\rightwidth}{42mm}{FEATURES}{features}
+%%      \featuresbody
+%%    \end{dndsection}
+%%  \else
+%%    \begin{dndsection}{\rightx}{55mm}{\rightwidth}{70mm}{FEATURES}{features}
+%%      \featuresbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% MAGIC section (only for casters)
+%%\environbodyname\magicbody  
+%%\NewEnviron{magicsection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{43mm}{\rightwidth}{105mm}{MAGIC}{magic}
+%%      \magicbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% EQUIPMENT section
+%%\environbodyname\equipmentbody
+%%\NewEnviron{equipmentsection}{%
+%%  \begin{dndsection}{0}{0}{68mm}{53mm}{EQUIPMENT}{equipment}
+%%    \equipmentbody
+%%  \end{dndsection}
+%%}[\ignorespacesafterend]
+%%
+%%% PROFICIENCIES section
+%%\environbodyname\proficienciesbody
+%%\NewEnviron{proficienciessection}{%
+%%  \begin{dndsection}{30mm}{55mm}{38mm}{160mm}{PROFICIENCIES}{proficiencies}
+%%    \proficienciesbody
+%%  \end{dndsection}
+%%}[\ignorespacesafterend]
+%%
+%%\begin{document}
+%%\pagestyle{empty}
+%%
+%%\begin{tikzpicture}[x=1mm,y=1mm]
+%%  % Set the picture size to text dimensions
+%%  \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
+%%  
+%%  % Equipment section (bottom left)
+%%  \begin{equipmentsection}
+%%    \footnotesize
+%%    \begin{itemize}
+%%      \item Clothes (Fine)
+%%      \item Leather Armor
+%%      \item Shortsword
+%%      \item Lyre
+%%      \item Backpack
+%%      \item Bedroll, Book of Elvish Poetry
+%%      \item Bottle of Ink, Ink Pen
+%%      \item Parchment (10 sheets), Tinderbox
+%%      \item Trail Rations (10 days), Waterskin
+%%    \end{itemize}
+%%  \end{equipmentsection}
+%%  
+%%  % Proficiencies section (left side)
+%%  \begin{proficienciessection}
+%%    \footnotesize
+%%    \textbf{Acrobatics}\\
+%%    Arcana\\
+%%    History\\
+%%    Investigation\\
+%%    Perception\\
+%%    Performance\\
+%%    Persuasion\\
+%%    Musical Instrument (Lyre)\\
+%%    Language (Common)\\
+%%    Language (Elvish)
+%%  \end{proficienciessection}
+%%  
+%%  % Attacks section (right side, top)
+%%  \begin{attackssection}
+%%    \footnotesize
+%%    \centering
+%%    \begin{tabular}{lccccc}
+%%    \textbf{NAME} & \textbf{ATTACK} & \textbf{DAMAGE} & \textbf{TYPE} & \textbf{RANGE} & \textbf{AMMO}\\
+%%    \hline
+%%    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---
+%%    \end{tabular}
+%%  \end{attackssection}
+%%  
+%%  % Magic section (right side, middle - only for casters)
+%%  \begin{magicsection}
+%%    \footnotesize
+%%    \textbf{CANTRIPS}\\[0.3cm]
+%%    
+%%    \textbf{Friends [C]}\\
+%%    You have advantage on Charisma checks against one creature for up to 1 minute.\\[0.3cm]
+%%    
+%%    \textbf{Ray of Frost}\\
+%%    Make a spell attack (+4) against a target within 60 ft. to deal 1d8 cold damage and slow the target by 10 feet until your next turn starts.\\[0.3cm]
+%%    
+%%    \textbf{Vicious Mockery}\\
+%%    A creature w/in 60 ft. must make a Wisdom save (DC 12) or take 1d4 psychic damage \& have disadvantage on their next attack roll on their next turn.\\[0.5cm]
+%%    
+%%    \textbf{1st LEVEL (2/day)}\\[0.3cm]
+%%    
+%%    \textbf{Bane [C]}\\
+%%    Three creatures within 30 ft. must make Charisma saves (DC 12) or subtract -1d4 from all attacks and saves for up to 1 minute.\\[0.3cm]
+%%    
+%%    \textbf{Comprehend Languages [R]}\\
+%%    For one hour, you understand all spoken and written languages.\\[0.3cm]
+%%    
+%%    \textbf{Healing Word [B]}\\
+%%    A creature within 60 ft. regains 1d4+2 hit points.\\[0.3cm]
+%%    
+%%    \textbf{Heroism [C]}\\
+%%    A creature you touch is immune to fear and gains 2 temporary hit points at the start of each round for up to 1 minute.
+%%  \end{magicsection}
+%%  
+%%  % Features section (right side, bottom)
+%%  \begin{featuressection}
+%%    \footnotesize
+%%    \textbf{Fey Ancestry}\\
+%%    You have advantage to save against charms and you can't be magically put to sleep.\\[0.3cm]
+%%    
+%%    \textbf{Bardic Inspiration (2/day)}\\
+%%    Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.\\[0.3cm]
+%%    
+%%    \textbf{Ritual Caster}\\
+%%    Cast certain spells as 10-minute rituals instead of using a spell slot.
+%%  \end{featuressection}
+%%\end{tikzpicture}
+%%
+%%\end{document}
+%%
+%%\documentclass{article}
+%%\usepackage[margin=7mm]{geometry}
+%%\usepackage{tikz}
+%%\usepackage{xcolor}
+%%\usepackage{environ}
+%%\usetikzlibrary{calc}
+%%
+%%% Define colors for different sections
+%%\colorlet{stats}{blue!10!white}
+%%\colorlet{proficiencies}{yellow!12!white}
+%%\colorlet{attacks}{orange!25!white}
+%%\colorlet{magic}{red!12!white}
+%%\colorlet{mypurple}{red!40!blue}
+%%\colorlet{features}{magenta!16!white}
+%%\colorlet{playername}{green!90!yellow!8!white}
+%%\colorlet{teal}{blue!40!green}
+%%\colorlet{equipment}{playername}
+%%
+%%% Caster/noncaster flag
+%%\newif\ifcaster
+%%\castertrue  % Set to true for caster example
+%%
+%%% Geometry parameters
+%%\newlength\leftwidth
+%%\newlength\rightwidth
+%%\newlength\rightx
+%%\setlength\leftwidth{6.5cm}
+%%\setlength\rightwidth{12.8cm}
+%%\setlength\rightx{7.15cm}
+%%
+%%% Decorative box macro for D&D character sheets
+%%% Usage: \dndbox{x}{y}{width}{height}
+%%% where (x,y) is the lower-left corner
+%%\newcommand{\dndbox}[4]{%
+%%  % Parameters: #1 = x, #2 = y, #3 = width, #4 = height
+%%  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
+%%  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
+%%  
+%%  % Define coordinates
+%%  \coordinate (ll) at (#1, #2);
+%%  \coordinate (lr) at (#1 + #3, #2);
+%%  \coordinate (ul) at (#1, #2 + #4);
+%%  \coordinate (ur) at (#1 + #3, #2 + #4);
+%%  
+%%  % Main outer frame (heavy lines)
+%%  \draw[line width=1.5pt] 
+%%    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
+%%    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
+%%    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
+%%    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
+%%  
+%%  % Corner decorations (ornate corners)
+%%  % Lower-left corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
+%%    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
+%%    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
+%%    
+%%  % Lower-right corner
+%%  \draw[line width=1.5pt] 
+%%    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
+%%    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
+%%    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
+%%    
+%%  % Upper-right corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
+%%    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
+%%    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
+%%    
+%%  % Upper-left corner
+%%  \draw[line width=1.5pt] 
+%%    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
+%%    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
+%%    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
+%%  \draw[line width=0.8pt] 
+%%    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
+%%  
+%%  % Inner frame lines (lighter)
+%%  \draw[line width=0.5pt]
+%%    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
+%%  
+%%  % Double line effect on sides
+%%  \draw[line width=0.3pt]
+%%    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
+%%    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
+%%}
+%%
+%%% dndsection environment - stores parameters for use inside tikzpicture
+%%\newcommand{\dndsectionx}{}
+%%\newcommand{\dndsectiony}{}
+%%\newcommand{\dndsectionwidth}{}
+%%\newcommand{\dndsectionheight}{}
+%%\newcommand{\dndsectiontitle}{}
+%%\newcommand{\dndsectioncolor}{}
+%%
+%%\NewEnviron{dndsection}[6]{%
+%%  \renewcommand{\dndsectionx}{#1}%
+%%  \renewcommand{\dndsectiony}{#2}%
+%%  \renewcommand{\dndsectionwidth}{#3}%
+%%  \renewcommand{\dndsectionheight}{#4}%
+%%  \renewcommand{\dndsectiontitle}{#5}%
+%%  \renewcommand{\dndsectioncolor}{#6}%
+%%  % Fill background
+%%  \fill[\dndsectioncolor] (\dndsectionx + 0.1, \dndsectiony + 0.1) rectangle (\dndsectionx + \dndsectionwidth - 0.1, \dndsectiony + \dndsectionheight - 0.1);
+%%  
+%%  % Draw the decorative box
+%%  \dndbox{\dndsectionx}{\dndsectiony}{\dndsectionwidth}{\dndsectionheight}
+%%  
+%%  % Place the title at the bottom center
+%%  \node[font=\footnotesize\scshape, anchor=south] at (\dndsectionx + \dndsectionwidth/2, \dndsectiony + 0.05) {\dndsectiontitle};
+%%  
+%%  % Calculate minipage width (with more margin)
+%%  \pgfmathsetmacro{\minipagewidth}{\dndsectionwidth - 0.8}
+%%  
+%%  % Place content in a minipage at the TOP of the box
+%%  \node[anchor=north west, inner sep=0] at (\dndsectionx + 0.4, \dndsectiony + \dndsectionheight - 0.4) {%
+%%    \begin{minipage}{\minipagewidth cm}%
+%%      \BODY%
+%%    \end{minipage}%
+%%  };
+%%}
+%%
+%%% Specific section environments with fixed positions
+%%% Use different body names to avoid conflicts
+%%
+%%% ATTACKS section
+%%\environbodyname\attacksbody
+%%\NewEnviron{attackssection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{152mm}{\rightwidth}{48mm}{ATTACKS}{attacks}
+%%      \attacksbody
+%%    \end{dndsection}
+%%  \else
+%%    \begin{dndsection}{\rightx}{128mm}{\rightwidth}{48mm}{ATTACKS}{attacks}
+%%      \attacksbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% FEATURES section
+%%\environbodyname\featuresbody
+%%\NewEnviron{featuressection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{0mm}{\rightwidth}{42mm}{FEATURES}{features}
+%%      \featuresbody
+%%    \end{dndsection}
+%%  \else
+%%    \begin{dndsection}{\rightx}{55mm}{\rightwidth}{70mm}{FEATURES}{features}
+%%      \featuresbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% MAGIC section (only for casters)
+%%\environbodyname\magicbody  
+%%\NewEnviron{magicsection}{%
+%%  \ifcaster
+%%    \begin{dndsection}{\rightx}{43mm}{\rightwidth}{105mm}{MAGIC}{magic}
+%%      \magicbody
+%%    \end{dndsection}
+%%  \fi
+%%}[\ignorespacesafterend]
+%%
+%%% EQUIPMENT section
+%%\environbodyname\equipmentbody
+%%\NewEnviron{equipmentsection}{%
+%%  \begin{dndsection}{0}{0}{68mm}{53mm}{EQUIPMENT}{equipment}
+%%    \equipmentbody
+%%  \end{dndsection}
+%%}[\ignorespacesafterend]
+%%
+%%% PROFICIENCIES section
+%%\environbodyname\proficienciesbody
+%%\NewEnviron{proficienciessection}{%
+%%  \begin{dndsection}{30mm}{55mm}{38mm}{160mm}{PROFICIENCIES}{proficiencies}
+%%    \proficienciesbody
+%%  \end{dndsection}
+%%}[\ignorespacesafterend]
+%%
+%%\begin{document}
+%%\pagestyle{empty}
+%%
+%%\begin{tikzpicture}[x=1mm,y=1mm]
+%%  % Set the picture size to text dimensions
+%%  \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
+%%  
+%%  % Equipment section (bottom left)
+%%  \begin{equipmentsection}
+%%    \footnotesize
+%%    \begin{itemize}
+%%      \item Clothes (Fine)
+%%      \item Leather Armor
+%%      \item Shortsword
+%%      \item Lyre
+%%      \item Backpack
+%%      \item Bedroll, Book of Elvish Poetry
+%%      \item Bottle of Ink, Ink Pen
+%%      \item Parchment (10 sheets), Tinderbox
+%%      \item Trail Rations (10 days), Waterskin
+%%    \end{itemize}
+%%  \end{equipmentsection}
+%%  
+%%  % Proficiencies section (left side)
+%%  \begin{proficienciessection}
+%%    \footnotesize
+%%    \textbf{Acrobatics}\\
+%%    Arcana\\
+%%    History\\
+%%    Investigation\\
+%%    Perception\\
+%%    Performance\\
+%%    Persuasion\\
+%%    Musical Instrument (Lyre)\\
+%%    Language (Common)\\
+%%    Language (Elvish)
+%%  \end{proficienciessection}
+%%  
+%%  % Attacks section (right side, top)
+%%  \begin{attackssection}
+%%    \footnotesize
+%%    \centering
+%%    \begin{tabular}{lccccc}
+%%    \textbf{NAME} & \textbf{ATTACK} & \textbf{DAMAGE} & \textbf{TYPE} & \textbf{RANGE} & \textbf{AMMO}\\
+%%    \hline
+%%    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---
+%%    \end{tabular}
+%%  \end{attackssection}
+%%  
+%%  % Magic section (right side, middle - only for casters)
+%%  \begin{magicsection}
+%%    \footnotesize
+%%    \textbf{CANTRIPS}\\[0.3cm]
+%%    
+%%    \textbf{Friends [C]}\\
+%%    You have advantage on Charisma checks against one creature for up to 1 minute.\\[0.3cm]
+%%    
+%%    \textbf{Ray of Frost}\\
+%%    Make a spell attack (+4) against a target within 60 ft. to deal 1d8 cold damage and slow the target by 10 feet until your next turn starts.\\[0.3cm]
+%%    
+%%    \textbf{Vicious Mockery}\\
+%%    A creature w/in 60 ft. must make a Wisdom save (DC 12) or take 1d4 psychic damage \& have disadvantage on their next attack roll on their next turn.\\[0.5cm]
+%%    
+%%    \textbf{1st LEVEL (2/day)}\\[0.3cm]
+%%    
+%%    \textbf{Bane [C]}\\
+%%    Three creatures within 30 ft. must make Charisma saves (DC 12) or subtract -1d4 from all attacks and saves for up to 1 minute.\\[0.3cm]
+%%    
+%%    \textbf{Comprehend Languages [R]}\\
+%%    For one hour, you understand all spoken and written languages.\\[0.3cm]
+%%    
+%%    \textbf{Healing Word [B]}\\
+%%    A creature within 60 ft. regains 1d4+2 hit points.\\[0.3cm]
+%%    
+%%    \textbf{Heroism [C]}\\
+%%    A creature you touch is immune to fear and gains 2 temporary hit points at the start of each round for up to 1 minute.
+%%  \end{magicsection}
+%%  
+%%  % Features section (right side, bottom)
+%%  \begin{featuressection}
+%%    \footnotesize
+%%    \textbf{Fey Ancestry}\\
+%%    You have advantage to save against charms and you can't be magically put to sleep.\\[0.3cm]
+%%    
+%%    \textbf{Bardic Inspiration (2/day)}\\
+%%    Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.\\[0.3cm]
+%%    
+%%    \textbf{Ritual Caster}\\
+%%    Cast certain spells as 10-minute rituals instead of using a spell slot.
+%%  \end{featuressection}
+%%\end{tikzpicture}
+%%
+%%\end{document}
+
+
 \documentclass{article}
 \usepackage[margin=7mm]{geometry}
 \usepackage{tikz}
