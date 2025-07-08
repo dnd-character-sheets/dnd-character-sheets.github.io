@@ -24,6 +24,44 @@
 \newif\ifcaster
 \casterfalse
 
+\tikzset{
+  dndleft/.style={
+    minimum width=67mm,
+  },
+  dndright/.style={
+    minimum width=128mm,
+  },
+  dndfull/.style={
+    minimum width=198mm,
+  },
+}
+
+\tikzset{
+  magic/.style={
+    dndright,
+    fill=magic,
+  },
+  attacks/.style={
+    dndright,
+    fill=attacks,
+  },
+  features/.style={
+    dndright,
+    fill=features,
+  },
+  equipment/.style={
+    dndleft,
+    fill=equipment,
+  },
+}
+
+\tikzset{
+  proficiencies/.style={
+    minimum width=37mm,
+    fill=proficiencies,
+  },
+}
+
 % dndbox should create a node
 
 %%  % inside a tikzpicture
@@ -76,6 +114,8 @@
   
 
 \newcommand{\dndboxhere}[2]{%
+  % draw a decorative box with the lower left corner at node dndboxll
+  % and with a width and height given by parameters #1 and #2
   \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
   \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
   
@@ -84,6 +124,67 @@
              +(#1, 0)  coordinate (lr)
              +(#1, #2) coordinate (ur)
              +(0, #2)  coordinate (ul);
+  
+  % Main outer frame (heavy lines)
+  \draw[line width=1.5pt] 
+    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
+    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
+    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
+    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
+  
+  % Corner decorations (ornate corners)
+  % Lower-left corner
+  \draw[line width=1.5pt] 
+    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
+    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
+    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
+  \draw[line width=0.8pt] 
+    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
+    
+  % Lower-right corner
+  \draw[line width=1.5pt] 
+    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
+    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
+    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
+  \draw[line width=0.8pt] 
+    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
+    
+  % Upper-right corner
+  \draw[line width=1.5pt] 
+    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
+    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
+    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
+  \draw[line width=0.8pt] 
+    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
+    
+  % Upper-left corner
+  \draw[line width=1.5pt] 
+    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
+    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
+    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
+  \draw[line width=0.8pt] 
+    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
+  
+  % Inner frame lines (lighter)
+  \draw[line width=0.5pt]
+    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
+  
+  % Double line effect on sides
+  \draw[line width=0.3pt]
+    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
+    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
+}
+
+\newcommand{\dndboxnode}[1]{%
+  % Draw a decorative box around the bounding box of node #1
+  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
+  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
+  
+  % Get the bounding box of the node
+  \path (#1.south west) coordinate (ll)
+        (#1.south east) coordinate (lr)
+        (#1.north east) coordinate (ur)
+        (#1.north west) coordinate (ul);
   
   % Main outer frame (heavy lines)
   \draw[line width=1.5pt] 
@@ -409,117 +510,112 @@
 \newdimen\my@xc
 \newdimen\my@yc
 
+\newdimen\my@Nx
+\newdimen\my@Ny
+\newdimen\my@Ex
+\newdimen\my@Ey
+\newdimen\my@Wx
+\newdimen\my@Wy
+\newdimen\my@Sx
+\newdimen\my@Sy
+\newdimen\my@Cx
+\newdimen\my@Cy
+
+\def\shieldTopDelta{3}
+\def\shieldBottomDelta{5}
 
 \pgfdeclareshape{shield}{
   % Inherit anchors from rectangle
   \inheritsavedanchors[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchor[from=rectangle]{south west}
   
   % Background path (defines the shape outline)
   \backgroundpath{
     % Get the corners
-    \southwest \my@xa=\pgf@x \my@ya=\pgf@y
-    \northeast \my@xb=\pgf@x \my@yb=\pgf@y
-    
-    % Calculate 2/3 up the west edge
-    \my@yc=\my@ya
-    \advance\my@yc by 0.667\my@yb
-    \advance\my@yc by -0.667\my@ya
-    
+    \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
+    \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
+
+% \showthe\my@Sy
+% \showthe\my@Ny
+% \showthe\my@Wx
+% \showthe\my@Ex
+
+    % p + t(q - p) == (1-t)*p + t * q
+    \pgfmathsetlength\my@Cx{0.5\my@Wx+0.5\my@Ex}
+    \pgfmathsetlength\my@Cy{0.25\my@Sy+0.75\my@Ny}
+
     % Calculate width for control point offsets
-    \my@xc=\my@xb
-    \advance\my@xc by -\my@xa % width of shape
+%    \my@xc=\my@xb
+%    \advance\my@xc by -\my@xa % width of shape
     
-%    % Draw kite shape with straight lines
-%    \pgfpathmoveto{\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@yb}}
-%    \pgfpathlineto{\pgfpoint{\my@xa}{\my@yc}}
-%    \pgfpathlineto{\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@ya}}
-%    \pgfpathlineto{\pgfpoint{\my@xb}{\my@yc}}
-%    \pgfpathclose
-    
-    % Draw shield shape with curves
-    \pgfpathmoveto{\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@yb}}
-    % Top left curve - concave outward (control point 1/6 width outward)
-    \pgfpathquadraticcurveto%
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}% midpoint moved left
-      {\pgfpoint{\my@xa}{\my@yc}}% west 2/3 point
-    % Bottom left curve - concave inward (control point 1/4 width inward)
-    \pgfpathquadraticcurveto%
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}% midpoint moved right
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@ya}}% south anchor
-    % Bottom right curve - concave inward (control point 1/4 width inward)
-    \pgfpathquadraticcurveto%
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}% midpoint moved left
-      {\pgfpoint{\my@xb}{\my@yc}}% east 2/3 point
-    % Top right curve - concave outward (control point 1/6 width outward)
-    \pgfpathquadraticcurveto%
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}% midpoint moved right
-      {\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@yb}}% north anchor
+%%    \pgfpathmoveto{\pgfpoint{\my@Wx}{\my@Sy}}
+%%    \pgfpathlineto{\pgfpoint{\my@Ex}{\my@Sy}}
+%%    \pgfpathlineto{\pgfpoint{\my@Ex}{\my@Ny}}
+%%    \pgfpathlineto{\pgfpoint{\my@Cx}{\my@Cy}}
+%%    \pgfpathlineto{\pgfpoint{\my@Wx}{\my@Ny}}
+%%    \pgfpathclose
+
+    \def\north{\pgfpoint{\my@Cx}{\my@Ny}}
+    \def\west {\pgfpoint{\my@Wx}{\my@Cy}}
+    \def\south{\pgfpoint{\my@Cx}{\my@Sy}}
+    \def\east {\pgfpoint{\my@Ex}{\my@Cy}}
+
+    % Draw kite shape with straight lines
+    \pgfpathmoveto{\north}
+
+    \pgfpointlineattime{0.5}{\west}{\north} % bisector
+    \pgfgetlastxy{\my@xa}{\my@ya}
+    \pgfpointdiff{\west}{\north}
+    \pgfgetlastxy{\my@xb}{\my@yb} % note swap
+    \pgfpathquadraticcurveto
+        {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
+                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{\my@yb}{-\my@xb}}}}}
+        {\west}
+    \pgfpathlineto{\south}
+    \pgfpathlineto{\east}
     \pgfpathclose
 
 
+    
     % Add dots at control points for debugging
-    % Top left control point (outward)
-    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}{1pt}
+    \pgfpathcircle{\pgfpoint{0.6\my@Wx + 0.6\my@Nx}{0.4\my@Wy + 0.4\my@Ny}}{1pt}
     % Bottom left control point (inward)
-    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}{1pt}
+%    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}{1pt}
     % Bottom right control point (inward)
-    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}{1pt}
+%    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}{1pt}
     % Top right control point (outward)
-    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}{1pt}
+%    \pgfpathcircle{\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}{1pt}
+
+%    % Draw shield shape with curves
+%    \pgfpathmoveto{\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@yb}}
+%    % Top left curve - concave outward (control point 1/6 width outward)
+%    \pgfpathquadraticcurveto%
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}% midpoint moved left
+%      {\pgfpoint{\my@xa}{\my@yc}}% west 2/3 point
+%    % Bottom left curve - concave inward (control point 1/4 width inward)
+%    \pgfpathquadraticcurveto%
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb - 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}% midpoint moved right
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@ya}}% south anchor
+%    % Bottom right curve - concave inward (control point 1/4 width inward)
+%    \pgfpathquadraticcurveto%
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.25\my@xc}{0.5\my@ya + 0.5\my@yc}}% midpoint moved left
+%      {\pgfpoint{\my@xb}{\my@yc}}% east 2/3 point
+%    % Top right curve - concave outward (control point 1/6 width outward)
+%    \pgfpathquadraticcurveto%
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb + 0.167\my@xc}{0.5\my@yb + 0.5\my@yc}}% midpoint moved right
+%      {\pgfpoint{0.5\my@xa + 0.5\my@xb}{\my@yb}}% north anchor
+%    \pgfpathclose
+%
+%
   }
 }
-
-
-%\pgfdeclareshape{shield}{
-%  % Inherit anchors from rectangle
-%  \inheritsavedanchors[from=rectangle]
-%  \inheritanchor[from=rectangle]{center}
-%  \inheritanchor[from=rectangle]{north}
-%  \inheritanchor[from=rectangle]{south}
-%  \inheritanchor[from=rectangle]{east}
-%  \inheritanchor[from=rectangle]{west}
-%  \inheritanchor[from=rectangle]{north east}
-%  \inheritanchor[from=rectangle]{north west}
-%  \inheritanchor[from=rectangle]{south east}
-%  \inheritanchor[from=rectangle]{south west}
-%  
-%  % Background path (defines the shape outline)
-%  \backgroundpath{
-%    % Get the corners
-%    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
-%    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
-%    
-%    % Calculate 2/3 up the west edge
-%    \pgf@yc=\pgf@ya
-%    \advance\pgf@yc by 0.667\pgf@yb
-%    \advance\pgf@yc by -0.667\pgf@ya
-%    
-%    % Calculate width for control point offsets
-%    \pgf@xc=\pgf@xb
-%    \advance\pgf@xc by -\pgf@xa % width of shape
-%    
-%    % Draw kite shape with straight lines
-%    \pgfpathmoveto{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb}{\pgf@yb}}
-%    \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yc}}
-%    \pgfpathlineto{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb}{\pgf@ya}}
-%    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
-%    \pgfpathclose
-%    
-%    % Add dots at control points for debugging
-%    % Top left control point (outward)
-%    \pgfpathcircle{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb - 0.167\pgf@xc}{0.5\pgf@yb + 0.5\pgf@yc}}{1pt}
-%    \pgfusepath{fill}
-%    % Bottom left control point (inward)
-%    \pgfpathcircle{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb + 0.25\pgf@xc}{0.5\pgf@ya + 0.5\pgf@yc}}{1pt}
-%    \pgfusepath{fill}
-%    % Bottom right control point (inward)
-%    \pgfpathcircle{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb - 0.25\pgf@xc}{0.5\pgf@ya + 0.5\pgf@yc}}{1pt}
-%    \pgfusepath{fill}
-%    % Top right control point (outward)
-%    \pgfpathcircle{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb + 0.167\pgf@xc}{0.5\pgf@yb + 0.5\pgf@yc}}{1pt}
-%    \pgfusepath{fill}
-%  }
-%}
-%
 
 
