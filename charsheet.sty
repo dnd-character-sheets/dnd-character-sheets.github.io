@@ -522,61 +522,13 @@
 \newdimen\my@Cy
 
 \def\shieldTopDelta{3}
-\def\shieldBottomDelta{5}
+\def\shieldBottomDelta{7}
 
-%Here is a {\LaTeX} macro that is meant to draw a shield shape.  I
-%started with a kite shape using straight lines to connect
-%north-west-south-east, then replaced the first straight line with a
-%quadratic curve.  Emulating the code that is there, will you please
-%replace the other three straight lines with similar curves?
-
-\pgfdeclareshape{shield}{
-  % Inherit anchors from rectangle
-  \inheritsavedanchors[from=rectangle]
-  \inheritanchor[from=rectangle]{center}
-  \inheritanchor[from=rectangle]{north}
-  \inheritanchor[from=rectangle]{south}
-  \inheritanchor[from=rectangle]{east}
-  \inheritanchor[from=rectangle]{west}
-  \inheritanchor[from=rectangle]{north east}
-  \inheritanchor[from=rectangle]{north west}
-  \inheritanchor[from=rectangle]{south east}
-  \inheritanchor[from=rectangle]{south west}
-  
-  % Background path (defines the shape outline)
-  \backgroundpath{
-    % Get the corners
-    \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
-    \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
-
-    % p + t(q - p) == (1-t)*p + t * q
-    \pgfmathsetlength\my@Cx{0.5\my@Wx+0.5\my@Ex}
-    \pgfmathsetlength\my@Cy{0.25\my@Sy+0.75\my@Ny}
-
-    \def\north{\pgfpoint{\my@Cx}{\my@Ny}}
-    \def\west {\pgfpoint{\my@Wx}{\my@Cy}}
-    \def\south{\pgfpoint{\my@Cx}{\my@Sy}}
-    \def\east {\pgfpoint{\my@Ex}{\my@Cy}}
-
-    % Draw kite shape with straight lines
-    \pgfpathmoveto{\north}
-
-    \pgfpointlineattime{0.5}{\west}{\north} % bisector
-    \pgfgetlastxy{\my@xa}{\my@ya}
-    \pgfpointdiff{\west}{\north}
-    \pgfgetlastxy{\my@xb}{\my@yb} % note swap
-    \pgfpathquadraticcurveto
-        {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{\my@yb}{-\my@xb}}}}}
-        {\west}
-
-    \pgfpathlineto{\south}
-    \pgfpathlineto{\east}
-    \pgfpathclose
-
-  }
-}
-
+% Here is a {\LaTeX} macro that is meant to draw a shield shape.  I
+% started with a kite shape using straight lines to connect
+% north-west-south-east, then replaced the first straight line with a
+% quadratic curve.  Emulating the code that is there, will you please
+% replace the other three straight lines with similar curves?
 
 \pgfdeclareshape{shield}{
   % Inherit anchors from rectangle
@@ -590,7 +542,13 @@
   \inheritanchor[from=rectangle]{north west}
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
-  
+
+  \anchor{ac}{
+    \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
+    \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
+    \pgfpoint{0.5\my@Wx+0.5\my@Ex}{0.4\my@Sy+0.6\my@Ny}}     
+
+
   % Background path (defines the shape outline)
   \backgroundpath{
     % Get the corners
@@ -598,12 +556,14 @@
     \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
     % p + t(q - p) == (1-t)*p + t * q
     \pgfmathsetlength\my@Cx{0.5\my@Wx+0.5\my@Ex}
-    \pgfmathsetlength\my@Cy{0.25\my@Sy+0.75\my@Ny}
+    \pgfmathsetlength\my@Cy{0.2\my@Sy+0.80\my@Ny}
     \def\north{\pgfpoint{\my@Cx}{\my@Ny}}
     \def\west {\pgfpoint{\my@Wx}{\my@Cy}}
     \def\south{\pgfpoint{\my@Cx}{\my@Sy}}
     \def\east {\pgfpoint{\my@Ex}{\my@Cy}}
-    
+
+    \anchor{ac}{\pgfpointlineattime{0.8}{\south}{\north}}
+
     % Draw kite shape with curved lines
     \pgfpathmoveto{\north}
     
@@ -624,7 +584,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
+                     {\pgfpointscale{\shieldBottomDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
         {\south}
     
     % Curve from south to east
@@ -634,7 +594,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
+                     {\pgfpointscale{\shieldBottomDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
         {\east}
     
     % Curve from east to north (closing the path)
