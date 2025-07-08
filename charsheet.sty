@@ -25,16 +25,21 @@
 \casterfalse
 
 \tikzset{
+  dndbox/.style={ outer sep=1.5pt },  % make decorations work
   dndleft/.style={
+    dndbox,
     minimum width=67mm,
   },
   dndright/.style={
+    dndbox,
     minimum width=128mm,
   },
   dndfull/.style={
+    dndbox,
     minimum width=198mm,
   },
   dndhits/.style={
+    dndbox,
     minimum height=21mm,
   },
 }
@@ -60,6 +65,7 @@
 
 \tikzset{
   proficiencies/.style={
+    dndbox,
     minimum width=37mm,
     fill=proficiencies,
   },
@@ -718,220 +724,18 @@
 }
 
 
-\newcommand{\dndboxnodez}[1]{%
-  % Draw a decorative box around the node #1 using inner separation boundaries
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Get the node's shape and extract inner dimensions
-  \begingroup
-    \pgfpointanchor{#1}{center}
-    \pgf@xa=\pgf@x
-    \pgf@ya=\pgf@y
-    
-    % Get the text box dimensions (excluding inner sep)
-    \pgfpointanchor{#1}{text}
-    \advance\pgf@x by -\pgf@xa
-    \advance\pgf@y by -\pgf@ya
-    \pgfmathsetmacro{\textwidth}{2*abs(\pgf@x)*0.03514598}
-    \pgfmathsetmacro{\textheight}{2*abs(\pgf@y)*0.03514598}
-    
-    % Use a more direct approach with the node's actual boundaries
-    % Calculate positions based on the node's text area
-    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{west}}
-    \pgfextractx{\pgf@xb}{\pgfpointanchor{#1}{east}}
-    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{south}}
-    \pgfextracty{\pgf@yb}{\pgfpointanchor{#1}{north}}
-    
-    % Get inner sep values from the node
-    \pgfkeysgetvalue{/pgf/inner xsep}{\innerxsep}
-    \pgfkeysgetvalue{/pgf/inner ysep}{\innerysep}
-    \ifx\innerxsep\pgfkeysnovalue
-      \def\innerxsep{.3333em}
-    \fi
-    \ifx\innerysep\pgfkeysnovalue  
-      \def\innerysep{.3333em}
-    \fi
-    
-    % Convert inner sep to points
-    \pgfmathsetlengthmacro{\innerxseppt}{\innerxsep}
-    \pgfmathsetlengthmacro{\inneryseppt}{\innerysep}
-    
-    % Define coordinates at inner separation boundaries
-    % We need to account for the cornersize to ensure decorations stay within bounds
-    \pgfmathsetlengthmacro{\totalinsetx}{\innerxseppt + \cornersize cm}
-    \pgfmathsetlengthmacro{\totalinsety}{\inneryseppt + \cornersize cm}
-    
-    \coordinate (ll) at ($(#1.south west) + (\totalinsetx, \totalinsety)$);
-    \coordinate (lr) at ($(#1.south east) + (-\totalinsetx, \totalinsety)$);
-    \coordinate (ur) at ($(#1.north east) + (-\totalinsetx, -\totalinsety)$);
-    \coordinate (ul) at ($(#1.north west) + (\totalinsetx, -\totalinsety)$);
-  \endgroup
-  
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
-
-
-\newcommand{\dndboxnodeO}[1]{%
-  % Draw a decorative box around the node #1 using inner separation boundaries
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Get the node's shape and extract inner dimensions
-  \begingroup
-    \pgfpointanchor{#1}{center}
-    \pgf@xa=\pgf@x
-    \pgf@ya=\pgf@y
-    
-    % Get the text box dimensions (excluding inner sep)
-    \pgfpointanchor{#1}{text}
-    \advance\pgf@x by -\pgf@xa
-    \advance\pgf@y by -\pgf@ya
-    \pgfmathsetmacro{\textwidth}{2*abs(\pgf@x)*0.03514598}
-    \pgfmathsetmacro{\textheight}{2*abs(\pgf@y)*0.03514598}
-    
-    % Use a more direct approach with the node's actual boundaries
-    % Calculate positions based on the node's text area
-    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{west}}
-    \pgfextractx{\pgf@xb}{\pgfpointanchor{#1}{east}}
-    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{south}}
-    \pgfextracty{\pgf@yb}{\pgfpointanchor{#1}{north}}
-    
-    % Get outer sep values from the node
-    \pgfkeysgetvalue{/pgf/outer xsep}{\outerxsep}
-    \pgfkeysgetvalue{/pgf/outer ysep}{\outerysep}
-    \ifx\outerxsep\pgfkeysnovalue
-      \PackageError{charsheet}{No outer xsep}{DND box with bad node?}
-    \fi
-    \ifx\outerysep\pgfkeysnovalue  
-      \PackageError{charsheet}{No outer ysep}{DND box with bad node?}
-    \fi
-    
-    % Convert outer sep to points
-    \pgfmathsetlengthmacro{\outerxseppt}{\outerxsep}
-    \pgfmathsetlengthmacro{\outeryseppt}{\outerysep}
-    
-    % Define coordinates at outer separation boundaries
-    % We need to account for the cornersize to ensure decorations stay within bounds
-    \pgfmathsetlengthmacro{\totalinsetx}{\outerxseppt + \cornersize cm}
-    \pgfmathsetlengthmacro{\totalinsety}{\outeryseppt + \cornersize cm}
-    
-    \coordinate (ll) at ($(#1.south west) + (\totalinsetx, \totalinsety)$);
-    \coordinate (lr) at ($(#1.south east) + (-\totalinsetx, \totalinsety)$);
-    \coordinate (ur) at ($(#1.north east) + (-\totalinsetx, -\totalinsety)$);
-    \coordinate (ul) at ($(#1.north west) + (\totalinsetx, -\totalinsety)$);
-  \endgroup
-  
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
-
-\newcommand{\dndboxNR}[2][0.75pt]{%
-  % draw a decorative box with the lower left corner at node dndboxll
-  % and with a width and height given by parameters #1 and #2
+\newcommand{\dnddecorate}[1]{%
+  % draw a decorative box on the named node
   \pgfmathsetmacro{\cornersize}{0.50015} % Size of corner decorations
   \pgfmathsetmacro{\inset}{0.1} % Inset for inner lines
 
+  % 0.75pt is half of line width
+
   % Define coordinates
-  \path (#2.south west) +(#1,#1) coordinate (ll)
-        (#2.south east) +(-#1,#1) coordinate (lr)
-        (#2.north west) +(#1,-#1) coordinate (ul)
-         (#2.north east) +(-#1,-#1) coordinate (ur)
+  \path (#1.south west) +(0.75pt,0.75pt) coordinate (ll)
+        (#1.south east) +(-0.75pt,0.75pt) coordinate (lr)
+        (#1.north west) +(0.75pt,-0.75pt) coordinate (ul)
+         (#1.north east) +(-0.75pt,-0.75pt) coordinate (ur)
      ;
   
 %   \draw[ultra thin] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
@@ -947,9 +751,11 @@
 
 
 
-  \foreach \pt in {ll, lr, ul, ur} {
-     \fill[white] (\pt) circle[radius=\cornersize];
-  }
+    \fill[white] (ll) -- +(\cornersize,0) arc (0:90:\cornersize) -- cycle;
+    \fill[white] (lr) -- +(-\cornersize,0) arc (180:90:\cornersize) -- cycle;
+    \fill[white] (ul) -- +(\cornersize,0) arc (0:-90:\cornersize) -- cycle;
+    \fill[white] (ur) -- +(-\cornersize,0) arc (180:270:\cornersize) -- cycle;
+
 
 
   % Main outer frame (heavy lines)
@@ -1001,4 +807,11 @@
   \draw[line width=0.3pt]
     ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
     ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
+
+
+  \foreach \a in {north west, north east, south west, south east} {
+    \fill[blue] (#1.\a) circle[radius=1pt];
+  }
+
+
 }
