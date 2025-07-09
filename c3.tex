@@ -10,21 +10,23 @@
 }
 
 \newdimen\mytemp
-\environbodyname\mysectionbody
-\NewEnviron{mysection}[3][]{
-  \setlength\mytemp{\rightwidth-6mm}
-%  \node [#1] (#2) #3 {X{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}Z};
-  \node [#1] (#2) #3 {\begin{minipage}{3in}\lipsum[3]\end{minipage}};
-  \dnddecorate{#2};
-}
+%\environbodyname\mysectionbody
+%\NewEnviron{mysection}[3][]{
+%  \setlength\mytemp{\rightwidth-6mm}
+%%  \node [#1] (#2) #3 {X{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}Z};
+%  \node [#1] (#2) #3 {\begin{minipage}{3in}\lipsum[3]\end{minipage}};
+%  \dnddecorate{#2};
+%}
 
-\newcommand\newsectionenv[2][78mm]{%
-  \expandafter\environbodyname\expandafter{\csname#1body\endcsname}
-  \NewEnviron{#2}[3][]{
-    % [...] name at
-    \setlength\mytemp{#1}
-    \node [#2,##1] (##2) ##3 {X{\begin{minipage}[t]{\mytemp}\csname#1body\endcsname\end{minipage}}Z};
-    \dnddecorate{##2};
+
+\newcommand\newsectionenv[2][\dndrightwidth]{%
+  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+  \expandafter\newdimen\csname#2width\endcsname
+  \NewEnviron{#2}[2][]{
+    % [...] name 
+    \expandafter\setlength\csname#2width\endcsname{#1}
+    \node [#2,##1] (#2) ##2 {X{\begin{minipage}[t]{\csname#2width\endcsname}\csname#2body\endcsname\end{minipage}}Z};
+    \dnddecorate{#2};
   }
 }
 
@@ -95,7 +97,7 @@
             at (5cm,5cm) {\raisebox{4pt}{+1}};
 
 
-\begin{attacks}[attacks,anchor=north east]{attacks}{at (hpbackground.south east)}
+\begin{attacks}[attacks,anchor=north east]{at (hpbackground.south east)}
     \centering
     \begin{attackstab}
     Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
@@ -106,7 +108,7 @@
 
 % \node (attacks) at (hpbackground.south west) {A};
 
-\begin{magic}[below=of attacks]{magic}{}
+\begin{magic}[below=of attacks]{}
 \centering
 \begin{featurestab}
 % Magic section (right side, middle)
@@ -116,7 +118,9 @@
 \end{featurestab}
 \end{magic}
 
-\begin{features}[below=of magic]{features}{}
+{\tracingmacros=1
+
+\begin{features}[below=of magic]{}
 \begin{featurestab}
 Fey Ancestry&
   You have advantage to save against charms and you can't be magically put to sleep.\\
@@ -126,7 +130,7 @@ Ritual Caster&
   Cast certain spells as 10-minute rituals instead of using a spell slot.\\
 \end{featurestab}
 \end{features}
-
+}
 
 \fill [red] (magic.north) circle [radius=5pt];
 \fill [blue] (attacks.south) circle [radius=5pt];
