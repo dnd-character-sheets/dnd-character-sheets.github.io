@@ -10,14 +10,6 @@
 }
 
 \newdimen\mytemp
-%\environbodyname\mysectionbody
-%\NewEnviron{mysection}[3][]{
-%  \setlength\mytemp{\rightwidth-6mm}
-%%  \node [#1] (#2) #3 {{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}};
-%  \node [#1] (#2) #3 {\begin{minipage}{3in}\lipsum[3]\end{minipage}};
-%  \dnddecorate{#2};
-%}
-
 
 \newcommand\newsectionenv[5][\dndrightwidth]{%
    % [width]{name}{label}{pre-code}{post-code}
@@ -45,62 +37,69 @@
 \begin{document}
 \pagestyle{empty}
 
+\newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
+
+
 \noindent
 \begin{charsheet}
 
   \node [dndfull,height=33mm,fill=playername,below=of top] (splash) {};
 
-%  \hpbackground
+  \begingroup\sffamily\Large
 
-  \node (hpbackground) 
-    [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
-   { };
+      \node (hpbackground) 
+        [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
+       { };
 
+      \node (hitdice)
+             [dndhits,width=20mm,inside south east corner=of hpbackground,
+             decorate=hpetc,
+             dndlabel=HIT DICE] 
+         { \Large d8 }
+         ;
 
-%  \fill [red] (hpbackground.north west) circle[radius=5pt];
+      \node (curhp)
+            [dndhits,fill=white,width=72mm,left=of hitdice,decorate=hpetc,
+             dnd/label={CURRENT HIT POINTS}] 
+         { \Large \bfseries\sffamily 10 }
+         ;
 
-  \node [dndhits,width=20mm,inside south east corner=of hpbackground,
-         decorate=hpetc,
-         dndlabel=HIT DICE] 
-     (hitdice) 
-     { \Large d8 }
-     ;
-%  \dnddecorate[hpetc]{hitdice};
-%  \node [outer sep=0pt, inner sep=0pt, above=of hitdice.south]
-%        {\textsf{\footnotesize HIT DICE}};
+      \node [dndmaxhp,above left corner=of curhp,decorate=hpetc,dndlabel=MAX HP] 
+         (maxhp)
+         { \Large 99 }
+         ;
 
-  \node [dndhits,fill=white,minimum width=72mm,left=of hitdice,decorate=hpetc,
-         dnd/label={CURRENT HIT POINTS}] 
-     (curhp)
-     { \Large \bfseries\sffamily 10 }
-     ;
-%   \dndlabel{curhp}{CURRENT HIT POINTS}
-%  \dnddecorate[hpetc]{curhp};
-%  \node [outer sep=0pt, inner sep=0pt, above=of curhp.south]
-%        {\textsf{\footnotesize CURRENT HIT POINTS}};
+      \node (initiative)
+            [dndmaxhp,right=of maxhp,decorate=hpetc,dndlabel=INITIATIVE] 
+         { +2 }
+         ;
 
-  \node [dndmaxhp,fill=white,anchor=south west] 
-     (maxhp)
-     at ($(curhp.north west)+(0mm,2mm)$)
-     { \Large 99 }
-     ;
-  \dnddecorate[hpetc]{maxhp};
-  \node [outer sep=0pt, inner sep=0pt, above=of maxhp.south]
-        {\textsf{\footnotesize MAX HP}};
+      \node (speed)
+            [dndmaxhp,right=of initiative,decorate=hpetc,dndlabel=SPEED] 
+         { 30~ft }
+         ;
 
 
-  \mynode[hpetc]{initiative}{dndmaxhp,right=of maxhp}{}{+2}{INITIATIVE};
-  \mynode[hpetc]{speed}{dndmaxhp,right=of initiative}{}{30~ft}{SPEED};
+       \node (ac) [dndmaxhp,shield,innershield,draw,ultra thick,right=of speed,width=15mm,
+                   dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
+            ]
+      {\raisebox{4mm}{13}}
+      ;
 
-  {\renewcommand\dnddecorate[2][white]{\relax}
-   \mynode[hpetc]{ac}{dndmaxhp,shield,draw,ultra thick,right=of
-   speed,minimum width=15mm}{}{\raisebox{4mm}{13}}{\raisebox{3mm}{\tiny\begin{tabular}{c}ARMOR\\CLASS\end{tabular}}};
-   \node [dndmaxhp,shield,draw,fill=none,thin,minimum width=15mm,scale=0.88] at (ac) { };
-  }
-  
+%       \node [dndmaxhp,shield,draw,fill=none,thin,minimum width=15mm,scale=0.88] at (ac) { };
 
-  \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
-            at (5cm,5cm) {\raisebox{4pt}{+1}};
+       
+     
+%      {\renewcommand\dnddecorate[2][white]{\relax}
+%       \mynode[hpetc]{ac}{dndmaxhp,shield,draw,ultra thick,right=of
+%       speed,minimum width=15mm}{}{\raisebox{4mm}{13}}{\raisebox{3mm}{\tiny\begin{tabular}{c}ARMOR\\CLASS\end{tabular}}};
+%      }
+      
+
+      \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
+                at (5cm,5cm) {\raisebox{4pt}{+1}};
+
+  \endgroup
 
 
 \begin{attacks}[attacks,anchor=north east]{at (hpbackground.south east)}

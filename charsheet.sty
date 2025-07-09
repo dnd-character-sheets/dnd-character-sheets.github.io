@@ -954,7 +954,7 @@
     above left corner/.code={%
         \tikz@corner@parse#1\tikz@stop%
         \tikzset{%
-            anchor=south east,
+            anchor=south west,
             at={($(\tikz@corner@node.north west)+(0,\tikz@corner@distance)$)}%
         }%
     },
@@ -970,7 +970,7 @@
     above right corner/.code={%
         \tikz@corner@parse#1\tikz@stop%
         \tikzset{%
-            anchor=south west,
+            anchor=south east,
             at={($(\tikz@corner@node.north east)+(0,\tikz@corner@distance)$)}%
         }%
     },
@@ -1091,4 +1091,35 @@
 %  label/.style={dnd/label={#1}}, % short alias
   dndlabel/.style={dnd/label={#1}}, % short alias
 %
+}
+
+\tikzset{
+  innershield/.style={
+    append after command={
+      \pgfextra{%
+        \begingroup
+          % expand \tikzlastnode but keep \dnddecorate untouched
+          \edef\temp{\the\DND@decorations \noexpand\innershield{\tikzlastnode}}%
+          \global\DND@decorations=\expandafter{\temp}%
+        \endgroup
+      }%
+    }
+  },
+}
+
+\newcommand\innershield[1]{% node
+  \node [shield,draw,thin,scale=0.88,fill=none] at (#1) { };
+}
+
+
+
+\renewcommand\innershield[1]{% node
+  % Get the dimensions of the target node
+  \pgfpointdiff{\pgfpointanchor{#1}{south west}}{\pgfpointanchor{#1}{north east}}
+  \pgfgetlastxy{\nodewidth}{\nodeheight}
+  
+  % Create the inner shield with matching dimensions
+  \node [shield,draw,thin,scale=0.88,fill=none,
+         minimum width=\nodewidth,
+         minimum height=\nodeheight] at (#1) { };
 }
