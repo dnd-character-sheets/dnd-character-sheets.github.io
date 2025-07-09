@@ -13,26 +13,28 @@
 %\environbodyname\mysectionbody
 %\NewEnviron{mysection}[3][]{
 %  \setlength\mytemp{\rightwidth-6mm}
-%%  \node [#1] (#2) #3 {X{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}Z};
+%%  \node [#1] (#2) #3 {{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}};
 %  \node [#1] (#2) #3 {\begin{minipage}{3in}\lipsum[3]\end{minipage}};
 %  \dnddecorate{#2};
 %}
 
 
-\newcommand\newsectionenv[2][\dndrightwidth]{%
+\newcommand\newsectionenv[5][\dndrightwidth]{%
+   % [width]{name}{label}{pre-code}{post-code}
   \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
   \expandafter\newdimen\csname#2width\endcsname
   \NewEnviron{#2}[2][]{
     % [...] name 
     \expandafter\setlength\csname#2width\endcsname{#1}
-    \node [#2,##1] (#2) ##2 {X{\begin{minipage}[t]{\csname#2width\endcsname}\csname#2body\endcsname\end{minipage}}Z};
+    \node [#2,##1] (#2) ##2 {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+\end{minipage}}};
     \dnddecorate{#2};
   }
 }
 
-\newsectionenv{magic}
-\newsectionenv{attacks}
-\newsectionenv{features}
+\newsectionenv{magic}{MAGIC}{}{}
+\newsectionenv{attacks}{ATTACKS}{}{}
+\newsectionenv{features}{CLASS FEATURES}{}{}
   
 
 \begin{document}
@@ -132,23 +134,23 @@ Ritual Caster&
 \end{features}
 }
 
-\fill [red] (magic.north) circle [radius=5pt];
-\fill [blue] (attacks.south) circle [radius=5pt];
-
-\fill [red] (magic.center) circle [radius=5pt];
-\fill [blue] (attacks.center) circle [radius=5pt];
-
-\fill [yellow] (features.center) circle [radius=5pt];
-\fill [yellow] (features.north) circle [radius=5pt];
-
-\fill[green] (features.west) circle [radius=5pt]
-  (attacks.west) circle [radius=5pt]
-  (magic.west) circle [radius=5pt]
-  ;
-\fill[orange] (features.east) circle [radius=5pt]
-  (attacks.east) circle [radius=5pt]
-  (magic.east) circle [radius=5pt]
-  ;
+%\fill [red] (magic.north) circle [radius=5pt];
+%\fill [blue] (attacks.south) circle [radius=5pt];
+%
+%\fill [red] (magic.center) circle [radius=5pt];
+%\fill [blue] (attacks.center) circle [radius=5pt];
+%
+%\fill [yellow] (features.center) circle [radius=5pt];
+%\fill [yellow] (features.north) circle [radius=5pt];
+%
+%\fill[green] (features.west) circle [radius=5pt]
+%  (attacks.west) circle [radius=5pt]
+%  (magic.west) circle [radius=5pt]
+%  ;
+%\fill[orange] (features.east) circle [radius=5pt]
+%  (attacks.east) circle [radius=5pt]
+%  (magic.east) circle [radius=5pt]
+%  ;
 %  \node (anode) at (hpbackground.south east) [dndright,fill=attacks,anchor=north east,outer sep=1.5pt, inner sep=0pt] {\parbox{3in}{ATTACKS y \par\bigskip ya ya \vspace*{3in}}};
 %  \dnddecorate {anode};
 % 
