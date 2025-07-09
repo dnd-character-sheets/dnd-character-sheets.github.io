@@ -2,6 +2,7 @@
 \RequirePackage{tikz}
 \RequirePackage{times}
 \RequirePackage{xcolor}
+\RequirePackage{colortbl}
 \RequirePackage{environ}
 \RequirePackage{tabularx}
 \RequirePackage{booktabs}
@@ -432,10 +433,16 @@
   {\end{list}}
 
 
+\newcommand\feature[2]{%
+  \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
+  \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
+}
+
 \newenvironment{featurestab}
   {\renewcommand\arraystretch{1.5}%
    \begin{tabular}{>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{93mm}}}
   {\end{tabular}}
+
 
 \newenvironment{spellstab}
   {\renewcommand\arraystretch{1.5}%
@@ -477,10 +484,10 @@
 
 
 \newenvironment{attackstab}
-  {\renewcommand\arraystretch{1.2}%
+  {\renewcommand\arraystretch{1.3}%
    \tabcolsep=0.5\tabcolsep
    \small
-   \begin{tabular}{@{}cccccc@{}}
+   \begin{tabular}{@{}>{\rowcolor[gray]{0.9}}cccccc@{}}
    \multicolumn1{@{}l}{\textsf{NAME}}&
    \textsf{ATTACK}&
    \textsf{DAMAGE}&
@@ -828,4 +835,56 @@
 %  }
 
 
+}
+
+
+\newcommand{\spellslotso}[1]{%
+  \hbox{%
+    \begin{tikzpicture}[baseline=(current bounding box.center)]
+      \ifnum#1>0
+        % Draw the first circle
+        \draw (0,0) circle (1.6mm);
+        
+        % Draw remaining circles with double lines between them
+        \foreach \i in {2,...,#1} {
+          \pgfmathsetmacro{\xpos}{(\i-1)*6.2}
+          \pgfmathsetmacro{\prevxpos}{(\i-2)*6.2}
+          
+          % Draw double line from previous circle to current position
+          \draw[double, double distance=0.4mm] 
+            (\prevxpos mm + 1.6mm, 0) -- (\xpos mm - 1.6mm, 0);
+          
+          % Draw current circle
+          \draw (\xpos mm,0) circle (1.6mm);
+        }
+      \fi
+    \end{tikzpicture}%
+  }%
+}
+
+
+
+
+\newcommand{\spellslots}[1]{%
+  \hbox{%
+    \begin{tikzpicture}[baseline=1pt, thick]
+      \ifnum#1>0
+        % Draw the first circle
+        \draw (0,1.6mm) circle (1.6mm);
+        
+        % Draw remaining circles with double lines between them
+        \foreach \i in {2,...,#1} {
+          \pgfmathsetmacro{\xpos}{(\i-1)*5.0}
+          \pgfmathsetmacro{\prevxpos}{(\i-2)*5.0}
+          
+          % Draw double line from previous circle to current position
+          \draw[double, double distance=0.6mm] 
+            (\prevxpos mm + 1.6mm, 1.6mm) -- (\xpos mm - 1.6mm, 1.6mm);
+          
+          % Draw current circle
+          \draw (\xpos mm,1.6mm) circle (1.6mm);
+        }
+      \fi
+    \end{tikzpicture}%
+  }%
 }
