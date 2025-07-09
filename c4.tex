@@ -86,23 +86,13 @@
       {\raisebox{4mm}{13}}
       ;
 
-%       \node [dndmaxhp,shield,draw,fill=none,thin,minimum width=15mm,scale=0.88] at (ac) { };
+  \endgroup
 
-       
-     
-%      {\renewcommand\dnddecorate[2][white]{\relax}
-%       \mynode[hpetc]{ac}{dndmaxhp,shield,draw,ultra thick,right=of
-%       speed,minimum width=15mm}{}{\raisebox{4mm}{13}}{\raisebox{3mm}{\tiny\begin{tabular}{c}ARMOR\\CLASS\end{tabular}}};
-%      }
-      
 
       \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
                 at (5cm,5cm) {\raisebox{4pt}{+1}};
 
-  \endgroup
-
-
-\begin{attacks}[attacks,anchor=north east]{at (hpbackground.south east)}
+\begin{attacks}[below right corner=of hpbackground]{}
     \centering
     \begin{attackstab}
     Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
