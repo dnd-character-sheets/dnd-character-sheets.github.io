@@ -3,7 +3,7 @@
 \usepackage{charsheet}
 
 \newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
-  \node (#2) [#3] #4 { \Large #5 } ;
+  \node (#2) [#3] #4 { \Large \sffamily \mdseries #5 } ;
   \dnddecorate[#1]{#2};
   \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
         {\textsf{\footnotesize #6}};
@@ -68,7 +68,7 @@
 
   \node [dndhits,fill=white,minimum width=72mm,left=of hitdice] 
      (curhp)
-     { \Large 10 }
+     { \Large \bfseries\sffamily 10 }
      ;
   \dnddecorate[hpetc]{curhp};
   \node [outer sep=0pt, inner sep=0pt, above=of curhp.south]
