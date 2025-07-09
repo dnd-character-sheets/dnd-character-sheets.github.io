@@ -553,8 +553,8 @@
 \newdimen\my@Cx
 \newdimen\my@Cy
 
-\def\shieldTopDelta{3}
-\def\shieldBottomDelta{7}
+\def\shieldTopScale{0.15}
+\def\shieldBottomScale{0.3}
 
 % Here is a {\LaTeX} macro that is meant to draw a shield shape.  I
 % started with a kite shape using straight lines to connect
@@ -605,7 +605,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{\my@yb}{-\my@xb}}}}}
+                     {\pgfpointscale{\shieldTopScale}{\pgfpoint{\my@yb}{-\my@xb}}}}
         {\west}
     
     % Curve from west to south
@@ -615,7 +615,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldBottomDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
+                     {\pgfpointscale{\shieldBottomScale}{\pgfpoint{-\my@yb}{\my@xb}}}}
         {\south}
     
     % Curve from south to east
@@ -625,7 +625,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldBottomDelta}{\pgfpointnormalised{\pgfpoint{-\my@yb}{\my@xb}}}}}
+                     {\pgfpointscale{\shieldBottomScale}{\pgfpoint{-\my@yb}{\my@xb}}}}
         {\east}
     
     % Curve from east to north (closing the path)
@@ -635,7 +635,7 @@
     \pgfgetlastxy{\my@xb}{\my@yb} % note swap
     \pgfpathquadraticcurveto
         {\pgfpointadd{\pgfpoint{\my@xa}{\my@ya}}
-                     {\pgfpointscale{\shieldTopDelta}{\pgfpointnormalised{\pgfpoint{\my@yb}{-\my@xb}}}}}
+                     {\pgfpointscale{\shieldTopScale}{\pgfpoint{\my@yb}{-\my@xb}}}}
         {\north}
   }
 }
