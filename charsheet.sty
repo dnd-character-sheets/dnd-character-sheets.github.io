@@ -40,7 +40,14 @@
   },
   dndhits/.style={
     dndbox,
+    fill=white,
     minimum height=21mm,
+  },
+  dndmaxhp/.style={
+    dndbox,
+    fill=white,
+    minimum height=18mm,
+    minimum width=24mm,
   },
 }
 
@@ -452,11 +459,15 @@
 \newcommand\hpetcll{\rightx + 30mm, 184mm}
 
 \newcommand\hpbackground{
-  \node (hpbackground) 
-   at (splash.south east)
-   [fill=hpetc,anchor=north east,minimum width=98mm, minimum height=44.5mm] 
-   { };
+  \fill[hpetc] (\hpetcll) coordinate (hpbackground) rectangle +(98mm,44.5mm);
 }
+
+%\newcommand\hpbackground{
+%  \node (hpbackground) 
+%   at (splash.south east)
+%   [fill=hpetc,anchor=north east,minimum width=98mm, minimum height=44.5mm] 
+%   { };
+%}
 
 \newcommand\spellsheader[2]{%
   \multicolumn2{l}{\textsf{LEVEL~#1 \checkboxes{#2}/day}}%
@@ -560,9 +571,10 @@
     \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
     \pgfpoint{0.5\my@Wx+0.5\my@Ex}{0.4\my@Sy+0.6\my@Ny}}     
 
-
   % Background path (defines the shape outline)
   \backgroundpath{
+
+
     % Get the corners
     \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
     \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
@@ -573,8 +585,6 @@
     \def\west {\pgfpoint{\my@Wx}{\my@Cy}}
     \def\south{\pgfpoint{\my@Cx}{\my@Sy}}
     \def\east {\pgfpoint{\my@Ex}{\my@Cy}}
-
-    \anchor{ac}{\pgfpointlineattime{0.8}{\south}{\north}}
 
     % Draw kite shape with curved lines
     \pgfpathmoveto{\north}
@@ -724,18 +734,20 @@
 }
 
 
-\newcommand{\dnddecorate}[1]{%
+\newcommand\dndinset{0.1}
+
+\newcommand{\dnddecorate}[2][white]{%
   % draw a decorative box on the named node
-  \pgfmathsetmacro{\cornersize}{0.50015} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.1} % Inset for inner lines
+  \pgfmathsetmacro{\cornersize}{0.30} % Size of corner decorations
+  \pgfmathsetmacro{\inset}{\dndinset} % Inset for inner lines
 
   % 0.75pt is half of line width
 
   % Define coordinates
-  \path (#1.south west) +(0.75pt,0.75pt) coordinate (ll)
-        (#1.south east) +(-0.75pt,0.75pt) coordinate (lr)
-        (#1.north west) +(0.75pt,-0.75pt) coordinate (ul)
-         (#1.north east) +(-0.75pt,-0.75pt) coordinate (ur)
+  \path (#2.south west) +(0.75pt,0.75pt) coordinate (ll)
+        (#2.south east) +(-0.75pt,0.75pt) coordinate (lr)
+        (#2.north west) +(0.75pt,-0.75pt) coordinate (ul)
+         (#2.north east) +(-0.75pt,-0.75pt) coordinate (ur)
      ;
   
 %   \draw[ultra thin] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
@@ -751,10 +763,10 @@
 
 
 
-    \fill[white] (ll) -- +(\cornersize,0) arc (0:90:\cornersize) -- cycle;
-    \fill[white] (lr) -- +(-\cornersize,0) arc (180:90:\cornersize) -- cycle;
-    \fill[white] (ul) -- +(\cornersize,0) arc (0:-90:\cornersize) -- cycle;
-    \fill[white] (ur) -- +(-\cornersize,0) arc (180:270:\cornersize) -- cycle;
+    \fill[#1] (ll) -- +(\cornersize,0) arc (0:90:\cornersize) -- cycle;
+    \fill[#1] (lr) -- +(-\cornersize,0) arc (180:90:\cornersize) -- cycle;
+    \fill[#1] (ul) -- +(\cornersize,0) arc (0:-90:\cornersize) -- cycle;
+    \fill[#1] (ur) -- +(-\cornersize,0) arc (180:270:\cornersize) -- cycle;
 
 
 
@@ -809,9 +821,9 @@
     ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
 
 
-  \foreach \a in {north west, north east, south west, south east} {
-    \fill[blue] (#1.\a) circle[radius=1pt];
-  }
+%  \foreach \a in {north west, north east, south west, south east} {
+%    \fill[blue] (#2.\a) circle[radius=1pt];
+%  }
 
 
 }
