@@ -1,0 +1,292 @@
+\documentclass[11pt]{article}
+\usepackage{lipsum}
+\usepackage{charsheet}
+
+\newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
+  \node (#2) [#3] #4 { \Large \sffamily \mdseries #5 } ;
+  \dnddecorate[#1]{#2};
+  \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
+        {\textsf{\footnotesize #6}}
+}
+
+\newdimen\mytemp
+%\environbodyname\mysectionbody
+%\NewEnviron{mysection}[3][]{
+%  \setlength\mytemp{\rightwidth-6mm}
+%%  \node [#1] (#2) #3 {{\begin{minipage}[t]{\mytemp}\mysectionbody\end{minipage}}};
+%  \node [#1] (#2) #3 {\begin{minipage}{3in}\lipsum[3]\end{minipage}};
+%  \dnddecorate{#2};
+%}
+
+
+\newcommand\newsectionenv[5][\dndrightwidth]{%
+   % [width]{name}{label}{pre-code}{post-code}
+  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+  \expandafter\newdimen\csname#2width\endcsname
+  \NewEnviron{#2}[2][]{
+    % [...] name 
+    \expandafter\setlength\csname#2width\endcsname{#1}
+    \node [#2,##1] (#2) ##2 {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+\end{minipage}}};
+    \dnddecorate{#2};
+  }
+}
+
+\newsectionenv{magic}{MAGIC}{}{}
+\newsectionenv{attacks}{ATTACKS}{}{}
+\newsectionenv{features}{CLASS FEATURES}{}{}
+
+\newcommand\dndlabel[2]{% {node}{label text}
+  \node [outer sep=0pt, inner sep=0pt, above=of #1.south]
+        {\textsf{\footnotesize #2}};
+}
+  
+
+\begin{document}
+\pagestyle{empty}
+
+\noindent
+\begin{charsheet}
+
+  \node [dndfull,height=33mm,fill=playername,below=of top] (splash) {};
+
+%  \hpbackground
+
+  \node (hpbackground) 
+    [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
+   { };
+
+
+%  \fill [red] (hpbackground.north west) circle[radius=5pt];
+
+  \node [dndhits,width=20mm,inside south east corner=of hpbackground,
+         decorate=hpetc,
+         dndlabel=HIT DICE] 
+     (hitdice) 
+     { \Large d8 }
+     ;
+%  \dnddecorate[hpetc]{hitdice};
+%  \node [outer sep=0pt, inner sep=0pt, above=of hitdice.south]
+%        {\textsf{\footnotesize HIT DICE}};
+
+  \node [dndhits,fill=white,minimum width=72mm,left=of hitdice,decorate=hpetc,
+         dnd/label={CURRENT HIT POINTS}] 
+     (curhp)
+     { \Large \bfseries\sffamily 10 }
+     ;
+%   \dndlabel{curhp}{CURRENT HIT POINTS}
+%  \dnddecorate[hpetc]{curhp};
+%  \node [outer sep=0pt, inner sep=0pt, above=of curhp.south]
+%        {\textsf{\footnotesize CURRENT HIT POINTS}};
+
+  \node [dndmaxhp,fill=white,anchor=south west] 
+     (maxhp)
+     at ($(curhp.north west)+(0mm,2mm)$)
+     { \Large 99 }
+     ;
+  \dnddecorate[hpetc]{maxhp};
+  \node [outer sep=0pt, inner sep=0pt, above=of maxhp.south]
+        {\textsf{\footnotesize MAX HP}};
+
+
+  \mynode[hpetc]{initiative}{dndmaxhp,right=of maxhp}{}{+2}{INITIATIVE};
+  \mynode[hpetc]{speed}{dndmaxhp,right=of initiative}{}{30~ft}{SPEED};
+
+  {\renewcommand\dnddecorate[2][white]{\relax}
+   \mynode[hpetc]{ac}{dndmaxhp,shield,draw,ultra thick,right=of
+   speed,minimum width=15mm}{}{\raisebox{4mm}{13}}{\raisebox{3mm}{\tiny\begin{tabular}{c}ARMOR\\CLASS\end{tabular}}};
+   \node [dndmaxhp,shield,draw,fill=none,thin,minimum width=15mm,scale=0.88] at (ac) { };
+  }
+  
+
+  \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
+            at (5cm,5cm) {\raisebox{4pt}{+1}};
+
+
+\begin{attacks}[attacks,anchor=north east]{at (hpbackground.south east)}
+    \centering
+    \begin{attackstab}
+    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
+    Hand Axe (off~hand) [B]& +5 & 1d6 & slashing & 5~ft or 20/60~ft& ---\\
+    \end{attackstab}
+\end{attacks}
+
+
+% \node (attacks) at (hpbackground.south west) {A};
+
+\begin{magic}[below=of attacks]{}
+\centering
+\begin{featurestab}
+% Magic section (right side, middle)
+  \textsf{CANTRIPS}\\
+  Friends& Does a thing\\
+  Ray of Frost& asdf\\
+  \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
+\end{featurestab}
+\end{magic}
+
+
+\begin{features}[below=of magic]{}
+\begin{featurestab}
+\feature{Fey Ancestry}{
+  You have advantage to save against charms and you can't be magically put to sleep.}
+\feature{\centering Bardic~Inspiration (2/day)}
+ {Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.}
+\feature{Ritual Caster}{    
+  Cast certain spells as 10-minute rituals instead of using a spell slot.}
+\end{featurestab}
+\end{features}
+
+
+%\fill [red] (magic.north) circle [radius=5pt];
+%\fill [blue] (attacks.south) circle [radius=5pt];
+%
+%\fill [red] (magic.center) circle [radius=5pt];
+%\fill [blue] (attacks.center) circle [radius=5pt];
+%
+%\fill [yellow] (features.center) circle [radius=5pt];
+%\fill [yellow] (features.north) circle [radius=5pt];
+%
+%\fill[green] (features.west) circle [radius=5pt]
+%  (attacks.west) circle [radius=5pt]
+%  (magic.west) circle [radius=5pt]
+%  ;
+%\fill[orange] (features.east) circle [radius=5pt]
+%  (attacks.east) circle [radius=5pt]
+%  (magic.east) circle [radius=5pt]
+%  ;
+%  \node (anode) at (hpbackground.south east) [dndright,fill=attacks,anchor=north east,outer sep=1.5pt, inner sep=0pt] {\parbox{3in}{ATTACKS y \par\bigskip ya ya \vspace*{3in}}};
+%  \dnddecorate {anode};
+% 
+%  \node (mnode) at (anode.south east) [dndright,fill=magic,anchor=north east] 
+%    {asdf MATIC asdf box Z};
+%%  \dnddecorate {mnode};
+% 
+%  \node (hp) [dndhits,minimum width=72mm, anchor=south east,fill=white,outer sep=10pt,inner xsep=0pt]
+%    at (hpbackground.south east) {CURRENT HIT POINTS CURRENT HIT POINTS CURRENT HIT POINTS};
+%%  \dnddecorate{hp};
+
+
+
+%  \path (hpbackground) ++(2mm, 1.5mm) coordinate (currenthp)
+%                       ++(74mm,0mm) coordinate (hit dice)
+%     ;
+%
+%  \path (currenthp) ++(0mm, 23mm) coordinate (maxhp)
+%                    ++(25mm, 0mm) coordinate (initiative)
+%                    ++(25mm, 0mm) coordinate (speed)
+%                    ++(23mm, 0mm) coordinate (ac)
+%     ;
+%
+%  \path (\rightx,0mm) coordinate (rightxbase);
+%
+%%  \dndfill{currenthp}{72mm}{21mm}{white};
+%%  \dndbox{currenthp}{72mm}{21mm};
+%%  \path (currenthp) +(2mm,2mm) node [anchor=south west] {\textsf{CURRENT HIT POINTS}};
+%
+%%  \dndfill{hit dice}{20mm}{21mm}{white};
+%%  \dndbox{hit dice}{20mm}{21mm};
+%%
+%%  \path (hit dice) +(10mm,2mm) node [anchor=south] {\textsf{HIT DICE}};
+%
+%
+%
+%  \dndlabeledbox            {maxhp}     {22mm}{18mm}{white}{MAX HP};
+%  \dndlabeledbox            {initiative}{22mm}{18mm}{white}{INITIATIVE};
+%  \dndlabeledbox            {speed}     {22mm}{18mm}{white}{SPEED};
+%  \dndlabeledbox            {ac}        {20mm}{18mm}{white}{\footnotesize\begin{tabular}{c}ARMOR\\CLASS\end{tabular}};
+%
+%%  \dndlabeledbox[south east]{currenthp} {72mm}{21mm}{white}{CURRENT HIT POINTS};
+%  \dndlabeledbox            {hit dice}  {20mm}{21mm}{white}{HIT DICE};
+%
+%  \dndlabeledbox{rightxbase |- currenthp}{26mm}{21mm}{white}{SENSES};
+%  \dndlabeledbox{rightxbase |- maxhp}    {26mm}{18mm}{white}{\tiny PASSIVE PERCEPTION};
+%
+%  \path (equipment.north west) ++(5mm,12mm) coordinate (CHAll)
+%                               ++(0mm,25mm) coordinate (WISll)
+%                               ++(0mm,25mm) coordinate (INTll)
+%                               ++(0mm,25mm) coordinate (CONll)
+%                               ++(0mm,25mm) coordinate (DEXll)
+%                               ++(0mm,25mm) coordinate (STRll)
+%   ;
+%
+%
+%  \dndnodebox{STR}{STRll}{20mm}{21mm};
+%  \dndnodebox{DEX}{DEXll}{20mm}{21mm};
+%  \dndnodebox{CON}{CONll}{20mm}{21mm};
+%  \dndnodebox{INT}{INTll}{20mm}{21mm};
+%  \dndnodebox{WIS}{WISll}{20mm}{21mm};
+%  \dndnodebox{CHA}{CHAll}{20mm}{21mm};
+%
+%  \node[draw,ellipse,ultra thick,minimum width=12mm, minimum height=8mm, fill=white] at (CHA.south) {15};
+%  \node[draw,kite,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
+%   at ($(CHA.north east)+(0mm,3mm)$) {+4};
+%
+%  \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
+%            at ($(WIS.north east)+(-1mm,3mm)$) {\raisebox{4pt}{+1}};
+%
+%  \node[draw,shield,anchor=ac,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
+%            at (INT.north east) { +9 };
+
+
+  
+%  % Equipment section (left side, tall box)
+%  \begin{equipmentsection}
+%    \begin{nobullets}
+%      \item Clothes (Fine)
+%      \item Leather Armor
+%      \item Shortsword
+%      \item Lyre
+%      \item Backpack
+%      \item Bedroll, Book of Elvish Poetry
+%      \item Bottle of Ink, Ink Pen
+%      \item Parchment (10 sheets), Tinderbox
+%      \item Trail Rations (10 days), Waterskin
+%    \end{nobullets}
+%  \end{equipmentsection}
+  
+%%  % Proficiencies section (middle top)
+%%  \begin{proficienciessection}
+%%    \small\raggedright
+%%    {Acrobatics}\\
+%%    Arcana\\
+%%    History\\
+%%    Investigation\\
+%%    Perception\\
+%%    Performance\\
+%%    Persuasion\\
+%%    Musical Instrument \mbox{\quad(Lyre)}\\
+%%    Language (Common)\\
+%%    Language (Elvish)
+%%  \end{proficienciessection}
+  
+%  % Attacks section (right side, top)
+%  \begin{attackssection}
+%    \centering
+%    \begin{attackstab}
+%    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
+%    Hand Axe (off~hand) [B]& +5 & 1d6 & slashing & 5~ft or 20/60~ft& ---\\
+%    \end{attackstab}
+%  \end{attackssection}
+%  
+%  
+%  % Features section (far right)
+%  \begin{featuressection}
+%  \begin{featurestab}
+%  Fey Ancestry&
+%    You have advantage to save against charms and you can't be magically put to sleep.\\
+%  \centering Bardic~Inspiration (2/day)&    
+%    Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.\\
+%  Ritual Caster&    
+%    Cast certain spells as 10-minute rituals instead of using a spell slot.\\
+%  \end{featurestab}
+%  \end{featuressection}
+%
+%
+%
+\end{charsheet}
+
+
+
+
+\end{document}

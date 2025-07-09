@@ -1067,13 +1067,15 @@
       \pgfextra{%
         \begingroup
           % expand \tikzlastnode but keep \dnddecorate untouched
-          \edef\temp{\the\DND@decorations \noexpand\dnddecorate{\tikzlastnode}}%
+          \edef\temp{\the\DND@decorations \noexpand\dnddecorate[#1]{\tikzlastnode}}%
           \global\DND@decorations=\expandafter{\temp}%
         \endgroup
       }%
     }
   },
-  decorate/.style={dnd/decorate}, % short alias
+  dnd/decorate/.default=white,
+  decorate/.style={dnd/decorate={#1}}, % short alias
+  decorate/.default=white,
 %
   dnd/label/.style={
     append after command={
