@@ -1045,7 +1045,7 @@
        \temp
     \endgroup
   },
-%    execute at end picture={\the\DND@decorations},
+  label/.style={dnd/label}, % short alias
     #1]
    \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
    \path (current bounding box.north) coordinate (top)
@@ -1066,7 +1066,7 @@
     append after command={
       \pgfextra{%
         \begingroup
-          % expand \tikzlastnode but keep \do untouched
+          % expand \tikzlastnode but keep \dnddecorate untouched
           \edef\temp{\the\DND@decorations \noexpand\dnddecorate{\tikzlastnode}}%
           \global\DND@decorations=\expandafter{\temp}%
         \endgroup
@@ -1074,18 +1074,19 @@
     }
   },
   decorate/.style={dnd/decorate}, % short alias
+%
+  dnd/label/.style={
+    append after command={
+      \pgfextra{%
+        \begingroup
+          % expand \tikzlastnode but keep \dndlabel untouched
+          \edef\temp{\the\DND@decorations \noexpand\dndlabel{\tikzlastnode}{#1}}%
+          \global\DND@decorations=\expandafter{\temp}%
+        \endgroup
+      }%
+    }
+  },
+%  label/.style={dnd/label={#1}}, % short alias
+  dndlabel/.style={dnd/label={#1}}, % short alias
+%
 }
-
-%  dnd/label/.style={
-%    append after command={
-%      \pgfextra{%
-%        \begingroup
-%          % expand \tikzlastnode but keep \do untouched
-%          \edef\temp{\the\DND@decorations \noexpand\dndlabel{\tikzlastnode}{#1}}%
-%          \global\DND@decorations=\expandafter{\temp}%
-%        \endgroup
-%      }%
-%    }
-%  },
-
-%}
