@@ -3,7 +3,7 @@
 
 \makeatletter
 \pgfkeys{
-  /pgf/lh/.initial=30  % Default angle is 30 degrees
+  /pgf/lh angle/.initial=29  % Default angle is 30 degrees
 }
 
 % Declare meaningful coordinate registers
@@ -41,7 +41,7 @@
   \my@halfheight=.5\my@halfheight%
 }
 
-\pgfdeclareshape{lh}{
+\pgfdeclareshape{lh}{%
   % Inherit anchors from rectangle
   \inheritsavedanchors[from=rectangle]
   \inheritanchor[from=rectangle]{center}
@@ -53,49 +53,51 @@
   \inheritanchor[from=rectangle]{north west}
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
-  
+%  
   % Saved anchor for inner north west
-  \savedanchor\innernorthwest{%
-    % Get text box dimensions
-    \pgf@x=.5\wd\pgfnodeparttextbox%
-    \pgf@y=.5\ht\pgfnodeparttextbox%
-    \advance\pgf@y by.5\dp\pgfnodeparttextbox%
-    % Add inner sep
-    \pgfmathsetlength\my@halfwidth{\pgfkeysvalueof{/pgf/inner xsep}}%
-    \pgfmathsetlength\my@halfheight{\pgfkeysvalueof{/pgf/inner ysep}}%
-    \advance\pgf@x by\my@halfwidth%
-    \advance\pgf@y by\my@halfheight%
-    % Check minimum dimensions
-    \pgfmathsetlength\my@halfwidth{\pgfkeysvalueof{/pgf/minimum width}}%
-    \pgfmathsetlength\my@halfheight{\pgfkeysvalueof{/pgf/minimum height}}%
-    \ifdim\pgf@x<.5\my@halfwidth\pgf@x=.5\my@halfwidth\fi%
-    \ifdim\pgf@y<.5\my@halfheight\pgf@y=.5\my@halfheight\fi%
-    % Store half dimensions
-    \my@halfwidth=\pgf@x%
-    \my@halfheight=\pgf@y%
-    % Calculate offset
-    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/pgf/lh}}%
-    \show\hexangle
-    \pgfmathsetlength\my@offset{\my@halfheight*tan(\hexangle)}%
-    \showthe\my@offset
-    % Set final position (inner north west)
-    \pgf@x=-\my@halfwidth%
-    \advance\pgf@x by\my@offset%
-    \pgf@y=\my@halfheight%
-  }
-  
+%  \savedanchor\innernorthwest{%
+%    % Get text box dimensions
+%    \pgf@x=.5\wd\pgfnodeparttextbox%
+%    \pgf@y=.5\ht\pgfnodeparttextbox%
+%    \advance\pgf@y by.5\dp\pgfnodeparttextbox%
+%    % Add inner sep
+%    \pgfmathsetlength\my@halfwidth{\pgfkeysvalueof{/pgf/inner xsep}}%
+%    \pgfmathsetlength\my@halfheight{\pgfkeysvalueof{/pgf/inner ysep}}%
+%    \advance\pgf@x by\my@halfwidth%
+%    \advance\pgf@y by\my@halfheight%
+%    % Check minimum dimensions
+%    \pgfmathsetlength\my@halfwidth{\pgfkeysvalueof{/pgf/minimum width}}%
+%    \pgfmathsetlength\my@halfheight{\pgfkeysvalueof{/pgf/minimum height}}%
+%    \ifdim\pgf@x<.5\my@halfwidth\pgf@x=.5\my@halfwidth\fi%
+%    \ifdim\pgf@y<.5\my@halfheight\pgf@y=.5\my@halfheight\fi%
+%    % Store half dimensions
+%    \my@halfwidth=\pgf@x%
+%    \my@halfheight=\pgf@y%
+%    % Calculate offset
+%    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/pgf/lh}}%
+%    \show\hexangle
+%    \pgfmathsetlength\my@offset{\my@halfheight*tan(\hexangle)}%
+%    \showthe\my@offset
+%    % Set final position (inner north west)
+%    \pgf@x=-\my@halfwidth%
+%    \advance\pgf@x by\my@offset%
+%    \pgf@y=\my@halfheight%
+%  }
+%  
   % Inner anchors - COMMENTED OUT FOR TESTING
   % \anchor{inner-north-west}{\innernorthwest}
   % \anchor{inner-north-east}{\innernorthwest\pgf@x=-\pgf@x}
   % \anchor{inner-south-west}{\innernorthwest\pgf@y=-\pgf@y}
   % \anchor{inner-south-east}{\innernorthwest\pgf@x=-\pgf@x\pgf@y=-\pgf@y}
-  
+%  
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
     \setmy@NEWSC
     % Get angle and calculate offset
-    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/pgf/lh}}%
+    \showthe\my@N
+    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/pgf/lh angle}}%
+    \show\hexangle
     \pgfmathsetlength\my@offset{\my@halfheight*tan(\hexangle)}%
     \showthe\my@offset
     % Draw hexagon using meaningful coordinates
@@ -123,16 +125,16 @@
 
 % Test with different angles
 \begin{tikzpicture}
-  \node[lh, draw, thick, lh=30, minimum width=2cm, minimum height=1.5cm] (hex1) at (0,0) {30°};
+  \node[lh, draw, thick, lh angle=30, minimum width=2cm, minimum height=1.5cm] (hex1) at (0,0) {30°};
   % \fill[red] (hex1.inner-north-west) circle (2pt);
   
-  \node[lh, draw, thick, lh=20, minimum width=2cm, minimum height=1.5cm] (hex2) at (3,0) {20°};
+  \node[lh, draw, thick, lh angle=20, minimum width=2cm, minimum height=1.5cm] (hex2) at (3,0) {20°};
   % \fill[red] (hex2.inner-north-west) circle (2pt);
   
-  \node[lh, draw, thick, lh=10, minimum width=2cm, minimum height=1.5cm] (hex3) at (6,0) {10°};
+  \node[lh, draw, thick, lh angle=10, minimum width=2cm, minimum height=1.5cm] (hex3) at (6,0) {10°};
   % \fill[red] (hex3.inner-north-west) circle (2pt);
   
-  \node[lh, draw, thick, lh=5, minimum width=2cm, minimum height=1.5cm] (hex4) at (9,0) {5°};
+  \node[lh, draw, thick, lh angle=5, minimum width=2cm, minimum height=1.5cm] (hex4) at (9,0) {5°};
   % \fill[red] (hex4.inner-north-west) circle (2pt);
 \end{tikzpicture}
 
@@ -140,7 +142,7 @@
 
 % Test with different styling and show all inner anchors
 \begin{tikzpicture}
-  \node[lh, draw, thick, fill=yellow!20, lh=25, minimum width=4cm, minimum height=3cm] (hex) at (0,0) {Styled hexagon};
+  \node[lh, draw, thick, fill=yellow!20, lh angle=25, minimum width=4cm, minimum height=3cm] (hex) at (0,0) {Styled hexagon};
   % Show all inner anchors - COMMENTED OUT
   % \fill[red] (hex.inner-north-west) circle (2pt) node[above left, font=\tiny] {inner NW};
   % \fill[blue] (hex.inner-north-east) circle (2pt) node[above right, font=\tiny] {inner NE};
