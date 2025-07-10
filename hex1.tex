@@ -4,8 +4,8 @@
 \makeatletter
 % Define the angle parameter for the shape
 \pgfkeys{
-  /tikz/dndhexagon angle/.initial=30,
-  /tikz/dndhexagon angle/.default=30
+  /tikz/longhexagon angle/.initial=30,
+  /tikz/longhexagon angle/.default=30
 }
 
 % Declare meaningful coordinate registers
@@ -43,7 +43,7 @@
   \my@halfheight=.5\my@halfheight%
 }
 
-\pgfdeclareshape{dndhexagon}{%
+\pgfdeclareshape{longhexagon}{%
   % Inherit anchors from rectangle
   \inheritsavedanchors[from=rectangle]
   \inheritanchor[from=rectangle]{center}
@@ -61,7 +61,7 @@
     % Get NESW coordinates
     \setmy@NEWSC
     % Get angle and calculate offset
-    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/dndhexagon angle}}%
+    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/longhexagon angle}}%
     \pgfmathsetlength\my@offset{\my@halfheight*tan(\hexangle)}%
     % Draw hexagon using meaningful coordinates
     \pgfpathmoveto{\pgfpoint{\my@W}{\my@Cy}}% west vertex
@@ -77,26 +77,26 @@
 
 \begin{document}
 
-% Test the dndhexagon shape with default angle (30 degrees)
+% Test the longhexagon shape with default angle (30 degrees)
 \begin{tikzpicture}
-  \node[dndhexagon, draw, thick] at (0,0) {Default (30°)};
+  \node[longhexagon, draw, thick] at (0,0) {Default (30°)};
 \end{tikzpicture}
 
 \vspace{1cm}
 
 % Test with different angles
 \begin{tikzpicture}[inner sep=6pt]
-  \node[dndhexagon, dndhexagon angle=30, draw, thick] at (0,0) {30°};
-  \node[dndhexagon, dndhexagon angle=20, draw, thick] at (3,0) {20°};
-  \node[dndhexagon, dndhexagon angle=10, draw, thick] at (6,0) {10°};
-  \node[dndhexagon, dndhexagon angle=5, draw, thick] at (9,0) {5°};
+  \node[longhexagon, longhexagon angle=30, draw, thick] at (0,0) {30°};
+  \node[longhexagon, longhexagon angle=20, draw, thick] at (3,0) {20°};
+  \node[longhexagon, longhexagon angle=10, draw, thick] at (6,0) {10°};
+  \node[longhexagon, longhexagon angle=5, draw, thick] at (9,0) {5°};
 \end{tikzpicture}
 
 \vspace{1cm}
 
 % Test with different styling
 \begin{tikzpicture}
-  \node[dndhexagon, dndhexagon angle=25, draw, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] at (0,0) {Styled hexagon};
+  \node[longhexagon, longhexagon angle=25, draw, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] at (0,0) {Styled hexagon};
 \end{tikzpicture}
 
 \end{document}

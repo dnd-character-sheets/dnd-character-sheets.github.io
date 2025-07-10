@@ -1,0 +1,32 @@
+\documentclass[11pt]{article}
+\usepackage{tikz}
+\usepackage{charsheet}
+
+
+\begin{document}
+
+\begin{tikzpicture}
+  \node[draw, thick, longhexagon, longhexagon angle=30, minimum width=2cm, minimum height=1.5cm] at (0,0) {30°};
+  \node[draw, thick, longhexagon, longhexagon angle=20, minimum width=2cm, minimum height=1.5cm] at (3,0) {20°};
+  \node[draw, thick, longhexagon, longhexagon angle=10, minimum width=2cm, minimum height=1.5cm] at (6,0) {10°};
+  \node[draw, thick, longhexagon, longhexagon angle=5, minimum width=2cm, minimum height=1.5cm] at (9,0) {5°};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Third test: just standard anchors
+\begin{tikzpicture}
+  \node[longhexagon, draw, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] (hex) at (0,0) {Test anchors};
+  % Test standard anchors first
+  \fill[red] (hex.north) circle (2pt) node[above, font=\tiny] {N};
+  \fill[blue] (hex.east) circle (2pt) node[right, font=\tiny] {E};
+  \fill[green] (hex.south) circle (2pt) node[below, font=\tiny] {S};
+  \fill[orange] (hex.west) circle (2pt) node[left, font=\tiny] {W};
+  \fill[brown] (hex.inner north west) circle (2pt) node[left, font=\tiny] {INW};
+  \fill[brown] (hex.inner north east) circle (2pt) node[right, font=\tiny] {INE};
+  \fill[brown] (hex.inner south west) circle (2pt) node[left, font=\tiny] {ISW};
+  \fill[brown] (hex.inner south east) circle (2pt) node[right, font=\tiny] {ISE};
+
+\end{tikzpicture}
+
+\end{document}
