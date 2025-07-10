@@ -15,10 +15,10 @@
    % [width]{name}{label}{pre-code}{post-code}
   \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
   \expandafter\newdimen\csname#2width\endcsname
-  \NewEnviron{#2}[2][]{
+  \NewEnviron{#2}[1][]{
     % [...] name 
     \expandafter\setlength\csname#2width\endcsname{#1}
-    \node [#2,##1] (#2) ##2 {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+    \node [#2,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
 \end{minipage}}};
     \dnddecorate{#2};
   }
@@ -27,9 +27,20 @@
 \newsectionenv{magic}{MAGIC}{}{}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{CLASS FEATURES}{}{}
+\newsectionenv{equipment}{EQUIPMENT}{}{}
+\newsectionenv[37mm]{proficiencies}{PROFICIENCIES}
+   {\medskip
+    \begin{minipage}{30mm}
+     \begin{proflist}}
+   {\end{proflist}
+    \end{minipage}}
 
 \newcommand\dndlabel[2]{% {node}{label text}
   \node [outer sep=0pt, inner sep=0pt, above=of #1.south]
+        {\textsf{\footnotesize #2}};
+}
+\newcommand\dndtoplabel[2]{% {node}{label text}
+  \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
         {\textsf{\footnotesize #2}};
 }
   
@@ -40,10 +51,70 @@
 \newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
 
 
+\newcounter{proficiency bonus}
+\newcounter{ptemp}
+
+\newcommand\signed[1]{%
+  \ifnum#1<0
+    \setcounter{ptemp}{#1}%
+    \setcounter{ptemp}{0-\value{ptemp}}%
+    \textminus\the\value{ptemp}%
+  \else
+    +#1%
+  \fi
+}
+
+\newcommand\fullstatbox[5][]{% location name number modifier saving-throw
+  \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
+  \dnddecorate[stats]{#2}
+  \dndtoplabel{#2}{\tiny#2}
+  \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
+  \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
+            at ($(#2.north east)+(-0.5mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+}
+
+\newcommand\nextstatloc{inside north west corner=of stats background}
+
+
+\newcounter{statmod}%
+\newcounter{saving}%
+
+\newcommand\statcommon[3]{% name value amount-to-add-to-saving
+%   \show\nextstatloc
+   \setcounter{statmod}{(#2 - 10) / 2}%
+   \setcounter{saving}{\value{statmod} + #3}%
+   \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{#2}{\thestatmod}{\thesaving}%
+   \gdef\nextstatloc{below=7mm of #1}%
+}
+
+\newcommand{\stat}[2]{%
+   \statcommon{#1}{#2}{0}%
+}
+
+\WithSuffix\newcommand\stat*[2]{%
+  \statcommon{#1}{#2}{\value{proficiency bonus}}%
+}
+
+%\makeatletter
+%\newcommand{\stat@starred}[2]{%
+%  \newcounter{tempmodifier}%
+%  \newcounter{tempmodifierwithprof}%
+%  \setcounter{tempmodifier}{(#2 - 10) / 2}%
+%  \setcounter{tempmodifierwithprof}{\value{tempmodifier} + \value{proficiencybonus}}%
+%  \fullstatbox[\nextstatloc]{#1}{#2}{\thetempmodifier}{\thetempmodifierwithprof}%
+%}
+%\newcommand{\stat@}{\@ifstar{\stat@starred}{\stat}}
+%\let\stat\stat@
+%\makeatother
+
+
 \noindent
 \begin{charsheet}
 
+  \setcounter{proficiency bonus}{2}
+
   \node [dndfull,height=33mm,fill=playername,below=of top] (splash) {};
+
 
   \begingroup\sffamily\Large
 
@@ -89,9 +160,6 @@
   \endgroup
 
 
-      \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
-                at (5cm,5cm) {\raisebox{4pt}{+1}};
-
 \begin{attacks}[below right corner=of hpbackground]{}
     \centering
     \begin{attackstab}
@@ -126,153 +194,59 @@
 \end{featurestab}
 \end{features}
 
+\node (stats background) 
+      [fill=stats,width=24mm,height=175mm,below left corner=of splash] { };
 
-%\fill [red] (magic.north) circle [radius=5pt];
-%\fill [blue] (attacks.south) circle [radius=5pt];
-%
-%\fill [red] (magic.center) circle [radius=5pt];
-%\fill [blue] (attacks.center) circle [radius=5pt];
-%
-%\fill [yellow] (features.center) circle [radius=5pt];
-%\fill [yellow] (features.north) circle [radius=5pt];
-%
-%\fill[green] (features.west) circle [radius=5pt]
-%  (attacks.west) circle [radius=5pt]
-%  (magic.west) circle [radius=5pt]
-%  ;
-%\fill[orange] (features.east) circle [radius=5pt]
-%  (attacks.east) circle [radius=5pt]
-%  (magic.east) circle [radius=5pt]
-%  ;
-%  \node (anode) at (hpbackground.south east) [dndright,fill=attacks,anchor=north east,outer sep=1.5pt, inner sep=0pt] {\parbox{3in}{ATTACKS y \par\bigskip ya ya \vspace*{3in}}};
-%  \dnddecorate {anode};
-% 
-%  \node (mnode) at (anode.south east) [dndright,fill=magic,anchor=north east] 
-%    {asdf MATIC asdf box Z};
-%%  \dnddecorate {mnode};
-% 
-%  \node (hp) [dndhits,minimum width=72mm, anchor=south east,fill=white,outer sep=10pt,inner xsep=0pt]
-%    at (hpbackground.south east) {CURRENT HIT POINTS CURRENT HIT POINTS CURRENT HIT POINTS};
-%%  \dnddecorate{hp};
+\stat{STRENGTH}{10}
+\stat*{DEXTERITY}{15}
+\stat{CONSTITUTION}{8}
+\stat{INTELLIGENCE}{15}
+\stat{WISDOM}{12}
+\stat*{CHARISMA}{15}
 
-
-
-%  \path (hpbackground) ++(2mm, 1.5mm) coordinate (currenthp)
-%                       ++(74mm,0mm) coordinate (hit dice)
-%     ;
-%
-%  \path (currenthp) ++(0mm, 23mm) coordinate (maxhp)
-%                    ++(25mm, 0mm) coordinate (initiative)
-%                    ++(25mm, 0mm) coordinate (speed)
-%                    ++(23mm, 0mm) coordinate (ac)
-%     ;
-%
-%  \path (\rightx,0mm) coordinate (rightxbase);
-%
-%%  \dndfill{currenthp}{72mm}{21mm}{white};
-%%  \dndbox{currenthp}{72mm}{21mm};
-%%  \path (currenthp) +(2mm,2mm) node [anchor=south west] {\textsf{CURRENT HIT POINTS}};
-%
-%%  \dndfill{hit dice}{20mm}{21mm}{white};
-%%  \dndbox{hit dice}{20mm}{21mm};
-%%
-%%  \path (hit dice) +(10mm,2mm) node [anchor=south] {\textsf{HIT DICE}};
-%
-%
-%
-%  \dndlabeledbox            {maxhp}     {22mm}{18mm}{white}{MAX HP};
-%  \dndlabeledbox            {initiative}{22mm}{18mm}{white}{INITIATIVE};
-%  \dndlabeledbox            {speed}     {22mm}{18mm}{white}{SPEED};
-%  \dndlabeledbox            {ac}        {20mm}{18mm}{white}{\footnotesize\begin{tabular}{c}ARMOR\\CLASS\end{tabular}};
-%
-%%  \dndlabeledbox[south east]{currenthp} {72mm}{21mm}{white}{CURRENT HIT POINTS};
-%  \dndlabeledbox            {hit dice}  {20mm}{21mm}{white}{HIT DICE};
-%
-%  \dndlabeledbox{rightxbase |- currenthp}{26mm}{21mm}{white}{SENSES};
-%  \dndlabeledbox{rightxbase |- maxhp}    {26mm}{18mm}{white}{\tiny PASSIVE PERCEPTION};
-%
-%  \path (equipment.north west) ++(5mm,12mm) coordinate (CHAll)
-%                               ++(0mm,25mm) coordinate (WISll)
-%                               ++(0mm,25mm) coordinate (INTll)
-%                               ++(0mm,25mm) coordinate (CONll)
-%                               ++(0mm,25mm) coordinate (DEXll)
-%                               ++(0mm,25mm) coordinate (STRll)
-%   ;
-%
-%
-%  \dndnodebox{STR}{STRll}{20mm}{21mm};
-%  \dndnodebox{DEX}{DEXll}{20mm}{21mm};
-%  \dndnodebox{CON}{CONll}{20mm}{21mm};
-%  \dndnodebox{INT}{INTll}{20mm}{21mm};
-%  \dndnodebox{WIS}{WISll}{20mm}{21mm};
-%  \dndnodebox{CHA}{CHAll}{20mm}{21mm};
-%
-%  \node[draw,ellipse,ultra thick,minimum width=12mm, minimum height=8mm, fill=white] at (CHA.south) {15};
-%  \node[draw,kite,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
-%   at ($(CHA.north east)+(0mm,3mm)$) {+4};
-%
-%  \node[draw,shield,anchor=north,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
-%            at ($(WIS.north east)+(-1mm,3mm)$) {\raisebox{4pt}{+1}};
-%
-%  \node[draw,shield,anchor=ac,ultra thick,minimum width=6mm, minimum height=10mm, fill=white] 
-%            at (INT.north east) { +9 };
-
+\node[kite,draw,thick,right=of CHARISMA] {kite};
 
   
-%  % Equipment section (left side, tall box)
-%  \begin{equipmentsection}
-%    \begin{nobullets}
-%      \item Clothes (Fine)
-%      \item Leather Armor
-%      \item Shortsword
-%      \item Lyre
-%      \item Backpack
-%      \item Bedroll, Book of Elvish Poetry
-%      \item Bottle of Ink, Ink Pen
-%      \item Parchment (10 sheets), Tinderbox
-%      \item Trail Rations (10 days), Waterskin
-%    \end{nobullets}
-%  \end{equipmentsection}
+\begin{equipment}[below left corner=of stats background]
+  \begin{nobullets}
+    \item Clothes (Fine)
+    \item Leather Armor
+    \item Shortsword
+    \item Lyre
+    \item Backpack
+    \item Bedroll, Book of Elvish Poetry
+    \item Bottle of Ink, Ink Pen
+    \item Parchment (10 sheets), Tinderbox
+    \item Trail Rations (10 days), Waterskin
+  \end{nobullets}
+\end{equipment}
+
   
-%%  % Proficiencies section (middle top)
-%%  \begin{proficienciessection}
-%%    \small\raggedright
-%%    {Acrobatics}\\
-%%    Arcana\\
-%%    History\\
-%%    Investigation\\
-%%    Perception\\
-%%    Performance\\
-%%    Persuasion\\
-%%    Musical Instrument \mbox{\quad(Lyre)}\\
-%%    Language (Common)\\
-%%    Language (Elvish)
-%%  \end{proficienciessection}
-  
-%  % Attacks section (right side, top)
-%  \begin{attackssection}
-%    \centering
-%    \begin{attackstab}
-%    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
-%    Hand Axe (off~hand) [B]& +5 & 1d6 & slashing & 5~ft or 20/60~ft& ---\\
-%    \end{attackstab}
-%  \end{attackssection}
-%  
-%  
-%  % Features section (far right)
-%  \begin{featuressection}
-%  \begin{featurestab}
-%  Fey Ancestry&
-%    You have advantage to save against charms and you can't be magically put to sleep.\\
-%  \centering Bardic~Inspiration (2/day)&    
-%    Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.\\
-%  Ritual Caster&    
-%    Cast certain spells as 10-minute rituals instead of using a spell slot.\\
-%  \end{featurestab}
-%  \end{featuressection}
-%
-%
-%
+% Proficiencies section (middle top)
+\begin{proficiencies}[right of upper corner=of stats background,width=38mm]
+  \small
+\item
+  {Acrobatics}
+\item
+  Arcana
+\item
+  History
+\item
+  Investigation
+\item
+  Perception
+\item
+  Performance
+\item
+  Persuasion
+\item
+  Musical Instrument (Lyre)
+\item
+  Language (Common)
+\item
+  Language (Elvish)
+\end{proficiencies}
+
 \end{charsheet}
 
 
