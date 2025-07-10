@@ -2,6 +2,109 @@
 \usepackage{tikz}
 
 \makeatletter
+% Define the angle parameter for the shape
+\pgfkeys{
+  /tikz/dndhexagon angle/.initial=30,
+  /tikz/dndhexagon angle/.default=30
+}
+
+% Declare meaningful coordinate registers
+\newdimen\my@N  % North (top) y coordinate
+\newdimen\my@E  % East (right) x coordinate
+\newdimen\my@W  % West (left) x coordinate
+\newdimen\my@S  % South (bottom) y coordinate
+\newdimen\my@Cx % Center x coordinate
+\newdimen\my@Cy % Center y coordinate
+
+% Other useful registers
+\newdimen\my@halfwidth
+\newdimen\my@halfheight
+\newdimen\my@offset
+
+% Macro to set NESW coordinates from southwest/northeast
+\def\setmy@NEWSC{%
+  \southwest
+  \my@W=\pgf@x%
+  \my@S=\pgf@y%
+  \northeast
+  \my@E=\pgf@x%
+  \my@N=\pgf@y%
+  % Calculate center
+  \my@Cx=.5\my@W%
+  \advance\my@Cx by.5\my@E%
+  \my@Cy=.5\my@S%
+  \advance\my@Cy by.5\my@N%
+  % Calculate half dimensions
+  \my@halfwidth=\my@E%
+  \advance\my@halfwidth by-\my@W%
+  \my@halfwidth=.5\my@halfwidth%
+  \my@halfheight=\my@N%
+  \advance\my@halfheight by-\my@S%
+  \my@halfheight=.5\my@halfheight%
+}
+
+\pgfdeclareshape{dndhexagon}{%
+  % Inherit anchors from rectangle
+  \inheritsavedanchors[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchor[from=rectangle]{south west}
+  
+  % Background path
+  \backgroundpath{%
+    % Get NESW coordinates
+    \setmy@NEWSC
+    % Get angle and calculate offset
+    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/dndhexagon angle}}%
+    \pgfmathsetlength\my@offset{\my@halfheight*tan(\hexangle)}%
+    % Draw hexagon using meaningful coordinates
+    \pgfpathmoveto{\pgfpoint{\my@W}{\my@Cy}}% west vertex
+    \pgfpathlineto{\pgfpoint{\my@W+\my@offset}{\my@N}}% inner NW
+    \pgfpathlineto{\pgfpoint{\my@E-\my@offset}{\my@N}}% inner NE
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@Cy}}% east vertex
+    \pgfpathlineto{\pgfpoint{\my@E-\my@offset}{\my@S}}% inner SE
+    \pgfpathlineto{\pgfpoint{\my@W+\my@offset}{\my@S}}% inner SW
+    \pgfpathclose%
+  }
+}
+\makeatother
+
+\begin{document}
+
+% Test the dndhexagon shape with default angle (30 degrees)
+\begin{tikzpicture}
+  \node[dndhexagon, draw, thick] at (0,0) {Default (30°)};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with different angles
+\begin{tikzpicture}[inner sep=6pt]
+  \node[dndhexagon, dndhexagon angle=30, draw, thick] at (0,0) {30°};
+  \node[dndhexagon, dndhexagon angle=20, draw, thick] at (3,0) {20°};
+  \node[dndhexagon, dndhexagon angle=10, draw, thick] at (6,0) {10°};
+  \node[dndhexagon, dndhexagon angle=5, draw, thick] at (9,0) {5°};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with different styling
+\begin{tikzpicture}
+  \node[dndhexagon, dndhexagon angle=25, draw, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] at (0,0) {Styled hexagon};
+\end{tikzpicture}
+
+\end{document}
+
+\documentclass[11pt]{article}
+\usepackage{tikz}
+
+\makeatletter
 \pgfkeys{
   /pgf/lh angle/.initial=29  % Default angle is 30 degrees
 }
