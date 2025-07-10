@@ -1,0 +1,91 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Bard 1
+"BACKGROUND": Scholar
+"PLAYER NAME": ""
+"RACE": Elf (High)
+"ALIGNMENT": Chaotic Good
+"EXPERIENCE POINTS": 0/300
+
+# ability scores – only the score in the lower oval
+"STRENGTH": 10
+"DEXTERITY": 15
+"CONSTITUTION": 8
+"INTELLIGENCE": 15
+"WISDOM": 12
+"CHARISMA": 15
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 13
+"MAX HP": 11
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 30 ft.
+"ARMOR CLASS": 13
+"SENSES": Darkvision 60 ft.
+"HIT DICE": d8
+
+# coin totals
+CP: 10
+SP: 5
+EP: ""
+GP: 10
+PP: ""
+
+PROFICIENCIES:
+  - Acrobatics
+  - Arcana
+  - History
+  - Investigation
+  - Perception
+  - Performance
+  - Persuasion
+  - Musical Instrument (Lyre)
+  - Language (Common)
+  - Language (Elven)
+
+EQUIPMENT:
+  - Clothes (Fine)
+  - Leather Armor
+  - Shortsword
+  - Lyre
+  - Backpack
+  - Bedroll
+  - Book of Elvish Poetry
+  - Bottle of Ink
+  - Ink Pen
+  - Parchment (10 sheets)
+  - Tinderbox
+  - Trail Rations (10 days)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Shortsword
+    ATTACK: +4
+    DAMAGE: 1d6+2
+    TYPE: piercing
+    RANGE: 5 ft.
+    AMMO: ""
+
+MAGIC:
+  - name: Friends [C]
+    description: You have advantage on Charisma checks against one creature for up to 1 minute.
+  - name: Ray of Frost
+    description: Make a spell attack (+4) against a target within 60 ft. to deal 1d8 cold damage and slow the target by 10 feet until your next turn starts.
+  - name: Vicious Mockery
+    description: A creature w/in 60 ft. must make a wisdom save (DC 12) or take 1d4 psychic damage & have disadvantage on their next attack roll on their next turn.
+  - name: Bane [C]
+    description: Three creatures within 30 ft. must make Charisma saves (DC 12) or subtract 1d4 from all attacks and saves for up to 1 minute.
+  - name: Comprehend Languages [R]
+    description: For one hour, you understand all spoken and written languages.
+  - name: Healing Word [B]
+    description: A creature within 60 ft. regains 1d4+2 hit points.
+  - name: Heroism [C]
+    description: A creature you touch is immune to fear and gains 2 temporary hit points at the start of each round for up to 1 minute.
+
+FEATURES:
+  - name: Fey Ancestry
+    description: You have advantage to save against charms and you can't be magically put to sleep.
+  - name: Bardic Inspiration 2/day
+    description: Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes.
+  - name: Ritual Caster
+    description: Cast certain spells as 10-minute rituals instead of using a spell slot.
