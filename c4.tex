@@ -2,6 +2,27 @@
 \usepackage{lipsum}
 \usepackage{charsheet}
 
+\usepackage{pgfkeys}
+
+\makeatletter
+\newcommand{\runwidth}[2]{%
+  % Store the macro name
+  \def\@runwidth@macro{#1}%
+  % Set up a key handler for "width"
+  \pgfkeys{
+    /runwidth/.cd,
+    width/.code={
+      \expandafter\@runwidth@macro\expandafter{##1}%
+    },
+    .unknown/.code={} % ignore everything else
+  }%
+  % Now parse the key-value list
+  \pgfkeys{/runwidth/.cd, #2}%
+}
+\makeatother
+
+
+
 \newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
   \node (#2) [#3] #4 { \Large \sffamily \mdseries #5 } ;
   \dnddecorate[#1]{#2};
@@ -17,17 +38,52 @@
   \expandafter\newdimen\csname#2width\endcsname
   \NewEnviron{#2}[1][]{
     % [...] name 
-    \expandafter\setlength\csname#2width\endcsname{#1}
+    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
     \node [#2,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
 \end{minipage}}};
     \dnddecorate{#2};
   }
 }
 
+\newcommand\typewidth[1]{\typeout{width is #1}}
+
+\newcommand\newsectionenvx[5][\dndrightwidth]{%
+   % [annotations]{name}{label}{pre-code}{post-code}
+  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+  \expandafter\newdimen\csname#2width\endcsname
+  \NewEnviron{#2}[1][]{
+    % [...] name 
+    %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
+    \expandafter\setlength\csname#2width\endcsname{40mm}%
+%    \runwidth{\typewidth}{#1}%
+    \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+\end{minipage}}};
+    \dnddecorate{#2};
+  }
+}
+
+
 \newsectionenv{magic}{MAGIC}{}{}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{CLASS FEATURES}{}{}
-\newsectionenv{equipment}{EQUIPMENT}{}{}
+\newsectionenv[64mm]{equipment}{EQUIPMENT}
+   {\medskip
+    \small
+    \begin{minipage}{60mm}
+     \begin{eqlist}}
+   {\end{eqlist}
+    \end{minipage}}
+
+\tikzset{equipmentx/.style={equipment}}
+
+\newsectionenvx[width=80mm]{equipmentx}{EQUIPMENTX}
+   {\medskip
+    \small
+    \begin{minipage}{75mm}
+     \begin{eqlist}}
+   {\end{eqlist}
+    \end{minipage}}
+
 \newsectionenv[37mm]{proficiencies}{PROFICIENCIES}
    {\medskip
     \begin{minipage}{30mm}
@@ -47,6 +103,8 @@
 
 \begin{document}
 \pagestyle{empty}
+
+\runwidth{\typewidth}{height=frogs,draw,width=17mm,nodraw}
 
 \newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
 
@@ -195,7 +253,7 @@
 \end{features}
 
 \node (stats background) 
-      [fill=stats,width=24mm,height=175mm,below left corner=of splash] { };
+      [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
 
 \stat{STRENGTH}{10}
 \stat*{DEXTERITY}{15}
@@ -204,11 +262,8 @@
 \stat{WISDOM}{12}
 \stat*{CHARISMA}{15}
 
-\node[kite,draw,thick,right=of CHARISMA] {kite};
-
   
 \begin{equipment}[below left corner=of stats background]
-  \begin{nobullets}
     \item Clothes (Fine)
     \item Leather Armor
     \item Shortsword
@@ -218,8 +273,19 @@
     \item Bottle of Ink, Ink Pen
     \item Parchment (10 sheets), Tinderbox
     \item Trail Rations (10 days), Waterskin
-  \end{nobullets}
 \end{equipment}
+
+\begin{equipmentx}[right=of equipment]
+    \item Clothes (Fine)
+    \item Leather Armor
+    \item Shortsword
+    \item Lyre
+    \item Backpack
+    \item Bedroll, Book of Elvish Poetry
+    \item Bottle of Ink, Ink Pen
+    \item Parchment (10 sheets), Tinderbox
+    \item Trail Rations (10 days), Waterskin
+\end{equipmentx}
 
   
 % Proficiencies section (middle top)
