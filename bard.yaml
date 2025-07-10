@@ -6,13 +6,13 @@
 "ALIGNMENT": Chaotic Good
 "EXPERIENCE POINTS": 0/300
 
-# ability scores – only the score in the lower oval
-"STRENGTH": 10
-"DEXTERITY": 15
-"CONSTITUTION": 8
-"INTELLIGENCE": 15
-"WISDOM": 12
-"CHARISMA": 15
+# ability scores – abbreviated keys, value is the score in the lower oval
+STR: 10
+DEX: 15
+CON: 8
+INT: 15
+WIS: 12
+CHA: 15
 
 "PROFICIENCY BONUS": +2
 "PASSIVE PERCEPTION": 13
@@ -67,12 +67,14 @@ ATTACKS:
     AMMO: ""
 
 MAGIC:
+  - level: 0                        # CANTRIPS
   - name: Friends [C]
     description: You have advantage on Charisma checks against one creature for up to 1 minute.
   - name: Ray of Frost
     description: Make a spell attack (+4) against a target within 60 ft. to deal 1d8 cold damage and slow the target by 10 feet until your next turn starts.
   - name: Vicious Mockery
     description: A creature w/in 60 ft. must make a wisdom save (DC 12) or take 1d4 psychic damage & have disadvantage on their next attack roll on their next turn.
+  - level: 1                        # 1st LEVEL
   - name: Bane [C]
     description: Three creatures within 30 ft. must make Charisma saves (DC 12) or subtract 1d4 from all attacks and saves for up to 1 minute.
   - name: Comprehend Languages [R]
