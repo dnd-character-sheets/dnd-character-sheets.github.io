@@ -1,20 +1,31 @@
 #!/usr/bin/env lua5.1
+--------------------------------------------------------------------------
+-- yaml-to-dndtex.lua   ‒  Convert character-sheet YAML to LaTeX macros
+-- Usage:   lua yaml-to-dndtex.lua  file.yaml   > file.tex
+--          cat file.yaml | lua yaml-to-dndtex.lua   > file.tex
+--------------------------------------------------------------------------
+
+local lyaml  = require "lyaml"
+
+-- -----------------------------------------------------------------------
+-- 0.  Make sure we have a load_all() helper
+-- -----------------------------------------------------------------------
+local yaml_load_all
+if lyaml.load_all then
+  yaml_load_all = lyaml.load_all          -- native API present
+else
+  -- Fallback: wrap single-document loader so we still return a list
+  yaml_load_all = function(str)
+    local ok, doc = pcall(lyaml.load, str)
+    if not ok then
+      error("lyaml.load failed: "..tostring(doc))
+    end
+    return { doc }
+  end
+end
 
 ---------------------------------------------------------------------------
--- yaml-to-dndtex.lua
--- Convert a character-sheet YAML file to LaTeX macro calls.
---
---  ‣ \newDND, \setDND, \valueDND must already be defined in the TeX context
---  ‣ Order of keys follows the YAML order wherever the parser preserves it
---  ‣ Special characters are escaped by the local  escape()  helper
----------------------------------------------------------------------------
-
-local lyaml      = require "lyaml"
-local io_open    = io.open
-local concat     = table.concat
-
----------------------------------------------------------------------------
--- 1. TeX-escaping
+-- 1. TeX-escaping utility
 ---------------------------------------------------------------------------
 local tex_escape_map = {
   ["\\"] = "\\textbackslash{}",
@@ -29,29 +40,33 @@ local tex_escape_map = {
   ["^"]  = "\\textasciicircum{}",
 }
 local function escape (s)
-  return (s:gsub("[\\&%%$#_{}~^]", tex_escape_map))
+  return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map))
 end
 
 ---------------------------------------------------------------------------
--- 2. Canonical key order for ATTACK-style records
+-- 2. Canonical key order for ATTACK records
 ---------------------------------------------------------------------------
 local ATTACK_ORDER = { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO" }
 local ATTACK_INDEX = {}
-for i,k in ipairs(ATTACK_ORDER) do ATTACK_INDEX[k]=i end
+for i,k in ipairs(ATTACK_ORDER) do ATTACK_INDEX[k] = i end
 
 local function keys_in_canonical_order (record, canon_index)
-  local keys, extras = {}, {}
-  for k,_ in pairs(record) do
-    (canon_index[k] and keys or extras)[#(canon_index[k] and keys or extras)+1] = k
+  local ordered, extras = {}, {}
+  for k in pairs(record) do
+    if canon_index[k] then
+      ordered[#ordered+1] = k
+    else
+      extras[#extras+1]  = k
+    end
   end
-  table.sort(keys,  function(a,b) return canon_index[a] < canon_index[b] end)
-  table.sort(extras)                         -- stable for “unknown” keys
-  for _,k in ipairs(extras) do keys[#keys+1]=k end
-  return keys
+  table.sort(ordered, function(a,b) return canon_index[a] < canon_index[b] end)
+  table.sort(extras)
+  for _,k in ipairs(extras) do ordered[#ordered+1] = k end
+  return ordered
 end
 
 ---------------------------------------------------------------------------
--- 3. Render helpers
+-- 3. Rendering helpers
 ---------------------------------------------------------------------------
 local function render_simple_kv (key, val)
   return ("\\setDND{%s}{%s}"):format(escape(key), escape(val))
@@ -62,15 +77,15 @@ local function render_item_list (key, list)
   for _,v in ipairs(list) do
     items[#items+1] = ("\\item %s"):format(escape(v))
   end
-  return ("\\setDND{%s}{%s}"):format(escape(key), concat(items, "\n"))
+  return ("\\setDND{%s}{%s}"):format(escape(key), table.concat(items, "\n"))
 end
 
 local function render_attack_record (rec)
-  local parts, order = {}, keys_in_canonical_order(rec, ATTACK_INDEX)
-  for _,k in ipairs(order) do
+  local parts = {}
+  for _,k in ipairs(keys_in_canonical_order(rec, ATTACK_INDEX)) do
     parts[#parts+1] = ("%s={%s}"):format(escape(k), escape(rec[k] or ""))
   end
-  return ("\\dndkeys{%s}"):format(concat(parts, ","))
+  return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
 end
 
 local function render_generic_record (rec)
@@ -78,109 +93,85 @@ local function render_generic_record (rec)
   for k,v in pairs(rec) do
     parts[#parts+1] = ("%s={%s}"):format(escape(k), escape(v))
   end
-  table.sort(parts)               -- deterministic but not canonical
-  return ("\\dndkeys{%s}"):format(concat(parts, ","))
+  table.sort(parts)
+  return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
 end
 
----------------------------------------------------------------------------
--- 4. Render a list of (possibly structured) elements
----------------------------------------------------------------------------
 local function render_struct_list (key, list)
   local out = {}
   for _,elem in ipairs(list) do
-    if type(elem)=="table" then
-      if elem.level and (not next(elem, "level")) then
-        out[#out+1] = ("\\spellslevel{%s}"):format(escape(elem.level))
-      elseif elem.name and elem.description and (not elem.ATTACK) then
-        out[#out+1] = ("\\described{%s}{%s}"):format(
-                        escape(elem.name), escape(elem.description))
-      elseif elem.ATTACK then
-        out[#out+1] = render_attack_record(elem)
-      else
-        out[#out+1] = render_generic_record(elem)
-      end
-    else
-      -- fall back: treat scalars as a one-item list element
+    if type(elem) ~= "table" then
       out[#out+1] = ("\\item %s"):format(escape(tostring(elem)))
+    elseif elem.level and not next(elem, "level") then
+      out[#out+1] = ("\\spellslevel{%s}"):format(escape(elem.level))
+    elseif elem.name and elem.description and not elem.ATTACK then
+      out[#out+1] = ("\\described{%s}{%s}"):format(
+                      escape(elem.name), escape(elem.description))
+    elseif elem.ATTACK then
+      out[#out+1] = render_attack_record(elem)
+    else
+      out[#out+1] = render_generic_record(elem)
     end
   end
-  return ("\\setDND{%s}{%s}"):format(escape(key), concat(out, "\n"))
+  return ("\\setDND{%s}{%s}"):format(escape(key), table.concat(out, "\n"))
 end
 
 ---------------------------------------------------------------------------
--- 5. Main conversion of a single YAML mapping
+-- 4. Convert a single YAML mapping to LaTeX lines
 ---------------------------------------------------------------------------
 local function convert_mapping (map)
   local lines = {}
 
-  -- first pull out proficiency bonus if it exists
+  -- Proficiency bonus (strip key after processing)
   local prof = map["PROFICIENCY BONUS"] or map["Proficiency Bonus"]
   if prof then
-    local clean = tostring(prof)
-    if not clean:match("^[+-]") then clean = "0"..clean end
+    local txt = tostring(prof)
+    if not txt:match("^[+-]") then txt = "0"..txt end
     lines[#lines+1] =
-      ("\\setcounter{proficiency bonus}{%s}"):format(escape(clean))
+      ("\\setcounter{proficiency bonus}{%s}"):format(escape(txt))
   end
 
-  -- iterate in YAML order if lyaml has preserved it;  otherwise pairs()
-  local iter_keys
-  if map.tag=="!!omap" or map.n then        -- lyaml ordered map
-    iter_keys = function()                  -- returns an iterator
-      local i, n = 0, map.n
-      return function()
-        i = i + 1
-        if i<=n then return map[i][1] end
-      end
-    end
+  -- Iterate in original order if lyaml preserved it (omap style)
+  local keys = {}
+  if map.n and map[1] and type(map[1])=="table" and map[1][1] then
+    for i=1,map.n do keys[#keys+1] = map[i][1] end
   else
-    -- fall back: order not guaranteed
-    local keys = {}
-    for k in pairs(map) do keys[#keys+1]=k end
-    table.sort(keys)
-    iter_keys = function()
-      local i, n = 0, #keys
-      return function()
-        i=i+1; if i<=n then return keys[i] end
-      end
-    end
+    for k in pairs(map) do keys[#keys+1] = k end
+    table.sort(keys)               -- fallback: deterministic but arbitrary
   end
 
-  for key in iter_keys() do
-    if key=="PROFICIENCY BONUS" or key=="Proficiency Bonus" then
-      -- already handled
-    else
-      local val = map[key]
-      local t   = type(val)
+  for _,k in ipairs(keys) do
+    if k ~= "PROFICIENCY BONUS" and k ~= "Proficiency Bonus" then
+      local v = map[k]
+      local t = type(v)
       if t=="string" or t=="number" or t=="boolean" then
-        lines[#lines+1] = render_simple_kv(key, tostring(val))
+        lines[#lines+1] = render_simple_kv(k, tostring(v))
       elseif t=="table" then
-        if #val>0 and (type(val[1])=="string" or type(val[1])=="number") then
-          lines[#lines+1] = render_item_list(key, val)
+        if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
+          lines[#lines+1] = render_item_list(k, v)
         else
-          lines[#lines+1] = render_struct_list(key, val)
+          lines[#lines+1] = render_struct_list(k, v)
         end
       end
     end
   end
-  return concat(lines, "\n")
+  return table.concat(lines, "\n")
 end
 
 ---------------------------------------------------------------------------
--- 6. Entry point
+-- 5. Entry point
 ---------------------------------------------------------------------------
-local function read_all(filename)
+local function slurp(filename)
   if filename then
-    local fh = assert(io_open(filename, "r"))
-    local data = fh:read("*a"); fh:close(); return data
+    local f = assert(io.open(filename, "r"))
+    local txt = f:read("*a"); f:close(); return txt
   else
     return io.stdin:read("*a")
   end
 end
 
-local yaml_text = read_all(arg[1])
-local documents = lyaml.load_all(yaml_text)
-
-for _,doc in ipairs(documents) do
+local yaml_text = slurp(arg[1])
+for _,doc in ipairs(yaml_load_all(yaml_text)) do
   if type(doc)=="table" then
     io.write(convert_mapping(doc), "\n")
   end
