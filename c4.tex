@@ -196,6 +196,25 @@
   \statcommon{#1}{#2}{\value{proficiency bonus}}%
 }
 
+\newcommand\fullcoinbox[4][]{% location-setter nodename label number
+  \node (preliminary #2) [coin,#1,fill=equipment] {#4};
+  \node [dndbox,long octagon,long octagon end height=1.5mm,long
+         octagon angle=45,fill=equipment, height=5mm, width=13mm,anchor=center]
+     at ($(preliminary #2.west)+(0pt,0pt)$)
+     {\hbox to 10mm{\hspace*{0mm}\small#3\hss}}
+     ;
+  \node (#2) [coin,#1,fill=equipment] {#4};
+}
+
+\newcommand\nextcoinloc{anchor=north west,at=(coin top left)}
+
+\newcommand\coin[3]{% name label number
+   \expandafter\fullcoinbox\expandafter[\nextcoinloc]{#1}{#2}{#3}%
+   \gdef\nextcoinloc{below=of #1}%
+}
+
+
+
 %\makeatletter
 %\newcommand{\stat@starred}[2]{%
 %  \newcounter{tempmodifier}%
@@ -346,20 +365,21 @@
 
 \path (equipment.north west) +(3mm,-4mm) coordinate (coin top left);
 
-\tikzset{coin/.style={
-   dndbox,
-   long octagon,
-   long octagon angle=45,
-   long octagon end height=2.5mm,
-   width=15.5mm,
-   height=7.5mm
-}}
 
-\node (cp) [coin,anchor=north west,at=(coin top left)] {10};
-\node (sp) [coin,below=of cp] {5};
-\node (ep) [coin,below=of sp] {};
-\node (gp) [coin,below=of ep] {10};
-\node (pp) [coin,below=of gp] {};
+
+%\node (cp) [coin,anchor=north west,at=(coin top left)] {10};
+
+
+\coin{cp}{Cu}{10}
+\coin{sp}{Ag}{5}
+\coin{gp}{Au}{G}
+%\fullcoinbox[anchor=north west,at=(coin top left)]{cp}{Cu}{Z};
+%\node (sp) [coin,below=of cp] {5};
+%\node (ep) [coin,below=of sp] {};
+%\node (gp) [coin,below=of ep] {10};
+%\node (pp) [coin,below=of gp] {};
+
+
 
 
 %\begin{equipmentx}[right=of equipment]
