@@ -21,6 +21,7 @@
 }
 \makeatother
 
+\newcommand\pplabel{{\tiny PASSIVE PERCEPTION}}
 
 
 \newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
@@ -308,11 +309,12 @@
   
 \node (proficiency bonus)
       [proficiencies,decorated stub rectangle,width=38mm,height=8mm,
-       right of upper corner=of stats background]
+       right of upper corner=3.5mm of stats background]
    {\hbox to 0pt{\hss\hspace*{9mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
    ;
-\node [anchor=west,at=(proficiency bonus.west),proficiencies,circle,
+\node [anchor=west,proficiencies,circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
+       at ($(proficiency bonus.west)+(-2mm,0mm)$)
       {\large\textsf{+\arabic{proficiency bonus}}};
 
 % Proficiencies section (middle top)
@@ -339,6 +341,20 @@
 \item
   Language (Elvish)
 \end{proficiencies}
+
+\node (passive perception)
+   [dndmaxhp,left=10mm of maxhp,width=24mm] 
+   {\Large\textsf{13}}
+   ;
+
+\dndlabel{passive perception}{\pplabel}
+
+\node (senses)
+   [dndmaxhp,left=10mm of curhp,width=24mm] 
+   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
+   ;
+\dndlabel{senses}{\scriptsize SENSES}
+
 
 \end{charsheet}
 
