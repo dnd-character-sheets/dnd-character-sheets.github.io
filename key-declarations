@@ -1,0 +1,64 @@
+#!/usr/bin/env lua5.1
+--------------------------------------------------------------------------
+-- collect-dnd-keys.lua
+--   Usage:   lua collect-dnd-keys.lua file1.yaml file2.yaml ...
+--            ./collect-dnd-keys.lua *.yaml
+--
+--   Requires the Debian package  lua-yaml  (module "lyaml").
+--------------------------------------------------------------------------
+
+local lyaml = require "lyaml"
+
+-- ---------------------------------------------------------------------
+-- 1.  make a wrapper so we work even if lyaml lacks load_all()
+-- ---------------------------------------------------------------------
+local yaml_load_all = lyaml.load_all or function(str) return { lyaml.load(str) } end
+
+-- ---------------------------------------------------------------------
+-- 2.  read an entire file into a string
+-- ---------------------------------------------------------------------
+local function slurp(filename)
+  local f = assert(io.open(filename, "r"))
+  local txt = f:read("*a")
+  f:close()
+  return txt
+end
+
+-- ---------------------------------------------------------------------
+-- 3.  collect unique keys from a mapping (handles !!omap too)
+-- ---------------------------------------------------------------------
+local all = {}          -- set:  all[key] = true
+local function collect_from_mapping(map)
+  if type(map) ~= "table" then return end
+  -- lyaml represents !!omap as an array of one-element tables
+  if map.n and map[1] and type(map[1])=="table" and map[1][1] then
+    for i = 1, map.n do
+      all[ map[i][1] ] = true
+    end
+  else
+    for k in pairs(map) do
+      all[k] = true
+    end
+  end
+end
+
+-- ---------------------------------------------------------------------
+-- 4.  main: iterate over every file, every document
+-- ---------------------------------------------------------------------
+for _,fname in ipairs(arg) do
+  local yaml_text = slurp(fname)
+  for _,doc in ipairs( yaml_load_all(yaml_text) ) do
+    collect_from_mapping(doc)
+  end
+end
+
+-- ---------------------------------------------------------------------
+-- 5.  emit the keys in alphabetical order
+-- ---------------------------------------------------------------------
+local keys = {}
+for k in pairs(all) do keys[#keys+1] = k end
+table.sort(keys, function(a,b) return tostring(a) < tostring(b) end)
+
+for _,k in ipairs(keys) do
+  io.write("\\declareDND{", k, "}\n")
+end
