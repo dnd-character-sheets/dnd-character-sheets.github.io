@@ -12,6 +12,7 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
+\usepgflibrary{intersections}
 
 % Define colors for different sections
 \colorlet{stats}{blue!10!white}
@@ -1329,6 +1330,12 @@
 %%  been taken out of each corner.  Get the radius from a tikz key `stub
 %%  radius`, and let it default to 5pt.
 
+\pgfkeys{
+  /tikz/stub radius/.initial=5pt,
+  /tikz/stub radius/.default=5pt
+}
+
+\newdimen\my@stubradius
 
 \pgfdeclareshape{stub rectangle}{%
   % Inherit anchors from rectangle
@@ -1347,6 +1354,7 @@
   \backgroundpath{%
     % Get NESW coordinates
     \setmy@NEWSC
+    \setmy@halves
     % Get stub radius
     \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
     % Check if stub radius is too large
@@ -1385,3 +1393,214 @@
 }
 
 
+\pgfdeclareshape{clipped rectangle}{%
+  % Inherit anchors from rectangle
+  \inheritsavedanchors[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchor[from=rectangle]{south west}
+  
+  % Background path
+  \backgroundpath{%
+    % Get NESW coordinates
+    \setmy@NEWSC
+    \setmy@halves
+    % Get stub radius
+    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+    % Check if stub radius is too large
+    \ifdim\my@stubradius>\my@halfwidth
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the width (\the\my@halfwidth)}%
+    \fi
+    \ifdim\my@stubradius>\my@halfheight
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the height (\the\my@halfheight)}%
+    \fi
+    % Draw the path with cut corners
+    % Start at bottom edge, after SW corner bite
+    \pgfpathmoveto{\pgfpoint{\my@W+\my@stubradius}{\my@S}}%
+    % Line to SE corner bite start
+    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@S+\my@stubradius}}%
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
+    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@N}}%
+    \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
+    \pgfpathlineto{\pgfpoint{\my@W}{\my@N-\my@stubradius}}%
+    \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
+    \pgfpathclose%
+  }
+}
+
+
+%% Now I'd like you to define a shape "decorated stub rectangle",
+%% which should inherit from "stub rectangle." It should use
+%% \beforebackgroundpath to draw the following:
+%%
+%%  - Inside the bounding box by a distance of one-third the stub
+%%    radius, a rectangle "A" drawn with a line thickness of 0.5pt.
+%%
+%%  - Inside that rectangle "A" by the same distance, along only the east and west edges, a
+%%    line drawn with a thickness of 0.3 points.  This line should
+%%    extend not the full length of the edge, but a distance 1.5x the
+%%    stub radius from both top and bottom.
+%%
+%%  - Inside each corner of rectangle "A", a quarter circle.
+
+
+
+\newdimen\my@inset
+\newdimen\my@cornerradius
+
+% Now define decorated stub rectangle
+\pgfdeclareshape{decorated stub rectangle}{%
+  % Inherit everything from stub rectangle
+  \inheritsavedanchors[from=stub rectangle]
+  \inheritanchor[from=stub rectangle]{center}
+  \inheritanchor[from=stub rectangle]{north}
+  \inheritanchor[from=stub rectangle]{south}
+  \inheritanchor[from=stub rectangle]{east}
+  \inheritanchor[from=stub rectangle]{west}
+  \inheritanchor[from=stub rectangle]{north east}
+  \inheritanchor[from=stub rectangle]{north west}
+  \inheritanchor[from=stub rectangle]{south east}
+  \inheritanchor[from=stub rectangle]{south west}
+  \inheritbackgroundpath[from=stub rectangle]
+  
+  % Add decorations before the background
+  \beforebackgroundpath{%
+    % Get coordinates and stub radius
+    \setmy@NEWSC
+    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+    % Calculate inset (one-third of stub radius)
+    \my@inset=\my@stubradius
+    \divide\my@inset by 3
+    % Calculate corner radius for quarter circles
+    \my@cornerradius=\my@inset
+    
+    % Draw rectangle A (inset by one-third stub radius)
+    \pgfsetlinewidth{0.5pt}%
+    \pgfpathrectangle{\pgfpoint{\my@W+\my@inset}{\my@S+\my@inset}}%
+                     {\pgfpoint{\my@E-\my@W-2\my@inset}{\my@N-\my@S-2\my@inset}}%
+    \pgfusepath{stroke}%
+    
+    % Draw east and west edge lines
+    \pgfsetlinewidth{0.3pt}%
+    \pgfmathsetlength\my@cornerradius{1.0*\my@stubradius}%
+    % West edge line
+    \pgfpathmoveto{\pgfpoint{\my@W+2\my@inset}{\my@S+\my@inset+\my@cornerradius}}%
+    \pgfpathlineto{\pgfpoint{\my@W+2\my@inset}{\my@N-\my@inset-\my@cornerradius}}%
+    % East edge line
+    \pgfpathmoveto{\pgfpoint{\my@E-2\my@inset}{\my@S+\my@inset+\my@cornerradius}}%
+    \pgfpathlineto{\pgfpoint{\my@E-2\my@inset}{\my@N-\my@inset-\my@cornerradius}}%
+    \pgfusepath{stroke}%
+    
+    % Draw quarter circles in corners of rectangle A
+    \pgfsetlinewidth{0.5pt}%
+    % SW corner quarter circle
+    \pgfpathmoveto{\pgfpoint{\my@W+\my@inset+\my@inset}{\my@S+\my@inset}}%
+    \pgfpatharc{0}{90}{\my@inset}%
+    \pgfusepath{stroke}%
+    % SE corner quarter circle
+    \pgfpathmoveto{\pgfpoint{\my@E-\my@inset}{\my@S+\my@inset+\my@inset}}%
+    \pgfpatharc{90}{180}{\my@inset}%
+    \pgfusepath{stroke}%
+    % NE corner quarter circle
+    \pgfpathmoveto{\pgfpoint{\my@E-\my@inset-\my@inset}{\my@N-\my@inset}}%
+    \pgfpatharc{180}{270}{\my@inset}%
+    \pgfusepath{stroke}%
+    % NW corner quarter circle
+    \pgfpathmoveto{\pgfpoint{\my@W+\my@inset}{\my@N-\my@inset-\my@inset}}%
+    \pgfpatharc{270}{360}{\my@inset}%
+    \pgfusepath{stroke}%
+  }
+}
+
+% Now define decorated rectangle
+\pgfdeclareshape{decorated clipped rectangle}{%
+  % Inherit everything from clipped rectangle
+  \inheritsavedanchors[from=clipped rectangle]
+  \inheritanchor[from=clipped rectangle]{center}
+  \inheritanchor[from=clipped rectangle]{north}
+  \inheritanchor[from=clipped rectangle]{south}
+  \inheritanchor[from=clipped rectangle]{east}
+  \inheritanchor[from=clipped rectangle]{west}
+  \inheritanchor[from=clipped rectangle]{north east}
+  \inheritanchor[from=clipped rectangle]{north west}
+  \inheritanchor[from=clipped rectangle]{south east}
+  \inheritanchor[from=clipped rectangle]{south west}
+  \inheritbackgroundpath[from=clipped rectangle]
+  
+  % Add decorations before the background
+  \beforebackgroundpath{%
+    % Get coordinates and stub radius
+    \setmy@NEWSC
+    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+    % Calculate inset (one-third of stub radius)
+    \my@inset=1.6\my@stubradius
+    %
+    %
+    % Draw quarter circles in corners of rectangle A
+    \pgfsetlinewidth{0.5pt}%
+    % NW corner curve
+    \begingroup
+      \def\NW{%
+        \pgfpathmoveto{\pgfpoint{\my@W}{\my@N-\my@inset}}%
+        \pgfpathquadraticcurveto
+            {\pgfpoint{\my@W+0.25\my@inset}{\my@N-0.25\my@inset}}
+            {\pgfpoint{\my@W+\my@inset}{\my@N}}%
+      }
+      \def\SW{
+        \pgfpathmoveto{\pgfpoint{\my@W}{\my@S+\my@inset}}%
+        \pgfpathquadraticcurveto
+            {\pgfpoint{\my@W+0.25\my@inset}{\my@S+0.25\my@inset}}
+            {\pgfpoint{\my@W+\my@inset}{\my@S}}%
+      }
+
+      \NW
+      \pgfusepath{stroke}%
+      \SW
+      \pgfusepath{stroke}%
+      \def\vertical{%
+         \pgfpathmoveto{\pgfpoint{\my@W+0.15\my@inset}{\my@S}}
+         \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@N}}
+      }
+      \pgfintersectionofpaths{\NW}{\vertical}
+      \pgfpointintersectionsolution{1}
+      \typeout{west solution x=\the\pgf@x}
+      \my@ya=\pgf@y  % X coordinate is bogus, dunno why
+      \pgfpathcircle{\pgfpointintersectionsolution{1}\typeout{west circle y=\the\pgf@y}}{2pt}\pgfusepath{stroke}
+      \pgfintersectionofpaths{\SW}{\vertical}
+      \pgfpointintersectionsolution{1}
+      \my@yb=\pgf@y  % X coordinate is bogus, dunno why
+      \typeout{west=\the\my@W, north=\the\my@N, inter=(\the\pgf@x,\the\pgf@y)}
+      \typeout{west:  high y=\the\my@ya, low y=\the\my@yb, south=\the\my@S}
+      \pgfpathmoveto{\pgfpoint{\my@W+0.15\my@inset}{\my@ya}}
+      \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@yb}}
+      \pgfusepath{stroke}%
+      
+      % Northeast
+      \pgfpathmoveto{\pgfpoint{\my@E}{\my@N-\my@inset}}%
+      \pgfpathquadraticcurveto
+          {\pgfpoint{\my@E-0.25\my@inset}{\my@N-0.25\my@inset}}
+          {\pgfpoint{\my@E-\my@inset}{\my@N}}%
+      \pgfusepath{stroke}%
+
+      % Southeast
+      \pgfpathmoveto{\pgfpoint{\my@E}{\my@S+\my@inset}}%
+      \pgfpathquadraticcurveto
+          {\pgfpoint{\my@E-0.25\my@inset}{\my@S+0.25\my@inset}}
+          {\pgfpoint{\my@E-\my@inset}{\my@S}}%
+      \pgfusepath{stroke}%
+
+      % Southwest
+      \pgfusepath{stroke}%
+
+    \endgroup
+
+
+  }
+}
