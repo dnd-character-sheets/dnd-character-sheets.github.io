@@ -1564,24 +1564,25 @@
       \pgfusepath{stroke}%
       \SW
       \pgfusepath{stroke}%
-      \def\vertical{%
-         \pgfpathmoveto{\pgfpoint{\my@W+0.15\my@inset}{\my@S}}
-         \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@N}}
-      }
-      \pgfintersectionofpaths{\NW}{\vertical}
-      \pgfpointintersectionsolution{1}
-      \typeout{west solution x=\the\pgf@x}
-      \my@ya=\pgf@y  % X coordinate is bogus, dunno why
-      \pgfpathcircle{\pgfpointintersectionsolution{1}\typeout{west circle y=\the\pgf@y}}{2pt}\pgfusepath{stroke}
-      \pgfintersectionofpaths{\SW}{\vertical}
-      \pgfpointintersectionsolution{1}
-      \my@yb=\pgf@y  % X coordinate is bogus, dunno why
-      \typeout{west=\the\my@W, north=\the\my@N, inter=(\the\pgf@x,\the\pgf@y)}
-      \typeout{west:  high y=\the\my@ya, low y=\the\my@yb, south=\the\my@S}
-      \pgfpathmoveto{\pgfpoint{\my@W+0.15\my@inset}{\my@ya}}
-      \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@yb}}
-      \pgfusepath{stroke}%
-      
+%
+%      \def\vertical{%
+%         \pgfpathmoveto{\pgfpoint{}{\my@S}}
+%         \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@N}}
+%      }
+%      \pgfintersectionofpaths{\NW}{\vertical}
+%      \pgfpointintersectionsolution{1}
+%      \typeout{west solution x=\the\pgf@x}
+%      \my@ya=\pgf@y  % X coordinate is bogus, dunno why
+%      \pgfpathcircle{\pgfpointintersectionsolution{1}\typeout{west circle y=\the\pgf@y}}{2pt}\pgfusepath{stroke}
+%      \pgfintersectionofpaths{\SW}{\vertical}
+%      \pgfpointintersectionsolution{1}
+%      \my@yb=\pgf@y  % X coordinate is bogus, dunno why
+%      \typeout{west=\the\my@W, north=\the\my@N, inter=(\the\pgf@x,\the\pgf@y)}
+%      \typeout{west:  high y=\the\my@ya, low y=\the\my@yb, south=\the\my@S}
+%      \pgfpathmoveto{\pgfpoint{\my@W+0.15\my@inset}{\my@ya}}
+%      \pgfpathlineto{\pgfpoint{\my@W+0.15\my@inset}{\my@yb}}
+%      \pgfusepath{stroke}%
+%      
       % Northeast
       \pgfpathmoveto{\pgfpoint{\my@E}{\my@N-\my@inset}}%
       \pgfpathquadraticcurveto
@@ -1596,7 +1597,16 @@
           {\pgfpoint{\my@E-\my@inset}{\my@S}}%
       \pgfusepath{stroke}%
 
-      % Southwest
+      % EW decorations
+
+      \pgfmathsetlength{\my@xa}{\my@E-0.15\my@inset}
+      \pgfpathmoveto{\pgfpoint{\my@xa}{\my@N-1.05\my@stubradius}}
+      \pgfpathlineto{\pgfpoint{\my@xa}{\my@S+1.05\my@stubradius}}
+      \pgfusepath{stroke}%
+
+      \pgfmathsetlength{\my@xa}{\my@W+0.15\my@inset}
+      \pgfpathmoveto{\pgfpoint{\my@xa}{\my@N-1.05\my@stubradius}}
+      \pgfpathlineto{\pgfpoint{\my@xa}{\my@S+1.05\my@stubradius}}
       \pgfusepath{stroke}%
 
     \endgroup

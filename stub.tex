@@ -1,0 +1,83 @@
+\documentclass[11pt]{article}
+\usepackage{charsheet}
+
+
+\begin{document}
+
+% Test decorated stub rectangle
+\begin{tikzpicture}
+  \node[decorated stub rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (0,0) {Decorated};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Compare with regular stub rectangle
+\begin{tikzpicture}
+  \node[stub rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (0,0) {Regular};
+  \node[decorated stub rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (5,0) {Decorated};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with different stub radii
+\begin{tikzpicture}
+  \node[decorated stub rectangle, stub radius=8pt, draw, thick, minimum width=3cm, minimum height=2cm] at (0,0) {8pt};
+  \node[decorated stub rectangle, stub radius=15pt, draw, ultra thick,fill=green!5!white, minimum width=3cm, minimum height=2cm] at (4,0) {15pt};
+\end{tikzpicture}
+
+
+% Test with different stub radii
+\begin{tikzpicture}
+  \node[stub rectangle, stub radius=3pt,fill=blue!10!white, draw, ultra thick, minimum width=2cm, minimum height=1.5cm] at (0,0) {3pt};
+  \node[stub rectangle, stub radius=5pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (3,0) {5pt};
+  \node[stub rectangle, stub radius=8pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (6,0) {8pt};
+  \node[stub rectangle, stub radius=10pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (9,0) {10pt};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with styling
+\begin{tikzpicture}
+  \node[stub rectangle, stub radius=7pt, draw=blue, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] at (0,0) {Styled stub};
+\end{tikzpicture}
+
+% Test decorated clipped rectangle
+\begin{tikzpicture}
+  \node[decorated clipped rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (0,0) {Decorated};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Compare with regular clipped rectangle
+\begin{tikzpicture}
+  \node[clipped rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (0,0) {Regular};
+  \node[decorated clipped rectangle, draw, thick, minimum width=4cm, minimum height=3cm, stub radius=12pt] at (5,0) {Decorated};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with different stub radii
+\begin{tikzpicture}
+  \node[decorated clipped rectangle, stub radius=8pt, draw, thick, minimum width=3cm, minimum height=2cm] at (0,0) {8pt};
+  \node[decorated clipped rectangle, stub radius=15pt, draw, ultra thick,fill=green!5!white, minimum width=3cm, minimum height=2cm] at (4,0) {15pt};
+\end{tikzpicture}
+
+
+% Test with different stub radii
+\begin{tikzpicture}
+  \node[clipped rectangle, stub radius=3pt,fill=blue!10!white, draw, ultra thick, minimum width=2cm, minimum height=1.5cm] at (0,0) {3pt};
+  \node[clipped rectangle, stub radius=5pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (3,0) {5pt};
+  \node[clipped rectangle, stub radius=8pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (6,0) {8pt};
+  \node[clipped rectangle, stub radius=10pt, draw, thick, minimum width=2cm, minimum height=1.5cm] at (9,0) {10pt};
+\end{tikzpicture}
+
+\vspace{1cm}
+
+% Test with styling
+\begin{tikzpicture}
+  \node[clipped rectangle, stub radius=7pt, draw=blue, thick, fill=yellow!20, minimum width=4cm, minimum height=3cm] at (0,0) {Styled stub};
+\end{tikzpicture}
+
+
+\end{document}
+
