@@ -1286,32 +1286,50 @@
 
 
 
-
-% Define \newDND{name} to declare a new DND variable
+%-----------------------------------------------------------------
+% 1. \newDND{<name>}   – declare a key (no value yet)
+%-----------------------------------------------------------------
 \newcommand{\newDND}[1]{%
-  \@ifundefined{dnd@val@#1}{%
-    \expandafter\def\csname dnd@val@#1\endcsname{0}%
+  \@ifundefined{dnd@decl@#1}{%
+    \expandafter\def\csname dnd@decl@#1\endcsname{}%  mark as declared
   }{%
-    \PackageError{dnd}{DND value `#1' already defined}{}%
+    \PackageError{dnd}{DND key `#1' already declared}{}%
   }%
 }
 
-% Define \setDND{name}{value} to assign a value
+%-----------------------------------------------------------------
+% 2. \setDND{<name>}{<value>}   – assign a value (must be declared)
+%-----------------------------------------------------------------
 \newcommand{\setDND}[2]{%
-  \@ifundefined{dnd@val@#1}{%
-    \PackageError{dnd}{DND value `#1' not defined}{Use \noexpand\newDND{#1} first.}%
+  \@ifundefined{dnd@decl@#1}{%
+    \PackageError{dnd}{DND key `#1' has not been declared}%
+                   {Declare it first with \string\newDND.}%
   }{%
     \expandafter\def\csname dnd@val@#1\endcsname{#2}%
   }%
 }
 
-% Define \valueDND{name} to retrieve the value
+%-----------------------------------------------------------------
+% 3. \valueDND{<name>}   – retrieve value (must be set)
+%-----------------------------------------------------------------
 \newcommand{\valueDND}[1]{%
-  \@ifundefined{dnd@val@#1}{%
-    \PackageError{dnd}{DND value `#1' not defined}{Use \noexpand\newDND{#1} first.}%
+  \@ifundefined{dnd@decl@#1}{%
+    \PackageError{dnd}{DND key `#1' has not been declared}{}%
   }{%
-    \csname dnd@val@#1\endcsname
+    \@ifundefined{dnd@val@#1}{%
+      \PackageError{dnd}{DND key `#1' has no value yet}%
+                     {Assign one with \string\setDND.}%
+    }{%
+      \csname dnd@val@#1\endcsname
+    }%
   }%
 }
 
+%-----------------------------------------------------------------
+% 4. \ifDNDdefined{<name>}{<true>}{<false>}
+%    Succeeds *only* after a value has been set.
+%-----------------------------------------------------------------
+\newcommand{\ifDNDdefined}[3]{%
+  \@ifundefined{dnd@val@#1}{#3}{#2}%
+}
 
