@@ -1283,3 +1283,35 @@
     \pgfpathclose%
   }
 }
+
+
+
+
+% Define \newDND{name} to declare a new DND variable
+\newcommand{\newDND}[1]{%
+  \@ifundefined{dnd@val@#1}{%
+    \expandafter\def\csname dnd@val@#1\endcsname{0}%
+  }{%
+    \PackageError{dnd}{DND value `#1' already defined}{}%
+  }%
+}
+
+% Define \setDND{name}{value} to assign a value
+\newcommand{\setDND}[2]{%
+  \@ifundefined{dnd@val@#1}{%
+    \PackageError{dnd}{DND value `#1' not defined}{Use \noexpand\newDND{#1} first.}%
+  }{%
+    \expandafter\def\csname dnd@val@#1\endcsname{#2}%
+  }%
+}
+
+% Define \valueDND{name} to retrieve the value
+\newcommand{\valueDND}[1]{%
+  \@ifundefined{dnd@val@#1}{%
+    \PackageError{dnd}{DND value `#1' not defined}{Use \noexpand\newDND{#1} first.}%
+  }{%
+    \csname dnd@val@#1\endcsname
+  }%
+}
+
+
