@@ -74,22 +74,22 @@
     \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
     % SE corner arc: we're west of corner, need to go north
     % Arc goes counterclockwise from current position
-    \pgfpatharc{180}{90}{-\my@stubradius}%
+    \pgfpatharc{180}{90}{\my@stubradius}%
     % Now at radius north of SE corner
     % Line to NE corner bite start
     \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
     % NE corner arc: we're south of corner, need to go west
-    \pgfpatharc{270}{180}{-\my@stubradius}%
+    \pgfpatharc{270}{180}{\my@stubradius}%
     % Now at radius west of NE corner
     % Line to NW corner bite start
     \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
     % NW corner arc: we're east of corner, need to go south
-    \pgfpatharc{0}{270}{-\my@stubradius}%
+    \pgfpatharc{0}{-90}{\my@stubradius}%
     % Now at radius south of NW corner
     % Line to SW corner bite start
     \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
     % SW corner arc: we're north of corner, need to go east
-    \pgfpatharc{90}{0}{-\my@stubradius}%
+    \pgfpatharc{90}{0}{\my@stubradius}%
     % Now back at starting point
     \pgfpathclose%
   }

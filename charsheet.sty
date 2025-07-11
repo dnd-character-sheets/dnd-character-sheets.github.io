@@ -1323,3 +1323,65 @@
   \@ifundefined{dnd@val@#1}{#3}{#2}%
 }
 
+%%  I'd like you to use \pgfdeclareshape to define a shape for me.  I want
+%%  something called "stub rectangle".  It is a rectangle except each
+%%  corner is replaced with a corner circle, as if a circular bite had
+%%  been taken out of each corner.  Get the radius from a tikz key `stub
+%%  radius`, and let it default to 5pt.
+
+
+\pgfdeclareshape{stub rectangle}{%
+  % Inherit anchors from rectangle
+  \inheritsavedanchors[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchor[from=rectangle]{south west}
+  
+  % Background path
+  \backgroundpath{%
+    % Get NESW coordinates
+    \setmy@NEWSC
+    % Get stub radius
+    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+    % Check if stub radius is too large
+    \ifdim\my@stubradius>\my@halfwidth
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the width (\the\my@halfwidth)}%
+    \fi
+    \ifdim\my@stubradius>\my@halfheight
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the height (\the\my@halfheight)}%
+    \fi
+    % Draw the path with cut corners
+    % Start at bottom edge, after SW corner bite
+    \pgfpathmoveto{\pgfpoint{\my@W+\my@stubradius}{\my@S}}%
+    % Line to SE corner bite start
+    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
+    % SE corner arc: we're west of corner, need to go north
+    % Arc goes counterclockwise from current position
+    \pgfpatharc{180}{90}{\my@stubradius}%
+    % Now at radius north of SE corner
+    % Line to NE corner bite start
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
+    % NE corner arc: we're south of corner, need to go west
+    \pgfpatharc{270}{180}{\my@stubradius}%
+    % Now at radius west of NE corner
+    % Line to NW corner bite start
+    \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
+    % NW corner arc: we're east of corner, need to go south
+    \pgfpatharc{0}{-90}{\my@stubradius}%
+    % Now at radius south of NW corner
+    % Line to SW corner bite start
+    \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
+    % SW corner arc: we're north of corner, need to go east
+    \pgfpatharc{90}{0}{\my@stubradius}%
+    % Now back at starting point
+    \pgfpathclose%
+  }
+}
+
+
