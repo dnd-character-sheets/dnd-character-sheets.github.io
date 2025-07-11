@@ -1,63 +1,88 @@
 #!/usr/bin/env lua5.1
 --------------------------------------------------------------------------
 -- collect-dnd-keys.lua
---   Usage:   lua collect-dnd-keys.lua file1.yaml file2.yaml ...
---            ./collect-dnd-keys.lua *.yaml
+--   Gather every top-level YAML key appearing in one or more files and
+--   emit   \declareDND{<key>}   lines, sorted alphabetically.
 --
---   Requires the Debian package  lua-yaml  (module "lyaml").
+--   Usage:  lua collect-dnd-keys.lua file1.yaml file2.yaml ...
+--           ./collect-dnd-keys.lua  *.yaml  > all-keys.tex
+--
+--   Requires:  lua-yaml  (package “lyaml”)
 --------------------------------------------------------------------------
 
 local lyaml = require "lyaml"
 
--- ---------------------------------------------------------------------
--- 1.  make a wrapper so we work even if lyaml lacks load_all()
--- ---------------------------------------------------------------------
-local yaml_load_all = lyaml.load_all or function(str) return { lyaml.load(str) } end
-
--- ---------------------------------------------------------------------
--- 2.  read an entire file into a string
--- ---------------------------------------------------------------------
-local function slurp(filename)
-  local f = assert(io.open(filename, "r"))
-  local txt = f:read("*a")
-  f:close()
-  return txt
+---------------------------------------------------------------------------
+-- 0. load_all wrapper  (handles old lyaml that exports only load)
+---------------------------------------------------------------------------
+local function yaml_load_all(text)
+  if lyaml.load_all then
+    return lyaml.load_all(text)
+  else
+    local ok, doc = pcall(lyaml.load, text)
+    if ok then return { doc } else error(doc) end
+  end
 end
 
--- ---------------------------------------------------------------------
--- 3.  collect unique keys from a mapping (handles !!omap too)
--- ---------------------------------------------------------------------
-local all = {}          -- set:  all[key] = true
-local function collect_from_mapping(map)
-  if type(map) ~= "table" then return end
-  -- lyaml represents !!omap as an array of one-element tables
-  if map.n and map[1] and type(map[1])=="table" and map[1][1] then
+---------------------------------------------------------------------------
+-- 1. read whole file
+---------------------------------------------------------------------------
+local function slurp(fname)
+  local f = assert(io.open(fname, "r"))
+  local s = f:read("*a")
+  f:close()
+  return s
+end
+
+---------------------------------------------------------------------------
+-- 2. accumulate keys
+---------------------------------------------------------------------------
+local declared = {}   -- set:  declared[key] = true
+
+local function collect_keys_from_mapping(map)
+  -- !!omap is represented as array of one-pair tables: [{k1=v1}, {k2=v2}, …]
+  if map.n and map[1] and type(map[1])=="table" then
     for i = 1, map.n do
-      all[ map[i][1] ] = true
+      local pair = map[i]
+      declared[ pair[1] ] = true
     end
   else
     for k in pairs(map) do
-      all[k] = true
+      declared[k] = true
     end
   end
 end
 
--- ---------------------------------------------------------------------
--- 4.  main: iterate over every file, every document
--- ---------------------------------------------------------------------
-for _,fname in ipairs(arg) do
-  local yaml_text = slurp(fname)
-  for _,doc in ipairs( yaml_load_all(yaml_text) ) do
-    collect_from_mapping(doc)
+---------------------------------------------------------------------------
+-- 3. main loop over filenames
+---------------------------------------------------------------------------
+for _,filename in ipairs(arg) do
+  local ok, yaml_text = pcall(slurp, filename)
+  if not ok then
+    io.stderr:write("collect-dnd-keys: cannot read ", filename, ": ", yaml_text, "\n")
+  else
+    local ok_doclist, docs = pcall(yaml_load_all, yaml_text)
+    if not ok_doclist then
+      io.stderr:write("collect-dnd-keys: YAML parse error in ", filename, ":\n  ", docs, "\n")
+    else
+      for _,doc in ipairs(docs) do
+        if type(doc) == "table" then
+          collect_keys_from_mapping(doc)
+        else
+          io.stderr:write("collect-dnd-keys: top-level YAML node in ", filename,
+                          " is not a mapping – skipped.\n")
+        end
+      end
+    end
   end
 end
 
--- ---------------------------------------------------------------------
--- 5.  emit the keys in alphabetical order
--- ---------------------------------------------------------------------
+---------------------------------------------------------------------------
+-- 4. emit keys in alphabetical order
+---------------------------------------------------------------------------
 local keys = {}
-for k in pairs(all) do keys[#keys+1] = k end
-table.sort(keys, function(a,b) return tostring(a) < tostring(b) end)
+for k in pairs(declared) do keys[#keys+1] = k end
+table.sort(keys)
 
 for _,k in ipairs(keys) do
   io.write("\\declareDND{", k, "}\n")
