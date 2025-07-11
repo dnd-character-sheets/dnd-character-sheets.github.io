@@ -30,7 +30,12 @@
 \casterfalse
 
 \tikzset{
-  dndbox/.style={ },  % make decorations work
+  dndbox/.style={ 
+    decorated stub rectangle,
+    stub radius=2.3mm,
+    line width=1.2pt,
+    draw,
+  },  % make decorations work
   dndleft/.style={
     dndbox,
     minimum width=67mm,
@@ -50,9 +55,6 @@
   dndmaxhp/.style={
     dndbox,
     decorated clipped rectangle,
-    draw,
-    line width=1.2pt,
-    stub radius=2.3mm,
     fill=white,
     minimum height=18mm,
     minimum width=24mm,
@@ -64,6 +66,9 @@
     minimum width=24mm,
   },
   statbox/.style={
+    dndbox,
+    stub rectangle,
+    stub radius=1.5mm,
     minimum width=18mm,
     minimum height=20mm,
     fill=none,

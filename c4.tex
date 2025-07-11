@@ -41,7 +41,7 @@
     \expandafter\setlength\csname#2width\endcsname{#1-3mm}
     \node [#2,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
 \end{minipage}}};
-    \dnddecorate{#2};
+%    \dnddecorate{#2};
   }
 }
 
@@ -124,11 +124,11 @@
 
 \newcommand\fullstatbox[5][]{% location name number modifier saving-throw
   \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
-  \dnddecorate[stats]{#2}
+%  \dnddecorate[stats]{#2}
   \dndtoplabel{#2}{\tiny#2}
   \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
   \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
-            at ($(#2.north east)+(-0.5mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+            at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
 }
 
 \newcommand\nextstatloc{inside north west corner=of stats background}
