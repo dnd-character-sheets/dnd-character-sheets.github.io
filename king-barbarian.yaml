@@ -1,3 +1,4 @@
+---
 "CHARACTER NAME": ""
 "CLASS & LEVEL": Barbarian 1
 "BACKGROUND": Hermit (Custom)
@@ -94,7 +95,13 @@ FEATURES:
   - name: Unarmored Defense
     description: If you wear no armor, your AC = 10 + Dex + Con.
   - name: Rage
-    description: Start/stop as a bonus action. Lasts 1 minute or until you are unconscious or fail to attack or take damage for 1 turn. Can’t concentrate. While raging: • Advantage on Str checks & saves. • Melee Str attacks deal +2 damage. • You take half damage from bludgeoning, piercing, and slashing damage. • At 1st level you can rage 2 times per long rest.
+    description: |
+       Start/stop as a bonus action. Lasts 1 minute or until you are
+       unconscious or fail to attack or take damage for 1 turn. Can’t
+       concentrate. While raging: • Advantage on Str checks & saves. •
+       Melee Str attacks deal +2 damage. • You take half damage from
+       bludgeoning, piercing, and slashing damage. • At 1st level you
+       can rage 2 times per long rest.
 
 "DESCRIPTION & PERSONALITY":
   motivation: ""
@@ -105,3 +112,4 @@ FEATURES:
   suggested_names:
     - Kesk
     - Kethra
+...
