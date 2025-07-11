@@ -5,21 +5,23 @@
 \usepackage{pgfkeys}
 
 \makeatletter
+
+\pgfkeys{
+  /runwidth/.cd,
+  width/.code={
+    \expandafter\@runwidth@macro\expandafter{#1}%
+  },
+  .unknown/.code={} % ignore everything else
+}%
+
+
 \newcommand{\runwidth}[2]{%
   % Store the macro name
   \def\@runwidth@macro{#1}%
   % Set up a key handler for "width"
-  \pgfkeys{
-    /runwidth/.cd,
-    width/.code={
-      \expandafter\@runwidth@macro\expandafter{##1}%
-    },
-    .unknown/.code={} % ignore everything else
-  }%
   % Now parse the key-value list
   \pgfkeys{/runwidth/.cd, #2}%
 }
-\makeatother
 
 \newcommand\pplabel{{\tiny PASSIVE PERCEPTION}}
 
@@ -33,59 +35,80 @@
 
 \newdimen\mytemp
 
-\newcommand\newsectionenv[5][\dndrightwidth]{%
+\newcommand\newsectionenv[5][width=\dndrightwidth]{%
    % [width]{name}{label}{pre-code}{post-code}
   \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
   \expandafter\newdimen\csname#2width\endcsname
+  \runwidth{\setsectionenvwidth{#2}}{#1}%
   \NewEnviron{#2}[1][]{
     % [...] name 
-    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
-    \node [#2,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
-\end{minipage}}};
+    \runwidth{\setsectionenvwidth{#2}}{##1}%
+    \setlength{\my@xa}{\csname#2width\endcsname-7mm}%
+%    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
+    \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
+         #4%
+         \csname#2body\endcsname
+         #5%
+         \par\medskip
+         \typeout{{\string\hsize} inside #2 is \the\hsize}%
+         \hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+         \end{minipage}}};
 %    \dnddecorate{#2};
   }
 }
+
+\makeatother
+
 
 \newcommand\typewidth[1]{\typeout{width is #1}}
-
-\newcommand\newsectionenvx[5][\dndrightwidth]{%
-   % [annotations]{name}{label}{pre-code}{post-code}
-  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
-  \expandafter\newdimen\csname#2width\endcsname
-  \NewEnviron{#2}[1][]{
-    % [...] name 
-    %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
-    \expandafter\setlength\csname#2width\endcsname{40mm}%
-%    \runwidth{\typewidth}{#1}%
-    \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
-\end{minipage}}};
-%    \dnddecorate{#2};
-  }
+\newcommand\setsectionenvwidth[2]{% section-env-name annotations
+%  \typeout{setting #1width to #2}%
+%  \expandafter\show\csname#1width\endcsname
+  \expandafter\setlength\csname#1width\endcsname{#2}%
+%  \expandafter\show\csname l@#1width\endcsname
 }
+
+%%%%    \newcommand\newsectionenvx[5][\dndrightwidth]{%
+%%%%       % [annotations]{name}{label}{pre-code}{post-code}
+%%%%      \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+%%%%      \expandafter\newdimen\csname#2width\endcsname
+%%%%      \NewEnviron{#2}[1][]{
+%%%%        % [...] name 
+%%%%        %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
+%%%%    %    \expandafter\setlength\csname#2width\endcsname{40mm}%
+%%%%    %    \runwidth{\typewidth}{#1}%
+%%%%    %    \def\@runwidth@macro###1{\setlength{\csname#2width\endcsname}{zorch}}%
+%%%%    %    \show\@runwidth@macro
+%%%%    %    \pgfkeys{/runwidth/.cd, ##1}%
+%%%%        \runwidth{\setsectionenvwidth{#2}}{##1}%
+%%%%        \expandafter\advance\csname#2width\endcsname by -6mm
+%%%%        \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+%%%%    \end{minipage}}};
+%%%%    %    \dnddecorate{#2};
+%%%%      }
+%%%%    }
 
 
 \newsectionenv{magic}{MAGIC}{}{}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{CLASS FEATURES}{}{}
-\newsectionenvx[width=64mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
+\newsectionenv[width=74mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
    {\medskip
     \small
-    \begin{minipage}{60mm}
      \begin{eqlist}}
-   {\end{eqlist}
-    \end{minipage}}
+   {\end{eqlist}}
 
 \tikzset{equipmentx/.style={equipment}}
 
-\newsectionenvx[width=80mm]{equipmentx}{EQUIPMENTX}
-   {\medskip
-    \small
-    \begin{minipage}{75mm}
-     \begin{eqlist}}
-   {\end{eqlist}
-    \end{minipage}}
+%\newsectionenvx[width=120mm]{equipmentx}{EQUIPMENTX}
+%   {\medskip
+%    \small
+%    \begin{minipage}{75mm}
+%     \begin{eqlist}}
+%   {\end{eqlist}
+%    \end{minipage}}
 
-\newsectionenv[37mm]{proficiencies}{PROFICIENCIES}
+\newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
    {\medskip
     \begin{minipage}{30mm}
      \begin{proflist}}
@@ -105,7 +128,23 @@
 \begin{document}
 \pagestyle{empty}
 
+\typewidth{width test, not a real width}
 \runwidth{\typewidth}{height=frogs,draw,width=17mm,nodraw}
+\runwidth{\typewidth}{height=frogs,draw,width=18mm,nodraw}
+%%%%    {%\tracingall\tracingonline=1
+%%%%    \newdimen\testonewidth
+%%%%    \show\testonewidth
+%%%%    \setsectionenvwidth{testone}{33mm}
+%%%%    \relax
+%%%%    \showthe\testonewidth
+%%%%    }
+%%%%    {%\tracingall\tracingonline=1
+%%%%    %\runwidth{\typewidth}{height=frogs,draw,width=19mm,nodraw}
+%%%%    \newdimen\testsectionnamewidth
+%%%%    \runwidth{\setsectionenvwidth{testsectionname}}{height=frogs,draw,width=18mm,nodraw}
+%%%%    %\runwidth{\relax}{height=frogs,draw,width=21mm,nodraw}
+%%%%    %\showthe\testsectionnamewidth
+%%%%    }
 
 \newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
 
@@ -308,7 +347,7 @@
 
   
 \node (proficiency bonus)
-      [proficiencies,decorated stub rectangle,width=38mm,height=8mm,
+      [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
        right of upper corner=3.5mm of stats background]
    {\hbox to 0pt{\hss\hspace*{9mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
    ;
@@ -318,7 +357,7 @@
       {\large\textsf{+\arabic{proficiency bonus}}};
 
 % Proficiencies section (middle top)
-\begin{proficiencies}[below=of proficiency bonus,width=38mm]
+\begin{proficiencies}[below=of proficiency bonus,width=38.002mm]
   \small
 \item
   {Acrobatics}

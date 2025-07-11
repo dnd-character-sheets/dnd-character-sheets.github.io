@@ -473,7 +473,7 @@
 \newenvironment{eqlist}
   {\begin{list}{}{%
       \raggedright
-      \setlength{\leftmargin}{24mm}% no indentation
+      \setlength{\leftmargin}{22mm}% no indentation
       \setlength{\labelwidth}{0pt}%
       \setlength{\labelsep}{0pt}%
       \setlength{\itemindent}{-4mm}%
@@ -493,7 +493,10 @@
 
 \newenvironment{featurestab}
   {\renewcommand\arraystretch{1.5}%
-   \begin{tabular}{>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{93mm}}}
+   \setlength{\my@xa}{\hsize-26mm-3\tabcolsep}%
+%   \par\bigskip
+%   \hrule width \hsize depth 0pt height 2pt
+   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{\my@xa}@{}}}
   {\end{tabular}}
 
 
