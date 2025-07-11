@@ -22,6 +22,7 @@
 \colorlet{mypurple}{red!40!blue}
 \colorlet{features}{magenta!16!white}
 \colorlet{playername}{green!90!yellow!8!white}
+\colorlet{splashfield}{playername!96!black}
 \colorlet{teal}{blue!40!green}
 \colorlet{equipment}{playername}
 \colorlet{hpetc}{gray!40!white}
@@ -1048,7 +1049,7 @@
     left of lower corner/.code={%
         \tikz@corner@parse#1\tikz@stop%
         \tikzset{%
-            anchor=north east,
+            anchor=south east,
             at={($(\tikz@corner@node.south west)+(-\tikz@corner@distance,0)$)}%
         }%
     }

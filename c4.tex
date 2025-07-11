@@ -35,17 +35,18 @@
 
 \newdimen\mytemp
 
-\newcommand\newsectionenv[5][width=\dndrightwidth]{%
+\newcommand\newsectionenv[5][]{%
    % [width]{name}{label}{pre-code}{post-code}
   \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
   \expandafter\newdimen\csname#2width\endcsname
-  \runwidth{\setsectionenvwidth{#2}}{#1}%
+  \runwidth{\setsectionenvwidth{#2}}{width=\dndrightwidth,#1}%
   \NewEnviron{#2}[1][]{
     % [...] name 
     \runwidth{\setsectionenvwidth{#2}}{##1}%
     \setlength{\my@xa}{\csname#2width\endcsname-7mm}%
 %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
-    \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
+    \typeout{\string\node{}  [#2,#1,##1] (#2) ...}%
+    \node [width=\dndrightwidth,#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
          #4%
          \csname#2body\endcsname
          #5%
@@ -89,7 +90,9 @@
 %%%%    }
 
 
-\newsectionenv{magic}{MAGIC}{}{}
+\newsectionenv[]{magic}{MAGIC}
+  {\begin{minipage}[t][87mm][t]{\hsize}}
+  {\end{minipage}}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{CLASS FEATURES}{}{}
 \newsectionenv[width=74mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
@@ -110,7 +113,7 @@
 
 \newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
    {\medskip
-    \begin{minipage}{30mm}
+    \begin{minipage}[t][138mm][t]{\hsize}
      \begin{proflist}}
    {\end{proflist}
     \end{minipage}}
@@ -211,11 +214,37 @@
 
   \setcounter{proficiency bonus}{2}
 
+
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
+  \begingroup\sffamily
 
-  \begingroup\sffamily\Large
+  
+
+  \node (class and level)
+    [fill=splashfield,anchor=south west,width=38mm] at ($(splash.south west)+(88mm,19mm)$)
+    {\hbox to 36mm{\itshape class and level\hfill}}
+    ;
+
+  \node[fill=splashfield,right=1mm of class and level,width=36mm]
+    {\hbox to 36mm{\itshape background\hfill}}
+    ;
+    
+  \node (race) [fill=splashfield,below left corner=4.2mm of class and level,width=36mm]
+    {\hbox to 36mm{\itshape race\hfill}}
+    ;
+    
+  \node (alignment) [fill=splashfield,right=1mm of race,width=26mm]
+    {\hbox to 26mm{\itshape alignment\hfill}}
+    ;
+    
+  \node (alignment) [fill=splashfield,right=1mm of alignment,width=26mm]
+    {\hbox to 26mm{\itshape experience points\hfill}}
+    ;
+    
+
+\Large
 
       \node (hpbackground) 
         [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
@@ -303,7 +332,7 @@
 \stat*{CHARISMA}{15}
 
   
-\begin{equipment}[below left corner=of stats background]
+\begin{equipment}[left of lower corner=of features]
     \item Clothes (Fine)
     \item Leather Armor
     \item Shortsword
