@@ -288,8 +288,17 @@
 \end{equipmentx}
 
   
+\node (proficiency bonus)
+      [proficiencies,decorated stub rectangle,width=38mm,height=8mm,
+       right of upper corner=of stats background]
+   {\hbox to 0pt{\hss\hspace*{9mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
+   ;
+\node [anchor=west,at=(proficiency bonus.west),proficiencies,circle,
+       width=10mm,height=10mm,line width=1.5pt,draw]
+      {\large\textsf{+\arabic{proficiency bonus}}};
+
 % Proficiencies section (middle top)
-\begin{proficiencies}[right of upper corner=of stats background,width=38mm]
+\begin{proficiencies}[below=of proficiency bonus,width=38mm]
   \small
 \item
   {Acrobatics}
