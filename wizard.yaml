@@ -1,0 +1,95 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Wizard 1
+"BACKGROUND": Outlander
+"PLAYER NAME": ""
+"RACE": Human (Alqaadi)
+"ALIGNMENT": Lawful Neutral
+"EXPERIENCE POINTS": 0/300
+
+# ability scores — only the score in the lower oval
+STR: 11
+DEX: 9
+CON: 14
+INT: 16
+WIS: 15
+CHA: 13
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 12
+"MAX HP": 14
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "-1"
+"SPEED": 30 ft.
+"ARMOR CLASS": 9
+"SENSES": ""
+"HIT DICE": d6
+
+# coin totals
+CP: 15
+SP: 10
+EP: ""
+GP: 5
+PP: ""
+
+PROFICIENCIES:
+  - Arcana
+  - Insight
+  - Investigation
+  - Medicine
+  - Persuasion
+  - Survival
+  - Language (Alqaadan)
+  - Language (Common)
+  - Language (Draconic)
+
+EQUIPMENT:
+  - Robes
+  - Quarterstaff
+  - Healer's Kit
+  - Orb (Arcane Focus)
+  - Ring of the Order of the Ruby Orb
+  - Spell Component Pouch
+  - Pearl (100 gp)
+  - Backpack
+  - Bedroll
+  - Bottle of Ink
+  - Ink Pen
+  - Trail Rations (10 days)
+  - Parchment (10 sheets)
+  - Spellbook
+  - Waterskin
+
+ATTACKS:
+  - NAME: Quarterstaff
+    ATTACK: "+0"
+    DAMAGE: 1d6
+    TYPE: bludgeoning
+    RANGE: 5 ft.
+    AMMO: ""
+
+MAGIC:
+  - level: 0                    # CANTRIPS
+  - name: Fire Bolt
+    description: Make a ranged spell attack (+5) to deal 1d10 fire damage to a creature within 120 ft.
+  - name: Light
+    description: An object you touch sheds light like a torch for 1 hour.
+  - name: Mage Hand
+    description: For 1 minute, control a ghostly hand that can move or interact with light, unattended objects within 30 ft.
+  - level: 1                    # 1st LEVEL
+  - name: Burning Hands
+    description: Creatures in a 15-foot cone take 3d6 fire damage, or half as much if they make a Dexterity save (DC 13).
+  - name: Detect Magic [R]
+    description: You sense the presence of magic objects within 30 ft.; visible magic objects appear to glow.
+  - name: Identify [R]
+    description: Learn all of the properties of one magic object you are holding.
+  - name: Mage Armor
+    description: An unarmored creature you touch gains an AC of 13 + their Dexterity modifier for 8 hours.
+  - name: Magic Missile
+    description: Each of three magical bolts of force strikes a target you designate within 120 ft., dealing 1d4+1 force damage.
+
+FEATURES:
+  - name: Arcane Recovery 1/day
+    description: At the end of a rest, regain 1 used spell slot.
+  - name: Ritual Caster
+    description: Cast certain spells as 10-minute rituals instead of using spell slots.
+

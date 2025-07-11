@@ -1,0 +1,89 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Rogue 1
+"BACKGROUND": Farmer
+"PLAYER NAME": ""
+"RACE": Halfling (Lightfoot)
+"ALIGNMENT": Neutral
+"EXPERIENCE POINTS": 0/300
+
+# ability scores — only the score in the lower oval
+STR: 8
+DEX: 17
+CON: 10
+INT: 12
+WIS: 13
+CHA: 15
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 15
+"MAX HP": 13
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+3"
+"SPEED": 25 ft.
+"ARMOR CLASS": 14
+"SENSES": ""
+"HIT DICE": d8
+
+# coin totals
+CP: 10
+SP: 5
+EP: ""
+GP: 5
+PP: ""
+
+PROFICIENCIES:
+  - Acrobatics
+  - Animal Handling
+  - Deception
+  - Investigation
+  - Nature
+  - Perception [E]
+  - Stealth [E]
+  - Thieves' Tools
+  - Language (Common)
+  - Language (Halfling Cant)
+
+EQUIPMENT:
+  - Clothes (Common)
+  - Leather Armor
+  - Dagger (2)
+  - Sling
+  - Sling Bullets (20)
+  - Thieves' Tools
+  - Lucky Rabbit's Foot
+  - Backpack
+  - Bedroll
+  - Hooded Lantern
+  - Oil (10 flasks)
+  - Tinderbox
+  - Trail Rations (10 days)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Dagger
+    ATTACK: "+5"
+    DAMAGE: 1d4+3
+    TYPE: piercing
+    RANGE: 5 ft. or 20/60 ft.
+    AMMO: ""
+  - NAME: Sling
+    ATTACK: "+5"
+    DAMAGE: 1d4+3
+    TYPE: bludgeoning
+    RANGE: 30/120 ft.
+    AMMO: 20 bullets
+
+MAGIC: []
+
+FEATURES:
+  - name: Brave
+    description: You have advantage to save against fear.
+  - name: Lucky
+    description: When you roll a 1 on a check, reroll it and use the new result.
+  - name: Naturally Stealthy
+    description: You can attempt to hide behind a creature bigger than you.
+  - name: Expertise
+    description: Add double your proficiency bonus to Stealth and Perception checks.
+  - name: Sneak Attack 1/turn
+    description: If you attack with advantage or have an ally adjacent to your target, deal +1d6 damage with an attack.
+

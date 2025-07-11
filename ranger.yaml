@@ -1,0 +1,76 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Ranger 1
+"BACKGROUND": Acolyte
+"PLAYER NAME": ""
+"RACE": Dwarf (Mountain)
+"ALIGNMENT": Lawful Good
+"EXPERIENCE POINTS": 0/300
+
+# ability scores — only the score in the lower oval
+STR: 16
+DEX: 12
+CON: 17
+INT: 8
+WIS: 13
+CHA: 10
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 13
+"MAX HP": 22
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+1"
+"SPEED": 25 ft.
+"ARMOR CLASS": 13
+"SENSES": Darkvision 60 ft.
+"HIT DICE": d10
+
+# coin totals
+CP: 5
+SP: 2
+EP: ""
+GP: 5
+PP: ""
+
+PROFICIENCIES:
+  - Animal Handling
+  - Intimidation
+  - Nature
+  - Perception
+  - Religion
+  - Survival
+  - Artisan's Tools (Smith's Tools)
+  - Language (Common)
+  - Language (Dwarvish)
+
+EQUIPMENT:
+  - Clothes (Traveler's)
+  - Hide Armor
+  - Hand Axe (5)
+  - Holy Symbol of Everae
+  - Backpack
+  - Bedroll
+  - Master's Smith Hammer
+  - Trail Rations (10 days)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Hand Axe (Main Hand)
+    ATTACK: "+5"
+    DAMAGE: 1d6+3
+    TYPE: slashing
+    RANGE: 5 ft. or 20/60 ft.
+    AMMO: ""
+  - NAME: Hand Axe (Off Hand) [B]
+    ATTACK: "+5"
+    DAMAGE: 1d6
+    TYPE: slashing
+    RANGE: 5 ft. or 20/60 ft.
+    AMMO: ""
+
+MAGIC: []
+
+FEATURES:
+  - name: Dwarven Resilience
+    description: You have advantage to save against poisons and you're resistant to poison damage.
+  - name: Favored Enemy (Beasts)
+    description: You have advantage when tracking beasts or recalling information about them.

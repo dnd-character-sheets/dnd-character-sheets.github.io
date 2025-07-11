@@ -1,0 +1,96 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Cleric 1
+"BACKGROUND": Soldier
+"PLAYER NAME": ""
+"RACE": Human (Sunderland)
+"ALIGNMENT": Lawful Good
+"EXPERIENCE POINTS": 0/300
+
+# ability scores – only the lower-oval value, abbreviated keys
+STR: 14
+DEX: 13
+CON: 15
+INT: 11
+WIS: 16
+CHA: 9
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 13
+"MAX HP": 17
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+1"
+"SPEED": 30 ft.
+"ARMOR CLASS": 17
+"SENSES": ""
+"HIT DICE": d8
+
+# coin totals
+CP: 10
+SP: 5
+EP: ""
+GP: 10
+PP: ""
+
+PROFICIENCIES:
+  - Athletics
+  - Insight
+  - Intimidation
+  - Medicine
+  - Religion
+  - Gaming Set (Dice)
+  - Language (Celestine)
+  - Language (Common)
+  - Language (Sund)
+
+EQUIPMENT:
+  - Clothes (Common)
+  - Scale Mail
+  - Warhammer
+  - Light Crossbow
+  - Shield
+  - Emblem of Glorion
+  - Backpack
+  - Bedroll
+  - Candle
+  - Censer
+  - Dice Set
+  - Hymnal
+  - Incense (2 blocks)
+  - Rank Insignia
+  - Trail Rations (10 days)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Warhammer
+    ATTACK: "+4"
+    DAMAGE: 1d8+2
+    TYPE: bludgeoning
+    RANGE: 5 ft.
+    AMMO: ""
+  - NAME: Light Crossbow
+    ATTACK: "+3"
+    DAMAGE: 1d8+1
+    TYPE: piercing
+    RANGE: 80/320 ft.
+    AMMO: 20 bolts
+
+MAGIC:
+  - level: 0                  # CANTRIPS
+  - name: Light
+    description: An object you touch sheds light like a torch for 1 hour.
+  - name: Sacred Flame
+    description: A creature within 60 ft. must make a Dexterity save (DC 13) or take 1d8 radiant damage.
+  - level: 1                  # 1st LEVEL
+  - name: Bless [C]
+    description: Three creatures within 30 ft. add +1d4 to all attacks and saves for up to 1 minute.
+  - name: Cure Wounds
+    description: A creature you touch regains 1d8+3 hit points.
+  - name: Divine Favor [B] [C]
+    description: Your weapon deals +1d4 radiant damage for up to 1 minute.
+  - name: Shield of Faith [B] [C]
+    description: A creature within 60 feet gains +2 AC for up to 10 minutes.
+
+FEATURES:
+  - name: War Priest [B] 3/day
+    description: As a bonus action, make an extra attack when you attack.
+

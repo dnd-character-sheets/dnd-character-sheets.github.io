@@ -1,0 +1,106 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Fighter 1
+"BACKGROUND": Soldier
+"PLAYER NAME": ""
+"RACE": Mountain Dwarf
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+# ability scores — only the score in the lower oval
+STR: 17
+DEX: 14
+CON: 14
+INT: 8
+WIS: 14
+CHA: 10
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 14
+"MAX HP": 22
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 25
+"ARMOR CLASS": 18
+"SENSES": Darkvision 60 ft.
+"HIT DICE": d10
+
+# coin totals (none listed on the sheet)
+CP: ""
+SP: ""
+EP: ""
+GP: ""
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Athletics
+  - Intimidation
+  - Perception
+  - Survival
+  - proficiencies_skip: true         # separates skills from tools
+  # Tools & vehicles
+  - Gaming Set (Dice)
+  - Vehicles (Land)
+  - Smith’s Tools
+  - proficiencies_skip: true         # separates tools from languages/arms
+  # Languages, armor, weapons
+  - Languages: Common
+  - Languages: Dwarvish
+  - Armor: All
+  - Shield
+  - Weapons: Simple
+  - Weapons: Martial
+
+EQUIPMENT:
+  - Chainmail Armor
+  - Shield (+2 AC)
+  - Smith’s Tools
+  - Backpack
+  - Crowbar
+  - Hammer
+  - Tinderbox
+  - Torches (10)
+  - Pitons (10)
+  - Rations (10)
+  - Waterskin
+  - 50 ft. Rope
+
+ATTACKS:
+  - NAME: Longsword
+    ATTACK: "+5"
+    DAMAGE: 1d8+3
+    TYPE: slashing
+    RANGE: 5 ft.
+    AMMO: ""
+    NOTES: If wielded with two hands you cannot use your shield (–2 AC) but deal +2 damage.
+  - NAME: Dwarven Long Axe
+    ATTACK: "+5"
+    DAMAGE: 1d8+3
+    TYPE: slashing
+    RANGE: 20/60 ft.
+    AMMO: ""
+    NOTES: One-handed melee weapon that can be thrown.
+
+MAGIC: []
+
+FEATURES:
+  - name: Military Rank
+    description: Advantage on checks in social situations that involve NPCs with military experience.
+  - name: Dwarven Resilience
+    description: Advantage on saving throws against poison and resistance to poison damage (take half damage).
+  - name: Stonecunning
+    description: +1 when examining stonework (History checks related to the origin of stonework).
+  - name: Protection Fighting Style
+    description: When a creature within 5 ft. of you attacks, you may use your reaction to impose disadvantage on its attack roll if you are wielding a shield.
+  - name: Second Wind
+    description: Once per long rest, use a bonus action to heal yourself for 1d10 + 1 HP.
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Obey duty.
+    - Amass wealth.
+    - Prove mettle.
+  suggested_names:
+    - Hovald
+    - Harva
