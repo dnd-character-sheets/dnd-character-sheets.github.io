@@ -1,0 +1,111 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Paladin 1
+"BACKGROUND": Soldier
+"PLAYER NAME": ""
+"RACE": Dragonborn (Bronze)
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+# ability scores — only the score in the lower oval
+STR: 16
+DEX: 8
+CON: 13
+INT: 10
+WIS: 12
+CHA: 16
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 11
+"MAX HP": 18
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "-1"
+"SPEED": 30
+"ARMOR CLASS": 16
+"SENSES": ""
+"HIT DICE": d10
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: 10
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Athletics
+  - Intimidation
+  - Persuasion
+  - Religion
+  - proficiencies_skip: true
+  # Tools & vehicles
+  - Gaming Set (Dice)
+  - Vehicles (Land)
+  - proficiencies_skip: true
+  # Languages, armor, weapons
+  - Languages: Common
+  - Languages: Draconic
+  - Armor: All
+  - Shield
+  - Weapons: Simple
+  - Weapons: Martial
+
+EQUIPMENT:
+  - Common Clothes
+  - Chain Mail Armor
+  - Holy Symbol
+  - Backpack
+  - Bedroll
+  - Mess Kit
+  - Tinderbox
+  - Torches (10)
+  - Rations (10)
+  - Waterskin
+  - 50 ft. Rope
+
+ATTACKS:
+  - NAME: Greatsword
+    ATTACK: "+5"
+    DAMAGE: 2d6+3
+    TYPE: slashing
+    RANGE: 5 ft.
+    AMMO: ""
+    NOTES: ""
+  - NAME: Javelin (5)
+    ATTACK: "+1"
+    DAMAGE: 1d6-1
+    TYPE: piercing
+    RANGE: 30/120 ft.
+    AMMO: 5 javelins
+    NOTES: Can be thrown.
+  - NAME: Breath Weapon (Lightning)
+    ATTACK: "DC 11 Dex"
+    DAMAGE: 2d6
+    TYPE: lightning
+    RANGE: 30-ft line
+    AMMO: ""
+    NOTES: Creatures in the line take full damage on a failed save or half on a success.
+
+MAGIC: []
+
+FEATURES:
+  - name: Military Rank
+    description: Advantage on checks in social situations that involve NPCs with military experience.
+  - name: Resistance (Lightning)
+    description: You take half damage from lightning.
+  - name: Divine Sense
+    description: As an action, you know the location of any consecrated or desecrated object or place or any celestial, fiend, or undead within 60 ft. (4 uses per long rest).
+  - name: Lay on Hands
+    description: You have 5 HP in a healing pool. As an action, heal a touched creature 1 HP (as many points as you like) or spend 5 points to cure a disease or poison.
+  - name: Chain Mail Stealth
+    description: You have disadvantage on Stealth checks while wearing chain mail armor.
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Earn glory.
+    - Do good.
+    - Mete out justice.
+  suggested_names:
+    - Raihan
+    - Raina
