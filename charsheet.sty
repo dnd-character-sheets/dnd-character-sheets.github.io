@@ -580,16 +580,6 @@
 \newdimen\my@xc
 \newdimen\my@yc
 
-\newdimen\my@Nx
-\newdimen\my@Ny
-\newdimen\my@Ex
-\newdimen\my@Ey
-\newdimen\my@Wx
-\newdimen\my@Wy
-\newdimen\my@Sx
-\newdimen\my@Sy
-\newdimen\my@Cx
-\newdimen\my@Cy
 
 \def\shieldTopScale{0.15}
 \def\shieldBottomScale{0.3}
@@ -614,24 +604,24 @@
   \inheritanchor[from=rectangle]{south west}
 
   \anchor{ac}{
-    \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
-    \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
-    \pgfpoint{0.5\my@Wx+0.5\my@Ex}{0.4\my@Sy+0.6\my@Ny}}     
+    \southwest \my@W=\pgf@x \my@S=\pgf@y
+    \northeast \my@E=\pgf@x \my@N=\pgf@y
+    \pgfpoint{0.5\my@W+0.5\my@E}{0.4\my@S+0.6\my@N}}     
 
   % Background path (defines the shape outline)
   \backgroundpath{
 
 
     % Get the corners
-    \southwest \my@Wx=\pgf@x \my@Sy=\pgf@y
-    \northeast \my@Ex=\pgf@x \my@Ny=\pgf@y
+    \southwest \my@W=\pgf@x \my@S=\pgf@y
+    \northeast \my@E=\pgf@x \my@N=\pgf@y
     % p + t(q - p) == (1-t)*p + t * q
-    \pgfmathsetlength\my@Cx{0.5\my@Wx+0.5\my@Ex}
-    \pgfmathsetlength\my@Cy{0.2\my@Sy+0.80\my@Ny}
-    \def\north{\pgfpoint{\my@Cx}{\my@Ny}}
-    \def\west {\pgfpoint{\my@Wx}{\my@Cy}}
-    \def\south{\pgfpoint{\my@Cx}{\my@Sy}}
-    \def\east {\pgfpoint{\my@Ex}{\my@Cy}}
+    \pgfmathsetlength\my@Cx{0.5\my@W+0.5\my@E}
+    \pgfmathsetlength\my@Cy{0.2\my@S+0.80\my@N}
+    \def\north{\pgfpoint{\my@Cx}{\my@N}}
+    \def\west {\pgfpoint{\my@W}{\my@Cy}}
+    \def\south{\pgfpoint{\my@Cx}{\my@S}}
+    \def\east {\pgfpoint{\my@E}{\my@Cy}}
 
     % Draw kite shape with curved lines
     \pgfpathmoveto{\north}
