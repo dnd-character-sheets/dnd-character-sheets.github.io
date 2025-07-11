@@ -1171,8 +1171,8 @@
 
 
 \pgfkeys{
-  /tikz/longhexagon angle/.initial=30,
-  /tikz/longhexagon angle/.default=30
+  /tikz/long hexagon angle/.initial=30,
+  /tikz/long hexagon angle/.default=30
 }
 
 % Declare meaningful coordinate registers
@@ -1199,7 +1199,7 @@
 
 \newcommand\setlonghexoffset[1]{%
     % Get angle and calculate offset
-    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/longhexagon angle}}%
+    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/long hexagon angle}}%
     \pgfmathsetlength{#1}{(0.5\my@N-0.5\my@S)*tan(\hexangle)}%
 }
 
@@ -1229,7 +1229,7 @@
   \my@halfheight=.5\my@halfheight%
 }
 
-\pgfdeclareshape{longhexagon}{%
+\pgfdeclareshape{long hexagon}{%
   % Inherit anchors from rectangle
   \inheritsavedanchors[from=rectangle]
   \inheritanchor[from=rectangle]{center}
@@ -1276,7 +1276,7 @@
     % Get NESW coordinates
     \setmy@NEWSC
     % Get angle and calculate offset
-    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/longhexagon angle}}%
+    \pgfmathsetmacro{\hexangle}{\pgfkeysvalueof{/tikz/long hexagon angle}}%
     \pgfmathsetlength\my@offset{(0.5\my@N-0.5\my@S)*tan(\hexangle)}%
     % Draw hexagon using meaningful coordinates
     \pgfpathmoveto{\pgfpoint{\my@W}{\my@Cy}}% west vertex
@@ -1286,6 +1286,143 @@
     \pgfpathlineto{\pgfpoint{\my@E-\my@offset}{\my@S}}% inner SE
     \pgfpathlineto{\pgfpoint{\my@W+\my@offset}{\my@S}}% inner SW
     \pgfpathclose%
+  }
+}
+
+\pgfkeys{
+  /tikz/long octagon angle/.initial=30,
+  /tikz/long octagon angle/.default=30,
+  /tikz/long octagon end height/.initial=3mm,
+  /tikz/long octagon end height/.default=3mm,
+}
+
+\pgfdeclareshape{long octagon}{%
+  % Inherit anchors from rectangle
+  \inheritsavedanchors[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchor[from=rectangle]{south west}
+  
+ % Saved anchor for inner north west
+  \anchor{inner north west}{%
+    \setmy@NEWSC
+    \setlonghexoffset{\my@offset}%
+    \pgfpoint{\my@W+\my@offset}{\my@N}% inner NW
+  }
+  \anchor{inner north east}{%
+    \setmy@NEWSC
+    \setlonghexoffset{\my@offset}%
+    \pgfpoint{\my@E-\my@offset}{\my@N}% inner NW
+  }
+  
+  \anchor{inner south west}{%
+    \setmy@NEWSC
+    \setlonghexoffset{\my@offset}%
+    \pgfpoint{\my@W+\my@offset}{\my@S}% inner NW
+  }
+  \anchor{inner south east}{%
+    \setmy@NEWSC
+    \setlonghexoffset{\my@offset}%
+    \pgfpoint{\my@E-\my@offset}{\my@S}% inner NW
+  }
+  
+%  \anchor{inner north east}{\pgfprocess{\pgfpointanchor{\tikz@fig@name}{inner north west}}\pgf@x=-\pgf@x}
+%  \anchor{inner south west}{\pgfprocess{\pgfpointanchor{\tikz@fig@name}{inner north west}}\pgf@y=-\pgf@y}
+%  \anchor{inner south east}{\pgfprocess{\pgfpointanchor{\tikz@fig@name}{inner north west}}\pgf@x=-\pgf@x\pgf@y=-\pgf@y}
+  
+
+
+  % Background path
+  \backgroundpath{%
+    % Get NESW coordinates
+    \setmy@NEWSC
+    \pgfmathsetmacro{\octangle}{\pgfkeysvalueof{/tikz/long octagon angle}}%
+    \pgfmathsetlength{\my@ya}{\pgfkeysvalueof{/tikz/long octagon end height}}%
+
+    % Get angle and calculate offset
+    \pgfmathsetlength\my@offset{(0.5\my@N-0.5\my@S-0.5\my@ya)*tan(\octangle)}%
+    % Draw octagon using meaningful coordinates
+    \pgfpathmoveto{\pgfpoint{\my@W}{\my@Cy+0.5\my@ya}}% west vertex
+    \pgfpathlineto{\pgfpoint{\my@W+\my@offset}{\my@N}}% inner NW
+    \pgfpathlineto{\pgfpoint{\my@E-\my@offset}{\my@N}}% inner NE
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@Cy+0.5\my@ya}}% west vertex
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@Cy-0.5\my@ya}}% west vertex
+    \pgfpathlineto{\pgfpoint{\my@E-\my@offset}{\my@S}}% inner SE
+    \pgfpathlineto{\pgfpoint{\my@W+\my@offset}{\my@S}}% inner SW
+    \pgfpathlineto{\pgfpoint{\my@W}{\my@Cy-0.5\my@ya}}% east vertex
+    \pgfpathclose%
+  }
+}
+
+
+\pgfdeclareshape{decorated long octagon}{%
+  % Inherit everything from long octagon
+  \inheritsavedanchors[from=long octagon]
+  \inheritanchor[from=long octagon]{center}
+  \inheritanchor[from=long octagon]{north}
+  \inheritanchor[from=long octagon]{south}
+  \inheritanchor[from=long octagon]{east}
+  \inheritanchor[from=long octagon]{west}
+  \inheritanchor[from=long octagon]{north east}
+  \inheritanchor[from=long octagon]{north west}
+  \inheritanchor[from=long octagon]{south east}
+  \inheritanchor[from=long octagon]{south west}
+  \inheritbackgroundpath[from=long octagon]
+  
+  % Add decorations before the background
+  \beforebackgroundpath{%
+    % Get coordinates and stub radius
+    \setmy@NEWSC
+
+%    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+%    % Calculate inset (one-third of stub radius)
+%    \my@inset=\my@stubradius
+%    \divide\my@inset by 3
+%    % Calculate corner radius for quarter circles
+%    \my@cornerradius=\my@inset
+%    
+%    % Draw rectangle A (inset by one-third stub radius)
+    \my@inset=10pt
+    \pgfsetlinewidth{0.5pt}%
+    \pgfpathrectangle{\pgfpoint{\my@W+\my@inset}{\my@S+\my@inset}}%
+                     {\pgfpoint{\my@E-\my@W-2\my@inset}{\my@N-\my@S-2\my@inset}}%
+    \pgfusepath{stroke}%
+%    
+%    % Draw east and west edge lines
+%    \pgfsetlinewidth{0.3pt}%
+%    \pgfmathsetlength\my@cornerradius{1.0*\my@stubradius}%
+%    % West edge line
+%    \pgfpathmoveto{\pgfpoint{\my@W+2\my@inset}{\my@S+\my@inset+\my@cornerradius}}%
+%    \pgfpathlineto{\pgfpoint{\my@W+2\my@inset}{\my@N-\my@inset-\my@cornerradius}}%
+%    % East edge line
+%    \pgfpathmoveto{\pgfpoint{\my@E-2\my@inset}{\my@S+\my@inset+\my@cornerradius}}%
+%    \pgfpathlineto{\pgfpoint{\my@E-2\my@inset}{\my@N-\my@inset-\my@cornerradius}}%
+%    \pgfusepath{stroke}%
+%    
+%    % Draw quarter circles in corners of rectangle A
+%    \pgfsetlinewidth{0.5pt}%
+%    % SW corner quarter circle
+%    \pgfpathmoveto{\pgfpoint{\my@W+\my@inset+\my@inset}{\my@S+\my@inset}}%
+%    \pgfpatharc{0}{90}{\my@inset}%
+%    \pgfusepath{stroke}%
+%    % SE corner quarter circle
+%    \pgfpathmoveto{\pgfpoint{\my@E-\my@inset}{\my@S+\my@inset+\my@inset}}%
+%    \pgfpatharc{90}{180}{\my@inset}%
+%    \pgfusepath{stroke}%
+%    % NE corner quarter circle
+%    \pgfpathmoveto{\pgfpoint{\my@E-\my@inset-\my@inset}{\my@N-\my@inset}}%
+%    \pgfpatharc{180}{270}{\my@inset}%
+%    \pgfusepath{stroke}%
+%    % NW corner quarter circle
+%    \pgfpathmoveto{\pgfpoint{\my@W+\my@inset}{\my@N-\my@inset-\my@inset}}%
+%    \pgfpatharc{270}{360}{\my@inset}%
+%    \pgfusepath{stroke}%
   }
 }
 
