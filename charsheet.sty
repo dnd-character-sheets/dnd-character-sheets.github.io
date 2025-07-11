@@ -44,11 +44,20 @@
     minimum width=198mm,
   },
   dndhits/.style={
-    dndbox,
-    fill=white,
+    dndmaxhp,
     minimum height=21mm,
   },
   dndmaxhp/.style={
+    dndbox,
+    decorated clipped rectangle,
+    draw,
+    line width=1.2pt,
+    stub radius=2.3mm,
+    fill=white,
+    minimum height=18mm,
+    minimum width=24mm,
+  },
+  old/dndmaxhp/.style={
     dndbox,
     fill=white,
     minimum height=18mm,
@@ -1540,7 +1549,7 @@
     \setmy@NEWSC
     \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
     % Calculate inset (one-third of stub radius)
-    \my@inset=1.6\my@stubradius
+    \my@inset=2\my@stubradius
     %
     %
     % Draw quarter circles in corners of rectangle A
@@ -1599,12 +1608,12 @@
 
       % EW decorations
 
-      \pgfmathsetlength{\my@xa}{\my@E-0.15\my@inset}
+      \pgfmathsetlength{\my@xa}{\my@E-0.22\my@inset}
       \pgfpathmoveto{\pgfpoint{\my@xa}{\my@N-1.05\my@stubradius}}
       \pgfpathlineto{\pgfpoint{\my@xa}{\my@S+1.05\my@stubradius}}
       \pgfusepath{stroke}%
 
-      \pgfmathsetlength{\my@xa}{\my@W+0.15\my@inset}
+      \pgfmathsetlength{\my@xa}{\my@W+0.22\my@inset}
       \pgfpathmoveto{\pgfpoint{\my@xa}{\my@N-1.05\my@stubradius}}
       \pgfpathlineto{\pgfpoint{\my@xa}{\my@S+1.05\my@stubradius}}
       \pgfusepath{stroke}%

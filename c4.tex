@@ -183,29 +183,28 @@
 
       \node (hitdice)
              [dndhits,width=20mm,inside south east corner=of hpbackground,
-             decorate=hpetc,
              dndlabel=HIT DICE] 
          { \Large d8 }
          ;
 
       \node (curhp)
-            [dndhits,fill=white,width=72mm,left=of hitdice,decorate=hpetc,
+            [dndhits,fill=white,width=72mm,left=of hitdice,
              dnd/label={CURRENT HIT POINTS}] 
          { \Large \bfseries\sffamily 10 }
          ;
 
-      \node [dndmaxhp,above left corner=of curhp,decorate=hpetc,dndlabel=MAX HP] 
+      \node [dndmaxhp,above left corner=of curhp,dndlabel=MAX HP] 
          (maxhp)
          { \Large 99 }
          ;
 
       \node (initiative)
-            [dndmaxhp,right=of maxhp,decorate=hpetc,dndlabel=INITIATIVE] 
+            [dndmaxhp,right=of maxhp,dndlabel=INITIATIVE] 
          { +2 }
          ;
 
       \node (speed)
-            [dndmaxhp,right=of initiative,decorate=hpetc,dndlabel=SPEED] 
+            [dndmaxhp,right=of initiative,dndlabel=SPEED] 
          { 30~ft }
          ;
 
