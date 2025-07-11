@@ -1,0 +1,113 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Monk 1
+"BACKGROUND": Professional Boxer
+"PLAYER NAME": ""
+"RACE": Half-Elf
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+# ability scores — only the score in the lower oval
+STR: 10
+DEX: 16
+CON: 12
+INT: 14
+WIS: 14
+CHA: 10
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 12
+"MAX HP": 15
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+3"
+"SPEED": 30 ft
+"ARMOR CLASS": 15
+"SENSES": Darkvision 60 ft.
+"HIT DICE": d8
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: ""
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Acrobatics
+  - History
+  - Insight
+  - Investigation
+  - Performance
+  - Stealth
+  - proficiencies_skip: true
+  # Tools
+  - Leatherworker’s Tools
+  - Thieves’ Tools
+  - proficiencies_skip: true
+  # Languages, armor, weapons
+  - Languages: Common
+  - Languages: Elf
+  - Languages: Dwarf
+  - Languages: Orc
+  - Armor: None
+  - Weapons: Simple
+  - Weapons: Shortsword
+
+EQUIPMENT:
+  - Backpack
+  - Bedroll
+  - Mess Kit
+  - Tinderbox
+  - Torches (10)
+  - Rations (10)
+  - Waterskin
+  - 50 ft. Rope
+  - Thieves’ Tools
+  - Leatherworker’s Tools
+
+ATTACKS:
+  - NAME: Punch
+    ATTACK: "+5"
+    DAMAGE: 1d4+3
+    TYPE: bludgeoning
+    RANGE: 5 ft.
+    AMMO: ""
+    NOTES: Unarmed strike.
+  - NAME: Brass Knuckle
+    ATTACK: "+5"
+    DAMAGE: 1d6+3
+    TYPE: bludgeoning
+    RANGE: 5 ft.
+    AMMO: ""
+    NOTES: —
+  - NAME: Dart (x10)
+    ATTACK: "+5"
+    DAMAGE: 1d4+3
+    TYPE: piercing
+    RANGE: 20/60 ft.
+    AMMO: 10 darts
+    NOTES: Can be thrown.
+
+MAGIC: []
+
+FEATURES:
+  - name: Boxer of Legend
+    description: You have advantage on Charisma checks against anyone who recognizes your boxing moniker “Hammerfist.”
+  - name: Darkvision 60 ft.
+    description: You can see in dim light as if it were bright and in darkness as if it were dim (disadvantage on Perception in darkness).
+  - name: Unarmored Defense
+    description: While wearing no armor, your AC equals 10 + Dex + Wis.
+  - name: Martial Arts
+    description: Use fists, shortsword, or any simple weapon (not heavy or two-handed). Must not wear armor or use a shield. • Use Dex for attack and damage • Unarmed damage is d4 • After taking the Attack action, you may make one punch as a bonus action.
+  - name: Fey Ancestry
+    description: Advantage on saving throws against being charmed, and magic can’t put you to sleep.
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Perfect Self
+    - Discover Truth
+    - Stave Off Boredom
+  suggested_names:
+    - Syrun
+    - Syralla

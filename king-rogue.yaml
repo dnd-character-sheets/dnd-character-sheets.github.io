@@ -1,0 +1,122 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Rogue 1
+"BACKGROUND": Alchemist’s Apprentice
+"PLAYER NAME": ""
+"RACE": Halfling
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+# ability scores — only the score in the lower oval
+STR: 10
+DEX: 17
+CON: 12
+INT: 14
+WIS: 8
+CHA: 14
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 9
+"MAX HP": 15
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+3"
+"SPEED": 25
+"ARMOR CLASS": 14
+"SENSES": ""
+"HIT DICE": d8
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: 10
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Acrobatics
+  - Animal Handling
+  - Deception
+  - Stealth (EXPERT)
+  - Investigation (EXPERT)
+  - proficiencies_skip: true
+  # Tools & vehicles
+  - Alchemist’s Tools
+  - Vehicles (Land)
+  - Thieves’ Tools
+  - proficiencies_skip: true
+  # Languages, armor, weapons
+  - Languages: Common
+  - Languages: Halfling
+  - Languages: Thieves Cant
+  - Armor: Light
+  - Weapons: Simple
+  - Weapons: Hand Crossbow
+  - Weapons: Longsword
+  - Weapons: Rapier
+  - Weapons: Shortsword
+
+EQUIPMENT:
+  - Leather Armor
+  - Alchemist’s Tools
+  - Thieves’ Tools
+  - Iron Pot
+  - Shovel
+  - Backpack
+  - Crowbar
+  - Hammer
+  - Bag of 1 000 Ball Bearings
+  - Hooded Lantern
+  - Flask of Oil (2)
+  - Rations (10)
+  - Waterskin
+  - 50 ft. Rope
+  - Grappling Hook
+
+ATTACKS:
+  - NAME: Rapier
+    ATTACK: "+5"
+    DAMAGE: 1d8+3
+    TYPE: piercing
+    RANGE: 5 ft.
+    AMMO: ""
+    NOTES: Uses Dex modifier, not Str.
+  - NAME: Shortbow
+    ATTACK: "+5"
+    DAMAGE: 1d6+3
+    TYPE: piercing
+    RANGE: 80/320 ft.
+    AMMO: 20 arrows
+    NOTES: —
+  - NAME: Dagger (x2)
+    ATTACK: "+5"
+    DAMAGE: 1d4+3
+    TYPE: piercing
+    RANGE: 20/60 ft.
+    AMMO: ""
+    NOTES: Uses Dex; can be thrown.
+
+MAGIC: []
+
+FEATURES:
+  - name: Rustic Hospitality
+    description: As long as you are no threat to them, most commoners will give you and your party a place to sleep free of charge.
+  - name: Lucky
+    description: Once per long rest, when you roll a 1 on a d20 you may reroll it once.
+  - name: Halfling Nimbleness
+    description: You can move through squares occupied by creatures larger than yourself (medium or bigger).
+  - name: Brave
+    description: You have advantage on saving throws against being frightened.
+  - name: Sneak Attack
+    description: Once per turn you may add +1d6 damage to an attack against a target that is unaware of you or whose attention is elsewhere.
+  - name: Expertise
+    description: Double your proficiency bonus on Stealth and Investigation checks (already noted on the skill list).
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Amass wealth.
+    - Earn recognition.
+    - Stave off boredom.
+  suggested_names:
+    - Pippin
+    - Piper

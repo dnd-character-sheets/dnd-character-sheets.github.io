@@ -1,0 +1,133 @@
+"CHARACTER NAME": ""
+"CLASS & LEVEL": Wizard 1
+"BACKGROUND": Sage
+"PLAYER NAME": ""
+"RACE": High Elf
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+# ability scores — only the score in the lower oval
+STR: 8
+DEX: 14
+CON: 12
+INT: 16
+WIS: 14
+CHA: 10
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 14
+"MAX HP": 12
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 30 ft
+"ARMOR CLASS": 12
+"SENSES": Darkvision 60 ft.
+"HIT DICE": d6
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: 10
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Arcana
+  - History
+  - Insight
+  - Nature
+  - Perception
+  - proficiencies_skip: true
+  # (no tool proficiencies listed)
+  - proficiencies_skip: true
+  # Languages / armor / weapons
+  - Languages: Common
+  - Languages: Elvish
+  - Languages: Draconic
+  - Languages: Dwarvish
+  - Languages: Orcish
+  - Armor: None
+  - Weapons: Dagger
+  - Weapons: Dart
+  - Weapons: Sling
+  - Weapons: Quarterstaff
+  - Weapons: Light Crossbow
+  - Weapons: Longsword
+  - Weapons: Shortsword
+  - Weapons: Longbow
+  - Weapons: Shortbow
+
+EQUIPMENT:
+  - Common Clothes
+  - Bottle of Black Ink
+  - Quill
+  - Small Knife
+  - Parchment (10)
+  - Spellbook
+  - Component Pouch
+  - Rations (10)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Longbow
+    ATTACK: "+4"
+    DAMAGE: 1d8+2
+    TYPE: piercing
+    RANGE: 150/600 ft.
+    AMMO: 20 arrows
+    NOTES: —
+
+MAGIC:
+  - level: 0                                  # CANTRIPS
+  - name: Dancing Lights
+    description: Create up to 4 glowing lights that move independently within 120 ft; last 1 min while you concentrate.
+  - name: Fire Bolt
+    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
+  - name: Light
+    description: Touch an object to shed bright light for 20 ft and dim for 20 ft for 1 hr.
+  - name: Ray of Frost
+    description: Ranged spell attack +5, 60 ft; 1d8 cold and target’s speed −10 ft until your next turn.
+  - name: Mage Hand
+    description: Spectral hand (30 ft) can manipulate objects up to 10 lbs for 1 min.
+  - name: Shocking Grasp
+    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
+  - level: 1                                  # 1st LEVEL
+  - name: Detect Magic [R]
+    description: Sense magic within 30 ft for 10 min; ritual.
+  - name: Feather Fall
+    description: Reaction; up to 5 creatures falling within 60 ft fall slowly, take no damage.
+  - name: Mage Armor
+    description: Touch unarmored creature; AC = 13 + Dex mod for 8 hr.
+  - name: Magic Missile
+    description: Create 3 darts (120 ft) that each deal 1d4+1 force; darts may target different creatures; uses 1st-level slot.
+  - name: Shield
+    description: Reaction; +5 AC until start of next turn, including triggering attack.
+  - name: Silent Image
+    description: Create a visual illusion in a 15-ft cube (120 ft) for 10 min (concentration); Investigation DC 13 reveals.
+  - name: Sleep
+    description: Roll 5d8; up to that total HP of creatures within 90 ft fall asleep for 1 min (ending on shake/damage).
+
+FEATURES:
+  - name: Researcher
+    description: You know where to find written or scholarly information; a check may be required for obscure topics.
+  - name: Darkvision 60 ft
+    description: See in dim light as if bright and in darkness as if dim (disadvantage on Perception in darkness).
+  - name: Trance
+    description: Elves don’t sleep; meditate 4 hr to gain a long-rest benefit.
+  - name: Arcane Recovery 1/day
+    description: After a short rest, regain one expended 1st-level spell slot.
+  - name: Scribe Spell
+    description: Copying a spell into your spellbook costs 2 hours & 50 gp per spell level.
+  - name: Fey Ancestry
+    description: Advantage on saves versus charm; magic can’t put you to sleep.
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Accrue power.
+    - Gain knowledge.
+    - Discover truth.
+  suggested_names:
+    - Eldarion
+    - Eldariel
