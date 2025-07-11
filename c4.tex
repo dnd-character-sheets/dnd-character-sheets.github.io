@@ -58,7 +58,7 @@
 %    \runwidth{\typewidth}{#1}%
     \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
 \end{minipage}}};
-    \dnddecorate{#2};
+%    \dnddecorate{#2};
   }
 }
 
@@ -66,7 +66,7 @@
 \newsectionenv{magic}{MAGIC}{}{}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{CLASS FEATURES}{}{}
-\newsectionenv[64mm]{equipment}{EQUIPMENT}
+\newsectionenvx[width=64mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
    {\medskip
     \small
     \begin{minipage}{60mm}
@@ -275,17 +275,35 @@
     \item Trail Rations (10 days), Waterskin
 \end{equipment}
 
-\begin{equipmentx}[right=of equipment]
-    \item Clothes (Fine)
-    \item Leather Armor
-    \item Shortsword
-    \item Lyre
-    \item Backpack
-    \item Bedroll, Book of Elvish Poetry
-    \item Bottle of Ink, Ink Pen
-    \item Parchment (10 sheets), Tinderbox
-    \item Trail Rations (10 days), Waterskin
-\end{equipmentx}
+\path (equipment.north west) +(3mm,-4mm) coordinate (coin top left);
+
+\tikzset{coin/.style={
+   dndbox,
+   long octagon,
+   long octagon angle=45,
+   long octagon end height=2.5mm,
+   width=15.5mm,
+   height=7.5mm
+}}
+
+\node (cp) [coin,anchor=north west,at=(coin top left)] {10};
+\node (sp) [coin,below=of cp] {5};
+\node (ep) [coin,below=of sp] {};
+\node (gp) [coin,below=of ep] {10};
+\node (pp) [coin,below=of gp] {};
+
+
+%\begin{equipmentx}[right=of equipment]
+%    \item Clothes (Fine)
+%    \item Leather Armor
+%    \item Shortsword
+%    \item Lyre
+%    \item Backpack
+%    \item Bedroll, Book of Elvish Poetry
+%    \item Bottle of Ink, Ink Pen
+%    \item Parchment (10 sheets), Tinderbox
+%    \item Trail Rations (10 days), Waterskin
+%\end{equipmentx}
 
   
 \node (proficiency bonus)
