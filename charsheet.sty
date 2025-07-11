@@ -1488,6 +1488,22 @@
   \@ifundefined{dnd@val@#1}{#3}{#2}%
 }
 
+\let\getDND\valueDND
+
+\WithSuffix\newcommand\getDND*[1]{%
+  \ifDNDdefined{#1}
+    {\getDND{#1}}
+    {\strut}
+}
+
+\WithSuffix\newcommand\getDND+[2]{%
+  \ifDNDdefined{#1}
+    {\getDND{#1}}
+    {#2}
+}
+
+
+
 %%  I'd like you to use \pgfdeclareshape to define a shape for me.  I want
 %%  something called "stub rectangle".  It is a rectangle except each
 %%  corner is replaced with a corner circle, as if a circular bite had
@@ -1778,3 +1794,193 @@
 
   }
 }
+
+\pgfkeys{
+  /runwidth/.cd,
+  width/.code={
+    \expandafter\@runwidth@macro\expandafter{#1}%
+  },
+  .unknown/.code={} % ignore everything else
+}%
+
+
+\newcommand{\runwidth}[2]{%
+  % Store the macro name
+  \def\@runwidth@macro{#1}%
+  % Set up a key handler for "width"
+  % Now parse the key-value list
+  \pgfkeys{/runwidth/.cd, #2}%
+}
+
+\newcommand\pplabel{{\tiny PASSIVE PERCEPTION}}
+
+
+\newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
+  \node (#2) [#3] #4 { \Large \sffamily \mdseries #5 } ;
+  \dnddecorate[#1]{#2};
+  \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
+        {\textsf{\footnotesize #6}}
+}
+
+\newdimen\mytemp
+
+\newcommand\newsectionenv[5][]{%
+   % [width]{name}{label}{pre-code}{post-code}
+  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+  \expandafter\newdimen\csname#2width\endcsname
+  \runwidth{\setsectionenvwidth{#2}}{width=\dndrightwidth,#1}%
+  \NewEnviron{#2}[1][]{
+    % [...] name 
+    \runwidth{\setsectionenvwidth{#2}}{##1}%
+    \setlength{\my@xa}{\csname#2width\endcsname-7mm}%
+%    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
+    \typeout{\string\node{}  [#2,#1,##1] (#2) ...}%
+    \node [width=\dndrightwidth,#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
+         #4%
+         \csname#2body\endcsname
+         #5%
+         \par\medskip
+         \typeout{{\string\hsize} inside #2 is \the\hsize}%
+         \hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+         \end{minipage}}};
+%    \dnddecorate{#2};
+  }
+}
+
+
+
+\newcommand\typewidth[1]{\typeout{width is #1}}
+\newcommand\setsectionenvwidth[2]{% section-env-name annotations
+%  \typeout{setting #1width to #2}%
+%  \expandafter\show\csname#1width\endcsname
+  \expandafter\setlength\csname#1width\endcsname{#2}%
+%  \expandafter\show\csname l@#1width\endcsname
+}
+
+%%%%    \newcommand\newsectionenvx[5][\dndrightwidth]{%
+%%%%       % [annotations]{name}{label}{pre-code}{post-code}
+%%%%      \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
+%%%%      \expandafter\newdimen\csname#2width\endcsname
+%%%%      \NewEnviron{#2}[1][]{
+%%%%        % [...] name 
+%%%%        %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
+%%%%    %    \expandafter\setlength\csname#2width\endcsname{40mm}%
+%%%%    %    \runwidth{\typewidth}{#1}%
+%%%%    %    \def\@runwidth@macro###1{\setlength{\csname#2width\endcsname}{zorch}}%
+%%%%    %    \show\@runwidth@macro
+%%%%    %    \pgfkeys{/runwidth/.cd, ##1}%
+%%%%        \runwidth{\setsectionenvwidth{#2}}{##1}%
+%%%%        \expandafter\advance\csname#2width\endcsname by -6mm
+%%%%        \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
+%%%%    \end{minipage}}};
+%%%%    %    \dnddecorate{#2};
+%%%%      }
+%%%%    }
+
+\newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
+
+
+
+\newcounter{proficiency bonus}
+\newcounter{ptemp}
+
+\newcommand\signed[1]{%
+  \ifnum#1<0
+    \setcounter{ptemp}{#1}%
+    \setcounter{ptemp}{0-\value{ptemp}}%
+    \textminus\the\value{ptemp}%
+  \else
+    +#1%
+  \fi
+}
+
+\newcommand\fullstatbox[5][]{% location name number modifier saving-throw
+  \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
+%  \dnddecorate[stats]{#2}
+  \dndtoplabel{#2}{\tiny#2}
+  \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
+  \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
+            at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+}
+
+
+\newcommand\dndlabel[2]{% {node}{label text}
+  \node [outer sep=0pt, inner sep=0pt, above=of #1.south]
+        {\textsf{\footnotesize #2}};
+}
+\newcommand\dndtoplabel[2]{% {node}{label text}
+  \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
+        {\textsf{\footnotesize #2}};
+}
+
+
+
+\newcounter{statmod}%
+\newcounter{saving}%
+
+\newcommand\statcommon[3]{% name value amount-to-add-to-saving
+%   \show\nextstatloc
+   \setcounter{statmod}{(#2 - 10) / 2}%
+   \setcounter{saving}{\value{statmod} + #3}%
+   \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{#2}{\thestatmod}{\thesaving}%
+   \gdef\nextstatloc{below=7mm of #1}%
+}
+
+\newcommand{\stat}[2]{%
+   \statcommon{#1}{#2}{0}%
+}
+
+\WithSuffix\newcommand\stat*[2]{%
+  \statcommon{#1}{#2}{\value{proficiency bonus}}%
+}
+
+\newcommand\fullcoinbox[4][]{% location-setter nodename label number
+  \node (preliminary #2) [coin,#1,fill=equipment] {#4};
+  \node [dndbox,long octagon,long octagon end height=1.5mm,long
+         octagon angle=45,fill=equipment, height=5mm, width=13mm,anchor=center]
+     at ($(preliminary #2.west)+(0pt,0pt)$)
+     {\hbox to 10mm{\hspace*{0mm}\small#3\hss}}
+     ;
+  \node (#2) [coin,#1,fill=equipment] {#4};
+}
+
+\newcommand\nextcoinloc{anchor=north west,at=(coin top left)}
+
+\newcommand\coin[3]{% name label number
+   \expandafter\fullcoinbox\expandafter[\nextcoinloc]{#1}{#2}{#3}%
+   \gdef\nextcoinloc{below=of #1}%
+}
+
+\newDND{ALIGNMENT}
+\newDND{ARMOR CLASS}
+\newDND{ATTACKS}
+\newDND{BACKGROUND}
+\newDND{CHA}
+\newDND{CHARACTER NAME}
+\newDND{CLASS + LEVEL}
+\newDND{CON}
+\newDND{CP}
+\newDND{CURRENT HIT POINTS}
+\newDND{DESCRIPTION + PERSONALITY}
+\newDND{DEX}
+\newDND{EP}
+\newDND{EQUIPMENT}
+\newDND{EXPERIENCE POINTS}
+\newDND{FEATURES}
+\newDND{GP}
+\newDND{HIT DICE}
+\newDND{INITIATIVE}
+\newDND{INT}
+\newDND{MAGIC}
+\newDND{MAX HP}
+\newDND{PASSIVE PERCEPTION}
+\newDND{PLAYER NAME}
+\newDND{PP}
+\newDND{PROFICIENCIES}
+\newDND{PROFICIENCY BONUS}
+\newDND{RACE}
+\newDND{SENSES}
+\newDND{SP}
+\newDND{SPEED}
+\newDND{STR}
+\newDND{WIS}

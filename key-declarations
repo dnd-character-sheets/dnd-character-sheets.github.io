@@ -85,5 +85,5 @@ for k in pairs(declared) do keys[#keys+1] = k end
 table.sort(keys)
 
 for _,k in ipairs(keys) do
-  io.write("\\declareDND{", k, "}\n")
+  io.write("\\newDND{", k, "}\n")
 end

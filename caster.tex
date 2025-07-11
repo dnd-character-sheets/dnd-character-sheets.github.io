@@ -50,7 +50,8 @@
 \noindent
 \begin{charsheet}
 
-  \setcounter{proficiency bonus}{2}
+  \input{barb}
+%  \setcounter{proficiency bonus}{2}
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
@@ -58,26 +59,26 @@
   \begingroup\sffamily
 
   
-
+  
   \node (class and level)
     [fill=splashfield,anchor=south west,width=38mm] at ($(splash.south west)+(88mm,19mm)$)
-    {\hbox to 36mm{\itshape class and level\hfill}}
+    {\hbox to 36mm{\itshape \getDND*{CLASS + LEVEL}\hfill}}
     ;
 
   \node[fill=splashfield,right=1mm of class and level,width=36mm]
-    {\hbox to 36mm{\itshape background\hfill}}
+    {\hbox to 36mm{\itshape \getDND*{BACKGROUND}\hfill}}
     ;
     
   \node (race) [fill=splashfield,below left corner=4.2mm of class and level,width=36mm]
-    {\hbox to 36mm{\itshape race\hfill}}
+    {\hbox to 36mm{\itshape \getDND*{RACE}\hfill}}
     ;
     
   \node (alignment) [fill=splashfield,right=1mm of race,width=26mm]
-    {\hbox to 26mm{\itshape alignment\hfill}}
+    {\hbox to 26mm{\itshape \getDND*{ALIGNMENT}\hfill}}
     ;
     
   \node (alignment) [fill=splashfield,right=1mm of alignment,width=26mm]
-    {\hbox to 26mm{\itshape experience points\hfill}}
+    {\hbox to 26mm{\itshape \getDND*{EXPERIENCE POINTS}\hfill}}
     ;
     
 
@@ -90,7 +91,7 @@
       \node (hitdice)
              [dndhits,width=20mm,inside south east corner=of hpbackground,
              dndlabel=HIT DICE] 
-         { \Large d8 }
+         { \Large \getDND*{HIT DICE}{} }
          ;
 
       \node (curhp)

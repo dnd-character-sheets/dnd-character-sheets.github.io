@@ -65,19 +65,52 @@ local function keys_in_canonical_order (record, canon_index)
   return ordered
 end
 
+local function keyformat(key)
+  return (key:gsub('%&', '+'))
+end
+
 ---------------------------------------------------------------------------
 -- 3. Rendering helpers
 ---------------------------------------------------------------------------
 local function render_simple_kv (key, val)
-  return ("\\setDND{%s}{%s}"):format(escape(key), escape(val))
+  return ("\\setDND{%s}{%s}"):format(keyformat(key), escape(val))
+end
+
+local function render(v)
+  if type(v) == 'string' then
+    return escape(v)
+  elseif type(v) ~= 'table' then
+    return tostring(v)
+  else
+    if v.proficiencies_skip then
+      return [[\profskip]]
+    elseif v.Languages then
+      return v.Languages
+    elseif v.Armor then
+      return string.format('%s Armor', v.Armor)
+    elseif v.Weapons then
+      return string.format('%s Weapons', v.Weapons)
+    else
+      return 'whut?: ' .. (require 'inspect'.image(v))
+    end
+  end
+end
+
+local function render_item(v)
+  local s = render(v)
+  if s:find 'profskip' then
+    return s
+  else
+    return ([[\item %s]]):format(s)
+  end
 end
 
 local function render_item_list (key, list)
   local items = {}
   for _,v in ipairs(list) do
-    items[#items+1] = ("\\item %s"):format(escape(v))
+    items[#items+1] = render_item(v)
   end
-  return ("\\setDND{%s}{%s}"):format(escape(key), table.concat(items, "\n"))
+  return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(items, "\n"))
 end
 
 local function render_attack_record (rec)
@@ -113,7 +146,7 @@ local function render_struct_list (key, list)
       out[#out+1] = render_generic_record(elem)
     end
   end
-  return ("\\setDND{%s}{%s}"):format(escape(key), table.concat(out, "\n"))
+  return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(out, "\n"))
 end
 
 ---------------------------------------------------------------------------
