@@ -81,8 +81,6 @@ ATTACKS:
     AMMO: ""
     NOTES: Can be thrown.
 
-MAGIC: []
-
 FEATURES:
   - name: Hermit Discovery
     description: With an action you can use an Herbalism Kit, destroying it in the process, to stabilize one target.
