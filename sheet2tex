@@ -39,7 +39,8 @@ end
 -- 1. TeX-escaping utility
 ---------------------------------------------------------------------------
 local tex_escape_map = {
-  ["\\"] = "\\textbackslash{}",
+--  ["\\"] = "\\textbackslash{}",
+  [' '] = '~',
   ["&"]  = "\\&",
   ["%"]  = "\\%",
   ["$"]  = "\\$",
@@ -141,8 +142,17 @@ local function render_generic_record (rec)
   return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
 end
 
+local function note(elem)
+  return elem.NOTE  and elem.NOTE :find '%S' and elem.NOTE or
+         elem.NOTES and elem.NOTES:find '%S' and elem.NOTES
+end
+
+
+
 local function render_struct_list (key, list)
+  eprintf('rendering struct for %s\n', key)
   local out = {}
+  local notes_header_out = false
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
       out[#out+1] = ("\\item %s"):format(escape(tostring(elem)))
@@ -152,11 +162,23 @@ local function render_struct_list (key, list)
       out[#out+1] = ("\\described{%s}{%s}"):format(
                       escape(elem.name), escape(elem.description))
     elseif elem.ATTACK then
+      eprintf('rendering an attack\n')
+      require 'inspect'.show(elem)
       out[#out+1] = render_attack_record(elem)
     else
       out[#out+1] = render_generic_record(elem)
     end
   end
+  for _,elem in ipairs(list) do
+    if elem.ATTACK and note(elem) then
+      if not notes_header_out then
+        out[#out+1] = [[\notesheader]]
+        notes_header_out = true
+      end
+      out[#out+1]=([[\attacknote{%s}{%s}]]):format(elem.NAME, note(elem))
+    end
+  end
+
   return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(out, "\n"))
 end
 
@@ -239,6 +261,7 @@ local function extend(doc)
       doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
     end
   end
+  doc.LEVEL = doc.LEVEL or doc['CLASS & LEVEL']:match '%d+' or nil
   return doc
 end
 

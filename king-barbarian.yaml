@@ -72,7 +72,6 @@ ATTACKS:
     TYPE: slashing
     RANGE: 5 ft.
     AMMO: ""
-    NOTES: ""
   - NAME: Hand Axe (x2)
     ATTACK: "+5"
     DAMAGE: 1d6+3
@@ -96,9 +95,9 @@ FEATURES:
     description: |
        Start/stop as a bonus action. Lasts 1 minute or until you are
        unconscious or fail to attack or take damage for 1 turn. Can’t
-       concentrate. While raging: • Advantage on Str checks & saves. •
-       Melee Str attacks deal +2 damage. • You take half damage from
-       bludgeoning, piercing, and slashing damage. • At 1st level you
+       concentrate. \par \smallskip While raging: • Advantage on Str checks & saves. 
+       • Melee Str attacks deal +2 damage. • You take half damage from
+       bludgeoning, piercing, and slashing damage. • At 1st level you
        can rage 2 times per long rest.
 
 "DESCRIPTION & PERSONALITY":

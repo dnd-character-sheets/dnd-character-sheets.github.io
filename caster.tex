@@ -58,29 +58,21 @@
 
   \begingroup\sffamily
 
-  
-  
-  \node (class and level)
-    [fill=splashfield,anchor=south west,width=38mm] at ($(splash.south west)+(88mm,19mm)$)
-    {\hbox to 36mm{\itshape \getDND*{CLASS + LEVEL}\hfill}}
-    ;
+  \newcommand\namestrut{\vrule width 0pt depth 1pt\relax}
 
-  \node[fill=splashfield,right=1mm of class and level,width=36mm]
-    {\hbox to 36mm{\itshape \getDND*{BACKGROUND}\hfill}}
-    ;
-    
-  \node (race) [fill=splashfield,below left corner=4.2mm of class and level,width=36mm]
-    {\hbox to 36mm{\itshape \getDND*{RACE}\hfill}}
-    ;
-    
-  \node (alignment) [fill=splashfield,right=1mm of race,width=26mm]
-    {\hbox to 26mm{\itshape \getDND*{ALIGNMENT}\hfill}}
-    ;
-    
-  \node (alignment) [fill=splashfield,right=1mm of alignment,width=26mm]
-    {\hbox to 26mm{\itshape \getDND*{EXPERIENCE POINTS}\hfill}}
-    ;
-    
+  \path ($(splash.south west)+(88mm,18.75mm)$) coordinate  (class sw);
+  \path ($(splash.south west)+(88mm,9.7mm)$) coordinate  (race sw);
+ 
+  \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(class sw)] {};
+  \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(race sw)] {};
+
+  \writesplash[at=(class sw)]{34mm}{CLASS + LEVEL}
+  \writesplash[right of base=1mm of CLASS + LEVEL]{34mm}{BACKGROUND}
+  \writesplash[right of base=1mm of BACKGROUND]{34mm}{PLAYER NAME}
+
+  \writesplash[at=(race sw)]{34mm}{RACE}
+  \writesplash[right of base=1mm of RACE]{34mm}{ALIGNMENT}
+  \writesplash[right of base=1mm of ALIGNMENT]{34mm}{EXPERIENCE POINTS}
 
 \Large
 
@@ -93,6 +85,13 @@
              dndlabel=HIT DICE] 
          { \Large \getDND*{HIT DICE}{} }
          ;
+
+     \ifDNDdefined{LEVEL}{
+       \expandafter\ifnum\rawgetDND{LEVEL}<3
+         \node [at=(hitdice.north),anchor=north] 
+              {\expandafter\spellslots\expandafter{\rawgetDND{LEVEL}+1}};
+       \fi
+     }{}
 
       \node (curhp)
             [dndhits,fill=white,width=72mm,left=of hitdice,
@@ -128,8 +127,7 @@
 \begin{attacks}[below right corner=of hpbackground]{}
     \centering
     \begin{attackstab}
-    Shortsword & +4 & 1d6+2 & piercing & 5 ft. & ---\\
-    Hand Axe (off~hand) [B]& +5 & 1d6 & slashing & 5~ft or 20/60~ft& ---\\
+    \getDND{ATTACKS}
     \end{attackstab}
 \end{attacks}
 
@@ -152,7 +150,7 @@
 {\node (magic) at (attacks.south) {};}
 
 \ifDNDdefined{FEATURES}{
-\begin{features}[below=of magic]{}
+\begin{features}[anchor=south east,at=(current bounding box.south east)]{}
 \let\described=\feature
 \begin{featurestab}
 \getDND{FEATURES}
@@ -171,24 +169,20 @@
 \dndstat{CHARISMA}{CHA}
 
   
-\begin{equipment}[left of lower corner=of features]
-    \item Clothes (Fine)
-    \item Leather Armor
-    \item Shortsword
-    \item Lyre
-    \item Backpack
-    \item Bedroll, Book of Elvish Poetry
-    \item Bottle of Ink, Ink Pen
-    \item Parchment (10 sheets), Tinderbox
-    \item Trail Rations (10 days), Waterskin
-\end{equipment}
+\ifDNDdefined{EQUIPMENT}{%
+  \begin{equipment}[left of lower corner=of features]
+     \getDND{EQUIPMENT}
+  \end{equipment}
+}
+{\node (equipment) [left of lower corner=of features] {};
+}
 
 \path (equipment.north west) +(3mm,-4mm) coordinate (coin top left);
 
 
-\coin{cp}{Cu}{10}
-\coin{sp}{Ag}{5}
-\coin{gp}{Au}{G}
+\coin{cp}{Cu}{\getDND*{CP}}
+\coin{sp}{Ag}{\getDND*{SP}}
+\coin{gp}{Au}{\getDND*{GP}}
   
 \node (proficiency bonus)
       [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
@@ -203,26 +197,7 @@
 % Proficiencies section (middle top)
 \begin{proficiencies}[below=of proficiency bonus,width=38.002mm]
   \small
-\item
-  {Acrobatics}
-\item
-  Arcana
-\item
-  History
-\item
-  Investigation
-\item
-  Perception
-\item
-  Performance
-\item
-  Persuasion
-\item
-  Musical Instrument (Lyre)
-\item
-  Language (Common)
-\item
-  Language (Elvish)
+\getDND*{PROFICIENCIES}
 \end{proficiencies}
 
 \node (passive perception)

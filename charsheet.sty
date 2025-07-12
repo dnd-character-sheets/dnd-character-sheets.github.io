@@ -22,7 +22,7 @@
 \colorlet{mypurple}{red!40!blue}
 \colorlet{features}{magenta!16!white}
 \colorlet{playername}{green!90!yellow!8!white}
-\colorlet{splashfield}{playername!96!black}
+\colorlet{splashfield}{playername!97.5!black}
 \colorlet{teal}{blue!40!green}
 \colorlet{equipment}{playername}
 \colorlet{hpetc}{gray!40!white}
@@ -392,62 +392,62 @@
 \let\rightwidth=\dndrightwidth
 
 
-% Specific section environments with fixed positions
-% Use different body names to avoid conflicts
-\environbodyname\attacksbody
-\NewEnviron{attackssection}{%
-  \ifcaster
-    \def\y{152mm}%
-    \def\h{26mm}
-  \else
-    \def\y{129mm}%
-    \def\h{49mm}
-  \fi  
-  \begin{dndsection}{\rightx}{\y}{\rightwidth}{\h}{ATTACKS}{attacks}
-    \attacksbody
-  \end{dndsection}
-}[\ignorespacesafterend]
-% y = 128mm for noncasters
-
-
-\environbodyname\featuresbody
-
-%%\NewEnviron{featuressection}{%  noncaster
-%%  \begin{dndsection}{\rightx}{55mm}{\rightwidth}{70mm}{FEATURES}{features}
-%%    \featuresbody
-%%  \end{dndsection}
-%%}[\ignorespacesafterend]
-%%
-
-\NewEnviron{featuressection}{%  caster
-  \begin{dndsection}{\rightx}{0mm}{\rightwidth}{42mm}{FEATURES}{features}
-    \featuresbody
-  \end{dndsection}
-}[\ignorespacesafterend]
-
-
-\environbodyname\magicbody  
-\NewEnviron{magicsection}{%
-  \dndnode{magic}{\rightx,44.5mm}{\rightwidth}{105mm};
-  \begin{dndsection}{\rightx}{44.5mm}{\rightwidth}{105mm}{MAGIC}{magic}
-    \magicbody
-  \end{dndsection}
-}[\ignorespacesafterend]
-
-\environbodyname\equipmentbody
-\NewEnviron{equipmentsection}{%
-  \dndnode{equipment}{0mm,0mm}{68mm}{53mm}
-  \begin{dndsection}{0mm}{0mm}{68mm}{53mm}{EQUIPMENT}{equipment}
-    \equipmentbody
-  \end{dndsection}
-}[\ignorespacesafterend]
-
-\environbodyname\proficienciesbody
-\NewEnviron{proficienciessection}{%
-  \begin{dndsection}{30mm}{55mm}{38mm}{160mm}{PROFICIENCIES}{proficiencies}
-    \proficienciesbody
-  \end{dndsection}
-}[\ignorespacesafterend]
+%%%%    % Specific section environments with fixed positions
+%%%%    % Use different body names to avoid conflicts
+%%%%    \environbodyname\attacksbody
+%%%%    \NewEnviron{attackssection}{%
+%%%%      \ifcaster
+%%%%        \def\y{152mm}%
+%%%%        \def\h{26mm}
+%%%%      \else
+%%%%        \def\y{129mm}%
+%%%%        \def\h{49mm}
+%%%%      \fi  
+%%%%      \begin{dndsection}{\rightx}{\y}{\rightwidth}{\h}{ATTACKS}{attacks}
+%%%%        \attacksbody
+%%%%      \end{dndsection}
+%%%%    }[\ignorespacesafterend]
+%%%%    % y = 128mm for noncasters
+%%%%    
+%%%%    
+%%%%    \environbodyname\featuresbody
+%%%%    
+%%%%    %%\NewEnviron{featuressection}{%  noncaster
+%%%%    %%  \begin{dndsection}{\rightx}{55mm}{\rightwidth}{70mm}{FEATURES}{features}
+%%%%    %%    \featuresbody
+%%%%    %%  \end{dndsection}
+%%%%    %%}[\ignorespacesafterend]
+%%%%    %%
+%%%%    
+%%%%    \NewEnviron{featuressection}{%  caster
+%%%%      \begin{dndsection}{\rightx}{0mm}{\rightwidth}{42mm}{FEATURES}{features}
+%%%%        \featuresbody
+%%%%      \end{dndsection}
+%%%%    }[\ignorespacesafterend]
+%%%%    
+%%%%    
+%%%%    \environbodyname\magicbody  
+%%%%    \NewEnviron{magicsection}{%
+%%%%      \dndnode{magic}{\rightx,44.5mm}{\rightwidth}{105mm};
+%%%%      \begin{dndsection}{\rightx}{44.5mm}{\rightwidth}{105mm}{MAGIC}{magic}
+%%%%        \magicbody
+%%%%      \end{dndsection}
+%%%%    }[\ignorespacesafterend]
+%%%%    
+%%%%    \environbodyname\equipmentbody
+%%%%    \NewEnviron{equipmentsection}{%
+%%%%      \dndnode{equipment}{0mm,0mm}{68mm}{53mm}
+%%%%      \begin{dndsection}{0mm}{0mm}{68mm}{53mm}{EQUIPMENT}{equipment}
+%%%%        \equipmentbody
+%%%%      \end{dndsection}
+%%%%    }[\ignorespacesafterend]
+%%%%    
+%%%%    \environbodyname\proficienciesbody
+%%%%    \NewEnviron{proficienciessection}{%
+%%%%      \begin{dndsection}{30mm}{55mm}{38mm}{160mm}{PROFICIENCIES}{proficiencies}
+%%%%        \proficienciesbody
+%%%%      \end{dndsection}
+%%%%    }[\ignorespacesafterend]
 
 
 
@@ -521,17 +521,7 @@
   \multicolumn2{l}{\textsf{CANTRIPS}}%
 }
 
-\newcommand{\checkboxes}[1]{%
-  \begingroup
-  \count0=#1\relax
-  \loop
-    \ifnum\count0>0
-      $\circ$\,
-      \ifnum\count0>1~\fi
-      \advance\count0 by -1
-  \repeat
-  \endgroup
-}
+\newcounter{boxcounter}
 
 \newcommand\hpetcll{\rightx + 30mm, 184mm}
 
@@ -547,15 +537,17 @@
 %}
 
 \newcommand\spellsheader[2]{%
-  \multicolumn2{l}{\textsf{LEVEL~#1 \checkboxes{#2}/day}}%
+  \multicolumn2{l}{\textsf{LEVEL~#1 \spellslots{#2}/day}}%
 }
 
 
 \newenvironment{attackstab}
   {\renewcommand\arraystretch{1.3}%
+   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
    \tabcolsep=0.5\tabcolsep
    \small
-   \begin{tabular}{@{}cccccc@{}}
+   \let\dndkeys=\attackkeys
+   \begin{tabular*}{\hsize-6mm}{@{\extracolsep{\fill}}cccccc@{}}
    \multicolumn1{@{}l}{\textsf{NAME}}&
    \textsf{ATTACK}&
    \textsf{DAMAGE}&
@@ -564,7 +556,7 @@
    \textsf{AMMO}\\
    \midrule
   }
-  {\end{tabular}}
+  {\end{tabular*}}
 
 
 %-------------------------------------------------------------
@@ -899,34 +891,31 @@
 }
 
 
-\newcommand{\spellslotso}[1]{%
-  \hbox{%
-    \begin{tikzpicture}[baseline=(current bounding box.center)]
-      \ifnum#1>0
-        % Draw the first circle
-        \draw (0,0) circle (1.6mm);
-        
-        % Draw remaining circles with double lines between them
-        \foreach \i in {2,...,#1} {
-          \pgfmathsetmacro{\xpos}{(\i-1)*6.2}
-          \pgfmathsetmacro{\prevxpos}{(\i-2)*6.2}
-          
-          % Draw double line from previous circle to current position
-          \draw[double, double distance=0.4mm] 
-            (\prevxpos mm + 1.6mm, 0) -- (\xpos mm - 1.6mm, 0);
-          
-          % Draw current circle
-          \draw (\xpos mm,0) circle (1.6mm);
-        }
-      \fi
-    \end{tikzpicture}%
-  }%
-}
-
-
-
-
-\newcommand{\spellslots}[1]{%
+%\newcommand{\spellslotsliteral}[1]{%
+%  \hbox{%
+%    \begin{tikzpicture}[baseline=(current bounding box.center),thick]
+%      \ifnum#1>0
+%        % Draw the first circle
+%        \draw (0,0) circle (1.6mm);
+%        
+%        % Draw remaining circles with double lines between them
+%        \foreach \i in {2,...,#1} {
+%          \pgfmathsetmacro{\xpos}{(\i-1)*5.2}
+%          \pgfmathsetmacro{\prevxpos}{(\i-2)*5.2}
+%          
+%          % Draw double line from previous circle to current position
+%          \draw[double, double distance=0.4mm] 
+%            (\prevxpos mm + 1.6mm, 0) -- (\xpos mm - 1.6mm, 0);
+%          
+%          % Draw current circle
+%          \draw (\xpos mm,0) circle (1.6mm);
+%        }
+%      \fi
+%    \end{tikzpicture}%
+%  }%
+%}
+%
+\newcommand{\spellslotsliteral}[1]{%
   \hbox{%
     \begin{tikzpicture}[baseline=1pt, thick]
       \ifnum#1>0
@@ -949,6 +938,18 @@
     \end{tikzpicture}%
   }%
 }
+
+
+\newcounter{slotcounter}
+\newcommand{\spellslots}[1]{%
+  \setcounter{slotcounter}{#1}%
+  \expandafter\spellslotsliteral\expandafter{\value{slotcounter}}%
+}
+
+
+
+
+
 
 
 
@@ -1044,8 +1045,22 @@
     right of lower corner/.code={%
         \tikz@corner@parse#1\tikz@stop%
         \tikzset{%
-            anchor=north west,
+            anchor=south west,
             at={($(\tikz@corner@node.south east)+(\tikz@corner@distance,0)$)}%
+        }%
+    },
+    right of base/.code={%
+        \tikz@corner@parse#1\tikz@stop%
+        \tikzset{%
+            anchor=base west,
+            at={($(\tikz@corner@node.base east)+(\tikz@corner@distance,0)$)}%
+        }%
+    },
+    left of base/.code={%
+        \tikz@corner@parse#1\tikz@stop%
+        \tikzset{%
+            anchor=base east,
+            at={($(\tikz@corner@node.base west)+(\tikz@corner@distance,0)$)}%
         }%
     },
     % Left of upper corner with optional distance
@@ -1983,6 +1998,7 @@
 \newDND{INITIATIVE}
 \newDND{INT}
 \newDND{INT SAVING}
+\newDND{LEVEL}
 \newDND{MAGIC}
 \newDND{MAX HP}
 \newDND{PASSIVE PERCEPTION}
@@ -2007,4 +2023,57 @@
        {\stat{#1}{\rawgetDND{#2}}}
   }{%
   }
+}
+
+
+\pgfkeys{
+  /attacks/.cd,
+  NAME/.code={%
+    \gdef\@attackname{#1}%
+  },
+  ATTACK/.code={%
+    \typeout{attack #1}%
+    \gdef\@attackattack{#1}%
+  },
+  DAMAGE/.code={%
+   \typeout{attack damage #1}%
+    \gdef\@attackdamage{#1}%
+  },
+  TYPE/.code={%
+    \gdef\@attacktype{#1}%
+  },
+  RANGE/.code={%
+    \gdef\@attackrange{#1}%
+  },
+  AMMO/.code={%
+    \gdef\@attackammo{#1}%
+  },
+  .unknown/.code={} % ignore everything else
+}%
+
+
+\newcommand\attackkeys[1]{%
+  \gdef\@attackname{}%
+  \gdef\@attackattack{}%
+  \gdef\@attackdamage{}%
+  \gdef\@attacktype{}%
+  \gdef\@attackrange{}%
+  \gdef\@attackammo{}%
+  \pgfkeys{/attacks/.cd, #1}%
+  \@attackname&\@attackattack&\@attackdamage&\@attacktype&\@attackrange&\@attackammo\\
+}
+
+
+\newcommand\attacknote[2]{%
+  \multicolumn6{@{}p{\hsize-10mm}}{\textit{#1: #2}}\\
+}
+
+\newcommand\profskip{\medskip}
+
+
+\newcommand\writesplash[3][]{% [annotations] width dndkey
+  \node (#3)
+     [fill=none,anchor=base west,width=#2,#1] 
+    {\hbox to #2{\namestrut\itshape  \getDND*{#3}\hfill}}
+   ;
 }
