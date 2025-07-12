@@ -97,29 +97,29 @@
       \node (curhp)
             [dndhits,fill=white,width=72mm,left=of hitdice,
              dnd/label={CURRENT HIT POINTS}] 
-         { \Large \bfseries\sffamily 10 }
+         { }
          ;
 
       \node [dndmaxhp,above left corner=of curhp,dndlabel=MAX HP] 
          (maxhp)
-         { \Large 99 }
+         { \Large \getDND*{MAX HP} }
          ;
 
       \node (initiative)
             [dndmaxhp,right=of maxhp,dndlabel=INITIATIVE] 
-         { +2 }
+         { \getDND*{INITIATIVE} }
          ;
 
       \node (speed)
             [dndmaxhp,right=of initiative,dndlabel=SPEED] 
-         { 30~ft }
+         { \getDND*{SPEED} }
          ;
 
 
        \node (ac) [dndmaxhp,shield,innershield,draw,ultra thick,right=of speed,width=15mm,
                    dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
             ]
-      {\raisebox{4mm}{13}}
+      {\raisebox{4mm}{\getDND*{ARMOR CLASS}}}
       ;
 
   \endgroup
@@ -136,6 +136,8 @@
 
 % \node (attacks) at (hpbackground.south west) {A};
 
+\ifDNDdefined{MAGIC}
+{
 \begin{magic}[below=of attacks]{}
 \centering
 \begin{featurestab}
@@ -146,28 +148,27 @@
   \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
 \end{featurestab}
 \end{magic}
+}
+{\node (magic) at (attacks.south) {};}
 
-
+\ifDNDdefined{FEATURES}{
 \begin{features}[below=of magic]{}
+\let\described=\feature
 \begin{featurestab}
-\feature{Fey Ancestry}{
-  You have advantage to save against charms and you can't be magically put to sleep.}
-\feature{\centering Bardic~Inspiration (2/day)}
- {Grant an ally within 60 ft +1d6 inspiration they can use on any one check within 10 minutes.}
-\feature{Ritual Caster}{    
-  Cast certain spells as 10-minute rituals instead of using a spell slot.}
+\getDND{FEATURES}
 \end{featurestab}
 \end{features}
+}{}
 
 \node (stats background) 
       [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
 
-\stat{STRENGTH}{10}
-\stat*{DEXTERITY}{15}
-\stat{CONSTITUTION}{8}
-\stat{INTELLIGENCE}{15}
-\stat{WISDOM}{12}
-\stat*{CHARISMA}{15}
+\dndstat{STRENGTH}{STR}
+\dndstat{DEXTERITY}{DEX}
+\dndstat{CONSTITUTION}{CON}
+\dndstat{INTELLIGENCE}{INT}
+\dndstat{WISDOM}{WIS}
+\dndstat{CHARISMA}{CHA}
 
   
 \begin{equipment}[left of lower corner=of features]
@@ -233,7 +234,8 @@
 
 \node (senses)
    [dndmaxhp,left=10mm of curhp,width=24mm] 
-   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
+%   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
+   {\parbox{20mm}{\centering\itshape\getDND*{SENSES}}}
    ;
 \dndlabel{senses}{\scriptsize SENSES}
 

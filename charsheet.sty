@@ -501,6 +501,8 @@
   \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
 }
 
+\newcommand\described[2]{#1&#2\\}
+
 \newenvironment{featurestab}
   {\renewcommand\arraystretch{1.5}%
    \setlength{\my@xa}{\hsize-26mm-3\tabcolsep}%
@@ -1489,6 +1491,8 @@
 }
 
 \let\getDND\valueDND
+\newcommand{\rawgetDND}[1]{\csname dnd@val@#1\endcsname}
+
 
 \WithSuffix\newcommand\getDND*[1]{%
   \ifDNDdefined{#1}
@@ -1917,10 +1921,13 @@
 
 \newcounter{statmod}%
 \newcounter{saving}%
+\newcounter{statnumber}
+\newcommand\setstatnumber[1]{\setcounter{statnumber}{#1}}
 
 \newcommand\statcommon[3]{% name value amount-to-add-to-saving
 %   \show\nextstatloc
-   \setcounter{statmod}{(#2 - 10) / 2}%
+   \expandafter\setstatnumber\expandafter{#2}%
+   \setcounter{statmod}{(\value{statnumber} - 10) / 2}%
    \setcounter{saving}{\value{statmod} + #3}%
    \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{#2}{\thestatmod}{\thesaving}%
    \gdef\nextstatloc{below=7mm of #1}%
@@ -1956,13 +1963,17 @@
 \newDND{ATTACKS}
 \newDND{BACKGROUND}
 \newDND{CHA}
+\newDND{CHA SAVING}
 \newDND{CHARACTER NAME}
 \newDND{CLASS + LEVEL}
+\newDND{CLASS}
 \newDND{CON}
+\newDND{CON SAVING}
 \newDND{CP}
 \newDND{CURRENT HIT POINTS}
 \newDND{DESCRIPTION + PERSONALITY}
 \newDND{DEX}
+\newDND{DEX SAVING}
 \newDND{EP}
 \newDND{EQUIPMENT}
 \newDND{EXPERIENCE POINTS}
@@ -1971,6 +1982,7 @@
 \newDND{HIT DICE}
 \newDND{INITIATIVE}
 \newDND{INT}
+\newDND{INT SAVING}
 \newDND{MAGIC}
 \newDND{MAX HP}
 \newDND{PASSIVE PERCEPTION}
@@ -1983,4 +1995,16 @@
 \newDND{SP}
 \newDND{SPEED}
 \newDND{STR}
+\newDND{STR SAVING}
 \newDND{WIS}
+\newDND{WIS SAVING}
+
+
+\newcommand\dndstat[2]{% label, short name
+  \ifDNDdefined{#2}{%
+    \ifDNDdefined{#2 SAVING}%
+       {\stat*{#1}{\rawgetDND{#2}}}
+       {\stat{#1}{\rawgetDND{#2}}}
+  }{%
+  }
+}

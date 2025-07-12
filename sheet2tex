@@ -5,6 +5,17 @@
 --          cat file.yaml | lua yaml-to-dndtex.lua   > file.tex
 --------------------------------------------------------------------------
 
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function printf(...) return io.stdout:write(stringf(...)) end
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function fprintf(fd, ...) return fd:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) return error(stringf(...)) end
+local function runf(...) return os.execute(stringf(...)) end
+----------------------------------------------------------------
+
+
 local lyaml  = require "lyaml"
 
 -- -----------------------------------------------------------------------
@@ -203,8 +214,37 @@ local function slurp(filename)
   end
 end
 
+local saving_throw_proficiencies = {
+  Barbarian = { "Strength", "Constitution" },
+  Bard      = { "Dexterity", "Charisma" },
+  Cleric    = { "Wisdom", "Charisma" },
+  Druid     = { "Intelligence", "Wisdom" },
+  Fighter   = { "Strength", "Constitution" },
+  Monk      = { "Strength", "Dexterity" },
+  Paladin   = { "Wisdom", "Charisma" },
+  Ranger    = { "Strength", "Dexterity" },
+  Rogue     = { "Dexterity", "Intelligence" },
+  Sorcerer  = { "Constitution", "Charisma" },
+  Warlock   = { "Wisdom", "Charisma" },
+  Wizard    = { "Intelligence", "Wisdom" }
+}
+
+
+local function extend(doc)
+  local class = doc.CLASS or (doc['CLASS & LEVEL'] or ''):match '%a+' or ''
+  doc.CLASS = class
+  local p = saving_throw_proficiencies[class]
+  if p then
+    for _, prof in ipairs(p) do
+      doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
+    end
+  end
+  return doc
+end
+
 local yaml_text = slurp(arg[1])
 for _,doc in ipairs(yaml_load_all(yaml_text)) do
+  extend(doc)
   if type(doc)=="table" then
     io.write(convert_mapping(doc), "\n")
   end
