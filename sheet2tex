@@ -46,8 +46,8 @@ local tex_escape_map = {
   ["$"]  = "\\$",
   ["#"]  = "\\#",
   ["_"]  = "\\_",
-  ["{"]  = "\\{",
-  ["}"]  = "\\}",
+--  ["{"]  = "\\{",
+--  ["}"]  = "\\}",
   ["~"]  = "\\textasciitilde{}",
   ["^"]  = "\\textasciicircum{}",
 }
@@ -157,7 +157,7 @@ local function render_struct_list (key, list)
     if type(elem) ~= "table" then
       out[#out+1] = ("\\item %s"):format(escape(tostring(elem)))
     elseif elem.level and not next(elem, "level") then
-      out[#out+1] = ("\\spellslevel{%s}"):format(escape(elem.level))
+      out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]]):format(escape(elem.level))
     elseif elem.name and elem.description and not elem.ATTACK then
       out[#out+1] = ("\\described{%s}{%s}"):format(
                       escape(elem.name), escape(elem.description))

@@ -501,21 +501,25 @@
   \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
 }
 
-\newcommand\described[2]{#1&#2\\}
+\newdimen\featurespostspace
+\featurespostspace=8pt
+\newcommand\described[2]{#1&#2\\[\featurespostspace]}
+
+\newdimen\featuresnamewidth
+\featuresnamewidth=28mm
 
 \newenvironment{featurestab}
-  {\renewcommand\arraystretch{1.5}%
-   \setlength{\my@xa}{\hsize-26mm-3\tabcolsep}%
+  {\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
 %   \par\bigskip
 %   \hrule width \hsize depth 0pt height 2pt
-   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{\my@xa}@{}}}
+   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}@{}}}
   {\end{tabular}}
 
 
-\newenvironment{spellstab}
-  {\renewcommand\arraystretch{1.5}%
-   \begin{tabular}{>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{93mm}}}
-  {\end{tabular}}
+%\newenvironment{spellstab}
+% {\renewcommand\arraystretch{1.0}%
+%   \begin{tabular}{>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{93mm}}}
+%  {\end{tabular}}
 
 \newcommand\cantripsheader{%
   \multicolumn2{l}{\textsf{CANTRIPS}}%
@@ -536,8 +540,12 @@
 %   { };
 %}
 
-\newcommand\spellsheader[2]{%
-  \multicolumn2{l}{\textsf{LEVEL~#1 \spellslots{#2}/day}}%
+\newcommand\spellslevel[2][0]{%
+    \ifnum#2=0
+       \textsf{CANTRIPS}%
+    \else
+      \textsf{LEVEL~#2 SPELLS \ifnum#1>0 \spellslots{#1}/day\fi}%
+    \fi
 }
 
 
@@ -2010,6 +2018,7 @@
 \newDND{SENSES}
 \newDND{SP}
 \newDND{SPEED}
+\newDND{SPELL DC}
 \newDND{STR}
 \newDND{STR SAVING}
 \newDND{WIS}
