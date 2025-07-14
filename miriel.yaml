@@ -17,7 +17,7 @@ CHA: 13
 "PROFICIENCY BONUS": +2
 SPELL DC: 5
 "PASSIVE PERCEPTION": 13
-"MAX HP": 24-2?
+"MAX HP": 22
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
 "SPEED": 30
@@ -82,27 +82,37 @@ ATTACKS:
     AMMO: ""
     NOTES: ""
 
+SPELLS KNOWN: 5
+DOMAIN SPELLS: 2
 MAGIC:
   - level: 0                             # CANTRIPS
-  - name: Light
-    description: An object you touch sheds bright light in a 20-ft radius and dim light for an additional 20 ft for 1 hour.
-  - name: Mending
-    description: Repair a non-magical object you can touch.
   - name: Minor Blessing
     description: One touched creature gains +2 to attack rolls until the end of your next turn.
+#  - name: Light
+#    description: An object you touch sheds bright light in a 20-ft radius and dim light for an additional 20 ft for 1 hour.
+#  - name: Mending
+#    description: Repair a non-magical object you can touch.
+  - name: Sacred Flame
+    description: Target one creature; DEX save or 1d8 radiant damage.
+  - name: Spare the Dying
+    description: One unconscious creature you touch is stabilized.
   - level: 1                             # 1st LEVEL
+  - name: Bane [C]
+    description: Up to three allies within 30 ft gain -1d4 to attacks and saves for 1 minute.
   - name: Bless [C]
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute.
   - name: Cure Wounds
     description: A touched creature regains 1d8+3 HP.
-  - name: Guiding Bolt
-    description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
-  - name: Healing Word \rlap{[B]}
-    description: A creature within 60 ft regains 1d4+3 HP.
-  - name: Sanctuary [B]
-    description: A creature within 30 ft is warded for 1 minute. DC 13 WIS save or choose a new target or lose the attack/spell.
-  - name: Shield of Faith \rlap{[B,C]}
-    description: A creature within 60 ft gains +2 AC for 10 min.
+  - name: Inflict Wounds
+    description: Spell attack on creature you can reach, 3d10 necrotic damage.
+#  - name: Guiding Bolt
+#    description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
+#  - name: Healing Word \rlap{[B]}
+#    description: A creature within 60 ft regains 1d4+3 HP.
+#  - name: Sanctuary [B]
+#    description: A creature within 30 ft is warded for 1 minute. DC 13 WIS save or choose a new target or lose the attack/spell.
+#  - name: Shield of Faith \rlap{[B,C]}
+#    description: A creature within 60 ft gains +2 AC for 10 min.
   - name: Thunderwave
     description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful save, half damage and no push.
 
