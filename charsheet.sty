@@ -7,6 +7,7 @@
 \RequirePackage{tabularx}
 \RequirePackage{booktabs}
 \RequirePackage{calc}
+\RequirePackage{ifthen}
 \RequirePackage{suffix}
 \RequirePackage{xstring}
 \usetikzlibrary{calc}
@@ -2210,107 +2211,80 @@
 % Helper counters
 \newcount\tempcount
 \newcount\remaining
-\newcount\rowswiththree
-\newcount\rowswithfour
 \newcount\minrowstempcount
+\newcounter{minrowsresult}
+\newcounter{rowswiththree}
+\newcounter{rowswithfour}
 
-% Find minimum number of rows needed for n slots
-\def\minrows#1{%
-  \minrowstempcount=#1\relax
-  \ifnum\minrowstempcount<5
-    1%
+% Helper function that computes minrows and stores in counter
+\newcommand{\computeminrows}[1]{%
+  \ifnum#1<5
+    \setcounter{minrowsresult}{1}%
   \else
     % Try with first row = 3
-    \advance\minrowstempcount by -3
-    \edef\temp{\minrows{\minrowstempcount}}%
-    \rowswiththree=\temp\relax
-    % No need to add 1 since we're only comparing
-    %
-    % Try with first row = 4
-    \minrowstempcount=#1\relax
-    \advance\minrowstempcount by -4
-    \edef\temp{\minrows{\minrowstempcount}}%
-    \rowswithfour=\temp\relax
-    % No need to add 1 since we're only comparing
-    %
+    \computeminrows{\numexpr#1-3\relax}%
+    \setcounter{rowswiththree}{\value{minrowsresult}}%
+    % Try with first row = 4  
+    \computeminrows{\numexpr#1-4\relax}%
+    \setcounter{rowswithfour}{\value{minrowsresult}}%
     % Return the minimum (plus 1 for the current row)
-    \ifnum\rowswiththree<\rowswithfour
-      \minrowstempcount=\rowswiththree
-      \advance\minrowstempcount by 1
-      \the\minrowstempcount
-    \else
-      \minrowstempcount=\rowswithfour
-      \advance\minrowstempcount by 1
-      \the\minrowstempcount
-    \fi
+    \ifthenelse{\value{rowswiththree}<\value{rowswithfour}}{%
+      \setcounter{minrowsresult}{\value{rowswiththree}+1}%
+    }{%
+      \setcounter{minrowsresult}{\value{rowswithfour}+1}%
+    }%
   \fi
+}
+
+% User-facing function that returns the result as text
+\newcommand{\minrows}[1]{%
+  \computeminrows{#1}%
+  \arabic{minrowsresult}%
 }
 
 \newcommand\fourslots{\slots{4}} % placeholder
 
 
 % Main macro
-\newcommand\stackslotsliteral[1]{%
-  \ifnum#1=0
-    \hbox{}%
-  \else
-    \buildoptimalrows{#1}%
-  \fi
-}
-
 \newcommand{\stackslots}[1]{%
   \setcounter{slotcounter}{#1}%
-  \expandafter\stackslotsliteral\expandafter{\value{slotcounter}}%
+  \ifnum\value{slotcounter}=0
+    \hbox{}%
+  \else
+    \buildoptimalrows{\value{slotcounter}}%
+  \fi
 }
 
 
 
 % Build optimal row composition using same recursive logic
-\def\buildoptimalrows#1{%
-  \tempcount=#1\relax
-  \ifnum\tempcount<5
+\newcommand{\buildoptimalrows}[1]{%
+  \ifnum#1<5
     % Base case: 1-4 slots in single row
-    \vbox{\centerline{%
-      \ifnum\tempcount=4
-        \fourslots
-      \else
-        \slots{\tempcount}%
-      \fi
-    }}%
+    \vbox{\centerline{\slots{#1}}}%
   \else
     % Recursive case: decide between first row of 3 or 4
     % Try with first row = 3
-    \advance\tempcount by -3
-    \edef\temp{\minrows{\tempcount}}%
-    \rowswiththree=\temp\relax
-    % No need to add 1 since we're only comparing
-    %
-    % Try with first row = 4
-    \tempcount=#1\relax
-    \advance\tempcount by -4
-    \edef\temp{\minrows{\tempcount}}%
-    \rowswithfour=\temp\relax
-    % No need to add 1 since we're only comparing
-    %
+    \computeminrows{\numexpr#1-3\relax}%
+    \setcounter{rowswiththree}{\value{minrowsresult}}%
+    % Try with first row = 4  
+    \computeminrows{\numexpr#1-4\relax}%
+    \setcounter{rowswithfour}{\value{minrowsresult}}%
     % Choose the better option
-    \ifnum\rowswithfour<\rowswiththree
+    \ifthenelse{\value{rowswithfour}<\value{rowswiththree}}{%
       % Use 4 in first row (only if it reduces total rows)
       \vbox{%
-        \centerline{\fourslots}%
+        \centerline{\slots{4}}%
         \vskip\slotrowsep
-        \tempcount=#1\relax
-        \advance\tempcount by -4
-        \centerline{\buildoptimalrows{\tempcount}}%
+        \centerline{\buildoptimalrows{\numexpr#1-4\relax}}%
       }%
-    \else
+    }{%
       % Use 3 in first row (default choice to minimize 4-slot rows)
       \vbox{%
         \centerline{\slots{3}}%
         \vskip\slotrowsep
-        \tempcount=#1\relax
-        \advance\tempcount by -3
-        \centerline{\buildoptimalrows{\tempcount}}%
+        \centerline{\buildoptimalrows{\numexpr#1-3\relax}}%
       }%
-    \fi
+    }%
   \fi
 }
