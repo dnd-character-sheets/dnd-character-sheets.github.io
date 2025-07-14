@@ -1538,11 +1538,11 @@
   \ifDNDdefined{#1}{%
     % Name is defined, now check if it's non-empty
     \expandafter\ifx\expandafter\empty\csname dnd@val@#1\endcsname\empty
-      \typeout{empty #1 is !\csname dnd@val@#1\endcsname!}%
+%      \typeout{empty #1 is !\csname dnd@val@#1\endcsname!}%
       % Empty (expands to \relax)
       #3%
     \else
-      \typeout{nonempty #1 is !\csname dnd@val@#1\endcsname!}%
+%      \typeout{nonempty #1 is !\csname dnd@val@#1\endcsname!}%
       % Non-empty
       #2%
     \fi
@@ -2212,36 +2212,42 @@
 \newcount\remaining
 \newcount\rowswiththree
 \newcount\rowswithfour
+\newcount\minrowstempcount
 
 % Find minimum number of rows needed for n slots
 \def\minrows#1{%
-  \tempcount=#1\relax
-  \ifnum\tempcount<5
+  \minrowstempcount=#1\relax
+  \ifnum\minrowstempcount<5
     1%
   \else
     % Try with first row = 3
-    \advance\tempcount by -3
-    \rowswiththree=\minrows{\tempcount}%
+    \advance\minrowstempcount by -3
+    \edef\temp{\minrows{\minrowstempcount}}%
+    \rowswiththree=\temp\relax
     % No need to add 1 since we're only comparing
     %
     % Try with first row = 4
-    \tempcount=#1\relax
-    \advance\tempcount by -4
-    \rowswithfour=\minrows{\tempcount}%
+    \minrowstempcount=#1\relax
+    \advance\minrowstempcount by -4
+    \edef\temp{\minrows{\minrowstempcount}}%
+    \rowswithfour=\temp\relax
     % No need to add 1 since we're only comparing
     %
     % Return the minimum (plus 1 for the current row)
     \ifnum\rowswiththree<\rowswithfour
-      \tempcount=\rowswiththree
-      \advance\tempcount by 1
-      \the\tempcount
+      \minrowstempcount=\rowswiththree
+      \advance\minrowstempcount by 1
+      \the\minrowstempcount
     \else
-      \tempcount=\rowswithfour
-      \advance\tempcount by 1
-      \the\tempcount
+      \minrowstempcount=\rowswithfour
+      \advance\minrowstempcount by 1
+      \the\minrowstempcount
     \fi
   \fi
 }
+
+\newcommand\fourslots{\slots{4}} % placeholder
+
 
 % Main macro
 \newcommand\stackslotsliteral[1]{%
@@ -2275,13 +2281,15 @@
     % Recursive case: decide between first row of 3 or 4
     % Try with first row = 3
     \advance\tempcount by -3
-    \rowswiththree=\minrows{\tempcount}%
+    \edef\temp{\minrows{\tempcount}}%
+    \rowswiththree=\temp\relax
     % No need to add 1 since we're only comparing
     %
     % Try with first row = 4
     \tempcount=#1\relax
     \advance\tempcount by -4
-    \rowswithfour=\minrows{\tempcount}%
+    \edef\temp{\minrows{\tempcount}}%
+    \rowswithfour=\temp\relax
     % No need to add 1 since we're only comparing
     %
     % Choose the better option
