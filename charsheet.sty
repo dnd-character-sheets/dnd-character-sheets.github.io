@@ -2217,15 +2217,15 @@
 \newcounter{rowswithfour}
 
 % Helper function that computes minrows and stores in counter
-\newcommand{\computeminrows}[1]{%
+\newcommand{\setminrowsresult}[1]{%
   \ifnum#1<5
     \setcounter{minrowsresult}{1}%
   \else
     % Try with first row = 3
-    \computeminrows{\numexpr#1-3\relax}%
+    \setminrowsresult{\numexpr#1-3\relax}%
     \setcounter{rowswiththree}{\value{minrowsresult}}%
     % Try with first row = 4  
-    \computeminrows{\numexpr#1-4\relax}%
+    \setminrowsresult{\numexpr#1-4\relax}%
     \setcounter{rowswithfour}{\value{minrowsresult}}%
     % Return the minimum (plus 1 for the current row)
     \ifthenelse{\value{rowswiththree}<\value{rowswithfour}}{%
@@ -2238,7 +2238,7 @@
 
 % User-facing function that returns the result as text
 \newcommand{\minrows}[1]{%
-  \computeminrows{#1}%
+  \setminrowsresult{#1}%
   \arabic{minrowsresult}%
 }
 
@@ -2251,7 +2251,7 @@
   \ifnum\value{slotcounter}=0
     \hbox{}%
   \else
-    \buildoptimalrows{\value{slotcounter}}%
+    \buildoptimalrows{\arabic{slotcounter}}%
   \fi
 }
 
@@ -2265,10 +2265,10 @@
   \else
     % Recursive case: decide between first row of 3 or 4
     % Try with first row = 3
-    \computeminrows{\numexpr#1-3\relax}%
+    \setminrowsresult{\numexpr#1-3\relax}%
     \setcounter{rowswiththree}{\value{minrowsresult}}%
     % Try with first row = 4  
-    \computeminrows{\numexpr#1-4\relax}%
+    \setminrowsresult{\numexpr#1-4\relax}%
     \setcounter{rowswithfour}{\value{minrowsresult}}%
     % Choose the better option
     \ifthenelse{\value{rowswithfour}<\value{rowswiththree}}{%
