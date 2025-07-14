@@ -512,7 +512,7 @@
   {\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
 %   \par\bigskip
 %   \hrule width \hsize depth 0pt height 2pt
-   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}@{}}}
+   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
   {\end{tabular}}
 
 
@@ -1529,6 +1529,25 @@
     {#2}
 }
 
+\newif\ifvalnonempty
+\newcommand{\ifDNDnonempty}[3]{%
+  \ifDNDdefined{#1}{%
+    % Name is defined, now check if it's non-empty
+    \expandafter\ifx\expandafter\empty\csname dnd@val@#1\endcsname\empty
+      \typeout{empty #1 is !\csname dnd@val@#1\endcsname!}%
+      % Empty (expands to \relax)
+      #3%
+    \else
+      \typeout{nonempty #1 is !\csname dnd@val@#1\endcsname!}%
+      % Non-empty
+      #2%
+    \fi
+  }{%
+    % Name is not defined
+    #3%
+  }%
+}
+
 
 
 %%  I'd like you to use \pgfdeclareshape to define a shape for me.  I want
@@ -2019,6 +2038,8 @@
 \newDND{SP}
 \newDND{SPEED}
 \newDND{SPELL DC}
+\newDND{SPELLS KNOWN}
+\newDND{DOMAIN SPELLS}
 \newDND{STR}
 \newDND{STR SAVING}
 \newDND{WIS}
@@ -2085,4 +2106,81 @@
      [fill=none,anchor=base west,width=#2,#1] 
     {\hbox to #2{\namestrut\itshape  \getDND*{#3}\hfill}}
    ;
+}
+
+
+
+% Test four names and assign first two non-empty to specified variables with labels
+\newcommand{\firsttwoDNDdefined}[8]{%
+  \def#1{}%
+  \def#2{}%
+  \def#3{}%
+  \def#4{}%
+  \def\foundcount{0}%
+  %
+  % Test first name
+  \ifDNDnonempty{#5}{%
+    \ifnum\foundcount=0
+      \edef#1{\rawgetDND{#5}}%
+      \def#2{#5}%
+      \def\foundcount{1}%
+    \else
+      \ifnum\foundcount=1
+        \edef#3{\rawgetDND{#5}}%
+        \def#4{#5}%
+        \def\foundcount{2}%
+      \fi
+    \fi
+  }{}%
+  %
+  % Test second name (only if we haven't found 2 yet)
+  \ifnum\foundcount<2
+    \ifDNDnonempty{#6}{%
+      \ifnum\foundcount=0
+        \edef#1{\rawgetDND{#6}}%
+        \def#2{#6}%
+        \def\foundcount{1}%
+      \else
+        \ifnum\foundcount=1
+          \edef#3{\rawgetDND{#6}}%
+          \def#4{#6}%
+          \def\foundcount{2}%
+        \fi
+      \fi
+    }{}%
+  \fi
+  %
+  % Test third name (only if we haven't found 2 yet)
+  \ifnum\foundcount<2
+    \ifDNDnonempty{#7}{%
+      \ifnum\foundcount=0
+        \edef#1{\rawgetDND{#7}}%
+        \def#2{#7}%
+        \def\foundcount{1}%
+      \else
+        \ifnum\foundcount=1
+          \edef#3{\rawgetDND{#7}}%
+          \def#4{#7}%
+          \def\foundcount{2}%
+        \fi
+      \fi
+    }{}%
+  \fi
+  %
+  % Test fourth name (only if we haven't found 2 yet)
+  \ifnum\foundcount<2
+    \ifDNDnonempty{#8}{%
+      \ifnum\foundcount=0
+        \edef#1{\rawgetDND{#8}}%
+        \def#2{#8}%
+        \def\foundcount{1}%
+      \else
+        \ifnum\foundcount=1
+          \edef#3{\rawgetDND{#8}}%
+          \def#4{#8}%
+          \def\foundcount{2}%
+        \fi
+      \fi
+    }{}%
+  \fi
 }

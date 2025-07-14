@@ -51,8 +51,12 @@ local tex_escape_map = {
   ["~"]  = "\\textasciitilde{}",
   ["^"]  = "\\textasciicircum{}",
 }
+
+local minustab = { ['-'] = [[\textminus]] }
+
 local function escape (s)
-  return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map))
+  return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
+                     :gsub('([%s%d])%-(%d)', [[%1\textminus%2]]))
 end
 
 ---------------------------------------------------------------------------
