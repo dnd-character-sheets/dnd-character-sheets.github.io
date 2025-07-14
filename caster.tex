@@ -123,6 +123,10 @@
          { \getDND*{INITIATIVE} }
          ;
 
+\node [draw,above=of initiative] % {\slotsliteral7};
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+
+
       \node (speed)
             [dndmaxhp,right=of initiative,dndlabel=SPEED] 
          { \getDND*{SPEED} }
@@ -183,6 +187,8 @@
 \dndstat{WISDOM}{WIS}
 \dndstat{CHARISMA}{CHA}
 
+% slots OK here
+
   
 \ifDNDdefined{EQUIPMENT}{%
   \begin{equipment}[left of lower corner=of features]
@@ -215,12 +221,21 @@
 \getDND*{PROFICIENCIES}
 \end{proficiencies}
 
+
+\node [draw,below=of initiative] % {\slotsliteral7};
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+
+
 \firsttwoDNDdefined{\upper}{\upperlabel}{\lower}{\lowerlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
 
 %\typeout{upper is \upperlabel; lower is \lowerlabel}
 
 %{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
 
+\node [draw,below=of maxhp] % {\slotsliteral7};
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+
+% slots not OK here
 
 
 %\ifDNDdefined{SPELL DC}
@@ -268,7 +283,7 @@
    \dndlabel[\upperlabel]{lower val}{\lowerlabel}
 
 
-\node [draw,above=of features] {7 slots: minimum \minrows{7} rows\par \stackslots7\par!\slots4!};
+%\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};
 
 
 \end{charsheet}
