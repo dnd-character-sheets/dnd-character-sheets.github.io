@@ -2258,7 +2258,7 @@
   \ifnum\value{slotcounter}=0
     \hbox{}%
   \else
-    \buildoptimalrows{\arabic{slotcounter}}%
+    \vbox{\buildoptimalrows{\arabic{slotcounter}}}%
   \fi
 }
 
@@ -2269,17 +2269,17 @@
   \setcounter{buildrows}{#1}%
   \ifthenelse{\value{buildrows}<5}{%
     % Base case: 1-4 slots in single row
-    \slots{\arabic{buildrows}}%
+    \hbox to 0pt{\hss\slots{\arabic{buildrows}}\hss}%
 %    \vbox{\centerline{\slots{5}}}%
   }{%
     % Recursive case: decide between first row of 3 or 4
     % Try with first row = 3
     \setminrowsresult{\value{buildrows}}%
     \iffirstisfour
-       \fourslots%
+       \hbox to 0pt{\hss\fourslots\hss}%
        \buildoptimalrows{\value{buildrows}-4}%
     \else
-       \slots3\relax%
+       \hbox to 0pt{\hss\slots{3}\hss}%
        \buildoptimalrows{\value{buildrows}-3}%
     \fi
   }%

@@ -51,7 +51,7 @@
 \begin{charsheet}
 
 %  \input{miriel}
-\input{kylane2}
+\input{kylane3}
 %  \setcounter{proficiency bonus}{2}
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
@@ -123,8 +123,8 @@
          { \getDND*{INITIATIVE} }
          ;
 
-\node [draw,above=of initiative] % {\slotsliteral7};
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+%\node [draw,above=of initiative] % {\slotsliteral7};
+%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
 
 
       \node (speed)
@@ -222,8 +222,8 @@
 \end{proficiencies}
 
 
-\node [draw,below=of initiative] % {\slotsliteral7};
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
+%\node [draw,below=of initiative] % {\slotsliteral7};
+%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
 
 
 \firsttwoDNDdefined{\upperdndcontents}{\upperdndlabel}{\lowerdndcontents}{\lowerdndlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
@@ -232,8 +232,8 @@
 
 %{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
 
-\node [draw,below=of maxhp] % {\slotsliteral7};
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+%\node [draw,below=of maxhp] % {\slotsliteral7};
+%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
 
 % slots not OK here
 
@@ -265,7 +265,11 @@
 %
 %
 
-\def\pp{PASSIVE PERCEPTION}
+\def\sp{SORCERY POINTS}
+\ifx\upperdndlabel\sp
+  \edef\upperdndcontents{\noexpand\stackslots{\rawgetDND{SORCERY POINTS}}}%
+\fi
+
 %\show\pp
 %\show\upperdndlabel
 

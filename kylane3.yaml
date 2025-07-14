@@ -1,11 +1,13 @@
 "CHARACTER NAME": "Kylane of Darna"
-"CLASS & LEVEL": Sorcerer 2
+"CLASS & LEVEL": Sorcerer 3
+"MAX HP": 26
+SORCERY POINTS: 3
+
 "BACKGROUND": Town Watch
 "PLAYER NAME": "Katie"
 "RACE": Human
 "ALIGNMENT": ""
 "EXPERIENCE POINTS": ""
-SORCERY POINTS: 2
 
 # ability scores — only the score in the lower oval
 STR: 9
@@ -17,7 +19,6 @@ CHA: 16
 
 "PROFICIENCY BONUS": +2
 "PASSIVE PERCEPTION": 10
-"MAX HP": 23
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
 "SPEED": 30 ft
@@ -75,11 +76,9 @@ ATTACKS:
     ATTACK: "+2"
     DAMAGE: 1d6
     TYPE: bludgeoning
-    RANGE: 
-    AMMO: 
+    RANGE: "---"
+    AMMO: "---"
     NOTES: ""
-
-# Spells - Burning Hands (1st), Shield (1st), Magic Missile (1st), Fire Bolt (cantrip), Ray of Frost (cantrip), Shocking Grasp (cantrip), Light (cantrip).
 
 # Spells - Burning Hands (1st), Shield (1st), Magic Missile (1st), Fire Bolt (cantrip), Ray of Frost (cantrip), Shocking Grasp (cantrip), Light (cantrip).
 
@@ -100,14 +99,23 @@ MAGIC:
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
   - name: Shield
     description: As a reaction, +5 to AC and no damage from \emph{magic missile}
+  - level: 2
+  - name: Misty Step [B]
+    description: Teleport 30 feet to an unoccupied space you can see.
 
 FEATURES:
+  - name: Twinned Spell
+    description: Target a second creature.  Costs 1 + spell's level in sorcery points. (Not with target self.)
+  - name: Quicken Spell
+    description: Spend two sorcery points to cast as a bonus action.
   - name: Stand Watch
     description: While you are on watch your passive perception is 18.
   - name: Draconic Origin
     description: Double proficiency bonus on Charisma checks vs. dragons. Gain +1 HP per sorcerer level.
-  - name: Draconic Resilience
-    description: AC while not wearing armor = 13 + DEX
+  - name: Draconic Resil.
+    description: Your AC while not wearing armor is 13 + DEX
+
+
 
 "DESCRIPTION & PERSONALITY":
   motivation: ""
