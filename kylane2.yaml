@@ -1,5 +1,6 @@
 "CHARACTER NAME": "Kylane of Darna"
 "CLASS & LEVEL": Sorcerer 2
+"MAX HP": 21
 "BACKGROUND": Town Watch
 "PLAYER NAME": "Katie"
 "RACE": Human
@@ -17,7 +18,6 @@ CHA: 16
 
 "PROFICIENCY BONUS": +2
 "PASSIVE PERCEPTION": 10
-"MAX HP": 23
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
 "SPEED": 30 ft
