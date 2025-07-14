@@ -214,30 +214,56 @@
 \getDND*{PROFICIENCIES}
 \end{proficiencies}
 
-\ifDNDdefined{SPELL DC}
-  {
-      \node (spell dc)
+\firsttwoDNDdefined{\upper}{\upperlabel}{\lower}{\lowerlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
+
+%\typeout{upper is \upperlabel; lower is \lowerlabel}
+
+%{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
+
+
+
+%\ifDNDdefined{SPELL DC}
+%  {
+%      \node (spell dc)
+%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
+%         {\Large\textsf{13}}
+%         ;
+%
+%      \dndlabel{spell dc}{SPELL DC}
+%  }
+%  {
+%      \node (passive perception)
+%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
+%         {\Large\textsf{\getDND*{PASSIVE PERCEPTION}}}
+%         ;
+%
+%      \dndlabel{passive perception}{\pplabel}
+%  }
+%
+%\node (senses)
+%   [dndmaxhp,left=10mm of curhp,width=24mm] 
+%%   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
+%   {\parbox{20mm}{\centering\itshape\getDND*{SENSES}}}
+%   ;
+%\dndlabel{senses}{\scriptsize SENSES}
+%
+%
+
+\def\pp{PASSIVE PERCEPTION}
+\show\pp
+\show\upperlabel
+
+  \node (upper val)
          [dndmaxhp,left=10mm of maxhp,width=24mm] 
-         {\Large\textsf{13}}
+         {\Large\textsf{\upper}}
          ;
+      \dndlabel{upper val}{\ifx\upperlabel\pp\ppabel\else\upperlabel\fi}
 
-      \dndlabel{spell dc}{SPELL DC}
-  }
-  {
-      \node (passive perception)
-         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-         {\Large\textsf{\getDND*{PASSIVE PERCEPTION}}}
-         ;
-
-      \dndlabel{passive perception}{\pplabel}
-  }
-
-\node (senses)
-   [dndmaxhp,left=10mm of curhp,width=24mm] 
-%   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
-   {\parbox{20mm}{\centering\itshape\getDND*{SENSES}}}
-   ;
-\dndlabel{senses}{\scriptsize SENSES}
+   \node (lower val)
+      [dndmaxhp,left=10mm of curhp,width=24mm] 
+      {\Large\textsf{\lower}}
+      ;
+   \dndlabel{lower val}{\ifx\lowerlabel\pp\pplabel\else\lowerlabel\fi}
 
 
 \end{charsheet}
