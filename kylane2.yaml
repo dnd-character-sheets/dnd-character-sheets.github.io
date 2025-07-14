@@ -1,0 +1,111 @@
+"CHARACTER NAME": "Kylane of Darna"
+"CLASS & LEVEL": Sorcerer 2
+"BACKGROUND": Town Watch
+"PLAYER NAME": "Katie"
+"RACE": Human
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+SORCERY POINTS: 2
+
+# ability scores — only the score in the lower oval
+STR: 9
+DEX: 14
+CON: 15
+INT: 13
+WIS: 11
+CHA: 16
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 10
+"MAX HP": 14
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 30 ft
+"ARMOR CLASS": 15
+"SENSES": ""
+"HIT DICE": d6
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: ""
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Arcana
+  - Insight
+  - Nature
+  - Perception
+  - proficiencies_skip: true
+  # (no tool proficiencies listed)
+  - proficiencies_skip: true
+  # Languages / armor / weapons
+  - Languages: Common
+  - Languages: Elf
+  - Languages: Draconic
+  - Armor: None
+  - Weapons: Daggers
+  - Weapons: Darts
+  - Weapons: Slings
+  - Weapons: Quarterstaff
+  - Weapons: Light Crossbow
+
+EQUIPMENT:
+  - "Arcane Focus: Staff"
+  - Backpack
+  - Bedroll
+  - Mess Kit
+  - Tinderbox
+  - Torches (10)
+  - Rations (10)
+  - Waterskin
+  - 50 ft Rope
+
+ATTACKS:
+  - NAME: Light Crossbow
+    ATTACK: "+4"
+    DAMAGE: 1d8+2
+    TYPE: piercing
+    RANGE: 80/320 ft.
+    AMMO: 20 bolts
+    NOTES: ""
+
+# Spells - Burning Hands (1st), Shield (1st), Magic Missile (1st), Fire Bolt (cantrip), Ray of Frost (cantrip), Shocking Grasp (cantrip), Light (cantrip).
+
+MAGIC:
+  - level: 0                               # CANTRIPS
+  - name: Fire Bolt
+    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
+  - name: Ray of Frost
+    description: Ranged spell attack +5, 60 ft; 1d8 cold damage and target’s speed −10 ft. until your next turn.
+  - name: Shocking Grasp
+    description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
+  - name: Light
+    description: Touched object shines like a torch for 1 hour.
+  - level: 1                               # 1st LEVEL
+  - name: Burning Hands
+    description: 15-ft. cone; each creature Dex DC 13 for 3d6 fire (half on success).
+  - name: Magic Missile
+    description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
+  - name: Shield
+    description: As a reaction, +5 to AC and no damage from \emph{magic missile}
+
+FEATURES:
+  - name: Stand Watch
+    description: While you are on watch your passive perception is 18.
+  - name: Sorcerous Origin – Draconic (Silver, Cold)
+    description: Add double proficiency bonus on Charisma checks vs. dragons. Gain +1 HP per sorcerer level. Unarmored AC = 13 + Dex mod.
+  - name: Unarmored Defense (Draconic Resilience)
+    description: Your AC while not wearing armor equals 13 + your Dexterity modifier (already included above).
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Accrue Power
+    - Achieve Status
+    - Vanquish Evil
+  suggested_names:
+    - Dominick
+    - Dominara
