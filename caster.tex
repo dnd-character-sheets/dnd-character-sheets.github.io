@@ -50,7 +50,8 @@
 \noindent
 \begin{charsheet}
 
-  \input{miriel}
+%  \input{miriel}
+\input{kylane2}
 %  \setcounter{proficiency bonus}{2}
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
@@ -102,7 +103,7 @@
      \ifDNDdefined{LEVEL}{
        \expandafter\ifnum\rawgetDND{LEVEL}<3
          \node [at=(hitdice.north),anchor=north] 
-              {\expandafter\spellslots\expandafter{\rawgetDND{LEVEL}+1}};
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
        \fi
      }{}
 
@@ -250,20 +251,24 @@
 %
 
 \def\pp{PASSIVE PERCEPTION}
-\show\pp
-\show\upperlabel
+%\show\pp
+%\show\upperlabel
 
   \node (upper val)
          [dndmaxhp,left=10mm of maxhp,width=24mm] 
          {\Large\textsf{\upper}}
          ;
-      \dndlabel{upper val}{\ifx\upperlabel\pp\ppabel\else\upperlabel\fi}
+
+      \dndlabel[\upperlabel]{upper val}{\upperlabel}
 
    \node (lower val)
       [dndmaxhp,left=10mm of curhp,width=24mm] 
       {\Large\textsf{\lower}}
       ;
-   \dndlabel{lower val}{\ifx\lowerlabel\pp\pplabel\else\lowerlabel\fi}
+   \dndlabel[\upperlabel]{lower val}{\lowerlabel}
+
+
+\node [draw,above=of features] {7 slots: minimum \minrows7 rows};
 
 
 \end{charsheet}

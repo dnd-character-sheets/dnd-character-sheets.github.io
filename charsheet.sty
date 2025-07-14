@@ -544,7 +544,7 @@
     \ifnum#2=0
        \textsf{CANTRIPS}%
     \else
-      \textsf{LEVEL~#2 SPELLS \ifnum#1>0 \spellslots{#1}/day\fi}%
+      \textsf{LEVEL~#2 SPELLS \ifnum#1>0\slots{#1}/day\fi}%
     \fi
 }
 
@@ -899,7 +899,7 @@
 }
 
 
-%\newcommand{\spellslotsliteral}[1]{%
+%\newcommand{\slotsliteral}[1]{%
 %  \hbox{%
 %    \begin{tikzpicture}[baseline=(current bounding box.center),thick]
 %      \ifnum#1>0
@@ -923,7 +923,7 @@
 %  }%
 %}
 %
-\newcommand{\spellslotsliteral}[1]{%
+\newcommand{\slotsliteral}[1]{%
   \hbox{%
     \begin{tikzpicture}[baseline=1pt, thick]
       \ifnum#1>0
@@ -949,9 +949,9 @@
 
 
 \newcounter{slotcounter}
-\newcommand{\spellslots}[1]{%
+\newcommand{\slots}[1]{%
   \setcounter{slotcounter}{#1}%
-  \expandafter\spellslotsliteral\expandafter{\value{slotcounter}}%
+  \expandafter\slotsliteral\expandafter{\value{slotcounter}}%
 }
 
 
@@ -1513,6 +1513,10 @@
   \@ifundefined{dnd@val@#1}{#3}{#2}%
 }
 
+\newcommand{\ifDNDdeclared}[3]{%
+  \@ifundefined{dnd@font@#1}{#3}{#2}%
+}
+
 \let\getDND\valueDND
 \newcommand{\rawgetDND}[1]{\csname dnd@val@#1\endcsname}
 
@@ -1950,9 +1954,10 @@
 }
 
 
-\newcommand\dndlabel[2]{% {node}{label text}
-  \node [outer sep=0pt, inner sep=0pt, above=of #1.south]
-        {\textsf{\footnotesize #2}};
+\newcommand\dndlabel[3][DEFAULT LABEL]{% [key for font] {node}{label text, which could be a macro}
+  \edef\fontkey{#1 FONT}%
+  \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
+        {\textsf{\getDND\fontkey{#3}}};
 }
 \newcommand\dndtoplabel[2]{% {node}{label text}
   \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
@@ -2035,6 +2040,7 @@
 \newDND{PROFICIENCY BONUS}
 \newDND{RACE}
 \newDND{SENSES}
+\newDND{SORCERY POINTS}
 \newDND{SP}
 \newDND{SPEED}
 \newDND{SPELL DC}
@@ -2044,6 +2050,15 @@
 \newDND{STR SAVING}
 \newDND{WIS}
 \newDND{WIS SAVING}
+
+\newDND{PASSIVE PERCEPTION FONT} % control font size of labels
+\newDND{SORCERY POINTS FONT}
+\setDND{PASSIVE PERCEPTION FONT}{\tiny}
+\setDND{SORCERY POINTS FONT}{\tiny}
+
+\newDND{DEFAULT LABEL FONT}
+\setDND{DEFAULT LABEL FONT}{\footnotesize}
+
 
 
 \newcommand\dndstat[2]{% label, short name
@@ -2182,5 +2197,112 @@
         \fi
       \fi
     }{}%
+  \fi
+}
+
+
+%%%%%%%%%%%%
+
+% Vertical spacing between rows of slots
+\newdimen\slotrowsep
+\slotrowsep=2pt
+
+% Helper counters
+\newcount\tempcount
+\newcount\remaining
+\newcount\rowswiththree
+\newcount\rowswithfour
+
+% Find minimum number of rows needed for n slots
+\def\minrows#1{%
+  \tempcount=#1\relax
+  \ifnum\tempcount<5
+    1%
+  \else
+    % Try with first row = 3
+    \advance\tempcount by -3
+    \rowswiththree=\minrows{\tempcount}%
+    % No need to add 1 since we're only comparing
+    %
+    % Try with first row = 4
+    \tempcount=#1\relax
+    \advance\tempcount by -4
+    \rowswithfour=\minrows{\tempcount}%
+    % No need to add 1 since we're only comparing
+    %
+    % Return the minimum (plus 1 for the current row)
+    \ifnum\rowswiththree<\rowswithfour
+      \tempcount=\rowswiththree
+      \advance\tempcount by 1
+      \the\tempcount
+    \else
+      \tempcount=\rowswithfour
+      \advance\tempcount by 1
+      \the\tempcount
+    \fi
+  \fi
+}
+
+% Main macro
+\newcommand\stackslotsliteral[1]{%
+  \ifnum#1=0
+    \hbox{}%
+  \else
+    \buildoptimalrows{#1}%
+  \fi
+}
+
+\newcommand{\stackslots}[1]{%
+  \setcounter{slotcounter}{#1}%
+  \expandafter\stackslotsliteral\expandafter{\value{slotcounter}}%
+}
+
+
+
+% Build optimal row composition using same recursive logic
+\def\buildoptimalrows#1{%
+  \tempcount=#1\relax
+  \ifnum\tempcount<5
+    % Base case: 1-4 slots in single row
+    \vbox{\centerline{%
+      \ifnum\tempcount=4
+        \fourslots
+      \else
+        \slots{\tempcount}%
+      \fi
+    }}%
+  \else
+    % Recursive case: decide between first row of 3 or 4
+    % Try with first row = 3
+    \advance\tempcount by -3
+    \rowswiththree=\minrows{\tempcount}%
+    % No need to add 1 since we're only comparing
+    %
+    % Try with first row = 4
+    \tempcount=#1\relax
+    \advance\tempcount by -4
+    \rowswithfour=\minrows{\tempcount}%
+    % No need to add 1 since we're only comparing
+    %
+    % Choose the better option
+    \ifnum\rowswithfour<\rowswiththree
+      % Use 4 in first row (only if it reduces total rows)
+      \vbox{%
+        \centerline{\fourslots}%
+        \vskip\slotrowsep
+        \tempcount=#1\relax
+        \advance\tempcount by -4
+        \centerline{\buildoptimalrows{\tempcount}}%
+      }%
+    \else
+      % Use 3 in first row (default choice to minimize 4-slot rows)
+      \vbox{%
+        \centerline{\slots{3}}%
+        \vskip\slotrowsep
+        \tempcount=#1\relax
+        \advance\tempcount by -3
+        \centerline{\buildoptimalrows{\tempcount}}%
+      }%
+    \fi
   \fi
 }
