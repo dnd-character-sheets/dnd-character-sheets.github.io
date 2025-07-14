@@ -223,12 +223,12 @@
 
 
 \node [draw,below=of initiative] % {\slotsliteral7};
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
 
 
-\firsttwoDNDdefined{\upper}{\upperlabel}{\lower}{\lowerlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
+\firsttwoDNDdefined{\upperdndcontents}{\upperdndlabel}{\lowerdndcontents}{\lowerdndlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
 
-%\typeout{upper is \upperlabel; lower is \lowerlabel}
+%\typeout{upper is \upperdndlabel; lower is \lowerdndlabel}
 
 %{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
 
@@ -267,20 +267,20 @@
 
 \def\pp{PASSIVE PERCEPTION}
 %\show\pp
-%\show\upperlabel
+%\show\upperdndlabel
 
   \node (upper val)
          [dndmaxhp,left=10mm of maxhp,width=24mm] 
-         {\Large\textsf{\upper}}
+         {\Large\textsf{\upperdndcontents}}
          ;
 
-      \dndlabel[\upperlabel]{upper val}{\upperlabel}
+      \dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}
 
    \node (lower val)
       [dndmaxhp,left=10mm of curhp,width=24mm] 
-      {\Large\textsf{\lower}}
+      {\Large\textsf{\lowerdndcontents}}
       ;
-   \dndlabel[\upperlabel]{lower val}{\lowerlabel}
+   \dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}
 
 
 %\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};
