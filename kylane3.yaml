@@ -97,7 +97,7 @@ MAGIC:
   - name: Magic Missile
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
   - name: Shield
-    description: As a reaction, +5 to AC and no damage from \emph{magic missile}
+    description: As a reaction, gain +5 to AC and suffer no damage from \emph{magic missile}.
   - level: { number: 2, slots: 2 }
   - name: Misty Step [B]
     description: Teleport 30 feet to an unoccupied space you can see.
