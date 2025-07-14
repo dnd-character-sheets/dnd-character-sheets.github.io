@@ -16,7 +16,7 @@ WIS: 16
 CHA: 13
 
 "PROFICIENCY BONUS": +2
-SPELL DC: 5
+SPELL DC: 13
 "PASSIVE PERCEPTION": 13
 "MAX HP": 22
 "CURRENT HIT POINTS": ""
@@ -94,18 +94,18 @@ MAGIC:
 #  - name: Mending
 #    description: Repair a non-magical object you can touch.
   - name: Sacred Flame
-    description: Target one creature; DEX save or 1d8 radiant damage.
+    description: Target one creature; \textbf{DEX save} or 1d8 radiant damage.
   - name: Spare the Dying
     description: One unconscious creature you touch is stabilized.
-  - level: 1                             # 1st LEVEL
+  - level: {number : 1, slots : 3 }
   - name: Bane [C]
-    description: Up to three allies within 30 ft gain -1d4 to attacks and saves for 1 minute.
+    description: Up to three targets within 30 ft gain -1d4 to attacks and saves for 1 minute.
   - name: Bless [C]
-    description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute.
+    description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute [Life domain].
   - name: Cure Wounds
-    description: A touched creature regains 1d8+3 HP.
+    description: A touched creature regains 1d8+3 HP [Life domain].
   - name: Inflict Wounds
-    description: Spell attack on creature you can reach, 3d10 necrotic damage.
+    description: \textbf{Spell attack} on creature you can reach, 3d10 necrotic damage.
 #  - name: Guiding Bolt
 #    description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
 #  - name: Healing Word \rlap{[B]}
@@ -115,7 +115,7 @@ MAGIC:
 #  - name: Shield of Faith \rlap{[B,C]}
 #    description: A creature within 60 ft gains +2 AC for 10 min.
   - name: Thunderwave
-    description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful save, half damage and no push.
+    description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful \textbf{CON save}, half damage and no push.
 
 FEATURES:
   - name: Shelter of the Faithful
