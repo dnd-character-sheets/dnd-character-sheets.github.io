@@ -162,8 +162,13 @@ local function render_struct_list (key, list)
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
       out[#out+1] = ("\\item %s"):format(escape(tostring(elem)))
-    elseif elem.level and not next(elem, "level") then
-      out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]]):format(escape(elem.level))
+    elseif elem.level and not next(elem, 'level') then
+      if type(elem.level) == 'table' then
+        out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel[%s]{%s}}\\]]):
+                           format(elem.level.slots, elem.level.number)
+      else
+        out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]]):format(escape(elem.level))
+      end
     elseif elem.name and elem.description and not elem.ATTACK then
       out[#out+1] = ("\\described{%s}{%s}"):format(
                       escape(elem.name), escape(elem.description))

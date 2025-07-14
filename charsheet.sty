@@ -543,9 +543,9 @@
 
 \newcommand\spellslevel[2][0]{%
     \ifnum#2=0
-       \textsf{CANTRIPS}%
+       \textsf{CANTRIPS (unlimited)}%
     \else
-      \textsf{LEVEL~#2 SPELLS \ifnum#1>0\slots{#1}/day\fi}%
+      \textsf{LEVEL~#2 SPELLS \ifnum#1>0(\slots{#1} per day)\fi}%
     \fi
 }
 

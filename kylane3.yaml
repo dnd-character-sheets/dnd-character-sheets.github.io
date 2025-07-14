@@ -40,18 +40,16 @@ PROFICIENCIES:
   - Nature
   - Perception
   - proficiencies_skip: true
-  # (no tool proficiencies listed)
-  - proficiencies_skip: true
   # Languages / armor / weapons
-  - Languages: Common
-  - Languages: Elf
-  - Languages: Draconic
-  - Armor: None
-  - Weapons: Daggers
-  - Weapons: Darts
-  - Weapons: Slings
-  - Weapons: Quarterstaff
-  - Weapons: Light Crossbow
+  - Common
+  - Elf
+  - Draconic
+  - proficiencies_skip: true
+  - Daggers
+  - Darts
+  - Slings
+  - Quarterstaff
+  - Light Crossbow
 
 EQUIPMENT:
   - "Arcane Focus: Staff"
@@ -92,14 +90,14 @@ MAGIC:
     description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
   - name: Light
     description: Touched object shines like a torch for 1 hour.
-  - level: 1                               # 1st LEVEL
+  - level: { number: 1, slots: 4 }
   - name: Burning Hands
     description: 15-ft. cone; each creature Dex DC 13 for 3d6 fire (half on success).
   - name: Magic Missile
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
   - name: Shield
     description: As a reaction, +5 to AC and no damage from \emph{magic missile}
-  - level: 2
+  - level: { number: 2, slots: 2 }
   - name: Misty Step [B]
     description: Teleport 30 feet to an unoccupied space you can see.
 
