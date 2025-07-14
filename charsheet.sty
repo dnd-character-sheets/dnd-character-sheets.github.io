@@ -1516,7 +1516,12 @@
 }
 
 \newcommand{\ifDNDdeclared}[3]{%
-  \@ifundefined{dnd@font@#1}{#3}{#2}%
+  \@ifundefined{dnd@decl@#1}{#3}{#2}%
+}
+
+\newcommand{\ifDNDfont}[1]{%
+  \edef\dndfontcheck{\noexpand\ifDNDdeclared{#1 FONT}}%
+  \dndfontcheck
 }
 
 \let\getDND\valueDND

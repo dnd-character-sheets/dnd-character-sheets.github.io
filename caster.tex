@@ -286,13 +286,17 @@
          {\Large\textsf{\upperdndcontents}}
          ;
 
-      \dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}
+      \ifDNDfont{\upperdndlabel}
+         {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
+         {\dndlabel{upper val}{\upperdndlabel}}
 
    \node (lower val)
       [dndmaxhp,left=10mm of curhp,width=24mm] 
       {\Large\textsf{\lowerdndcontents}}
       ;
-   \dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}
+      \ifDNDfont{\lowerdndlabel}
+         {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
+         {\dndlabel{lower val}{\lowerdndlabel}}
 
 
 %\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};
