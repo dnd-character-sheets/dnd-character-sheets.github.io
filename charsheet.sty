@@ -924,25 +924,26 @@
 %  }%
 %}
 %
-\newcommand{\slotsliteral}[1]{%
+\newcommand{\slotsliteral}[2][1.5mm]{%
   \hbox{%
-    \begin{tikzpicture}[baseline=1pt, thick]
-      \ifnum#1>0
-        % Draw the first circle
-        \draw (0,1.6mm) circle (1.6mm);
-        
-        \ifnum#1>1
-          % Draw remaining circles with double lines between them
-          \foreach \i in {2,...,#1} {
-            \pgfmathsetmacro{\xpos}{(\i-1)*5.0}
-            \pgfmathsetmacro{\prevxpos}{(\i-2)*5.0}
+    \begin{tikzpicture}[baseline=1pt, thick,inner sep=0pt, outer sep=0pt]
+      \ifnum#2>0
+        % Create first circle node
+        \node[circle, draw, minimum size=3.2mm] (circle-1) at (0,1.6mm) {};
+        \def\prevnode{circle-1}%
+        \ifnum#2>1
+          % Create remaining circle nodes and connect them
+          \foreach \i in {2,...,#2} {
+            % Create circle node positioned relative to previous node
+            \edef\go{%
+            \noexpand\node (circle-\i)
+                  [circle, draw, minimum size=3.2mm, right=#1 of \prevnode] {};
+            }%
+            \go
             
-            % Draw double line from previous circle to current position
-            \draw[double, double distance=0.6mm] 
-              (\prevxpos mm + 1.6mm, 1.6mm) -- (\xpos mm - 1.6mm, 1.6mm);
-            
-            % Draw current circle
-            \draw (\xpos mm,1.6mm) circle (1.6mm);
+            % Draw double line between consecutive circles
+            \draw[double, double distance=0.6mm] (\prevnode) -- (circle-\i);
+            \xdef\prevnode{circle-\i}%
           }
         \fi
       \fi
