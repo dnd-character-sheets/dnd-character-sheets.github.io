@@ -86,14 +86,14 @@ local function keys_in_canonical_order (record, canon_index)
   local ordered, extras = {}, {}
   for k in pairs(record) do
     if canon_index[k] then
-      outf(ordered, "%s", k)
+      table.insert(ordered, k)
     else
-      outf(extras, "%s", k)
+      table.insert(extras, k)
     end
   end
   table.sort(ordered, function(a,b) return canon_index[a] < canon_index[b] end)
   table.sort(extras)
-  for _,k in ipairs(extras) do outf(ordered, "%s", k) end
+  for _,k in ipairs(extras) do table.insert(ordered, k) end
   return ordered
 end
 
@@ -140,7 +140,7 @@ end
 local function render_item_list (key, list)
   local items = {}
   for _,v in ipairs(list) do
-    outf(items, "%s", render_item(v))
+    table.insert(items, render_item(v))
   end
   return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(items, "\n"))
 end
@@ -186,15 +186,15 @@ local function render_struct_list (key, list)
       outf(out, "\\described{%s}{%s}", escape(elem.name), escape(elem.description))
     elseif elem.ATTACK then
       vprintf('rendering an attack\n')
-      outf(out, "%s", render_attack_record(elem))
+      table.insert(out, render_attack_record(elem))
     else
-      outf(out, "%s", render_generic_record(elem))
+      table.insert(out, render_generic_record(elem))
     end
   end
   for _,elem in ipairs(list) do
     if elem.ATTACK and note(elem) then
       if not notes_header_out then
-        outf(out, "%s", [[\notesheader]])
+        table.insert(out, [[\notesheader]])
         notes_header_out = true
       end
       outf(out, [[\attacknote{%s}{%s}]], elem.NAME, note(elem))
@@ -221,9 +221,9 @@ local function convert_mapping (map)
   -- Iterate in original order if lyaml preserved it (omap style)
   local keys = {}
   if map.n and map[1] and type(map[1])=="table" and map[1][1] then
-    for i=1,map.n do outf(keys, "%s", map[i][1]) end
+    for i=1,map.n do table.insert(keys, map[i][1]) end
   else
-    for k in pairs(map) do outf(keys, "%s", k) end
+    for k in pairs(map) do table.insert(keys, k) end
     table.sort(keys)               -- fallback: deterministic but arbitrary
   end
 
@@ -232,12 +232,12 @@ local function convert_mapping (map)
       local v = map[k]
       local t = type(v)
       if t=="string" or t=="number" or t=="boolean" then
-        outf(lines, "%s", render_simple_kv(k, tostring(v)))
+        table.insert(lines, render_simple_kv(k, tostring(v)))
       elseif t=="table" then
         if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
-          outf(lines, "%s", render_item_list(k, v))
+          table.insert(lines, render_item_list(k, v))
         else
-          outf(lines, "%s", render_struct_list(k, v))
+          table.insert(lines, render_struct_list(k, v))
         end
       end
     end
