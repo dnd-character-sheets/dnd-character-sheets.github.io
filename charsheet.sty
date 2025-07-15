@@ -931,18 +931,20 @@
         % Draw the first circle
         \draw (0,1.6mm) circle (1.6mm);
         
-        % Draw remaining circles with double lines between them
-        \foreach \i in {2,...,#1} {
-          \pgfmathsetmacro{\xpos}{(\i-1)*5.0}
-          \pgfmathsetmacro{\prevxpos}{(\i-2)*5.0}
-          
-          % Draw double line from previous circle to current position
-          \draw[double, double distance=0.6mm] 
-            (\prevxpos mm + 1.6mm, 1.6mm) -- (\xpos mm - 1.6mm, 1.6mm);
-          
-          % Draw current circle
-          \draw (\xpos mm,1.6mm) circle (1.6mm);
-        }
+        \ifnum#1>1
+          % Draw remaining circles with double lines between them
+          \foreach \i in {2,...,#1} {
+            \pgfmathsetmacro{\xpos}{(\i-1)*5.0}
+            \pgfmathsetmacro{\prevxpos}{(\i-2)*5.0}
+            
+            % Draw double line from previous circle to current position
+            \draw[double, double distance=0.6mm] 
+              (\prevxpos mm + 1.6mm, 1.6mm) -- (\xpos mm - 1.6mm, 1.6mm);
+            
+            % Draw current circle
+            \draw (\xpos mm,1.6mm) circle (1.6mm);
+          }
+        \fi
       \fi
     \end{tikzpicture}%
   }%
