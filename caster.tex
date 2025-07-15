@@ -279,6 +279,11 @@
   \edef\upperdndcontents{\noexpand\stackslots{\rawgetDND{SORCERY POINTS}}}%
 \fi
 
+\def\se{SENSES}
+\ifx\upperdndlabel\se
+  \def\upperdndcontents{\parbox{20mm}{\centering\rmfamily\small\textit{\getDND{SENSES}}}}%
+\fi
+
 %\show\pp
 %\show\upperdndlabel
 
