@@ -1561,6 +1561,40 @@
   }%
 }
 
+%-----------------------------------------------------------------
+% 5. \ifDNDfalse{<name>}{<true>}{<false>}
+%    Returns true code if variable is false (undefined, empty, "0", or "false")
+%-----------------------------------------------------------------
+\newcommand{\ifDNDfalse}[3]{%
+  \ifDNDdefined{#1}{%
+    % Variable is defined, check its value
+    \edef\tempval{\csname dnd@val@#1\endcsname}%
+    \ifx\tempval\empty
+      % Empty string - false
+      #2%
+    \else
+      % Check if value is "0" or "false"
+      \def\tempzero{0}%
+      \def\tempfalse{false}%
+      \ifx\tempval\tempzero
+        % Value is "0" - false
+        #2%
+      \else
+        \ifx\tempval\tempfalse
+          % Value is "false" - false
+          #2%
+        \else
+          % Value is something else - true
+          #3%
+        \fi
+      \fi
+    \fi
+  }{%
+    % Variable is not defined - false
+    #2%
+  }%
+}
+
 
 
 %%  I'd like you to use \pgfdeclareshape to define a shape for me.  I want
