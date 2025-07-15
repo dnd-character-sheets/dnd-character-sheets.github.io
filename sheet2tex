@@ -13,6 +13,10 @@ local function fprintf(fd, ...) return fd:write(stringf(...)) end
 local function dief(...) eprintf(...); os.exit(1) end
 local function errorf(...) return error(stringf(...)) end
 local function runf(...) return os.execute(stringf(...)) end
+local function outf(out, ...)
+  table.insert(out, stringf(...))
+  return out
+end
 ----------------------------------------------------------------
 
 local fields = require 'flags'.parser()
