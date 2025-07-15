@@ -900,42 +900,19 @@
 }
 
 
-%\newcommand{\slotsliteral}[1]{%
-%  \hbox{%
-%    \begin{tikzpicture}[baseline=(current bounding box.center),thick]
-%      \ifnum#1>0
-%        % Draw the first circle
-%        \draw (0,0) circle (1.6mm);
-%        
-%        % Draw remaining circles with double lines between them
-%        \foreach \i in {2,...,#1} {
-%          \pgfmathsetmacro{\xpos}{(\i-1)*5.2}
-%          \pgfmathsetmacro{\prevxpos}{(\i-2)*5.2}
-%          
-%          % Draw double line from previous circle to current position
-%          \draw[double, double distance=0.4mm] 
-%            (\prevxpos mm + 1.6mm, 0) -- (\xpos mm - 1.6mm, 0);
-%          
-%          % Draw current circle
-%          \draw (\xpos mm,0) circle (1.6mm);
-%        }
-%      \fi
-%    \end{tikzpicture}%
-%  }%
-%}
-%
 \newcommand{\slotsliteral}[2][1.5mm]{%
   \hbox{%
-    \begin{tikzpicture}[baseline=1pt, thick,inner sep=0pt, outer sep=0pt]
+    \begin{tikzpicture}[baseline=(circle-base), thick,inner sep=0pt, outer sep=0pt]
       \ifnum#2>0
         % Create first circle node
         \node[circle, draw, minimum size=3.2mm] (circle-1) at (0,1.6mm) {};
+        \path (circle-1.south) +(0mm,1pt) coordinate (circle-base); % looks better
         \def\prevnode{circle-1}%
         \ifnum#2>1
           % Create remaining circle nodes and connect them
           \foreach \i in {2,...,#2} {
             % Create circle node positioned relative to previous node
-            \edef\go{%
+            \edef\go{%  avoid speculating about just how tikz expands
             \noexpand\node (circle-\i)
                   [circle, draw, minimum size=3.2mm, right=#1 of \prevnode] {};
             }%
@@ -2294,7 +2271,7 @@
   \arabic{minrowsresult}%
 }
 
-\newcommand\fourslots{\slots{4}} % placeholder
+\newcommand\fourslots{\slotsliteral[1.0mm]{4}} % closer together
 
 
 % Main macro
@@ -2315,8 +2292,9 @@
   \setcounter{buildrows}{#1}%
   \ifthenelse{\value{buildrows}<5}{%
     % Base case: 1-4 slots in single row
-    \hbox to 0pt{\hss\slots{\arabic{buildrows}}\hss}%
-%    \vbox{\centerline{\slots{5}}}%
+    \hbox to 0pt{\hss
+      \ifthenelse{\value{buildrows}=4}{\fourslots}{\slots{\arabic{buildrows}}}%
+      \hss}%
   }{%
     % Recursive case: decide between first row of 3 or 4
     % Try with first row = 3
