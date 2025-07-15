@@ -111,10 +111,8 @@
          ;
 
      \ifDNDdefined{LEVEL}{
-       \expandafter\ifnum\rawgetDND{LEVEL}<3
          \node [at=(hitdice.north),anchor=north] 
               {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-       \fi
      }{}
 
       \node (curhp)
