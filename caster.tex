@@ -58,16 +58,25 @@
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
+  \colorlet{splashgray}{white!85.765!black}
+
+
+
   \begingroup\sffamily
 
   \newcommand\namestrut{\vrule width 0pt depth 1pt\relax}
 
   \path ($(splash.south west)+(88mm,18.75mm)$) coordinate  (class field sw);
   \path ($(splash.south west)+(88mm,9.7mm)$) coordinate  (race field sw);
-
-  \draw ($(splash.south west)+(48mm,16mm)$) coordinate  (charname center)
-     ;
+  \path ($(splash.south west)+(48mm,16mm)$) coordinate  (charname center);
+  \path ($(splash.south west)+(40mm,24mm)$) coordinate  (pregen left);
  
+
+  \ifDNDfalse{PREGENERATED}%
+    {\node [fill=splashgray,width=42mm,height=5mm,anchor=south west,at=(pregen left)] {};}
+    {}
+
+
   \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(class field sw)] {};
   \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(race field sw)] {};
 
