@@ -53,17 +53,17 @@ end
 -- 1. TeX-escaping utility
 ---------------------------------------------------------------------------
 local tex_escape_map = {
---  ["\\"] = "\\textbackslash{}",
+--  ["\\"] = [[\textbackslash{}]],
   [' '] = '~',
-  ["&"]  = "\\&",
-  ["%"]  = "\\%",
-  ["$"]  = "\\$",
-  ["#"]  = "\\#",
-  ["_"]  = "\\_",
---  ["{"]  = "\\{",
---  ["}"]  = "\\}",
-  ["~"]  = "\\textasciitilde{}",
-  ["^"]  = "\\textasciicircum{}",
+  ["&"]  = [[\&]],
+  ["%"]  = [[\%]],
+  ["$"]  = [[\$]],
+  ["#"]  = [[\#]],
+  ["_"]  = [[\_]],
+--  ["{"]  = [[\{]],
+--  ["}"]  = [[\}]],
+  ["~"]  = [[\textasciitilde{}]],
+  ["^"]  = [[\textasciicircum{}]],
 }
 
 local minustab = { ['-'] = [[\textminus]] }
@@ -105,7 +105,7 @@ end
 -- 3. Rendering helpers
 ---------------------------------------------------------------------------
 local function render_simple_kv (key, val)
-  return ("\\setDND{%s}{%s}"):format(keyformat(key), escape(val))
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), escape(val))
 end
 
 local function render(v)
@@ -142,7 +142,7 @@ local function render_item_list (key, list)
   for _,v in ipairs(list) do
     table.insert(items, render_item(v))
   end
-  return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(items, "\n"))
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(items, "\n"))
 end
 
 local function render_attack_record (rec)
@@ -150,7 +150,7 @@ local function render_attack_record (rec)
   for _,k in ipairs(keys_in_canonical_order(rec, ATTACK_INDEX)) do
     outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
   end
-  return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
+  return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
 
 local function render_generic_record (rec)
@@ -159,7 +159,7 @@ local function render_generic_record (rec)
     outf(parts, "%s={%s}", escape(k), escape(v))
   end
   table.sort(parts)
-  return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
+  return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
 
 local function note(elem)
@@ -175,7 +175,7 @@ local function render_struct_list (key, list)
   local notes_header_out = false
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
-      outf(out, "\\item %s", escape(tostring(elem)))
+      outf(out, [[\item %s]], escape(tostring(elem)))
     elseif elem.level and not next(elem, 'level') then
       if type(elem.level) == 'table' then
         outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel[%s]{%s}}\\]], elem.level.slots, elem.level.number)
@@ -183,7 +183,7 @@ local function render_struct_list (key, list)
         outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]], escape(elem.level))
       end
     elseif elem.name and elem.description and not elem.ATTACK then
-      outf(out, "\\described{%s}{%s}", escape(elem.name), escape(elem.description))
+      outf(out, [[\described{%s}{%s}]], escape(elem.name), escape(elem.description))
     elseif elem.ATTACK then
       vprintf('rendering an attack\n')
       table.insert(out, render_attack_record(elem))
@@ -201,7 +201,7 @@ local function render_struct_list (key, list)
     end
   end
 
-  return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(out, "\n"))
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "\n"))
 end
 
 ---------------------------------------------------------------------------
@@ -215,7 +215,7 @@ local function convert_mapping (map)
   if prof then
     local txt = tostring(prof)
     if not txt:match("^[+-]") then txt = "0"..txt end
-    outf(lines, "\\setcounter{proficiency bonus}{%s}", escape(txt))
+    outf(lines, [[\setcounter{proficiency bonus}{%s}]], escape(txt))
   end
 
   -- Iterate in original order if lyaml preserved it (omap style)
