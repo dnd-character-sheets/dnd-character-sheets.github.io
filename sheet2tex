@@ -15,6 +15,16 @@ local function errorf(...) return error(stringf(...)) end
 local function runf(...) return os.execute(stringf(...)) end
 ----------------------------------------------------------------
 
+local fields = require 'flags'.parser()
+  :bool('standalone as s'):help('emit just definitions, not full file')
+  :output_file('output as o'):help('where to write if not stdout')
+  :string('type as t', 'silverpine'):help('template for character sheet')
+  :bool('verbose as v')
+  :numarg(1)
+  :parse(arg)
+
+local vprintf = fields.verbose and eprintf or function() end
+
 
 local lyaml  = require "lyaml"
 
@@ -156,7 +166,7 @@ end
 
 
 local function render_struct_list (key, list)
-  eprintf('rendering struct for %s\n', key)
+  vprintf('rendering struct for %s\n', key)
   local out = {}
   local notes_header_out = false
   for _,elem in ipairs(list) do
@@ -173,8 +183,7 @@ local function render_struct_list (key, list)
       out[#out+1] = ("\\described{%s}{%s}"):format(
                       escape(elem.name), escape(elem.description))
     elseif elem.ATTACK then
-      eprintf('rendering an attack\n')
-      require 'inspect'.show(elem)
+      vprintf('rendering an attack\n')
       out[#out+1] = render_attack_record(elem)
     else
       out[#out+1] = render_generic_record(elem)
@@ -276,10 +285,15 @@ local function extend(doc)
   return doc
 end
 
-local yaml_text = slurp(arg[1])
-for _,doc in ipairs(yaml_load_all(yaml_text)) do
-  extend(doc)
-  if type(doc)=="table" then
-    io.write(convert_mapping(doc), "\n")
+local main = function(arg)
+  local yaml_text = slurp(arg[1])
+  for _,doc in ipairs(yaml_load_all(yaml_text)) do
+    extend(doc)
+    if type(doc)=="table" then
+      io.write(convert_mapping(doc), "\n")
+    end
   end
 end
+
+
+main(arg)
