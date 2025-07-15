@@ -24,6 +24,8 @@ local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
   :string('type as t', 'silverpine'):help('template for character sheet')
   :bool('verbose as v')
+  :string('templates', '/home/nr/etc/dnd/resources/character-sheets')
+         :help('directory where character-sheet templates live') 
   :numarg(1)
   :parse(arg)
 
@@ -286,12 +288,79 @@ local function extend(doc)
   return doc
 end
 
+local function contents(filename)
+  local f, msg = io.open(filename, 'r')
+  if not f then return f, msg end
+  local s, msg = f:read '*a'
+  if not s then return s, string.format('%s: %s', filename, msg) end
+  f:close()
+  return s
+end
+
+local function set_contents(filename, s)
+  local f, msg = io.open(filename, 'w')
+  if not f then return f, msg end
+  local s = assert(f:write(s))
+  f:close()
+  return s or true
+end
+
+local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what doesn't need quotes
+local strfind = string.find
+
+local function dirname(s) -- also returns basename as second result
+  s = s:gsub('/$', '')
+  local dir, base = s:match '^(.*)/([^/]*)$'
+  if not dir then
+    return '.', s
+  elseif dir == '' then
+    return '/', base
+  else
+    return dir, base
+  end
+end
+
+
+function osquote(s)
+  -- Returns string s with whatever markup is needed to quote it 
+  -- to the POSIX shell.
+
+  if strfind(s, quote_me) or s == '' then
+    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
+  else
+    return s
+  end
+end
+
+local function fill_template(assignments)
+  local pathname = stringf('%s/%s.tex', fields.templates, fields.type)
+  local template, msg = contents(pathname)
+  if not template then
+    eprintf('%s\n', msg)
+    os.exit(1)
+  else
+    return (template:gsub('\n%s*\\input%b{}', assignments))
+  end
+end
+
+local function emit(assignments)
+  if not fields.output then
+    io.stdout:write(assignments, '\n')
+  elseif fields.output:find '%.tex$' then
+    set_contents(fields.output, fill_template(assignments))
+  elseif fields.output:find '%.pdf$' then
+    local tex = fields.output:gsub('%.pdf$', '.tex')
+    set_contents(tex, fill_template(assignments))
+    runf('pdflatex -output-directory %s %s', osquote(dirname(fields.output)), osquote(tex))
+  end
+end
+
 local main = function(arg)
   local yaml_text = slurp(arg[1])
   for _,doc in ipairs(yaml_load_all(yaml_text)) do
     extend(doc)
     if type(doc)=="table" then
-      io.write(convert_mapping(doc), "\n")
+      emit(convert_mapping(doc))
     end
   end
 end
