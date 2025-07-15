@@ -86,14 +86,14 @@ local function keys_in_canonical_order (record, canon_index)
   local ordered, extras = {}, {}
   for k in pairs(record) do
     if canon_index[k] then
-      ordered[#ordered+1] = k
+      outf(ordered, "%s", k)
     else
-      extras[#extras+1]  = k
+      outf(extras, "%s", k)
     end
   end
   table.sort(ordered, function(a,b) return canon_index[a] < canon_index[b] end)
   table.sort(extras)
-  for _,k in ipairs(extras) do ordered[#ordered+1] = k end
+  for _,k in ipairs(extras) do outf(ordered, "%s", k) end
   return ordered
 end
 
@@ -140,7 +140,7 @@ end
 local function render_item_list (key, list)
   local items = {}
   for _,v in ipairs(list) do
-    items[#items+1] = render_item(v)
+    outf(items, "%s", render_item(v))
   end
   return ("\\setDND{%s}{%s}"):format(keyformat(key), table.concat(items, "\n"))
 end
@@ -148,7 +148,7 @@ end
 local function render_attack_record (rec)
   local parts = {}
   for _,k in ipairs(keys_in_canonical_order(rec, ATTACK_INDEX)) do
-    parts[#parts+1] = ("%s={%s}"):format(escape(k), escape(rec[k] or ""))
+    outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
   end
   return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
 end
@@ -156,7 +156,7 @@ end
 local function render_generic_record (rec)
   local parts = {}
   for k,v in pairs(rec) do
-    parts[#parts+1] = ("%s={%s}"):format(escape(k), escape(v))
+    outf(parts, "%s={%s}", escape(k), escape(v))
   end
   table.sort(parts)
   return ("\\dndkeys{%s}"):format(table.concat(parts, ","))
@@ -175,31 +175,29 @@ local function render_struct_list (key, list)
   local notes_header_out = false
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
-      out[#out+1] = ("\\item %s"):format(escape(tostring(elem)))
+      outf(out, "\\item %s", escape(tostring(elem)))
     elseif elem.level and not next(elem, 'level') then
       if type(elem.level) == 'table' then
-        out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel[%s]{%s}}\\]]):
-                           format(elem.level.slots, elem.level.number)
+        outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel[%s]{%s}}\\]], elem.level.slots, elem.level.number)
       else
-        out[#out+1] = ([[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]]):format(escape(elem.level))
+        outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]], escape(elem.level))
       end
     elseif elem.name and elem.description and not elem.ATTACK then
-      out[#out+1] = ("\\described{%s}{%s}"):format(
-                      escape(elem.name), escape(elem.description))
+      outf(out, "\\described{%s}{%s}", escape(elem.name), escape(elem.description))
     elseif elem.ATTACK then
       vprintf('rendering an attack\n')
-      out[#out+1] = render_attack_record(elem)
+      outf(out, "%s", render_attack_record(elem))
     else
-      out[#out+1] = render_generic_record(elem)
+      outf(out, "%s", render_generic_record(elem))
     end
   end
   for _,elem in ipairs(list) do
     if elem.ATTACK and note(elem) then
       if not notes_header_out then
-        out[#out+1] = [[\notesheader]]
+        outf(out, "%s", [[\notesheader]])
         notes_header_out = true
       end
-      out[#out+1]=([[\attacknote{%s}{%s}]]):format(elem.NAME, note(elem))
+      outf(out, [[\attacknote{%s}{%s}]], elem.NAME, note(elem))
     end
   end
 
@@ -217,16 +215,15 @@ local function convert_mapping (map)
   if prof then
     local txt = tostring(prof)
     if not txt:match("^[+-]") then txt = "0"..txt end
-    lines[#lines+1] =
-      ("\\setcounter{proficiency bonus}{%s}"):format(escape(txt))
+    outf(lines, "\\setcounter{proficiency bonus}{%s}", escape(txt))
   end
 
   -- Iterate in original order if lyaml preserved it (omap style)
   local keys = {}
   if map.n and map[1] and type(map[1])=="table" and map[1][1] then
-    for i=1,map.n do keys[#keys+1] = map[i][1] end
+    for i=1,map.n do outf(keys, "%s", map[i][1]) end
   else
-    for k in pairs(map) do keys[#keys+1] = k end
+    for k in pairs(map) do outf(keys, "%s", k) end
     table.sort(keys)               -- fallback: deterministic but arbitrary
   end
 
@@ -235,12 +232,12 @@ local function convert_mapping (map)
       local v = map[k]
       local t = type(v)
       if t=="string" or t=="number" or t=="boolean" then
-        lines[#lines+1] = render_simple_kv(k, tostring(v))
+        outf(lines, "%s", render_simple_kv(k, tostring(v)))
       elseif t=="table" then
         if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
-          lines[#lines+1] = render_item_list(k, v)
+          outf(lines, "%s", render_item_list(k, v))
         else
-          lines[#lines+1] = render_struct_list(k, v)
+          outf(lines, "%s", render_struct_list(k, v))
         end
       end
     end
