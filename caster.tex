@@ -167,7 +167,7 @@
 \end{featurestab}
 \end{magic}
 }
-{\node (magic) at (attacks.south) {};}
+{\path (attacks.south east) coordinate (magic);} % anchor is to east
 
 \ifDNDdefined{FEATURES}{
 \begin{features}[anchor=south east,at=(current bounding box.south -| magic.east)]{}
