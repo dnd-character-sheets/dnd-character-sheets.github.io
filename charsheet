@@ -161,6 +161,7 @@ end
 local function render_attack_record (rec)
   local parts = {}
   for _,k in ipairs(keys_in_canonical_order(rec, ATTACK_INDEX)) do
+--    require 'inspect'.show { k = k, field = rec[k] or 'nil' }
     outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
   end
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
@@ -350,18 +351,23 @@ local function fill_template(assignments)
     eprintf('%s\n', msg)
     os.exit(1)
   else
-    return (template:gsub('\n%s*\\input%b{}', assignments))
+    local bracketed_splash = stringf('{%s/splash.png}', fields.templates)
+    return (template:gsub('\n%s*\\input%b{}', assignments)
+                    :gsub('%{splash.png%}', bracketed_splash)
+           )
   end
 end
 
 local function emit(assignments)
+  local output = fields.standalone and assignments or fill_template(assignments)
+
   if not fields.output then
     io.stdout:write(assignments, '\n')
   elseif fields.output:find '%.tex$' then
-    set_contents(fields.output, fill_template(assignments))
+    set_contents(fields.output, output)
   elseif fields.output:find '%.pdf$' then
     local tex = fields.output:gsub('%.pdf$', '.tex')
-    set_contents(tex, fill_template(assignments))
+    set_contents(tex, output)
     runf('pdflatex -output-directory %s %s', osquote(dirname(fields.output)), osquote(tex))
   end
 end
