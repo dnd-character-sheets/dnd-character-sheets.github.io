@@ -2150,79 +2150,53 @@
 
 
 
-% Test four names and assign first two non-empty to specified variables with labels
-\newcommand{\firsttwoDNDdefined}[8]{%
+% Test a list of names names and assign first two non-empty to specified variables with labels
+\newcommand{\firsttwoDNDdefined}[5]{%
+  % \label \contents \label \contents {key,key,...,key}
   \def#1{}%
   \def#2{}%
   \def#3{}%
   \def#4{}%
-  \def\foundcount{0}%
-  %
-  % Test first name
-  \ifDNDnonempty{#5}{%
-    \ifnum\foundcount=0
-      \edef#1{\rawgetDND{#5}}%
-      \def#2{#5}%
-      \def\foundcount{1}%
-    \else
-      \ifnum\foundcount=1
-        \edef#3{\rawgetDND{#5}}%
-        \def#4{#5}%
-        \def\foundcount{2}%
-      \fi
-    \fi
-  }{}%
-  %
-  % Test second name (only if we haven't found 2 yet)
-  \ifnum\foundcount<2
-    \ifDNDnonempty{#6}{%
-      \ifnum\foundcount=0
-        \edef#1{\rawgetDND{#6}}%
-        \def#2{#6}%
-        \def\foundcount{1}%
-      \else
-        \ifnum\foundcount=1
-          \edef#3{\rawgetDND{#6}}%
-          \def#4{#6}%
-          \def\foundcount{2}%
-        \fi
-      \fi
-    }{}%
-  \fi
-  %
-  % Test third name (only if we haven't found 2 yet)
-  \ifnum\foundcount<2
-    \ifDNDnonempty{#7}{%
-      \ifnum\foundcount=0
-        \edef#1{\rawgetDND{#7}}%
-        \def#2{#7}%
-        \def\foundcount{1}%
-      \else
-        \ifnum\foundcount=1
-          \edef#3{\rawgetDND{#7}}%
-          \def#4{#7}%
-          \def\foundcount{2}%
-        \fi
-      \fi
-    }{}%
-  \fi
-  %
-  % Test fourth name (only if we haven't found 2 yet)
-  \ifnum\foundcount<2
-    \ifDNDnonempty{#8}{%
-      \ifnum\foundcount=0
-        \edef#1{\rawgetDND{#8}}%
-        \def#2{#8}%
-        \def\foundcount{1}%
-      \else
-        \ifnum\foundcount=1
-          \edef#3{\rawgetDND{#8}}%
-          \def#4{#8}%
-          \def\foundcount{2}%
-        \fi
-      \fi
-    }{}%
-  \fi
+  \foreach \key in {#5}{%
+     \expandafter\ifDNDdefined\expandafter{\key}%
+         {\ifx#1\empty
+            \xdef#1{\key}%
+            \edef\defined@go{\noexpand\rawgetDND{\key}}%
+            \xdef#2{\defined@go}%
+          \else
+            \ifx#3\empty
+              \xdef#3{\key}%
+              \edef\defined@go{\noexpand\rawgetDND{\key}}%
+              \xdef#4{\defined@go}%
+            \fi
+          \fi
+         }%
+         {}%
+   }%
+}
+
+\newcommand{\firsttwoDNDnonempty}[5]{%
+  % \label \contents \label \contents {key,key,...,key}
+  \def#1{}%
+  \def#2{}%
+  \def#3{}%
+  \def#4{}%
+  \foreach \key in {#5}{%
+     \expandafter\ifDNDnonempty\expandafter{\key}%
+         {\ifx#1\empty
+            \xdef#1{\key}%
+            \edef\defined@go{\noexpand\rawgetDND{\key}}%
+            \xdef#2{\defined@go}%
+          \else
+            \ifx#3\empty
+              \xdef#3{\key}%
+              \edef\defined@go{\noexpand\rawgetDND{\key}}%
+              \xdef#4{\defined@go}%
+            \fi
+          \fi
+         }%
+         {}%
+   }%
 }
 
 
@@ -2308,3 +2282,10 @@
     \fi
   }%
 }
+
+\newcommand\beginExpand{}%
+\def\beginExpand#1[#2]{%
+  \edef\begin@optional{\noexpand\begin{#1}[#2]}%
+  \begin@optional
+}
+  
