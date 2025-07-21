@@ -86,8 +86,6 @@ ATTACKS:
     AMMO: ""
     NOTES: Creatures in the line take full damage on a failed save or half on a success.
 
-MAGIC: []
-
 FEATURES:
   - name: Military Rank
     description: Advantage on checks in social situations that involve NPCs with military experience.
