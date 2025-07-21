@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage{lipsum}
 \usepackage{charsheet}
+\usepackage{multicol}
 
 \usepackage{pgfkeys}
 
@@ -11,11 +12,14 @@
   {\end{minipage}}
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{FEATURES}{}{}
-\newsectionenv[width=74mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
+\newsectionenv[width=70mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
    {\medskip
+    \ifDNDdefined{MAGIC}{}{\begin{multicols}{2}}%
     \small
      \begin{eqlist}}
-   {\end{eqlist}}
+   {\end{eqlist}%
+    \ifDNDdefined{MAGIC}{}{\end{multicols}}%
+   }
 
 
 \newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
@@ -177,12 +181,15 @@
 {\path (attacks.south east) coordinate (magic);} % anchor is to east
 
 \ifDNDdefined{FEATURES}{
-\begin{features}[anchor=south east,at=(current bounding box.south -| magic.east)]{}
-\let\described=\feature
-\begin{featurestab}
-\getDND{FEATURES}
-\end{featurestab}
-\end{features}
+  \ifDNDdefined{MAGIC}
+     {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}}
+     {\def\where{below right corner=of attacks}}%
+  \beginExpand{features}[\where]{}
+  \let\described=\feature
+  \begin{featurestab}
+  \getDND{FEATURES}
+  \end{featurestab}
+  \end{features}
 }{}
 
 \node (stats background) 
@@ -197,11 +204,19 @@
 
 % slots OK here
 
+\typeout{WTF magic}
   
 \ifDNDdefined{EQUIPMENT}{%
-  \begin{equipment}[left of lower corner=of features]
+%  \typeout{equipment, not magic}%
+  {%
+   \ifDNDdefined{MAGIC}{\def\where{left of lower corner=of features}}
+                       {\def\where{below right corner=of features,width=\dndrightwidth}}%
+
+  \beginExpand{equipment}[\where]
+     \useDNDfont{EQUIPMENT}%
      \getDND{EQUIPMENT}
   \end{equipment}
+  }
 }
 {\node (equipment) [left of lower corner=of features] {};
 }
@@ -224,7 +239,7 @@
       {\large\textsf{+\arabic{proficiency bonus}}};
 
 % Proficiencies section (middle top)
-\begin{proficiencies}[below=of proficiency bonus,width=38.002mm]
+\begin{proficiencies}[below=of proficiency bonus,width=38.002mm,height=3in]
   \small
 \getDND*{PROFICIENCIES}
 \end{proficiencies}
@@ -242,7 +257,7 @@
 %              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
 
 
-\firsttwoDNDdefined{\upperdndcontents}{\upperdndlabel}{\lowerdndcontents}{\lowerdndlabel}{SORCERY POINTS}{SENSES}{SPELL DC}{PASSIVE PERCEPTION}
+\firsttwoDNDnonempty{\upperdndlabel}{\upperdndcontents}{\lowerdndlabel}{\lowerdndcontents}{SORCERY POINTS,SENSES,SPELL DC,PASSIVE PERCEPTION}
 
 %\typeout{upper is \upperdndlabel; lower is \lowerdndlabel}
 
@@ -303,6 +318,8 @@
          {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
          {\dndlabel{upper val}{\upperdndlabel}}
 
+\ifx\lowerdndlabel\empty\else
+
    \node (lower val)
       [dndmaxhp,left=10mm of curhp,width=24mm] 
       {\Large\textsf{\lowerdndcontents}}
@@ -310,6 +327,8 @@
       \ifDNDfont{\lowerdndlabel}
          {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
          {\dndlabel{lower val}{\lowerdndlabel}}
+
+\fi
 
 
 %\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};

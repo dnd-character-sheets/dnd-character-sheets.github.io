@@ -78,7 +78,7 @@ ATTACKS:
     RANGE: 30/120 ft.
     AMMO: 5 javelins
     NOTES: Can be thrown.
-  - NAME: Breath Weapon (Lightning)
+  - NAME: \parbox{5em}{Breath Weapon (Lightning)}
     ATTACK: "DC 11 Dex"
     DAMAGE: 2d6
     TYPE: lightning
