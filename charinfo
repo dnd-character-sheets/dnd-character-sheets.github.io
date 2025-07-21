@@ -108,6 +108,15 @@ local saving_throw_proficiencies = {
   Wizard    = { "Intelligence", "Wisdom" }
 }
 
+local long_upper_stats = { }
+do
+  for _, stats in pairs(saving_throw_proficiencies) do
+    for _, stat in ipairs(stats) do
+      long_upper_stats[stat:upper()] = true
+    end
+  end
+end
+
 
 local function modifier(stat)
   return math.floor((tonumber(stat)-10) / 2.0)
@@ -273,15 +282,231 @@ local function emit(assignments)
   end
 end
 
-local main = function(arg)
+local function read_docs(arg)
+  local docs = { }
   for _, pathname in ipairs(arg) do
     local yaml_text = slurp(pathname)
     for _,doc in ipairs(yaml_load_all(yaml_text)) do
       if type(doc) == 'table' then
-        io.stdout:write(mkplayer(extend(doc)), '\n\n')
+        table.insert(docs, extend(doc))
       end
     end
   end
+  return docs
+end
+
+local function emit_players(docs, low, high)
+  for i = low or 1, high or #docs do
+    if docs[i] then
+      io.stdout:write(mkplayer(docs[i]), '\n\n')
+    end
+  end
+end
+
+require 'tabutil'
+
+local function emit_passive_perceptions(docs)
+--  require 'inspect'.show (docs)
+  local pps = table.of_tables()
+  local have_pps = false
+  for _, doc in ipairs(docs) do
+    local n = tonumber(doc['PASSIVE PERCEPTION'])
+    if n then
+      have_pps = true
+      table.insert(pps[n], doc.CLASS or '??')
+--      require 'inspect'.show {passive = n, nth = pps[n] }
+    else
+--      require 'inspect'.show(doc)
+    end
+  end
+--  require 'inspect'.show(pps)
+  if have_pps then
+    local displays = { }
+    for pp = 30, 1, -1 do
+      if pps[pp][1] then
+        table.insert(displays, stringf('%d~(%s)', pp, table.concat(pps[pp], ', ')))
+      end
+    end
+    io.stdout:write('\n\\bigskip\nPassive perceptions: ',
+                    table.concat(displays, '; '), '\n\n')
+  end
+end
+
+require 'tabutil'
+
+local function saveinfo(description, dc)
+  local d = description:upper()
+  for stat in statsstrings:gmatch '%a+' do
+    if d:find ('%A' .. stat .. '%A') then
+      return stringf([[(\textsc{%s, DC~%s})]], stat:lower(), dc and tostring(dc) or '?')
+    end
+  end
+  for stat in pairs(long_upper_stats) do
+    if d:find ('%A' .. stat .. '%A') then
+      return stringf([[(\textsc{%s, DC~%s})]], stat:sub(1,3):lower(), dc and tostring(dc) or '?')
+    end
+  end
+
+  if dc then
+    return stringf([[(DC~%s)]], tostring(dc))
+  end
+end  
+        
+
+local statsstrings = 'STR DEX CON INT WIS CHA'
+
+
+local non_offensive_spells = { }
+do
+  local list = { 'Bless', 'Resistance', 'Guidance' }
+  for _, spell in ipairs(list) do
+    non_offensive_spells[spell] = true
+  end
+end
+
+
+local function offensive_spells(docs)
+
+  local function nosuffix(name)
+    return (name:gsub('%s-%[.*', ''))
+  end
+
+
+  local attacks = { }
+  local saves = { }
+  for _, doc in ipairs(docs) do
+    for _, spell in ipairs(doc.MAGIC or {}) do
+--      require 'inspect'.show(spell)
+      if type(spell) == 'table' and spell.name
+      and not non_offensive_spells[nosuffix(spell.name)]
+      then
+        local name = nosuffix(spell.name)
+        if spell.description:lower():find 'save'
+        or spell.description:lower():find 'saving'
+        then
+          saves[name] = saveinfo(spell.description, doc['SPELL DC']) or true
+        elseif spell.description:lower():find 'damage'
+        and spell.description:lower():find 'attack'
+        then
+          attacks[name] = true
+        else
+--          eprintf('No category for %s\n', name)
+        end
+      end
+    end
+  end
+
+--  require 'inspect'.show { attacks = attacks, saves = saves }
+
+  local template = [[
+\bigskip
+
+\emph{\Large Offensive Spells}
+\par
+\medskip
+\noindent
+\begin{tabular}{@{}c@{}}
+\toprule
+\begin{tabular}[t]{@{}e}
+\upshape{Attack roll}\\
+\midrule
+ATTACKS\\
+\end{tabular}%
+\begin{tabular}[t]{e}
+\upshape{Saving throw}\\
+\midrule
+SAVES\\
+\end{tabular}\\
+\bottomrule
+\end{tabular}
+
+
+]]
+
+
+
+  local col1 = table.sorted_keys(attacks)
+  local col2 = table.sorted_keys(saves)
+
+   require 'inspect'.show{ col1 = col1 }
+  for i = 1, #col2 do
+    col2[i] = stringf('%s %s', col2[i], saves[col2[i]])
+  end
+
+  return template:gsub('ATTACKS', table.concat(col1, [[\\]]))
+                 :gsub('SAVES', table.concat(col2, [[\\]]))
+    
+
+
+end
+
+local function emit_description_table(header, key, docs)
+
+  local function nosuffix(name)
+    return (name:gsub('%s-%[.*', ''))
+  end
+
+  local description = { } -- index by name
+  for _, doc in ipairs(docs) do
+    for _, spell in ipairs(doc[key] or {}) do
+      if type(spell) == 'table' and spell.name then
+        local name = nosuffix(spell.name)
+        local d = description[name] or spell.description
+        if #spell.description < #d then
+          d = spell.description
+        end
+        description[name] = d
+      end
+    end
+  end
+
+printf([[{\Large\textit{%s}}]], header)
+
+io.stdout:write [[
+\medskip
+
+\noindent
+\begingroup
+\def\arraystretch{1.2}
+\rlap{\begin{tabularx}{2\linewidth}{@{}>{\itshape}l>{\raggedright\arraybackslash}X@{}}
+\toprule
+\upshape{Name}&
+Description\\
+\midrule
+]]
+
+  for _, key in ipairs(table.sorted_keys(description)) do
+    printf([[
+%s&%s\\
+]], key, escape(description[key]))
+  end
+
+io.stdout:write [[
+\bottomrule
+\end{tabularx}}
+\endgroup
+]]
+
+end
+
+
+local main = function(arg)
+  local docs = read_docs(arg)
+  emit_players(docs, 1, 2)
+  emit_passive_perceptions(docs)
+  io.stdout:write([[\newpage]], '\n')
+  emit_players(docs, 3, 4)
+  io.stdout:write(offensive_spells(docs), '\n\n')
+
+  if #docs > 4 then
+    io.stdout:write([[\clearpage]], '\n')
+    emit_players(docs, 5)
+  end
+
+  io.stdout:write([[\clearpage]], '\n')
+  emit_description_table('All Spells', 'MAGIC', docs)
+  io.stdout:write([[\clearpage]], '\n')
+  emit_description_table('Features', 'FEATURES', docs)
 end
 
 
@@ -289,6 +514,7 @@ io.stdout:write [[
 \documentclass[12pt,twocolumn]{article}
 \usepackage[margin=0.8cm,landscape]{geometry}
 \usepackage{times}
+\usepackage{tabularx}
 \usepackage{dminfo}
 
 \begin{document}
