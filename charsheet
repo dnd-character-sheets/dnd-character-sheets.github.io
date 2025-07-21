@@ -214,7 +214,7 @@ local function render_struct_list (key, list)
     end
   end
 
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "\n"))
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "%\n"))
 end
 
 ---------------------------------------------------------------------------
