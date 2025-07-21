@@ -491,7 +491,7 @@
       \setlength{\topsep}{0pt}% space before/after the list
       \setlength{\partopsep}{0pt}%
       \setlength{\parsep}{0pt}%
-      \setlength{\itemsep}{2pt}% space between items
+      \setlength{\itemsep}{1pt}% space between items
       \renewcommand*{\makelabel}[1]{}% suppress the bullet
   }}%
   {\end{list}}
@@ -545,7 +545,8 @@
     \ifnum#2=0
        \textsf{CANTRIPS (unlimited)}%
     \else
-      \textsf{LEVEL~#2 SPELLS \ifnum#1>0(\slots{#1} per day)\fi}%
+      \textsf{\vrule width 0pt height 14pt depth 0pt
+              LEVEL~#2 SPELLS \ifnum#1>0(\slots{#1} per day)\fi}%
     \fi
 }
 
