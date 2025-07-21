@@ -1454,6 +1454,7 @@
 \newcommand{\newDND}[1]{%
   \@ifundefined{dnd@decl@#1}{%
     \expandafter\def\csname dnd@decl@#1\endcsname{}%  mark as declared
+    \expandafter\def\csname dnd@font@#1\endcsname{}%  normally no font change
   }{%
     \PackageError{dnd}{DND key `#1' already declared}{}%
   }%
@@ -1487,6 +1488,24 @@
   }%
 }
 
+\newcommand{\useDNDfont}[1]{%
+  \@ifundefined{dnd@font@#1}{%
+    \PackageError{dnd}{DND key `#1' has not been declared}{}%
+  }{%
+    \csname dnd@font@#1\endcsname
+  }%
+}
+
+\newcommand{\setDNDfont}[2]{%
+  \@ifundefined{dnd@font@#1}{%
+    \PackageError{dnd}{DND key `#1' has not been declared}{}%
+  }{%
+    \expandafter\def\csname dnd@font@#1\endcsname{#2}%
+  }%
+}
+
+\expandafter\newcommand\csname dnd@font@DEFAULT LABEL\endcsname{}
+
 %-----------------------------------------------------------------
 % 4. \ifDNDdefined{<name>}{<true>}{<false>}
 %    Succeeds *only* after a value has been set.
@@ -1499,9 +1518,8 @@
   \@ifundefined{dnd@decl@#1}{#3}{#2}%
 }
 
-\newcommand{\ifDNDfont}[1]{%
-  \edef\dndfontcheck{\noexpand\ifDNDdeclared{#1 FONT}}%
-  \dndfontcheck
+\newcommand{\ifDNDfont}[3]{%
+  \@ifundefined{dnd@font@#1}{#3}{#2}%
 }
 
 \let\getDND\valueDND
@@ -1976,9 +1994,8 @@
 
 
 \newcommand\dndlabel[3][DEFAULT LABEL]{% [key for font] {node}{label text, which could be a macro}
-  \edef\fontkey{#1 FONT}%
   \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
-        {\textsf{\getDND\fontkey{#3}}};
+        {\textsf{\useDNDfont{#1}#3}};
 }
 \newcommand\dndtoplabel[2]{% {node}{label text}
   \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
@@ -2068,21 +2085,16 @@
 \newDND{SPEED}
 \newDND{SPELL DC}
 \newDND{SPELLS KNOWN}
+\newDND{TRAITS}
 \newDND{DOMAIN SPELLS}
 \newDND{STR}
 \newDND{STR SAVING}
 \newDND{WIS}
 \newDND{WIS SAVING}
 
-\newDND{PASSIVE PERCEPTION FONT} % control font size of labels
-\newDND{SORCERY POINTS FONT}
-
-\setDND{PASSIVE PERCEPTION FONT}{\tiny}
-\setDND{SORCERY POINTS FONT}{\tiny}
-
-
-\newDND{DEFAULT LABEL FONT}
-\setDND{DEFAULT LABEL FONT}{\footnotesize}
+\setDNDfont{PASSIVE PERCEPTION}{\tiny}
+\setDNDfont{SORCERY POINTS}{\tiny}
+\setDNDfont{DEFAULT LABEL}{\footnotesize}
 
 
 

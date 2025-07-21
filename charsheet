@@ -107,7 +107,12 @@ end
 -- 3. Rendering helpers
 ---------------------------------------------------------------------------
 local function render_simple_kv (key, val)
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), escape(val))
+  local fontbase = key:match('(.*) FONT$')
+  if fontbase then
+    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), escape(val))
+  else
+    return ([[\setDND{%s}{%s}]]):format(keyformat(key), escape(val))
+  end
 end
 
 local function render(v)
