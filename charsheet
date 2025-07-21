@@ -122,7 +122,11 @@ local function render(v)
     return tostring(v)
   else
     if v.proficiencies_skip then
-      return [[\profskip]]
+      return [[\profskip{}]]
+    elseif v.smallskip then
+      return [[\smallskip{}]]
+    elseif v.medskip then
+      return [[\medskip{}]]
     elseif v.Languages then
       return v.Languages
     elseif v.Armor then
@@ -137,7 +141,9 @@ end
 
 local function render_item(v)
   local s = render(v)
-  if s:find 'profskip' then
+  if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
+  or s:find [[\bigskip]]
+  then
     return s
   else
     return ([[\item %s]]):format(s)
