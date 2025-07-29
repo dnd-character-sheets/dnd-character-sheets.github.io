@@ -1,5 +1,15 @@
+##  My spell list for level 3
+##  Known and always prepared: bless, cure wounds, lesser restoration, spiritual weapon.
+##  
+##  Cantrips: sacred flame, minor blessing and spare the dying.
+##  
+##  Prepared spells (level 3 + modifier 3) so six prepared: Bane, Aid
+##  (2nd level), Prayer of healing (2nd level), guiding bolt, inflict
+##  wounds and thunder wave.
+
+
 "CHARACTER NAME": "Miriel"
-"CLASS & LEVEL": Cleric (Life Domain) 2
+"CLASS & LEVEL": Cleric (Life Domain) 3
 "BACKGROUND": Acolyte
 "PLAYER NAME": "Mel"
 "RACE": Human
@@ -18,7 +28,7 @@ CHA: 13
 "PROFICIENCY BONUS": +2
 SPELL DC: 13
 "PASSIVE PERCEPTION": 13
-"MAX HP": 22
+"MAX HP": 29
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
 "SPEED": 30
@@ -85,6 +95,7 @@ ATTACKS:
 
 SPELLS KNOWN: 5
 DOMAIN SPELLS: 2
+MAGIC FONT: \small
 MAGIC:
   - level: 0                             # CANTRIPS
   - name: Minor Blessing
@@ -94,20 +105,20 @@ MAGIC:
 #  - name: Mending
 #    description: Repair a non-magical object you can touch.
   - name: Sacred Flame
-    description: Target one creature; \textbf{DEX save} or 1d8 radiant damage.
+    description: Target one creature; DEX save or 1d8 radiant damage.
   - name: Spare the Dying
     description: One unconscious creature you touch is stabilized.
-  - level: {number : 1, slots : 3 }
+  - level: {number : 1, slots : 4 }
   - name: Bane [C]
-    description: Up to three targets within 30 ft gain -1d4 to attacks and saves for 1 minute.
-  - name: Bless [C]
+    description: Up to three targets within 30 ft gain -1d4 to attacks and saves for 1 minute (CHA saving throw).
+  - name: Bless [C]  # life domain
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute [Life domain].
-  - name: Cure Wounds
-    description: A touched creature regains 1d8+3 HP [Life domain].
+  - name: Cure Wounds # life domain
+    description: A touched creature regains 1d8+3 HP. # Life domain
+  - name: Guiding Bolt
+    description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
   - name: Inflict Wounds
-    description: \textbf{Spell attack} on creature you can reach, 3d10 necrotic damage.
-#  - name: Guiding Bolt
-#    description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
+    description: Spell attack on creature you can reach, 3d10 necrotic damage.
 #  - name: Healing Word \rlap{[B]}
 #    description: A creature within 60 ft regains 1d4+3 HP.
 #  - name: Sanctuary [B]
@@ -116,10 +127,19 @@ MAGIC:
 #    description: A creature within 60 ft gains +2 AC for 10 min.
   - name: Thunderwave
     description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful \textbf{CON save}, half damage and no push.
+  - level: { number: 2, slots: 2 }
+  - name: Aid
+    description: For 3 hours, up to 3 creatures gain 5 max and current HP.
+  - name: Lesser Restoration # domain spell
+    description: End one disease or condition on one creature you touch.
+  - name: Prayer of Healing
+    description: Up to 6 creatures you can see regain 2d8+5 HP, +2 for Disciple of Life. 10 min to cast.
+  - name: Spiritual Weapon [B]
+    description: For one minute, a spectral weapon can attack for 1d8+5 force damage.
 
 FEATURES:
-  - name: Shelter of the Faithful
-    description: Free lodging and care at friendly temples.
+#  - name: Shelter of the Faithful
+#    description: Free lodging and care at friendly temples.
   - name: Disciple of Life
     description: Your healing spells restore an additional 2 HP + the spell’s level.
   - name: Channel Divinity
