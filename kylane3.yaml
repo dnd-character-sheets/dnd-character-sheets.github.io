@@ -2,6 +2,7 @@
 "CLASS & LEVEL": Sorcerer 3
 "MAX HP": 28
 SORCERY POINTS: 3
+SPELL DC: 13
 
 "BACKGROUND": Town Watch
 MOTIVATION: Kylane wants to harness her newfound power
@@ -100,7 +101,7 @@ MAGIC:
     description: As a reaction, gain +5 to AC and suffer no damage from \emph{magic missile}.
   - level: { number: 2, slots: 2 }
   - name: Misty Step [B]
-    description: Teleport 30 feet to an unoccupied space you can see.
+    description: Teleport 30 ft to an unoccupied space you can see.
 
 FEATURES:
   - name: Twinned Spell
