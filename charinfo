@@ -334,21 +334,24 @@ end
 
 require 'tabutil'
 
+local function upshape(s)
+  return stringf([[{\upshape{}%s}]], s)
+end
 local function saveinfo(description, dc)
   local d = description:upper()
   for stat in statsstrings:gmatch '%a+' do
     if d:find ('%A' .. stat .. '%A') then
-      return stringf([[(\textsc{%s, DC~%s})]], stat:lower(), dc and tostring(dc) or '?')
+      return upshape(stringf([[(\textsc{%s, DC~%s})]], stat:lower(), dc and tostring(dc) or '?'))
     end
   end
   for stat in pairs(long_upper_stats) do
     if d:find ('%A' .. stat .. '%A') then
-      return stringf([[(\textsc{%s, DC~%s})]], stat:sub(1,3):lower(), dc and tostring(dc) or '?')
+      return upshape(stringf([[(\textsc{%s, DC~%s})]], stat:sub(1,3):lower(), dc and tostring(dc) or '?'))
     end
   end
 
   if dc then
-    return stringf([[(DC~%s)]], tostring(dc))
+    return upshape(stringf([[(DC~%s)]], tostring(dc)))
   end
 end  
         
@@ -380,16 +383,21 @@ local function offensive_spells(docs)
       if type(spell) == 'table' and spell.name
       and not non_offensive_spells[nosuffix(spell.name)]
       then
+        local description = spell.description:lower()
         local name = nosuffix(spell.name)
-        if spell.description:lower():find 'save'
-        or spell.description:lower():find 'saving'
+        if name == 'Magic Missile' then
+          saves[name] = [[\upshape{(always hits)}]]
+        elseif description:find 'save'
+        or description:find 'saving'
+        or spell.description:find '%A%a%a%a%s+DC%s+%d'
         then
           saves[name] = saveinfo(spell.description, doc['SPELL DC']) or true
-        elseif spell.description:lower():find 'damage'
-        and spell.description:lower():find 'attack'
+        elseif description:find 'attack%s*%+%d'
+        or (description:find 'damage' and description:find 'attack')
         then
           attacks[name] = true
         else
+--require 'inspect'.show {description = description, find = { description:find '%A%a%a%a%s+DC%s+%d' } }
 --          eprintf('No category for %s\n', name)
         end
       end
@@ -462,29 +470,49 @@ local function emit_description_table(header, key, docs)
 
 printf([[{\Large\textit{%s}}]], header)
 
-io.stdout:write [[
-\medskip
-
-\noindent
-\begingroup
-\def\arraystretch{1.2}
-\rlap{\begin{tabularx}{2\linewidth}{@{}>{\itshape}l>{\raggedright\arraybackslash}X@{}}
+local table_head = [[
+\begin{tabularx}{\linewidth}[t]{@{}>{\itshape}l>{\raggedright\arraybackslash}X@{}}
 \toprule
 \upshape{Name}&
 Description\\
 \midrule
 ]]
 
-  for _, key in ipairs(table.sorted_keys(description)) do
+local table_tail = [[
+\bottomrule
+\end{tabularx}\relax
+]]
+
+io.stdout:write [[
+\medskip
+
+\noindent
+\begingroup
+\def\arraystretch{1.2}
+\rlap{\relax
+]]
+
+io.stdout:write(table_head)
+
+  local all_spells = table.sorted_keys(description)
+  local skip_before = #all_spells + 1
+  if #all_spells > 10 then
+    skip_before = math.ceil(#all_spells / 2.0)
+  end
+
+  for i, key in ipairs(all_spells) do
+    if i == skip_before then
+      printf('%s\n\\hskip 1em minus 1em\\relax %s', table_tail, table_head)
+    end
     printf([[
 %s&%s\\
 ]], key, escape(description[key]))
   end
 
+io.stdout:write(table_tail)
+
 io.stdout:write [[
-\bottomrule
-\end{tabularx}}
-\endgroup
+}\endgroup
 ]]
 
 end
@@ -517,6 +545,7 @@ io.stdout:write [[
 \usepackage{tabularx}
 \usepackage{dminfo}
 
+\providecommand\slots[1]{\relax}
 \begin{document}
 
 ]]
