@@ -504,7 +504,9 @@
 
 \newdimen\featurespostspace
 \featurespostspace=8pt
-\newcommand\described[2]{#1&#2\\[\featurespostspace]}
+\newdimen\featurespostdepth
+\featurespostdepth=5pt
+\newcommand\described[2]{#1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]}
 
 \newdimen\featuresnamewidth
 \featuresnamewidth=28mm
