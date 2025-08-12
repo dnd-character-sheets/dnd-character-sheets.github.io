@@ -2016,7 +2016,7 @@
 %   \show\nextstatloc
    \expandafter\setstatnumber\expandafter{#2}%
    % calc package rounds toward zero; do not use
-   \pgfmathsetcounter{statmod}{round((\value{statnumber} - 10) / 2)}%
+   \pgfmathsetcounter{statmod}{floor((\value{statnumber} - 10) / 2)}%
    \setcounter{saving}{\value{statmod} + #3}%
    \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{#2}{\thestatmod}{\thesaving}%
    \gdef\nextstatloc{below=7mm of #1}%
