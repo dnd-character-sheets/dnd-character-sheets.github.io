@@ -1,0 +1,139 @@
+"CHARACTER NAME": Reiss Scorick
+"CLASS & LEVEL": Druid 1
+"BACKGROUND": Sage
+"PLAYER NAME": ""
+"RACE": Human
+"ALIGNMENT": Neutral
+"EXPERIENCE POINTS": 0
+
+STR: 9
+DEX: 14
+CON: 15
+INT: 11
+WIS: 16
+CHA: 13
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 13
+"MAX HP": 10
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 30 ft.
+"ARMOR CLASS": 15
+"SENSES": ""
+"HIT DICE": d8
+
+CP: 68
+SP: 38
+GP: 7
+
+PROFICIENCIES:
+  # saving throws
+  - Saving Throw (Intelligence)
+  - Saving Throw (Wisdom)
+
+  # skills
+  - Arcana
+  - History
+  - Insight
+  - Nature
+
+  # tools
+  - Herbalism Kit
+
+  # weapons
+  - Club
+  - Dagger
+  - Dart
+  - Javelin
+  - Mace
+  - Quarterstaff
+  - Scimitar
+  - Sickle
+  - Sling
+  - Spear
+
+  # armor
+  - Armor (Light)
+  - Armor (Medium)
+  - Shield (nonmetal only)
+
+  # languages
+  - Language (Common)
+  - Language (Drudic)
+  - Language (Dwarvish)
+  - Language (Giant)
+  - Language (Gnomish)
+
+EQUIPMENT:
+  - Leather Armor
+  - Shield
+  - Scimitar
+  - Dagger
+  - Sling and 20 Stones
+  - Belt Pouch
+  - Clothes (Common)
+  - Bottle of Black Ink
+  - Quill
+  - Small Knife
+  - Personal Papers
+  - Potion of Healing (2d4+2 hp)
+  - Gem (10 gp)
+  - Gem (10 gp)
+
+ATTACKS:
+  - NAME: Scimitar
+    ATTACK: "+4"
+    DAMAGE: 1d6+2
+    TYPE: slashing
+    RANGE: 5 ft.
+    AMMO: "---"
+  - NAME: Dagger
+    ATTACK: "+4"
+    DAMAGE: 1d4+2
+    TYPE: piercing
+    RANGE: 5 ft. or 20/60 ft.
+    AMMO: "---"
+  - NAME: Sling
+    ATTACK: "+4"
+    DAMAGE: 1d4+2
+    TYPE: bludgeoning
+    RANGE: 30/120 ft.
+    AMMO: 20 stones
+
+MAGIC:
+  - level: 0
+  - name: Druidcraft
+    description: Whisper to nature to create sensory effects or predict the weather.
+  - name: Resistance
+    description: Target gains +1d4 on one saving throw within 1 minute.
+
+  - level: 1
+  - name: Cure Wounds
+    description: A creature you touch regains 1d8+3 hit points.
+  - name: Detect Magic
+    description: Sense magic within 30 feet for up to 10 minutes.
+  - name: Entangle [C]
+    description: Plants fill a 20-foot square, restraining creatures in the area.
+  - name: Longstrider
+    description: One creature’s speed increases by 10 ft. for 1 hour.
+
+FEATURES:
+  - name: Researcher
+    description: When you try to recall lore, you know where and from whom you can obtain it.
+  - name: Ritual Casting
+    description: You can cast druid spells with the ritual tag as rituals.
+  - name: Age 30
+    description: 30 years old, 5'3", 131 lbs.
+
+TRAITS:
+  - name: Trait
+    description: Listens to all sides of argument.
+  - name: Trait
+    description: Cowardly outlook.
+  - name: Ideal
+    description: Logic above all else.
+  - name: Bond
+    description: Former mentor now a lich.
+  - name: Flaw
+    description: Overlooks obvious solutions.

@@ -78,13 +78,20 @@ EQUIPMENT:
   - Waterskin
 
 ATTACKS:
-  - NAME: Mace
-    ATTACK: "+1"
-    DAMAGE: 1d6-1
-    TYPE: bludgeoning
+  - NAME: Frost brand scimitar
+    ATTACK: "+2"
+    DAMAGE: 1d6+2/1d6
+    TYPE: slashing/cold
     RANGE: 5 ft.
     AMMO: "---"
     NOTES: ""
+#  - NAME: Mace
+#    ATTACK: "+1"
+#    DAMAGE: 1d6-1
+#    TYPE: bludgeoning
+#    RANGE: 5 ft.
+#    AMMO: "---"
+#    NOTES: ""
   - NAME: Light Crossbow
     ATTACK: "+4"
     DAMAGE: 1d8+2
@@ -114,36 +121,36 @@ MAGIC:
   - name: Bless [C]  # life domain
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute [Life domain].
   - name: Cure Wounds # life domain
-    description: A touched creature regains 1d8+3 HP. # Life domain
+    description: A touched creature regains 1d8+3 HP, +3 more (DoL). # Life domain
   - name: Guiding Bolt
     description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage.
   - name: Inflict Wounds
     description: Spell attack on creature you can reach, 3d10 necrotic damage.
-#  - name: Healing Word \rlap{[B]}
-#    description: A creature within 60 ft regains 1d4+3 HP.
+  - name: Healing Word \rlap{[B]}
+    description: A visible creature within 60 ft regains 1d4+3 HP, +3 more.
 #  - name: Sanctuary [B]
 #    description: A creature within 30 ft is warded for 1 minute. DC 13 WIS save or choose a new target or lose the attack/spell.
 #  - name: Shield of Faith \rlap{[B,C]}
 #    description: A creature within 60 ft gains +2 AC for 10 min.
-  - name: Thunderwave
-    description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful \textbf{CON save}, half damage and no push.
+#  - name: Thunderwave
+#    description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful \textbf{CON save}, half damage and no push.
   - level: { number: 2, slots: 2 }
   - name: Aid
     description: For 3 hours, up to 3 creatures gain 5 max and current HP.
   - name: Lesser Restoration # domain spell
     description: End one disease or condition on one creature you touch.
   - name: Prayer of Healing
-    description: Up to 6 creatures you can see regain 2d8+5 HP, +2 for Disciple of Life. 10 min to cast.
+    description: Up to 6 creatures you can see regain 2d8+3 HP, +4 more (DoL). 10 min to cast.
   - name: Spiritual Weapon [B]
-    description: For one minute, a spectral weapon can attack for 1d8+5 force damage.
+    description: For one minute, a spectral weapon can attack for 1d8+3 force damage.
 
 FEATURES:
 #  - name: Shelter of the Faithful
 #    description: Free lodging and care at friendly temples.
   - name: Disciple of Life
-    description: Your healing spells restore an additional 2 HP + the spell’s level.
+    description: Healing spells restore an additional 2 HP + spell's level.
   - name: Channel Divinity
-    description: Turn Undead; Preserve Life (HP = 5\(\times\)level). 1 per rest
+    description: Turn Undead; Preserve Life (HP = 5\(\times\)level). 1 per rest until level 6.
 
 "DESCRIPTION & PERSONALITY":
   motivation: ""

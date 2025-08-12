@@ -1,0 +1,127 @@
+---
+"CHARACTER NAME": "Zanogh Greyfist"
+"CLASS & LEVEL": Barbarian 3
+"BACKGROUND": Hermit
+"PLAYER NAME": "Amelia"
+"RACE": Half-Orc
+"ALIGNMENT": ""
+"EXPERIENCE POINTS": ""
+
+MOTIVATION: Zanogh wants to get in touch with her orcish side
+
+# ability scores — only the score in the lower oval
+STR: 17
+DEX: 14
+CON: 14
+INT: 8
+WIS: 12
+CHA: 10
+
+"PROFICIENCY BONUS": +2
+"PASSIVE PERCEPTION": 13
+"MAX HP": 32
+"CURRENT HIT POINTS": ""
+"INITIATIVE": "+2"
+"SPEED": 30
+"ARMOR CLASS": 14
+"HIT DICE": d12
+
+"SENSES": Darkvision 60 ft.
+
+
+# coin totals
+CP: ""
+SP: ""
+EP: ""
+GP: 
+PP: ""
+
+PROFICIENCIES:
+  # Skills
+  - Animal Handling
+  - Athletics
+  - Perception
+  - Intimidation
+  - Survival
+  - proficiencies_skip: true
+  # Tools
+  - Herbalism Kit
+  - proficiencies_skip: true
+  # Languages / armor / weapons
+  - Languages: Common
+  - Languages: Orcish
+  - Languages: Dwarvish
+  - Armor: Light
+  - Armor: Medium
+  - Shield
+  - Weapons: Simple
+  - Weapons: Martial
+
+EQUIPMENT:
+  - Common Clothes
+  - Winter Blanket
+  - Herbalism Kit
+  - Backpack
+  - Bedroll
+  - Mess Kit
+  - Tinderbox
+  - Torches (10)
+  - Rations (10)
+  - Waterskin
+
+ATTACKS:
+  - NAME: Greataxe
+    ATTACK: "+5"
+    DAMAGE: 1d12+3
+    TYPE: slashing
+    RANGE: 5 ft.
+    AMMO: ---
+  - NAME: Hand Axe (x2)
+    ATTACK: "+5"
+    DAMAGE: 1d6+3
+    TYPE: slashing
+    RANGE: 5ft, 20/60 ft.
+    AMMO: ---
+#    NOTES: Can be thrown.
+
+MAGIC:
+  - name: Beast Sense (R,C)
+    description: Touch a willing beast. For 1 hr, use an action to switch to the beast's eyes and ears (or switch back).
+  - name: Speak With Animals (R)
+    description: For 10 minutes, understand and speak with beasts.
+
+FEATURES:
+  - name: Bear Totem
+    description: While raging, resistance to all damage except psychic. # (\emph{requires totem}).
+  - name: Hermit Discovery
+    description: With an action you can use an Herbalism Kit, destroying it in the process, to stabilize one target.
+#  - name: Darkvision 60 ft.
+#    description: You can see in dim light as if it were bright and in darkness as if it were dim (disadvantage on Perception in darkness).
+  - name: Relentless Endurance
+    description: Once per long rest, when you are reduced to 0 HP, you instead stay at 1 HP. \quad \slots{1}
+  - name: Savage Attacks
+    description: When you score a critical hit with a melee attack, add one extra weapon damage die to the total.
+  - name: Unarmored Defense
+    description: If you wear no armor, your AC = 10 + Dex + Con.
+  - name: Reckless Attack
+    description: Advantage on melee Strength attacks, but also on attacks against you.
+  - name: Danger Sense
+    description: Advantage on DEX saves against threats you can see.
+  - name: Rage
+    description: |
+       Start/stop as a bonus action. Lasts 1 minute or until you are
+       unconscious or fail to attack or take damage for 1 turn. Can’t
+       concentrate. \par \smallskip While raging: • Advantage on Str checks & saves. 
+       • Melee Str attacks deal +2 damage. • You take half damage from
+       bludgeoning, piercing, and slashing damage. • At 3rd level, 3 times per long rest.
+
+"DESCRIPTION & PERSONALITY":
+  motivation: ""
+  suggested_motivations:
+    - Earn glory.
+    - Satisfy wanderlust.
+    - Prove mettle.
+  suggested_names:
+    - Kesk
+    - Kethra
+...
