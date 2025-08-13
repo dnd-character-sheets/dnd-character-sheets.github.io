@@ -280,10 +280,19 @@
     <h1>D&D Character Sheet Creator</h1>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
-        <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
-        <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
-        <button type="button" class="generate-button" onclick="generateYAML()">Generate YAML</button>
-        <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
+        <div>
+            <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
+            <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
+            <button type="button" class="generate-button" onclick="generateYAML()">Generate YAML</button>
+            <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
+            <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="pregenerated" name="pregenerated">
+                Pregenerated character
+            </label>
+        </div>
     </div>
     
     <div id="status-bar" style="text-align: center; margin: 0.5em 0; font-size: 0.9em; color: #666; min-height: 1.2em;">
@@ -839,6 +848,22 @@
                 setFormValue('#experience', data['EXPERIENCE POINTS']);
                 setFormValue('#motivation', data['MOTIVATION']);
                 
+                // Pregenerated checkbox
+                const pregeneratedEl = document.querySelector('#pregenerated');
+                if (pregeneratedEl) {
+                    const pregeneratedValue = data['PREGENERATED'];
+                    console.log('PREGENERATED value:', pregeneratedValue, 'type:', typeof pregeneratedValue);
+                    // Following \ifDNDfalse semantics: undefined, empty, "0", or "false" are false
+                    // Convert to string for comparison to handle both numeric and string values
+                    const valueStr = pregeneratedValue ? pregeneratedValue.toString() : '';
+                    const shouldCheck = pregeneratedValue && 
+                                       valueStr !== '' && 
+                                       valueStr !== '0' && 
+                                       valueStr !== 'false';
+                    console.log('Should check:', shouldCheck);
+                    pregeneratedEl.checked = shouldCheck;
+                }
+                
                 // Handle CLASS & LEVEL first, then let individual CLASS/LEVEL override
                 if (data['CLASS & LEVEL']) {
                     const classLevel = data['CLASS & LEVEL'].toString();
@@ -1056,6 +1081,10 @@
             if (alignment) yaml.push(`"ALIGNMENT": "${alignment}"`);
             if (experience) yaml.push(`"EXPERIENCE POINTS": "${experience}"`);
             if (motivation) yaml.push(`MOTIVATION: "${motivation}"`);
+            
+            // Pregenerated
+            const pregenerated = document.querySelector('#pregenerated').checked;
+            if (pregenerated) yaml.push('PREGENERATED: true');
 
             yaml.push('');
 
@@ -1243,13 +1272,14 @@
         }
         
         function downloadYAML() {
-            const yamlContent = document.getElementById('yaml-output').value;
+            let yamlContent = document.getElementById('yaml-output').value;
             if (!yamlContent.trim()) {
-                alert('Please generate YAML first!');
-                return;
+                // Auto-generate YAML if it doesn't exist
+                generateYAML();
+                yamlContent = document.getElementById('yaml-output').value;
             }
 
-            const characterName = document.getElementById('character-name').value || 'character';
+            const characterName = document.getElementById('character-name').value.trim() || 'character';
             const filename = characterName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.yaml';
             
             const blob = new Blob([yamlContent], { type: 'text/yaml' });
