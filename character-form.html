@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: elderberry
+        Version: grape
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1057,20 +1057,27 @@
             }
         }
 
+        function cleanText(text) {
+            // Escape backslashes and remove problematic encoding artifacts
+            return text.replace(/\\/g, '\\\\')  // Escape backslashes
+                      .replace(/\u00C2/g, '')    // Remove Â characters (encoding artifacts)
+                      .trim();
+        }
+
         function createYAMLContent() {
             const form = document.getElementById('character-form');
             const yaml = [];
 
             // Character Info
-            const characterName = form.querySelector('#character-name')?.value || '';
-            const playerName = form.querySelector('#player-name')?.value || '';
-            const characterClass = form.querySelector('#class')?.value || '';
-            const level = form.querySelector('#level')?.value || '';
-            const race = form.querySelector('#race')?.value || '';
-            const background = form.querySelector('#background')?.value || '';
-            const alignment = form.querySelector('#alignment')?.value || '';
-            const experience = form.querySelector('#experience')?.value || '';
-            const motivation = form.querySelector('#motivation')?.value || '';
+            const characterName = cleanText(form.querySelector('#character-name')?.value || '');
+            const playerName = cleanText(form.querySelector('#player-name')?.value || '');
+            const characterClass = cleanText(form.querySelector('#class')?.value || '');
+            const level = cleanText(form.querySelector('#level')?.value || '');
+            const race = cleanText(form.querySelector('#race')?.value || '');
+            const background = cleanText(form.querySelector('#background')?.value || '');
+            const alignment = cleanText(form.querySelector('#alignment')?.value || '');
+            const experience = cleanText(form.querySelector('#experience')?.value || '');
+            const motivation = cleanText(form.querySelector('#motivation')?.value || '');
 
             if (characterName) yaml.push(`"CHARACTER NAME": "${characterName}"`);
             if (playerName) yaml.push(`"PLAYER NAME": "${playerName}"`);
@@ -1132,11 +1139,11 @@
             yaml.push('');
 
             // Proficiencies
-            const proficienciesText = form.querySelector('#proficiencies-text')?.value || '';
+            const proficienciesText = cleanText(form.querySelector('#proficiencies-text')?.value || '');
             if (proficienciesText.trim()) {
                 yaml.push('PROFICIENCIES:');
                 proficienciesText.split('\n').forEach(line => {
-                    line = line.trim();
+                    line = cleanText(line);
                     if (line) {
                         yaml.push(`  - "${line}"`);
                     } else {
@@ -1149,20 +1156,20 @@
             // Attacks
             const attacks = [];
             document.querySelectorAll('.attack-item').forEach(attackDiv => {
-                const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
-                const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
-                const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
-                const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
-                const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
-                const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
+                const name = cleanText(attackDiv.querySelector('[data-field="name"]')?.value || '');
+                const attack = cleanText(attackDiv.querySelector('[data-field="attack"]')?.value || '');
+                const damage = cleanText(attackDiv.querySelector('[data-field="damage"]')?.value || '');
+                const type = cleanText(attackDiv.querySelector('[data-field="type"]')?.value || '');
+                const range = cleanText(attackDiv.querySelector('[data-field="range"]')?.value || '');
+                const ammo = cleanText(attackDiv.querySelector('[data-field="ammo"]')?.value || '');
 
                 if (name || attack || damage || type || range || ammo) {
-                    attacks.push('  - NAME: "' + (name || '') + '"');
-                    attacks.push('    ATTACK: "' + (attack || '') + '"');
-                    attacks.push('    DAMAGE: "' + (damage || '') + '"');
-                    attacks.push('    TYPE: "' + (type || '') + '"');
-                    attacks.push('    RANGE: "' + (range || '') + '"');
-                    attacks.push('    AMMO: "' + (ammo || '') + '"');
+                    attacks.push('  - NAME: "' + name + '"');
+                    attacks.push('    ATTACK: "' + attack + '"');
+                    attacks.push('    DAMAGE: "' + damage + '"');
+                    attacks.push('    TYPE: "' + type + '"');
+                    attacks.push('    RANGE: "' + range + '"');
+                    attacks.push('    AMMO: "' + ammo + '"');
                 }
             });
             if (attacks.length > 0) {
@@ -1201,8 +1208,8 @@
                         
                         if (name || description) {
                             hasMagic = true;
-                            if (name) spells.push(`  - name: "${name}"`);
-                            if (description) spells.push(`    description: "${description}"`);
+                            if (name) spells.push(`  - name: "${cleanText(name)}"`);
+                            if (description) spells.push(`    description: "${cleanText(description)}"`);
                         }
                     });
                 }
@@ -1221,8 +1228,8 @@
                 const description = featureDiv.querySelector('[data-field="description"]')?.value || '';
 
                 if (name || description) {
-                    features.push(`  - name: "${name || ''}"`);
-                    features.push(`    description: "${description || ''}"`);
+                    features.push(`  - name: "${cleanText(name || '')}"`);
+                    features.push(`    description: "${cleanText(description || '')}"`);
                 }
             });
             if (features.length > 0) {
@@ -1232,11 +1239,11 @@
             }
 
             // Equipment
-            const equipmentText = form.querySelector('#equipment-text')?.value || '';
+            const equipmentText = cleanText(form.querySelector('#equipment-text')?.value || '');
             if (equipmentText.trim()) {
                 yaml.push('EQUIPMENT:');
                 equipmentText.split('\n').forEach(line => {
-                    line = line.trim();
+                    line = cleanText(line);
                     if (line) {
                         yaml.push(`  - "${line}"`);
                     }
@@ -1313,7 +1320,7 @@
                 const response = await fetch('http://localhost/charsheet', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/yaml',
+                        'Content-Type': 'text/yaml; charset=utf-8',
                     },
                     body: yamlContent
                 });
