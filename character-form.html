@@ -150,12 +150,30 @@
             margin-bottom: 0.3em;
         }
         
+        .spell-level {
+            margin-bottom: 1.5em;
+            padding: 0.8em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: rgba(255,255,255,0.3);
+        }
+        
+        .spell-level h3 {
+            margin: 0 0 0.5em 0;
+            color: #631;
+            font-size: 1.1em;
+        }
+        
         .spell-item {
             border: 1px solid #ddd;
             padding: 0.5em;
             margin-bottom: 0.5em;
             border-radius: 2px;
-            background-color: rgba(255,255,255,0.5);
+            background-color: rgba(255,255,255,0.8);
+        }
+        
+        .spells-container {
+            margin-bottom: 0.5em;
         }
         
         .feature-item {
@@ -411,13 +429,15 @@
         <div class="section magic" id="magic-section">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Magic</h2>
-                <button type="button" class="add-button" id="magic-toggle" onclick="toggleMagic()">+ Add Spells</button>
+                <button type="button" class="add-button" id="magic-toggle" onclick="toggleMagic()">(click to open)</button>
             </div>
             <div id="magic-content" style="display: none;">
-                <div id="magic-list">
-                    <!-- Dynamic spells will be added here -->
+                <div id="magic-levels">
+                    <!-- Spell levels are added dynamically as needed -->
                 </div>
-                <button type="button" class="add-button" onclick="addSpell()">Add Spell</button>
+                <div id="next-level-button-container">
+                    <!-- Next level button will appear here -->
+                </div>
             </div>
         </div>
 
@@ -503,10 +523,14 @@
                         if (newAttack) newAttack.focus();
                     }, 10);
                 } else if (magicSection && magicSection.contains(activeElement)) {
-                    addSpell();
-                    // Focus on the level field of the new spell
+                    // Find which spell level section we're in
+                    const spellLevelDiv = activeElement.closest('.spell-level');
+                    const level = spellLevelDiv ? spellLevelDiv.getAttribute('data-level') : '0';
+                    addSpellToLevel(parseInt(level));
+                    // Focus on the name field of the new spell
                     setTimeout(() => {
-                        const newSpell = document.querySelector('.spell-item:last-child [data-field="level"]');
+                        const container = spellLevelDiv.querySelector('.spells-container');
+                        const newSpell = container ? container.querySelector('.spell-item:last-child [data-field="name"]') : null;
                         if (newSpell) newSpell.focus();
                     }, 10);
                 } else if (featuresSection && featuresSection.contains(activeElement)) {
@@ -534,14 +558,80 @@
             
             if (magicContent.style.display === 'none') {
                 magicContent.style.display = 'block';
-                toggleBtn.textContent = '- Hide Spells';
-                if (document.querySelectorAll('.spell-item').length === 0) {
-                    addSpell();
+                toggleBtn.textContent = '(click to close)';
+                // Ensure at least cantrips level exists, or show "open cantrips" button
+                if (document.querySelectorAll('.spell-level').length === 0) {
+                    showNextLevelButton(0);
                 }
             } else {
                 magicContent.style.display = 'none';
-                toggleBtn.textContent = '+ Add Spells';
+                toggleBtn.textContent = '(click to open)';
             }
+        }
+        
+        function getSpellLevelName(level) {
+            if (level === 0) return 'Cantrips';
+            const suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
+            return `${level}${suffixes[level]} Level Spells`;
+        }
+        
+        function openSpellLevel(level) {
+            const magicLevels = document.getElementById('magic-levels');
+            const levelDiv = document.createElement('div');
+            levelDiv.className = 'spell-level';
+            levelDiv.setAttribute('data-level', level);
+            
+            const levelName = getSpellLevelName(level);
+            const slotsInput = level > 0 ? `
+                <div class="field" style="max-width: 3em; margin-bottom: 0.5em;">
+                    <label>Slots</label>
+                    <input type="number" min="0" max="9" maxlength="1" data-slots="${level}" placeholder="0" style="width: 2.5em;">
+                </div>` : '';
+            
+            levelDiv.innerHTML = `
+                <h3>${levelName}</h3>
+                ${slotsInput}
+                <div class="spells-container"></div>
+                <button type="button" class="add-button" onclick="addSpellToLevel(${level})">Add ${level === 0 ? 'Cantrip' : getSpellLevelName(level).replace(' Spells', ' Spell')}</button>
+            `;
+            
+            magicLevels.appendChild(levelDiv);
+            
+            // Add change tracking for the new slot input if it exists
+            const slotsInputEl = levelDiv.querySelector('[data-slots]');
+            if (slotsInputEl) {
+                slotsInputEl.addEventListener('input', markDirty);
+                slotsInputEl.addEventListener('change', markDirty);
+            }
+            
+            updateNextLevelButton();
+        }
+        
+        function showNextLevelButton(level) {
+            const container = document.getElementById('next-level-button-container');
+            const nextLevel = level;
+            const maxLevel = 9;
+            
+            if (nextLevel <= maxLevel) {
+                const levelName = nextLevel === 0 ? 'Cantrips' : getSpellLevelName(nextLevel);
+                container.innerHTML = `
+                    <button type="button" class="add-button" onclick="openSpellLevel(${nextLevel}); addSpellToLevel(${nextLevel});">Open ${levelName}</button>
+                `;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+        
+        function updateNextLevelButton() {
+            const existingLevels = Array.from(document.querySelectorAll('.spell-level')).map(el => parseInt(el.getAttribute('data-level')));
+            if (existingLevels.length === 0) {
+                showNextLevelButton(0);
+                return;
+            }
+            
+            const maxExistingLevel = Math.max(...existingLevels);
+            const nextLevel = maxExistingLevel + 1;
+            showNextLevelButton(nextLevel);
         }
 
         function addAttack() {
@@ -553,22 +643,25 @@
                     <input type="text" placeholder="Attack Name" data-field="name" />
                     <input type="text" placeholder="Attack Bonus" data-field="attack" />
                     <input type="text" placeholder="Damage" data-field="damage" />
-                    <select data-field="type">
-                        <option value="">Type</option>
-                        <option value="slashing">Slashing</option>
-                        <option value="piercing">Piercing</option>
-                        <option value="bludgeoning">Bludgeoning</option>
-                        <option value="acid">Acid</option>
-                        <option value="cold">Cold</option>
-                        <option value="fire">Fire</option>
-                        <option value="force">Force</option>
-                        <option value="lightning">Lightning</option>
-                        <option value="necrotic">Necrotic</option>
-                        <option value="poison">Poison</option>
-                        <option value="psychic">Psychic</option>
-                        <option value="radiant">Radiant</option>
-                        <option value="thunder">Thunder</option>
-                    </select>
+                    <input type="text" placeholder="Type" data-field="type" list="damage-types" />
+                    <datalist id="damage-types">
+                        <option value="slashing">
+                        <option value="piercing">
+                        <option value="bludgeoning">
+                        <option value="acid">
+                        <option value="cold">
+                        <option value="fire">
+                        <option value="force">
+                        <option value="lightning">
+                        <option value="necrotic">
+                        <option value="poison">
+                        <option value="psychic">
+                        <option value="radiant">
+                        <option value="thunder">
+                        <option value="slashing/cold">
+                        <option value="piercing/fire">
+                        <option value="bludgeoning/thunder">
+                    </datalist>
                     <input type="text" placeholder="Range" data-field="range" />
                     <input type="text" placeholder="Ammo" data-field="ammo" />
                 </div>
@@ -583,46 +676,42 @@
             });
         }
 
-        function addSpell() {
-            const container = document.getElementById('magic-list');
+        function addSpellToLevel(level) {
+            // Ensure the level exists first
+            let spellLevelDiv = document.querySelector(`[data-level="${level}"]`);
+            if (!spellLevelDiv) {
+                openSpellLevel(level);
+                spellLevelDiv = document.querySelector(`[data-level="${level}"]`);
+            }
+            
+            const spellContainer = spellLevelDiv.querySelector('.spells-container');
             const item = document.createElement('div');
             item.className = 'spell-item';
             item.innerHTML = `
                 <div class="field-row">
-                    <div class="field">
-                        <label>Level</label>
-                        <select data-field="level">
-                            <option value="">Select Level</option>
-                            <option value="0">0 (Cantrip)</option>
-                            <option value="1">1st</option>
-                            <option value="2">2nd</option>
-                            <option value="3">3rd</option>
-                            <option value="4">4th</option>
-                            <option value="5">5th</option>
-                            <option value="6">6th</option>
-                            <option value="7">7th</option>
-                            <option value="8">8th</option>
-                            <option value="9">9th</option>
-                        </select>
-                    </div>
                     <div class="field wide">
                         <label>Spell Name</label>
-                        <input type="text" placeholder="e.g., Magic Missile" data-field="name" />
+                        <input type="text" placeholder="e.g., Magic Missile" data-field="name" data-level="${level}" />
                     </div>
                 </div>
                 <div class="field-group">
                     <label>Description</label>
-                    <textarea placeholder="Spell description..." data-field="description"></textarea>
+                    <textarea placeholder="Spell description..." data-field="description" rows="2"></textarea>
                 </div>
-                <button type="button" onclick="this.parentElement.remove()">Remove Spell</button>
+                <button type="button" onclick="this.parentElement.remove(); setupChangeTracking();">Remove Spell</button>
             `;
-            container.appendChild(item);
+            spellContainer.appendChild(item);
             
             // Add change tracking to new elements
             item.querySelectorAll('input, textarea, select').forEach(el => {
                 el.addEventListener('input', markDirty);
                 el.addEventListener('change', markDirty);
             });
+        }
+        
+        // Legacy function for compatibility
+        function addSpell() {
+            addSpellToLevel(0); // Default to cantrips
         }
 
         function addFeature() {
@@ -859,37 +948,58 @@
                     const toggleBtn = document.getElementById('magic-toggle');
                     if (magicContent && magicContent.style.display === 'none') {
                         magicContent.style.display = 'block';
-                        toggleBtn.textContent = '- Hide Spells';
+                        toggleBtn.textContent = '(click to close)';
                     }
                     
-                    // Clear existing spells first
-                    document.querySelectorAll('.spell-item').forEach(item => item.remove());
+                    // Clear existing spells and levels first
+                    document.getElementById('magic-levels').innerHTML = '';
+                    document.getElementById('next-level-button-container').innerHTML = '';
                     
                     // Process each magic entry
+                    let currentLevel = null;
                     data['MAGIC'].forEach(spell => {
                         if (spell && typeof spell === 'object') {
-                            // Skip level-only entries (they're just headers)
+                            // Handle level markers with slot information
                             if (spell.level !== undefined && !spell.name) {
-                                return; // Skip level markers like {level: 0}
+                                currentLevel = spell.level;
+                                // If this is a level with slot information, handle slots
+                                if (typeof spell.level === 'object' && spell.level.number !== undefined) {
+                                    currentLevel = spell.level.number;
+                                    // Ensure the level exists before setting slots
+                                    if (!document.querySelector(`[data-level="${currentLevel}"]`)) {
+                                        openSpellLevel(currentLevel);
+                                    }
+                                    const slotsInput = document.querySelector(`[data-slots="${currentLevel}"]`);
+                                    if (slotsInput && spell.level.slots !== undefined) {
+                                        slotsInput.value = spell.level.slots;
+                                    }
+                                } else if (typeof spell.level === 'number') {
+                                    currentLevel = spell.level;
+                                }
+                                return;
                             }
                             
                             // Add spell with name and description
-                            if (spell.name) {
-                                addSpell();
-                                const items = document.querySelectorAll('.spell-item');
-                                const lastItem = items[items.length - 1];
-                                if (lastItem) {
-                                    const levelEl = lastItem.querySelector('[data-field="level"]');
-                                    const nameEl = lastItem.querySelector('[data-field="name"]');
-                                    const descEl = lastItem.querySelector('[data-field="description"]');
-                                    
-                                    if (levelEl && spell.level !== undefined) levelEl.value = spell.level;
-                                    if (nameEl) nameEl.value = spell.name || '';
-                                    if (descEl) descEl.value = spell.description || '';
+                            if (spell.name && currentLevel !== null) {
+                                addSpellToLevel(currentLevel);
+                                const levelContainer = document.querySelector(`[data-level="${currentLevel}"] .spells-container`);
+                                if (levelContainer) {
+                                    const items = levelContainer.querySelectorAll('.spell-item');
+                                    const lastItem = items[items.length - 1];
+                                    if (lastItem) {
+                                        const nameEl = lastItem.querySelector('[data-field="name"]');
+                                        const descEl = lastItem.querySelector('[data-field="description"]');
+                                        
+                                        if (nameEl) nameEl.value = spell.name || '';
+                                        if (descEl) descEl.value = spell.description || '';
+                                    }
                                 }
                             }
                         }
                     });
+                    
+                    // Update the next level button after loading
+                    updateNextLevelButton();
                 }
                 
             } catch (error) {
@@ -1007,20 +1117,44 @@
                 yaml.push('');
             }
 
-            // Magic
+            // Magic - organized by spell levels
             const spells = [];
-            document.querySelectorAll('.spell-item').forEach(spellDiv => {
-                const level = spellDiv.querySelector('[data-field="level"]').value;
-                const name = spellDiv.querySelector('[data-field="name"]').value;
-                const description = spellDiv.querySelector('[data-field="description"]').value;
-
-                if (level && (name || description)) {
-                    spells.push(`  - level: ${level}`);
-                    if (name) spells.push(`  - name: "${name}"`);
-                    if (description) spells.push(`    description: "${description}"`);
+            const magicLevels = document.querySelectorAll('.spell-level');
+            let hasMagic = false;
+            
+            magicLevels.forEach(levelDiv => {
+                const level = levelDiv.getAttribute('data-level');
+                const spellItems = levelDiv.querySelectorAll('.spell-item');
+                const slotsInput = levelDiv.querySelector(`[data-slots="${level}"]`);
+                
+                if (spellItems.length > 0) {
+                    // Add level header with slot information
+                    if (level === '0') {
+                        spells.push(`  - level: 0                             # CANTRIPS`);
+                    } else {
+                        const slots = slotsInput ? slotsInput.value : '';
+                        if (slots) {
+                            spells.push(`  - level: {number : ${level}, slots : ${slots} }`);
+                        } else {
+                            spells.push(`  - level: ${level}`);
+                        }
+                    }
+                    
+                    // Add spells for this level
+                    spellItems.forEach(spellDiv => {
+                        const name = spellDiv.querySelector('[data-field="name"]').value;
+                        const description = spellDiv.querySelector('[data-field="description"]').value;
+                        
+                        if (name || description) {
+                            hasMagic = true;
+                            if (name) spells.push(`  - name: "${name}"`);
+                            if (description) spells.push(`    description: "${description}"`);
+                        }
+                    });
                 }
             });
-            if (spells.length > 0) {
+            
+            if (hasMagic) {
                 yaml.push('MAGIC:');
                 yaml.push(...spells);
                 yaml.push('');
