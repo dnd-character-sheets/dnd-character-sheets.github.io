@@ -212,8 +212,8 @@
             background-color: rgba(255,255,255,0.5);
         }
         
-        .feature-item textarea {
-            min-height: 60px;
+        .feature-item textarea,
+        .spell-item textarea {
             resize: vertical;
             width: 100%;
             box-sizing: border-box;
@@ -283,7 +283,7 @@
         <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
         <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
         <button type="button" class="generate-button" onclick="generateYAML()">Generate YAML</button>
-        <button type="button" class="add-button" onclick="downloadYAML()">Download YAML File</button>
+        <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
     </div>
     
     <div id="status-bar" style="text-align: center; margin: 0.5em 0; font-size: 0.9em; color: #666; min-height: 1.2em;">
@@ -381,12 +381,6 @@
                     <input type="number" id="cha" name="cha" min="1" max="30">
                 </div>
             </div>
-            <div class="field-group">
-                <div class="field">
-                    <label for="proficiency-bonus">Proficiency Bonus</label>
-                    <input type="text" id="proficiency-bonus" name="proficiency-bonus" placeholder="+2">
-                </div>
-            </div>
         </div>
 
         <!-- Combat Stats Section -->
@@ -437,9 +431,13 @@
         <!-- Proficiencies Section -->
         <div class="section proficiencies">
             <h2>Proficiencies</h2>
+            <div class="field-group" style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 1em;">
+                <span>Proficiency Bonus +</span>
+                <input type="number" id="proficiency-bonus" name="proficiency-bonus" min="2" max="6" style="width: 2em; text-align: center;" placeholder="2">
+            </div>
             <div class="field-group">
                 <p>Enter one proficiency per line. Include skill, language, and equipment proficiencies. Leave a blank line between categories.</p>
-                <textarea id="proficiencies-text" name="proficiencies-text" rows="8" placeholder="Enter one proficiency per line, e.g.:&#10;Athletics&#10;Medicine&#10;Nature&#10;&#10;Common&#10;Orcish&#10;&#10;Light Armor&#10;Shield&#10;Simple Weapons" style="width: 100%; box-sizing: border-box;"></textarea>
+                <textarea id="proficiencies-text" name="proficiencies-text" rows="8" placeholder="Athletics&#10;Medicine&#10;Nature&#10;&#10;Common&#10;Orcish&#10;&#10;Light Armor&#10;Shield&#10;Simple Weapons" style="width: 100%; box-sizing: border-box;"></textarea>
             </div>
         </div>
 
@@ -481,9 +479,8 @@
         <div class="section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
-                <label for="equipment-text">Equipment List</label>
-                <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Enter one item per line, e.g.:&#10;Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin"></textarea>
-                <small>Enter one equipment item per line.</small>
+                <p>Enter one equipment item per line.</p>
+                <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin" style="width: 100%; box-sizing: border-box;"></textarea>
             </div>
             
             <h3>Currency</h3>
@@ -527,6 +524,11 @@
             addAttack();
             addFeature();
             setupChangeTracking();
+            
+            // Update download button text when character name changes
+            const characterNameField = document.getElementById('character-name');
+            characterNameField.addEventListener('input', updateDownloadButtonText);
+            characterNameField.addEventListener('change', updateDownloadButtonText);
         });
 
         // Global keyboard shortcut handler
@@ -599,7 +601,7 @@
         function getSpellLevelName(level) {
             if (level === 0) return 'Cantrips';
             const suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
-            return `${level}${suffixes[level]} Level Spells`;
+            return `${level}${suffixes[level]}-Level Spells`;
         }
         
         function openSpellLevel(level) {
@@ -608,18 +610,12 @@
             levelDiv.className = 'spell-level';
             levelDiv.setAttribute('data-level', level);
             
-            const levelName = getSpellLevelName(level);
-            const slotsInput = level > 0 ? `
-                <div class="field" style="max-width: 3em; margin-bottom: 0.5em;">
-                    <label>Slots</label>
-                    <input type="number" min="0" max="9" maxlength="1" data-slots="${level}" placeholder="0" style="width: 2.5em;">
-                </div>` : '';
+            const levelName = level === 0 ? 'Cantrips' : `${getSpellLevelName(level)} (<input type="number" min="0" max="9" maxlength="1" data-slots="${level}" placeholder="0" style="width: 2.5em; border: 1px solid #999; text-align: center;"> slots)`;
             
             levelDiv.innerHTML = `
                 <h3>${levelName}</h3>
-                ${slotsInput}
                 <div class="spells-container"></div>
-                <button type="button" class="add-button" onclick="addSpellToLevel(${level})">Add ${level === 0 ? 'Cantrip' : getSpellLevelName(level).replace(' Spells', ' Spell')}</button>
+                <button type="button" class="add-button" onclick="addSpellToLevel(${level})">Add ${level === 0 ? 'Cantrip' : getSpellLevelName(level).replace('-Level Spells', '-Level Spell')}</button>
             `;
             
             magicLevels.appendChild(levelDiv);
@@ -715,11 +711,9 @@
             const item = document.createElement('div');
             item.className = 'spell-item';
             item.innerHTML = `
-                <div class="field-row">
-                    <div class="field wide">
-                        <label>Spell Name</label>
-                        <input type="text" placeholder="e.g., Magic Missile" data-field="name" data-level="${level}" />
-                    </div>
+                <div class="field-group">
+                    <label>Name</label>
+                    <input type="text" placeholder="e.g., Magic Missile" data-field="name" data-level="${level}" />
                 </div>
                 <div class="field-group">
                     <label>Description</label>
@@ -752,7 +746,7 @@
                 </div>
                 <div class="field-group">
                     <label>Description</label>
-                    <textarea placeholder="Feature description..." data-field="description" rows="3"></textarea>
+                    <textarea placeholder="Feature description..." data-field="description" rows="2"></textarea>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()">Remove Feature</button>
             `;
@@ -779,6 +773,7 @@
                         isDirty = false;
                         updateStatusBar();
                         setupChangeTracking();
+                        updateDownloadButtonText();
                     } catch (error) {
                         updateStatusBar('Error loading YAML file: ' + error.message, true);
                     }
@@ -1240,6 +1235,13 @@
             alert('YAML copied to clipboard!');
         }
 
+        function updateDownloadButtonText() {
+            const characterName = document.getElementById('character-name').value.trim() || 'character';
+            const filename = characterName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.yaml';
+            const downloadButton = document.querySelector('[onclick="downloadYAML()"]');
+            downloadButton.innerHTML = `Download <tt>${filename}</tt>`;
+        }
+        
         function downloadYAML() {
             const yamlContent = document.getElementById('yaml-output').value;
             if (!yamlContent.trim()) {
