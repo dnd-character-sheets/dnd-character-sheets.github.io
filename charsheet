@@ -25,11 +25,17 @@ local fields = require 'flags'.parser()
   :string('type as t', 'silverpine'):help('template for character sheet')
   :bool('verbose as v')
   :string('templates', '/home/nr/etc/dnd/resources/character-sheets')
+  :bool('quiet as q'):help('suppress stdout from pdflatex')
          :help('directory where character-sheet templates live') 
   :numarg(1)
   :parse(arg)
 
 local vprintf = fields.verbose and eprintf or function() end
+
+local pdflatex =
+  fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error'
+    or 'pdflatex'
+
 
 
 local lyaml  = require "lyaml"
@@ -376,7 +382,11 @@ local function emit(assignments)
   elseif fields.output:find '%.pdf$' then
     local tex = fields.output:gsub('%.pdf$', '.tex')
     set_contents(tex, output)
-    runf('pdflatex -output-directory %s %s', osquote(dirname(fields.output)), osquote(tex))
+    local rc = runf('%s -output-directory %s %s',
+                    pdflatex, osquote(dirname(fields.output)), osquote(tex))
+    if rc ~= 0 then
+      os.exit(rc)
+    end
   end
 end
 
