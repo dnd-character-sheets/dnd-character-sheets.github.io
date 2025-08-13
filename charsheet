@@ -393,6 +393,10 @@ end
 local main = function(arg)
   local yaml_text = slurp(arg[1])
   for _,doc in ipairs(yaml_load_all(yaml_text)) do
+    if type(doc) == 'string' then
+      eprintf("YAML loaded as string %q.\n", doc)
+      os.exit(1)
+    end
     extend(doc)
     if type(doc)=="table" then
       emit(convert_mapping(doc))
