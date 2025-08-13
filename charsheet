@@ -121,10 +121,7 @@ local function render(v)
   elseif type(v) ~= 'table' then
     return tostring(v)
   else
-    -- Check if it's an empty table (blank list entry)
-    if next(v) == nil then
-      return [[\profskip{}]]
-    elseif v.proficiencies_skip then
+    if v.proficiencies_skip then
       return [[\profskip{}]]
     elseif v.smallskip then
       return [[\smallskip{}]]
