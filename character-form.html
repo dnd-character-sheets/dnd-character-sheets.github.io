@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: date
+        Version: elderberry
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1057,20 +1057,20 @@
             }
         }
 
-        function generateYAML() {
+        function createYAMLContent() {
             const form = document.getElementById('character-form');
             const yaml = [];
 
             // Character Info
-            const characterName = form.querySelector('#character-name').value;
-            const playerName = form.querySelector('#player-name').value;
-            const characterClass = form.querySelector('#class').value;
-            const level = form.querySelector('#level').value;
-            const race = form.querySelector('#race').value;
-            const background = form.querySelector('#background').value;
-            const alignment = form.querySelector('#alignment').value;
-            const experience = form.querySelector('#experience').value;
-            const motivation = form.querySelector('#motivation').value;
+            const characterName = form.querySelector('#character-name')?.value || '';
+            const playerName = form.querySelector('#player-name')?.value || '';
+            const characterClass = form.querySelector('#class')?.value || '';
+            const level = form.querySelector('#level')?.value || '';
+            const race = form.querySelector('#race')?.value || '';
+            const background = form.querySelector('#background')?.value || '';
+            const alignment = form.querySelector('#alignment')?.value || '';
+            const experience = form.querySelector('#experience')?.value || '';
+            const motivation = form.querySelector('#motivation')?.value || '';
 
             if (characterName) yaml.push(`"CHARACTER NAME": "${characterName}"`);
             if (playerName) yaml.push(`"PLAYER NAME": "${playerName}"`);
@@ -1086,18 +1086,18 @@
             if (motivation) yaml.push(`MOTIVATION: "${motivation}"`);
             
             // Pregenerated
-            const pregenerated = document.querySelector('#pregenerated').checked;
+            const pregenerated = document.querySelector('#pregenerated')?.checked || false;
             if (pregenerated) yaml.push('PREGENERATED: true');
 
             yaml.push('');
 
             // Ability Scores
-            const str = form.querySelector('#str').value;
-            const dex = form.querySelector('#dex').value;
-            const con = form.querySelector('#con').value;
-            const int = form.querySelector('#int').value;
-            const wis = form.querySelector('#wis').value;
-            const cha = form.querySelector('#cha').value;
+            const str = form.querySelector('#str')?.value || '';
+            const dex = form.querySelector('#dex')?.value || '';
+            const con = form.querySelector('#con')?.value || '';
+            const int = form.querySelector('#int')?.value || '';
+            const wis = form.querySelector('#wis')?.value || '';
+            const cha = form.querySelector('#cha')?.value || '';
 
             if (str) yaml.push(`STR: ${str}`);
             if (dex) yaml.push(`DEX: ${dex}`);
@@ -1109,17 +1109,17 @@
             yaml.push('');
 
             // Proficiency Bonus
-            const profBonus = form.querySelector('#proficiency-bonus').value;
+            const profBonus = form.querySelector('#proficiency-bonus')?.value || '';
             if (profBonus) yaml.push(`"PROFICIENCY BONUS": "${profBonus}"`);
 
             // Combat Stats
-            const maxHp = form.querySelector('#max-hp').value;
-            const hitDice = form.querySelector('#hit-dice').value;
-            const initiative = form.querySelector('#initiative').value;
-            const speed = form.querySelector('#speed').value;
-            const ac = form.querySelector('#armor-class').value;
-            const senses = form.querySelector('#senses').value;
-            const passivePerc = form.querySelector('#passive-perception').value;
+            const maxHp = form.querySelector('#max-hp')?.value || '';
+            const hitDice = form.querySelector('#hit-dice')?.value || '';
+            const initiative = form.querySelector('#initiative')?.value || '';
+            const speed = form.querySelector('#speed')?.value || '';
+            const ac = form.querySelector('#armor-class')?.value || '';
+            const senses = form.querySelector('#senses')?.value || '';
+            const passivePerc = form.querySelector('#passive-perception')?.value || '';
 
             if (maxHp) yaml.push(`"MAX HP": ${maxHp}`);
             if (hitDice) yaml.push(`"HIT DICE": "${hitDice}"`);
@@ -1132,7 +1132,7 @@
             yaml.push('');
 
             // Proficiencies
-            const proficienciesText = form.querySelector('#proficiencies-text').value;
+            const proficienciesText = form.querySelector('#proficiencies-text')?.value || '';
             if (proficienciesText.trim()) {
                 yaml.push('PROFICIENCIES:');
                 proficienciesText.split('\n').forEach(line => {
@@ -1149,12 +1149,12 @@
             // Attacks
             const attacks = [];
             document.querySelectorAll('.attack-item').forEach(attackDiv => {
-                const name = attackDiv.querySelector('[data-field="name"]').value;
-                const attack = attackDiv.querySelector('[data-field="attack"]').value;
-                const damage = attackDiv.querySelector('[data-field="damage"]').value;
-                const type = attackDiv.querySelector('[data-field="type"]').value;
-                const range = attackDiv.querySelector('[data-field="range"]').value;
-                const ammo = attackDiv.querySelector('[data-field="ammo"]').value;
+                const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
+                const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
+                const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
+                const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
+                const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
+                const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
 
                 if (name || attack || damage || type || range || ammo) {
                     attacks.push('  - NAME: "' + (name || '') + '"');
@@ -1196,8 +1196,8 @@
                     
                     // Add spells for this level
                     spellItems.forEach(spellDiv => {
-                        const name = spellDiv.querySelector('[data-field="name"]').value;
-                        const description = spellDiv.querySelector('[data-field="description"]').value;
+                        const name = spellDiv.querySelector('[data-field="name"]')?.value || '';
+                        const description = spellDiv.querySelector('[data-field="description"]')?.value || '';
                         
                         if (name || description) {
                             hasMagic = true;
@@ -1217,8 +1217,8 @@
             // Features
             const features = [];
             document.querySelectorAll('.feature-item').forEach(featureDiv => {
-                const name = featureDiv.querySelector('[data-field="name"]').value;
-                const description = featureDiv.querySelector('[data-field="description"]').value;
+                const name = featureDiv.querySelector('[data-field="name"]')?.value || '';
+                const description = featureDiv.querySelector('[data-field="description"]')?.value || '';
 
                 if (name || description) {
                     features.push(`  - name: "${name || ''}"`);
@@ -1232,7 +1232,7 @@
             }
 
             // Equipment
-            const equipmentText = form.querySelector('#equipment-text').value;
+            const equipmentText = form.querySelector('#equipment-text')?.value || '';
             if (equipmentText.trim()) {
                 yaml.push('EQUIPMENT:');
                 equipmentText.split('\n').forEach(line => {
@@ -1245,11 +1245,11 @@
             }
 
             // Currency
-            const cp = form.querySelector('#cp').value;
-            const sp = form.querySelector('#sp').value;
-            const ep = form.querySelector('#ep').value;
-            const gp = form.querySelector('#gp').value;
-            const pp = form.querySelector('#pp').value;
+            const cp = form.querySelector('#cp')?.value || '';
+            const sp = form.querySelector('#sp')?.value || '';
+            const ep = form.querySelector('#ep')?.value || '';
+            const gp = form.querySelector('#gp')?.value || '';
+            const pp = form.querySelector('#pp')?.value || '';
 
             if (cp) yaml.push(`CP: "${cp}"`);
             if (sp) yaml.push(`SP: "${sp}"`);
@@ -1257,7 +1257,11 @@
             if (gp) yaml.push(`GP: "${gp}"`);
             if (pp) yaml.push(`PP: "${pp}"`);
 
-            document.getElementById('yaml-output').value = yaml.join('\n');
+            return yaml.join('\n');
+        }
+
+        function generateYAML() {
+            document.getElementById('yaml-output').value = createYAMLContent();
         }
 
         function copyYAML() {
@@ -1298,208 +1302,8 @@
         
         async function generatePDF() {
             try {
-                // Generate YAML content directly without using textarea
-                const form = document.getElementById('character-form');
-                const yaml = [];
-
-                // Character Info
-                const characterName = form.querySelector('#character-name')?.value || '';
-                const playerName = form.querySelector('#player-name')?.value || '';
-                const characterClass = form.querySelector('#class')?.value || '';
-                const level = form.querySelector('#level')?.value || '';
-                const race = form.querySelector('#race')?.value || '';
-                const background = form.querySelector('#background')?.value || '';
-                const alignment = form.querySelector('#alignment')?.value || '';
-                const experience = form.querySelector('#experience')?.value || '';
-                const motivation = form.querySelector('#motivation')?.value || '';
-
-                if (characterName) yaml.push(`"CHARACTER NAME": "${characterName}"`);
-                if (playerName) yaml.push(`"PLAYER NAME": "${playerName}"`);
-                if (characterClass && level) {
-                    yaml.push(`"CLASS & LEVEL": "${characterClass} ${level}"`);
-                } else if (characterClass) {
-                    yaml.push(`"CLASS & LEVEL": "${characterClass}"`);
-                }
-                if (race) yaml.push(`"RACE": "${race}"`);
-                if (background) yaml.push(`"BACKGROUND": "${background}"`);
-                if (alignment) yaml.push(`"ALIGNMENT": "${alignment}"`);
-                if (experience) yaml.push(`"EXPERIENCE POINTS": "${experience}"`);
-                if (motivation) yaml.push(`MOTIVATION: "${motivation}"`);
-                
-                // Pregenerated
-                const pregenerated = document.querySelector('#pregenerated')?.checked || false;
-                if (pregenerated) yaml.push('PREGENERATED: true');
-
-                yaml.push('');
-
-                // Ability Scores
-                const str = form.querySelector('#str')?.value || '';
-                const dex = form.querySelector('#dex')?.value || '';
-                const con = form.querySelector('#con')?.value || '';
-                const int = form.querySelector('#int')?.value || '';
-                const wis = form.querySelector('#wis')?.value || '';
-                const cha = form.querySelector('#cha')?.value || '';
-
-                if (str) yaml.push(`STR: ${str}`);
-                if (dex) yaml.push(`DEX: ${dex}`);
-                if (con) yaml.push(`CON: ${con}`);
-                if (int) yaml.push(`INT: ${int}`);
-                if (wis) yaml.push(`WIS: ${wis}`);
-                if (cha) yaml.push(`CHA: ${cha}`);
-
-                yaml.push('');
-
-                // HP/Etc section
-                const proficiencyBonus = form.querySelector('#proficiency-bonus')?.value || '';
-                const passivePerception = form.querySelector('#passive-perception')?.value || '';
-                const maxHP = form.querySelector('#max-hp')?.value || '';
-                const currentHP = form.querySelector('#current-hp')?.value || '';
-                const initiative = form.querySelector('#initiative')?.value || '';
-                const speed = form.querySelector('#speed')?.value || '';
-                const armorClass = form.querySelector('#armor-class')?.value || '';
-                const senses = form.querySelector('#senses')?.value || '';
-                const hitDice = form.querySelector('#hit-dice')?.value || '';
-
-                if (proficiencyBonus) yaml.push(`"PROFICIENCY BONUS": "${proficiencyBonus}"`);
-                if (passivePerception) yaml.push(`"PASSIVE PERCEPTION": ${passivePerception}`);
-                if (maxHP) yaml.push(`"MAX HP": ${maxHP}`);
-                if (currentHP) yaml.push(`"CURRENT HIT POINTS": "${currentHP}"`);
-                if (initiative) yaml.push(`"INITIATIVE": "${initiative}"`);
-                if (speed) yaml.push(`"SPEED": "${speed}"`);
-                if (armorClass) yaml.push(`"ARMOR CLASS": ${armorClass}`);
-                if (senses) yaml.push(`"SENSES": "${senses}"`);
-                if (hitDice) yaml.push(`"HIT DICE": "${hitDice}"`);
-
-                yaml.push('');
-
-                // Coins
-                const cp = form.querySelector('#cp')?.value || '';
-                const sp = form.querySelector('#sp')?.value || '';
-                const ep = form.querySelector('#ep')?.value || '';
-                const gp = form.querySelector('#gp')?.value || '';
-                const pp = form.querySelector('#pp')?.value || '';
-
-                if (cp || sp || ep || gp || pp) {
-                    yaml.push('# coin totals');
-                    if (cp) yaml.push(`CP: ${cp}`);
-                    if (sp) yaml.push(`SP: ${sp}`);
-                    if (ep) yaml.push(`EP: ${ep}`);
-                    if (gp) yaml.push(`GP: ${gp}`);
-                    if (pp) yaml.push(`PP: ${pp}`);
-                    yaml.push('');
-                }
-
-                // Proficiencies
-                const proficienciesText = form.querySelector('#proficiencies-text')?.value || '';
-                if (proficienciesText.trim()) {
-                    yaml.push('PROFICIENCIES:');
-                    proficienciesText.split('\n').forEach(line => {
-                        line = line.trim();
-                        if (line) {
-                            yaml.push(`  - "${line}"`);
-                        } else {
-                            yaml.push('  -   # Separator');
-                        }
-                    });
-                    yaml.push('');
-                }
-
-                // Equipment
-                const equipmentText = form.querySelector('#equipment-text')?.value || '';
-                if (equipmentText.trim()) {
-                    yaml.push('EQUIPMENT:');
-                    equipmentText.split('\n').forEach(line => {
-                        line = line.trim();
-                        if (line) {
-                            yaml.push(`  - "${line}"`);
-                        }
-                    });
-                    yaml.push('');
-                }
-
-                // Attacks
-                const attacks = [];
-                document.querySelectorAll('.attack-item').forEach(attackDiv => {
-                    const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
-                    const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
-                    const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
-                    const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
-                    const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
-                    const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
-
-                    if (name || attack || damage || type || range || ammo) {
-                        attacks.push('  - NAME: "' + (name || '') + '"');
-                        attacks.push('    ATTACK: "' + (attack || '') + '"');
-                        attacks.push('    DAMAGE: "' + (damage || '') + '"');
-                        attacks.push('    TYPE: "' + (type || '') + '"');
-                        attacks.push('    RANGE: "' + (range || '') + '"');
-                        attacks.push('    AMMO: "' + (ammo || '') + '"');
-                    }
-                });
-                if (attacks.length > 0) {
-                    yaml.push('ATTACKS:');
-                    yaml.push(...attacks);
-                    yaml.push('');
-                }
-
-                // Magic
-                const magicSection = form.querySelector('#magic-section');
-                if (magicSection && !magicSection.hidden) {
-                    yaml.push('MAGIC:');
-                    
-                    // Process each spell level
-                    const spellLevels = form.querySelectorAll('.spell-level');
-                    spellLevels.forEach(levelDiv => {
-                        const levelNum = levelDiv.dataset.level;
-                        const spells = levelDiv.querySelectorAll('.spell-container');
-                        
-                        if (spells.length > 0) {
-                            if (levelNum === '0') {
-                                yaml.push('  - level: 0                        # CANTRIPS');
-                            } else {
-                                const slotsInput = levelDiv.querySelector('.spell-slots');
-                                const slots = slotsInput?.value || '';
-                                if (slots) {
-                                    yaml.push(`  - level: {number: ${levelNum}, slots: ${slots}}`);
-                                } else {
-                                    yaml.push(`  - level: ${levelNum}`);
-                                }
-                            }
-                            
-                            spells.forEach(spellContainer => {
-                                const name = spellContainer.querySelector('.spell-name')?.value || '';
-                                const description = spellContainer.querySelector('.spell-description')?.value || '';
-                                
-                                if (name) {
-                                    yaml.push(`  - name: "${name}"`);
-                                    if (description) {
-                                        yaml.push(`    description: "${description}"`);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    yaml.push('');
-                }
-
-                // Features
-                const featureContainers = form.querySelectorAll('.feature-container');
-                if (featureContainers.length > 0) {
-                    yaml.push('FEATURES:');
-                    featureContainers.forEach(container => {
-                        const name = container.querySelector('.feature-name')?.value || '';
-                        const description = container.querySelector('.feature-description')?.value || '';
-                        
-                        if (name) {
-                            yaml.push(`  - name: "${name}"`);
-                            if (description) {
-                                yaml.push(`    description: "${description}"`);
-                            }
-                        }
-                    });
-                }
-
-                const yamlContent = yaml.join('\n');
+                // Generate YAML content using the shared function
+                const yamlContent = createYAMLContent();
                 
                 // Debug the content being sent
                 console.log('YAML content length:', yamlContent.length);
