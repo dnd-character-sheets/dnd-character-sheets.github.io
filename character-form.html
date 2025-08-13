@@ -144,10 +144,38 @@
         }
         
         .attack-fields {
-            display: grid;
-            grid-template-columns: 2fr 0.8fr 0.8fr 1fr 1fr 1fr;
+            display: flex;
+            flex-wrap: wrap;
             gap: 0.5em;
             margin-bottom: 0.3em;
+            padding-left: 4em;
+        }
+        
+        .attack-fields > * {
+            flex: 1;
+            min-width: 8em;
+        }
+        
+        .attack-fields > *:first-child {
+            flex: 2;
+            min-width: 12em;
+            margin-left: -4em;
+        }
+        
+        .attack-fields .range-field {
+            flex: 0 0 10em;
+            max-width: 10em;
+        }
+        
+        .attack-fields .ammo-field {
+            flex: 0 0 4ch;
+            max-width: 4ch;
+            width: 4ch;
+        }
+        
+        .attack-fields::after {
+            content: '';
+            flex: 1;
         }
         
         .spell-level {
@@ -639,10 +667,10 @@
             item.className = 'attack-item';
             item.innerHTML = `
                 <div class="attack-fields">
-                    <input type="text" placeholder="Attack Name" data-field="name" />
+                    <input type="text" placeholder="Weapon" data-field="name" />
                     <input type="text" placeholder="Attack Bonus" data-field="attack" />
-                    <input type="text" placeholder="Damage" data-field="damage" />
-                    <input type="text" placeholder="Type" data-field="type" list="damage-types" />
+                    <input type="text" placeholder="Damage Amount" data-field="damage" />
+                    <input type="text" placeholder="Damage Type" data-field="type" list="damage-types" />
                     <datalist id="damage-types">
                         <option value="slashing">
                         <option value="piercing">
@@ -661,8 +689,8 @@
                         <option value="piercing/fire">
                         <option value="bludgeoning/thunder">
                     </datalist>
-                    <input type="text" placeholder="Range" data-field="range" />
-                    <input type="text" placeholder="Ammo" data-field="ammo" />
+                    <input type="text" placeholder="Range" data-field="range" class="range-field" />
+                    <input type="text" placeholder="Ammo" data-field="ammo" class="ammo-field" />
                 </div>
                 <button type="button" onclick="this.parentElement.remove()">Remove Attack</button>
             `;
@@ -719,7 +747,7 @@
             item.className = 'feature-item';
             item.innerHTML = `
                 <div class="field-group">
-                    <label>Feature Name</label>
+                    <label>Name</label>
                     <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" />
                 </div>
                 <div class="field-group">
