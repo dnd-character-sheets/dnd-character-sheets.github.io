@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Sheet Creator</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        body {
+            font-family: tahoma, verdana, arial, sans-serif;
+            font-size: 11pt;
+            max-width: 52em;
+            margin-left: 1em;
+            margin-right: 1em;
+            background-color: #f9f9f9;
+        }
+        
+        h1 {
+            color: #35A;
+            border-bottom: 1px solid silver;
+            padding-bottom: 4px;
+        }
+        
+        .section {
+            margin: 1em 0;
+            padding: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        
+        .playername { background-color: #e8f5d0; }
+        .stats { background-color: #e6f2ff; }
+        .hpetc { background-color: #e6e6e6; }
+        .proficiencies { background-color: #fffae6; }
+        .attacks { background-color: #ffe6cc; }
+        .magic { background-color: #ffe6e6; }
+        .features { background-color: #f0e6f7; }
+        .equipment { background-color: #e8f5d0; }
+        
+        .section h2 {
+            color: #631;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+        
+        .field-group {
+            margin-bottom: 0.5em;
+        }
+        
+        .field-row {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 0.5em;
+            flex-wrap: wrap;
+        }
+        
+        .field {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+        
+        .field.wide {
+            flex: 1;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 0.2em;
+            color: #333;
+        }
+        
+        input, textarea, select {
+            padding: 0.3em;
+            border: 1px solid #999;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #35A;
+            box-shadow: 0 0 3px rgba(53, 170, 170, 0.3);
+        }
+        
+        .ability-scores {
+            display: flex;
+            gap: 0.5em;
+            flex-wrap: wrap;
+        }
+        
+        .ability-scores .field {
+            max-width: 4em;
+        }
+        
+        .ability-scores input {
+            width: 3em;
+        }
+        
+        .list-container {
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 2px;
+        }
+        
+        .list-item {
+            display: flex;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+            align-items: center;
+        }
+        
+        .list-item input {
+            flex: 1;
+        }
+        
+        .list-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.2em 0.5em;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        
+        .add-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.4em 0.8em;
+            border-radius: 2px;
+            cursor: pointer;
+            margin-top: 0.3em;
+        }
+        
+        .attack-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .attack-fields {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 0.8fr 1fr 1fr 1fr;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+        }
+        
+        .spell-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .feature-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .feature-item textarea {
+            min-height: 60px;
+            resize: vertical;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .output-section {
+            margin-top: 2em;
+            padding: 1em;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .output-section h2 {
+            margin-top: 0;
+            color: #631;
+        }
+        
+        #yaml-output {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            font-size: 10pt;
+            background-color: white;
+            border: 1px solid #999;
+            padding: 0.5em;
+        }
+        
+        .generate-button {
+            background: #35A;
+            color: white;
+            border: none;
+            padding: 0.6em 1.2em;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12pt;
+            margin: 1em 0;
+        }
+        
+        .generate-button:hover {
+            background: #2a8;
+        }
+        
+        .currency-fields {
+            display: flex;
+            gap: 1em;
+        }
+        
+        .currency-fields .field {
+            min-width: 80px;
+        }
+        
+        kbd {
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 0.2em 0.4em;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>D&D Character Sheet Creator</h1>
+    
+    <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
+        <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
+        <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
+        <button type="button" class="generate-button" onclick="generateYAML()">Generate YAML</button>
+        <button type="button" class="add-button" onclick="downloadYAML()">Download YAML File</button>
+    </div>
+    
+    <div id="status-bar" style="text-align: center; margin: 0.5em 0; font-size: 0.9em; color: #666; min-height: 1.2em;">
+        <strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections
+    </div>
+    
+    <form id="character-form">
+        <!-- Character Info Section -->
+        <div class="section playername">
+            <h2>Character Info</h2>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="character-name">Character Name</label>
+                    <input type="text" id="character-name" name="character-name">
+                </div>
+                <div class="field wide">
+                    <label for="player-name">Player Name</label>
+                    <input type="text" id="player-name" name="player-name">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="class">Class</label>
+                    <select id="class" name="class">
+                        <option value="">Select Class</option>
+                        <option value="Barbarian">Barbarian</option>
+                        <option value="Bard">Bard</option>
+                        <option value="Cleric">Cleric</option>
+                        <option value="Druid">Druid</option>
+                        <option value="Fighter">Fighter</option>
+                        <option value="Monk">Monk</option>
+                        <option value="Paladin">Paladin</option>
+                        <option value="Ranger">Ranger</option>
+                        <option value="Rogue">Rogue</option>
+                        <option value="Sorcerer">Sorcerer</option>
+                        <option value="Warlock">Warlock</option>
+                        <option value="Wizard">Wizard</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="level">Level</label>
+                    <input type="number" id="level" name="level" min="1" max="20">
+                </div>
+                <div class="field">
+                    <label for="race">Race</label>
+                    <input type="text" id="race" name="race">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="background">Background</label>
+                    <input type="text" id="background" name="background">
+                </div>
+                <div class="field">
+                    <label for="alignment">Alignment</label>
+                    <input type="text" id="alignment" name="alignment">
+                </div>
+                <div class="field">
+                    <label for="experience">Experience Points</label>
+                    <input type="text" id="experience" name="experience">
+                </div>
+            </div>
+            <div class="field-group">
+                <label for="motivation">Motivation</label>
+                <input type="text" id="motivation" name="motivation" placeholder="Character's personal motivation" style="width: 100%;">
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="section stats">
+            <h2>Ability Scores</h2>
+            <div class="ability-scores">
+                <div class="field">
+                    <label for="str">Strength</label>
+                    <input type="number" id="str" name="str" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="dex">Dexterity</label>
+                    <input type="number" id="dex" name="dex" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="con">Constitution</label>
+                    <input type="number" id="con" name="con" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="int">Intelligence</label>
+                    <input type="number" id="int" name="int" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="wis">Wisdom</label>
+                    <input type="number" id="wis" name="wis" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="cha">Charisma</label>
+                    <input type="number" id="cha" name="cha" min="1" max="30">
+                </div>
+            </div>
+            <div class="field-group">
+                <div class="field">
+                    <label for="proficiency-bonus">Proficiency Bonus</label>
+                    <input type="text" id="proficiency-bonus" name="proficiency-bonus" placeholder="+2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Combat Stats Section -->
+        <div class="section hpetc">
+            <h2>Combat Stats</h2>
+            <div class="field-row">
+                <div class="field">
+                    <label for="max-hp">Max HP</label>
+                    <input type="number" id="max-hp" name="max-hp" min="1">
+                </div>
+                <div class="field">
+                    <label for="hit-dice">Hit Die</label>
+                    <select id="hit-dice" name="hit-dice">
+                        <option value="">Select</option>
+                        <option value="d6">d6</option>
+                        <option value="d8">d8</option>
+                        <option value="d10">d10</option>
+                        <option value="d12">d12</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="initiative">Initiative</label>
+                    <input type="text" id="initiative" name="initiative" placeholder="+1">
+                </div>
+                <div class="field">
+                    <label for="speed">Speed</label>
+                    <input type="text" id="speed" name="speed" placeholder="30">
+                </div>
+                <div class="field">
+                    <label for="armor-class">Armor Class</label>
+                    <input type="number" id="armor-class" name="armor-class" min="1">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="senses">Senses</label>
+                    <input type="text" id="senses" name="senses" placeholder="Darkvision 60 ft.">
+                </div>
+                <div class="field">
+                    <label for="passive-perception">Passive Perception</label>
+                    <input type="number" id="passive-perception" name="passive-perception" min="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Proficiencies Section -->
+        <div class="section proficiencies">
+            <h2>Proficiencies</h2>
+            <div class="field-group">
+                <label for="proficiencies-text">Skills, Languages, and Equipment Proficiencies</label>
+                <textarea id="proficiencies-text" name="proficiencies-text" rows="8" placeholder="Enter one proficiency per line, e.g.:&#10;Athletics&#10;Medicine&#10;Nature&#10;&#10;Common&#10;Orcish&#10;&#10;Light Armor&#10;Shield&#10;Simple Weapons"></textarea>
+                <small>Enter one proficiency per line.<br>Leave blank lines to create visual separators.</small>
+            </div>
+        </div>
+
+        <!-- Attacks Section -->
+        <div class="section attacks">
+            <h2>Attacks</h2>
+            <div id="attacks-list">
+                <!-- Dynamic attacks will be added here -->
+            </div>
+            <button type="button" class="add-button" onclick="addAttack()">Add Attack</button>
+        </div>
+
+        <!-- Magic Section -->
+        <div class="section magic" id="magic-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Magic</h2>
+                <button type="button" class="add-button" id="magic-toggle" onclick="toggleMagic()">+ Add Spells</button>
+            </div>
+            <div id="magic-content" style="display: none;">
+                <div id="magic-list">
+                    <!-- Dynamic spells will be added here -->
+                </div>
+                <button type="button" class="add-button" onclick="addSpell()">Add Spell</button>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section features">
+            <h2>Features</h2>
+            <div id="features-list">
+                <!-- Dynamic features will be added here -->
+            </div>
+            <button type="button" class="add-button" onclick="addFeature()">Add Feature</button>
+        </div>
+
+        <!-- Equipment Section -->
+        <div class="section equipment">
+            <h2>Equipment</h2>
+            <div class="field-group">
+                <label for="equipment-text">Equipment List</label>
+                <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Enter one item per line, e.g.:&#10;Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin"></textarea>
+                <small>Enter one equipment item per line.</small>
+            </div>
+            
+            <h3>Currency</h3>
+            <div class="currency-fields">
+                <div class="field">
+                    <label for="cp">Copper (CP)</label>
+                    <input type="text" id="cp" name="cp">
+                </div>
+                <div class="field">
+                    <label for="sp">Silver (SP)</label>
+                    <input type="text" id="sp" name="sp">
+                </div>
+                <div class="field">
+                    <label for="ep">Electrum (EP)</label>
+                    <input type="text" id="ep" name="ep">
+                </div>
+                <div class="field">
+                    <label for="gp">Gold (GP)</label>
+                    <input type="text" id="gp" name="gp">
+                </div>
+                <div class="field">
+                    <label for="pp">Platinum (PP)</label>
+                    <input type="text" id="pp" name="pp">
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+    <div class="output-section">
+        <h2>Generated YAML</h2>
+        <textarea id="yaml-output" readonly placeholder="Click 'Generate YAML' to see your character sheet YAML here..."></textarea>
+        <div>
+            <button type="button" class="add-button" onclick="copyYAML()">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize with some default entries
+        document.addEventListener('DOMContentLoaded', function() {
+            addAttack();
+            addFeature();
+            setupChangeTracking();
+        });
+
+        // Global keyboard shortcut handler
+        document.addEventListener('keydown', function(event) {
+            // Check for Ctrl+Enter (or Cmd+Enter on Mac)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                
+                // Find which section the focus is in
+                const activeElement = document.activeElement;
+                const attacksSection = document.getElementById('attacks-list');
+                const magicSection = document.getElementById('magic-list');
+                const featuresSection = document.getElementById('features-list');
+                
+                // Check if focus is within any of these sections
+                if (attacksSection && attacksSection.contains(activeElement)) {
+                    addAttack();
+                    // Focus on the name field of the new attack
+                    setTimeout(() => {
+                        const newAttack = document.querySelector('.attack-item:last-child [data-field="name"]');
+                        if (newAttack) newAttack.focus();
+                    }, 10);
+                } else if (magicSection && magicSection.contains(activeElement)) {
+                    addSpell();
+                    // Focus on the level field of the new spell
+                    setTimeout(() => {
+                        const newSpell = document.querySelector('.spell-item:last-child [data-field="level"]');
+                        if (newSpell) newSpell.focus();
+                    }, 10);
+                } else if (featuresSection && featuresSection.contains(activeElement)) {
+                    addFeature();
+                    // Focus on the name field of the new feature
+                    setTimeout(() => {
+                        const newFeature = document.querySelector('.feature-item:last-child [data-field="name"]');
+                        if (newFeature) newFeature.focus();
+                    }, 10);
+                } else {
+                    // If not in a specific section, check which section is closest or most recently used
+                    // Default to adding an attack
+                    addAttack();
+                    setTimeout(() => {
+                        const newAttack = document.querySelector('.attack-item:last-child [data-field="name"]');
+                        if (newAttack) newAttack.focus();
+                    }, 10);
+                }
+            }
+        });
+
+        function toggleMagic() {
+            const magicContent = document.getElementById('magic-content');
+            const toggleBtn = document.getElementById('magic-toggle');
+            
+            if (magicContent.style.display === 'none') {
+                magicContent.style.display = 'block';
+                toggleBtn.textContent = '- Hide Spells';
+                if (document.querySelectorAll('.spell-item').length === 0) {
+                    addSpell();
+                }
+            } else {
+                magicContent.style.display = 'none';
+                toggleBtn.textContent = '+ Add Spells';
+            }
+        }
+
+        function addAttack() {
+            const container = document.getElementById('attacks-list');
+            const item = document.createElement('div');
+            item.className = 'attack-item';
+            item.innerHTML = `
+                <div class="attack-fields">
+                    <input type="text" placeholder="Attack Name" data-field="name" />
+                    <input type="text" placeholder="Attack Bonus" data-field="attack" />
+                    <input type="text" placeholder="Damage" data-field="damage" />
+                    <select data-field="type">
+                        <option value="">Type</option>
+                        <option value="slashing">Slashing</option>
+                        <option value="piercing">Piercing</option>
+                        <option value="bludgeoning">Bludgeoning</option>
+                        <option value="acid">Acid</option>
+                        <option value="cold">Cold</option>
+                        <option value="fire">Fire</option>
+                        <option value="force">Force</option>
+                        <option value="lightning">Lightning</option>
+                        <option value="necrotic">Necrotic</option>
+                        <option value="poison">Poison</option>
+                        <option value="psychic">Psychic</option>
+                        <option value="radiant">Radiant</option>
+                        <option value="thunder">Thunder</option>
+                    </select>
+                    <input type="text" placeholder="Range" data-field="range" />
+                    <input type="text" placeholder="Ammo" data-field="ammo" />
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove Attack</button>
+            `;
+            container.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        function addSpell() {
+            const container = document.getElementById('magic-list');
+            const item = document.createElement('div');
+            item.className = 'spell-item';
+            item.innerHTML = `
+                <div class="field-row">
+                    <div class="field">
+                        <label>Level</label>
+                        <select data-field="level">
+                            <option value="">Select Level</option>
+                            <option value="0">0 (Cantrip)</option>
+                            <option value="1">1st</option>
+                            <option value="2">2nd</option>
+                            <option value="3">3rd</option>
+                            <option value="4">4th</option>
+                            <option value="5">5th</option>
+                            <option value="6">6th</option>
+                            <option value="7">7th</option>
+                            <option value="8">8th</option>
+                            <option value="9">9th</option>
+                        </select>
+                    </div>
+                    <div class="field wide">
+                        <label>Spell Name</label>
+                        <input type="text" placeholder="e.g., Magic Missile" data-field="name" />
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Description</label>
+                    <textarea placeholder="Spell description..." data-field="description"></textarea>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove Spell</button>
+            `;
+            container.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        function addFeature() {
+            const container = document.getElementById('features-list');
+            const item = document.createElement('div');
+            item.className = 'feature-item';
+            item.innerHTML = `
+                <div class="field-group">
+                    <label>Feature Name</label>
+                    <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" />
+                </div>
+                <div class="field-group">
+                    <label>Description</label>
+                    <textarea placeholder="Feature description..." data-field="description" rows="3"></textarea>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove Feature</button>
+            `;
+            container.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        let isDirty = false;
+        let loadedFileName = '';
+
+        function loadYAMLFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        parseYAMLIntoForm(e.target.result);
+                        loadedFileName = file.name;
+                        isDirty = false;
+                        updateStatusBar();
+                        setupChangeTracking();
+                    } catch (error) {
+                        updateStatusBar('Error loading YAML file: ' + error.message, true);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function updateStatusBar(message = null, isError = false) {
+            const statusBar = document.getElementById('status-bar');
+            if (message) {
+                statusBar.innerHTML = `<span style="color: ${isError ? '#d32f2f' : '#666'}">${message}</span>`;
+            } else if (loadedFileName) {
+                const dirtyMark = isDirty ? ' (dirty)' : '';
+                statusBar.innerHTML = `Loaded from <strong>${loadedFileName}</strong>${dirtyMark}`;
+            } else {
+                statusBar.innerHTML = '<strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections';
+            }
+        }
+
+        function markDirty() {
+            if (!isDirty) {
+                isDirty = true;
+                updateStatusBar();
+            }
+        }
+
+        function setupChangeTracking() {
+            // Remove existing listeners first
+            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
+                el.removeEventListener('input', markDirty);
+                el.removeEventListener('change', markDirty);
+            });
+            
+            // Add listeners to all form elements
+            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        function parseYAMLIntoForm(yamlText) {
+            const form = document.getElementById('character-form');
+            
+            try {
+                // Use js-yaml to parse the YAML
+                const data = jsyaml.load(yamlText);
+                if (!data) return;
+                
+                // Character info fields
+                const setFormValue = (selector, value) => {
+                    const el = form.querySelector(selector);
+                    if (el && value !== undefined && value !== null) {
+                        el.value = value.toString();
+                    }
+                };
+                
+                setFormValue('#character-name', data['CHARACTER NAME']);
+                setFormValue('#player-name', data['PLAYER NAME']);
+                setFormValue('#race', data['RACE']);
+                setFormValue('#background', data['BACKGROUND']);
+                setFormValue('#alignment', data['ALIGNMENT']);
+                setFormValue('#experience', data['EXPERIENCE POINTS']);
+                setFormValue('#motivation', data['MOTIVATION']);
+                
+                // Handle CLASS & LEVEL first, then let individual CLASS/LEVEL override
+                if (data['CLASS & LEVEL']) {
+                    const classLevel = data['CLASS & LEVEL'].toString();
+                    // Handle "Cleric (Life Domain) 3" format
+                    const match = classLevel.match(/^([A-Za-z]+)(?:\s+\([^)]+\))?\s+(\d+)$/) || 
+                                 classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
+                                 classLevel.match(/^([A-Za-z]+)/);
+                    if (match) {
+                        setFormValue('#class', match[1]);
+                        if (match[2]) setFormValue('#level', match[2]);
+                    }
+                }
+                
+                // Individual CLASS and LEVEL override "CLASS & LEVEL" if present
+                if (data['CLASS']) {
+                    setFormValue('#class', data['CLASS']);
+                }
+                if (data['LEVEL']) {
+                    setFormValue('#level', data['LEVEL']);
+                }
+                
+                // Ability scores
+                setFormValue('#str', data['STR']);
+                setFormValue('#dex', data['DEX']);
+                setFormValue('#con', data['CON']);
+                setFormValue('#int', data['INT']);
+                setFormValue('#wis', data['WIS']);
+                setFormValue('#cha', data['CHA']);
+                
+                // Combat stats
+                setFormValue('#proficiency-bonus', data['PROFICIENCY BONUS']);
+                setFormValue('#max-hp', data['MAX HP']);
+                setFormValue('#hit-dice', data['HIT DICE']);
+                setFormValue('#initiative', data['INITIATIVE']);
+                setFormValue('#speed', data['SPEED']);
+                setFormValue('#armor-class', data['ARMOR CLASS']);
+                setFormValue('#senses', data['SENSES']);
+                setFormValue('#passive-perception', data['PASSIVE PERCEPTION']);
+                
+                // Currency
+                setFormValue('#cp', data['CP']);
+                setFormValue('#sp', data['SP']);
+                setFormValue('#ep', data['EP']);
+                setFormValue('#gp', data['GP']);
+                setFormValue('#pp', data['PP']);
+                
+                // Proficiencies
+                if (data['PROFICIENCIES'] && Array.isArray(data['PROFICIENCIES'])) {
+                    const profList = data['PROFICIENCIES'].map(item => {
+                        if (typeof item === 'string') return item;
+                        if (typeof item === 'object' && item === null) return ''; // blank separator
+                        if (item && item.proficiencies_skip) return '';
+                        if (item && typeof item === 'object') {
+                            // Handle objects like {Languages: "Common"}, {Armor: "Light"}
+                            const keys = Object.keys(item);
+                            if (keys.length === 1) {
+                                const key = keys[0];
+                                const value = item[key];
+                                if (key === 'Languages') return value;
+                                if (key === 'Armor') return `${value} Armor`;
+                                if (key === 'Weapons') return `${value} Weapons`;
+                                return `${key}: ${value}`;
+                            }
+                        }
+                        return item?.toString() || '';
+                    });
+                    setFormValue('#proficiencies-text', profList.join('\n'));
+                }
+                
+                // Equipment
+                if (data['EQUIPMENT'] && Array.isArray(data['EQUIPMENT'])) {
+                    const equipList = data['EQUIPMENT'].map(item => item?.toString() || '');
+                    setFormValue('#equipment-text', equipList.join('\n'));
+                }
+                
+                // Features
+                if (data['FEATURES'] && Array.isArray(data['FEATURES'])) {
+                    // Clear existing features first
+                    document.querySelectorAll('.feature-item').forEach(item => item.remove());
+                    
+                    data['FEATURES'].forEach(feature => {
+                        if (feature && typeof feature === 'object' && feature.name) {
+                            addFeature();
+                            const items = document.querySelectorAll('.feature-item');
+                            const lastItem = items[items.length - 1];
+                            if (lastItem) {
+                                const nameEl = lastItem.querySelector('[data-field="name"]');
+                                const descEl = lastItem.querySelector('[data-field="description"]');
+                                if (nameEl) nameEl.value = feature.name || '';
+                                if (descEl) descEl.value = feature.description || '';
+                            }
+                        }
+                    });
+                }
+                
+                // Attacks
+                if (data['ATTACKS'] && Array.isArray(data['ATTACKS'])) {
+                    // Clear existing attacks first
+                    document.querySelectorAll('.attack-item').forEach(item => item.remove());
+                    
+                    data['ATTACKS'].forEach(attack => {
+                        if (attack && typeof attack === 'object') {
+                            addAttack();
+                            const items = document.querySelectorAll('.attack-item');
+                            const lastItem = items[items.length - 1];
+                            if (lastItem) {
+                                const nameEl = lastItem.querySelector('[data-field="name"]');
+                                const attackEl = lastItem.querySelector('[data-field="attack"]');
+                                const damageEl = lastItem.querySelector('[data-field="damage"]');
+                                const typeEl = lastItem.querySelector('[data-field="type"]');
+                                const rangeEl = lastItem.querySelector('[data-field="range"]');
+                                const ammoEl = lastItem.querySelector('[data-field="ammo"]');
+                                
+                                if (nameEl) nameEl.value = attack['NAME'] || '';
+                                if (attackEl) attackEl.value = attack['ATTACK'] || '';
+                                if (damageEl) damageEl.value = attack['DAMAGE'] || '';
+                                if (typeEl) typeEl.value = attack['TYPE'] || '';
+                                if (rangeEl) rangeEl.value = attack['RANGE'] || '';
+                                if (ammoEl) ammoEl.value = attack['AMMO'] || '';
+                            }
+                        }
+                    });
+                }
+                
+                // Magic/Spells
+                if (data['MAGIC'] && Array.isArray(data['MAGIC'])) {
+                    // Auto-open magic section
+                    const magicContent = document.getElementById('magic-content');
+                    const toggleBtn = document.getElementById('magic-toggle');
+                    if (magicContent && magicContent.style.display === 'none') {
+                        magicContent.style.display = 'block';
+                        toggleBtn.textContent = '- Hide Spells';
+                    }
+                    
+                    // Clear existing spells first
+                    document.querySelectorAll('.spell-item').forEach(item => item.remove());
+                    
+                    // Process each magic entry
+                    data['MAGIC'].forEach(spell => {
+                        if (spell && typeof spell === 'object') {
+                            // Skip level-only entries (they're just headers)
+                            if (spell.level !== undefined && !spell.name) {
+                                return; // Skip level markers like {level: 0}
+                            }
+                            
+                            // Add spell with name and description
+                            if (spell.name) {
+                                addSpell();
+                                const items = document.querySelectorAll('.spell-item');
+                                const lastItem = items[items.length - 1];
+                                if (lastItem) {
+                                    const levelEl = lastItem.querySelector('[data-field="level"]');
+                                    const nameEl = lastItem.querySelector('[data-field="name"]');
+                                    const descEl = lastItem.querySelector('[data-field="description"]');
+                                    
+                                    if (levelEl && spell.level !== undefined) levelEl.value = spell.level;
+                                    if (nameEl) nameEl.value = spell.name || '';
+                                    if (descEl) descEl.value = spell.description || '';
+                                }
+                            }
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                throw new Error('YAML parsing failed: ' + error.message);
+            }
+        }
+
+        function generateYAML() {
+            const form = document.getElementById('character-form');
+            const yaml = [];
+
+            // Character Info
+            const characterName = form.querySelector('#character-name').value;
+            const playerName = form.querySelector('#player-name').value;
+            const characterClass = form.querySelector('#class').value;
+            const level = form.querySelector('#level').value;
+            const race = form.querySelector('#race').value;
+            const background = form.querySelector('#background').value;
+            const alignment = form.querySelector('#alignment').value;
+            const experience = form.querySelector('#experience').value;
+            const motivation = form.querySelector('#motivation').value;
+
+            if (characterName) yaml.push(`"CHARACTER NAME": "${characterName}"`);
+            if (playerName) yaml.push(`"PLAYER NAME": "${playerName}"`);
+            if (characterClass && level) {
+                yaml.push(`"CLASS & LEVEL": "${characterClass} ${level}"`);
+            } else if (characterClass) {
+                yaml.push(`"CLASS & LEVEL": "${characterClass}"`);
+            }
+            if (race) yaml.push(`"RACE": "${race}"`);
+            if (background) yaml.push(`"BACKGROUND": "${background}"`);
+            if (alignment) yaml.push(`"ALIGNMENT": "${alignment}"`);
+            if (experience) yaml.push(`"EXPERIENCE POINTS": "${experience}"`);
+            if (motivation) yaml.push(`MOTIVATION: "${motivation}"`);
+
+            yaml.push('');
+
+            // Ability Scores
+            const str = form.querySelector('#str').value;
+            const dex = form.querySelector('#dex').value;
+            const con = form.querySelector('#con').value;
+            const int = form.querySelector('#int').value;
+            const wis = form.querySelector('#wis').value;
+            const cha = form.querySelector('#cha').value;
+
+            if (str) yaml.push(`STR: ${str}`);
+            if (dex) yaml.push(`DEX: ${dex}`);
+            if (con) yaml.push(`CON: ${con}`);
+            if (int) yaml.push(`INT: ${int}`);
+            if (wis) yaml.push(`WIS: ${wis}`);
+            if (cha) yaml.push(`CHA: ${cha}`);
+
+            yaml.push('');
+
+            // Proficiency Bonus
+            const profBonus = form.querySelector('#proficiency-bonus').value;
+            if (profBonus) yaml.push(`"PROFICIENCY BONUS": "${profBonus}"`);
+
+            // Combat Stats
+            const maxHp = form.querySelector('#max-hp').value;
+            const hitDice = form.querySelector('#hit-dice').value;
+            const initiative = form.querySelector('#initiative').value;
+            const speed = form.querySelector('#speed').value;
+            const ac = form.querySelector('#armor-class').value;
+            const senses = form.querySelector('#senses').value;
+            const passivePerc = form.querySelector('#passive-perception').value;
+
+            if (maxHp) yaml.push(`"MAX HP": ${maxHp}`);
+            if (hitDice) yaml.push(`"HIT DICE": "${hitDice}"`);
+            if (initiative) yaml.push(`"INITIATIVE": "${initiative}"`);
+            if (speed) yaml.push(`"SPEED": "${speed}"`);
+            if (ac) yaml.push(`"ARMOR CLASS": ${ac}`);
+            if (senses) yaml.push(`"SENSES": "${senses}"`);
+            if (passivePerc) yaml.push(`"PASSIVE PERCEPTION": ${passivePerc}`);
+
+            yaml.push('');
+
+            // Proficiencies
+            const proficienciesText = form.querySelector('#proficiencies-text').value;
+            if (proficienciesText.trim()) {
+                yaml.push('PROFICIENCIES:');
+                proficienciesText.split('\n').forEach(line => {
+                    line = line.trim();
+                    if (line) {
+                        yaml.push(`  - "${line}"`);
+                    } else {
+                        yaml.push('  -   # Separator');
+                    }
+                });
+                yaml.push('');
+            }
+
+            // Attacks
+            const attacks = [];
+            document.querySelectorAll('.attack-item').forEach(attackDiv => {
+                const name = attackDiv.querySelector('[data-field="name"]').value;
+                const attack = attackDiv.querySelector('[data-field="attack"]').value;
+                const damage = attackDiv.querySelector('[data-field="damage"]').value;
+                const type = attackDiv.querySelector('[data-field="type"]').value;
+                const range = attackDiv.querySelector('[data-field="range"]').value;
+                const ammo = attackDiv.querySelector('[data-field="ammo"]').value;
+
+                if (name || attack || damage || type || range || ammo) {
+                    attacks.push('  - NAME: "' + (name || '') + '"');
+                    attacks.push('    ATTACK: "' + (attack || '') + '"');
+                    attacks.push('    DAMAGE: "' + (damage || '') + '"');
+                    attacks.push('    TYPE: "' + (type || '') + '"');
+                    attacks.push('    RANGE: "' + (range || '') + '"');
+                    attacks.push('    AMMO: "' + (ammo || '') + '"');
+                }
+            });
+            if (attacks.length > 0) {
+                yaml.push('ATTACKS:');
+                yaml.push(...attacks);
+                yaml.push('');
+            }
+
+            // Magic
+            const spells = [];
+            document.querySelectorAll('.spell-item').forEach(spellDiv => {
+                const level = spellDiv.querySelector('[data-field="level"]').value;
+                const name = spellDiv.querySelector('[data-field="name"]').value;
+                const description = spellDiv.querySelector('[data-field="description"]').value;
+
+                if (level && (name || description)) {
+                    spells.push(`  - level: ${level}`);
+                    if (name) spells.push(`  - name: "${name}"`);
+                    if (description) spells.push(`    description: "${description}"`);
+                }
+            });
+            if (spells.length > 0) {
+                yaml.push('MAGIC:');
+                yaml.push(...spells);
+                yaml.push('');
+            }
+
+            // Features
+            const features = [];
+            document.querySelectorAll('.feature-item').forEach(featureDiv => {
+                const name = featureDiv.querySelector('[data-field="name"]').value;
+                const description = featureDiv.querySelector('[data-field="description"]').value;
+
+                if (name || description) {
+                    features.push(`  - name: "${name || ''}"`);
+                    features.push(`    description: "${description || ''}"`);
+                }
+            });
+            if (features.length > 0) {
+                yaml.push('FEATURES:');
+                yaml.push(...features);
+                yaml.push('');
+            }
+
+            // Equipment
+            const equipmentText = form.querySelector('#equipment-text').value;
+            if (equipmentText.trim()) {
+                yaml.push('EQUIPMENT:');
+                equipmentText.split('\n').forEach(line => {
+                    line = line.trim();
+                    if (line) {
+                        yaml.push(`  - "${line}"`);
+                    }
+                });
+                yaml.push('');
+            }
+
+            // Currency
+            const cp = form.querySelector('#cp').value;
+            const sp = form.querySelector('#sp').value;
+            const ep = form.querySelector('#ep').value;
+            const gp = form.querySelector('#gp').value;
+            const pp = form.querySelector('#pp').value;
+
+            if (cp) yaml.push(`CP: "${cp}"`);
+            if (sp) yaml.push(`SP: "${sp}"`);
+            if (ep) yaml.push(`EP: "${ep}"`);
+            if (gp) yaml.push(`GP: "${gp}"`);
+            if (pp) yaml.push(`PP: "${pp}"`);
+
+            document.getElementById('yaml-output').value = yaml.join('\n');
+        }
+
+        function copyYAML() {
+            const yamlOutput = document.getElementById('yaml-output');
+            yamlOutput.select();
+            document.execCommand('copy');
+            alert('YAML copied to clipboard!');
+        }
+
+        function downloadYAML() {
+            const yamlContent = document.getElementById('yaml-output').value;
+            if (!yamlContent.trim()) {
+                alert('Please generate YAML first!');
+                return;
+            }
+
+            const characterName = document.getElementById('character-name').value || 'character';
+            const filename = characterName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.yaml';
+            
+            const blob = new Blob([yamlContent], { type: 'text/yaml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
