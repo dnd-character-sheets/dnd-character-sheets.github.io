@@ -51,9 +51,7 @@ PROFICIENCIES:
   - Persuasion
   - Religion
   - Nature
-  - proficiencies_skip: true
-  # (no tool proficiencies listed)
-  - proficiencies_skip: true
+  - 
   # Languages / armor / weapons
   - Languages: Common
   - Languages: Celestial

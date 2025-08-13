@@ -115,6 +115,10 @@ local function render_simple_kv (key, val)
   end
 end
 
+local function is_empty_table(v)
+  return type(v) == 'table' and next(v) == nil
+end
+
 local function render(v)
   if type(v) == 'string' then
     return escape(v)
@@ -140,18 +144,17 @@ local function render(v)
 end
 
 local function render_item(v)
-  -- Handle blank list entries (nil values)
-  if v == nil then
+  if is_empty_table(v) then -- blank list entry
     return [[\profskip{}]]
-  end
-  
-  local s = render(v)
-  if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
-  or s:find [[\bigskip]]
-  then
-    return s
   else
-    return ([[\item %s]]):format(s)
+    local s = render(v)
+    if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
+    or s:find [[\bigskip]]
+    then
+      return s
+    else
+      return ([[\item %s]]):format(s)
+    end
   end
 end
 
