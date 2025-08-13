@@ -5,6 +5,7 @@
 "RACE": Halfling (Lightfoot)
 "ALIGNMENT": Neutral
 "EXPERIENCE POINTS": 0/300
+PREGENERATED: 1
 
 # ability scores — only the score in the lower oval
 STR: 8
@@ -40,8 +41,9 @@ PROFICIENCIES:
   - Perception [E]
   - Stealth [E]
   - Thieves' Tools
-  - Language (Common)
-  - Language (Halfling Cant)
+  -
+  - Common
+  - Halfling Cant
 
 EQUIPMENT:
   - Clothes (Common)
@@ -65,15 +67,13 @@ ATTACKS:
     DAMAGE: 1d4+3
     TYPE: piercing
     RANGE: 5 ft. or 20/60 ft.
-    AMMO: ""
+    AMMO: "---"
   - NAME: Sling
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: bludgeoning
     RANGE: 30/120 ft.
     AMMO: 20 bullets
-
-MAGIC: []
 
 FEATURES:
   - name: Brave

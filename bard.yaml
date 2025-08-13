@@ -5,6 +5,7 @@
 "RACE": Elf (High)
 "ALIGNMENT": Chaotic Good
 "EXPERIENCE POINTS": 0/300
+PREGENERATED: 1
 
 # ability scores – abbreviated keys, value is the score in the lower oval
 STR: 10
@@ -39,9 +40,11 @@ PROFICIENCIES:
   - Perception
   - Performance
   - Persuasion
+  -
   - Musical Instrument (Lyre)
-  - Language (Common)
-  - Language (Elven)
+  - 
+  - Common
+  - Elven
 
 EQUIPMENT:
   - Clothes (Fine)
