@@ -31,13 +31,11 @@ header-includes: |
   </style>
 ---
 
-% Quick-Start Guide to YAML Character Sheets
-
 <article>
 
 This guide walks you through creating a D&D character sheet using YAML, following the visual order and colored sections of the generated character sheet. Use examples from `zanogh.pdf` (Barbarian) and `miriel.pdf` (Cleric) as reference.
 
-## Character Info Section (Light Green Background)
+## Character Info Section
 
 <div class="playername">
 
@@ -71,7 +69,7 @@ MOTIVATION: "Zanogh wants to get in touch with her orcish side"
 
 </div>
 
-## Stats Section (Blue Background)
+## Stats Section
 
 <div class="stats">
 
@@ -100,7 +98,7 @@ CHA: 10
 
 </div>
 
-## Combat Stats Section (Gray Background)
+## Combat Stats Section
 
 <div class="hpetc">
 
@@ -133,7 +131,7 @@ SPELL DC: 13  # For spellcasters only
 
 </div>
 
-## Proficiencies Section (Yellow Background)
+## Proficiencies Section
 
 <div class="proficiencies">
 
@@ -167,7 +165,7 @@ PROFICIENCIES:
 
 </div>
 
-## Attacks Section (Orange Background)
+## Attacks Section
 
 <div class="attacks">
 
@@ -198,7 +196,7 @@ ATTACKS:
 
 </div>
 
-## Magic Section (Red Background)
+## Magic Section
 
 <div class="magic">
 
@@ -242,7 +240,7 @@ MAGIC FONT: \small
 
 </div>
 
-## Features Section (Magenta Background)
+## Features Section
 
 <div class="features">
 
@@ -266,7 +264,7 @@ FEATURES:
 
 </div>
 
-## Equipment Section (Light Green Background)
+## Equipment Section
 
 <div class="equipment">
 
