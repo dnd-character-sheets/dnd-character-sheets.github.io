@@ -232,11 +232,22 @@ MAGIC:
 - Spell descriptions can include formatting markers like [C] for concentration, [B] for bonus action
 - For non-casters, use `MAGIC: []` (empty list)
 
-### Font Control for Magic
+### Magic Rendering Options
+
+**Font Size Control:**
 For dense spell lists, control font size:
 ```yaml
-MAGIC FONT: \small
+MAGIC FONT: \small      # Render magic section in smaller font
+MAGIC FONT: \normalsize # Explicit normal size (default behavior)  
 ```
+
+**Separate Page:**
+For characters with extensive spell lists, move magic to its own page:
+```yaml
+MAGIC SEPARATE: true    # Magic section appears on separate page
+```
+
+These options can be combined with any magic content and help manage space on the character sheet.
 
 </div>
 

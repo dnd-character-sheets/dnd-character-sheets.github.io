@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: quince
+        Version: tangerine
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -465,6 +465,20 @@
         <div class="section magic" id="magic-section">
             <h2 id="magic-header" onclick="toggleMagic()" style="cursor: pointer;">Magic (click to open)</h2>
             <div id="magic-content" style="display: none;">
+                <div class="field-group" style="margin-bottom: 1em;">
+                    <span>Render:</span>
+                    <div style="margin-top: 0.5em;">
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="normal" checked> at normal size
+                        </label>
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="small"> in a small font
+                        </label>
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="separate"> on a page of its own
+                        </label>
+                    </div>
+                </div>
                 <div id="magic-levels">
                     <!-- Spell levels are added dynamically as needed -->
                 </div>
@@ -1045,6 +1059,26 @@
                     // Update the next level button after loading
                     updateNextLevelButton();
                 }
+
+                // Handle magic rendering options
+                let magicRenderOption = 'normal'; // default
+                
+                if (data['MAGIC SEPARATE'] && !ifDNDfalse(data['MAGIC SEPARATE'])) {
+                    magicRenderOption = 'separate';
+                } else if (data['MAGIC FONT'] && typeof data['MAGIC FONT'] === 'string') {
+                    const magicFont = data['MAGIC FONT'].toString();
+                    if (magicFont.includes('small')) {
+                        magicRenderOption = 'small';
+                    } else if (magicFont.includes('normalsize')) {
+                        magicRenderOption = 'normal';
+                    }
+                }
+                
+                // Set the radio button
+                const radioToCheck = document.querySelector(`input[name="magic-render"][value="${magicRenderOption}"]`);
+                if (radioToCheck) {
+                    radioToCheck.checked = true;
+                }
                 
             } catch (error) {
                 throw new Error('YAML parsing failed: ' + error.message);
@@ -1056,6 +1090,14 @@
             return text.replace(/\\/g, '\\\\')  // Escape backslashes
                       .replace(/\u00C2/g, '')    // Remove Â characters (encoding artifacts)
                       .trim();
+        }
+
+        function ifDNDfalse(value) {
+            // Following \ifDNDfalse semantics: undefined, empty, "0", or "false" are false
+            // Convert to string for comparison to handle both numeric and string values
+            if (value === undefined || value === null) return true;
+            const valueStr = value.toString().toLowerCase();
+            return valueStr === '' || valueStr === '0' || valueStr === 'false';
         }
 
         function createYAMLContent() {
@@ -1214,6 +1256,16 @@
                 yaml.push(...spells);
                 yaml.push('');
             }
+
+            // Magic rendering options - check these regardless of whether there are spells
+            // Radio buttons exist in DOM even when magic section is closed (display:none), so this works
+            const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
+            if (magicRenderOption === 'small') {
+                yaml.push('MAGIC FONT: \\small');
+            } else if (magicRenderOption === 'separate') {
+                yaml.push('MAGIC SEPARATE: true');
+            }
+            // For 'normal', we don't add anything special
 
             // Features
             const features = [];

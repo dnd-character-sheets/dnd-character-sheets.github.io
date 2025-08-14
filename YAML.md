@@ -434,6 +434,35 @@ MAGIC: []
 
 ---
 
+## **MAGIC FONT** (USER)
+**Usage**: Controls font size for the magic section rendering  
+**Type**: String (LaTeX font command)  
+**Required**: No  
+**Template Usage**: When specified, changes the font size of the entire magic section  
+**Examples**:
+- `MAGIC FONT: \\small` (renders magic section in small font)
+- `MAGIC FONT: \\normalsize` (renders magic section in normal font, explicit)
+- `MAGIC FONT: \\tiny` (renders magic section in tiny font)
+
+**Note**: If not specified, magic section renders at normal size. The value should include LaTeX font size commands.
+
+---
+
+## **MAGIC SEPARATE** (USER)
+**Usage**: Controls whether magic section appears on a separate page  
+**Type**: Boolean  
+**Required**: No  
+**Template Usage**: When true (using \ifDNDfalse semantics), renders magic section on its own page  
+**Examples**:
+- `MAGIC SEPARATE: true` (magic on separate page)
+- `MAGIC SEPARATE: 1` (magic on separate page) 
+- `MAGIC SEPARATE: false` (magic inline, default behavior)
+- `MAGIC SEPARATE: 0` (magic inline, default behavior)
+
+**Note**: Follows \ifDNDfalse semantics: undefined, empty, "0", or "false" are considered false. Any other value is true.
+
+---
+
 ## **MAX HP** (USER)
 **Usage**: Character's maximum hit points  
 **Type**: Number  
