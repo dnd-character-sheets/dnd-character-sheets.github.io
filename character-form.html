@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: tangerine
+        Version: ugli
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -864,13 +864,8 @@
                 if (pregeneratedEl) {
                     const pregeneratedValue = data['PREGENERATED'];
                     console.log('PREGENERATED value:', pregeneratedValue, 'type:', typeof pregeneratedValue);
-                    // Following \ifDNDfalse semantics: undefined, empty, "0", or "false" are false
-                    // Convert to string for comparison to handle both numeric and string values
-                    const valueStr = pregeneratedValue ? pregeneratedValue.toString() : '';
-                    const shouldCheck = pregeneratedValue && 
-                                       valueStr !== '' && 
-                                       valueStr !== '0' && 
-                                       valueStr !== 'false';
+                    // Use ifDNDfalse helper function - note: ifDNDfalse returns true when LaTeX would be false
+                    const shouldCheck = !ifDNDfalse(pregeneratedValue);
                     console.log('Should check:', shouldCheck);
                     pregeneratedEl.checked = shouldCheck;
                 }
