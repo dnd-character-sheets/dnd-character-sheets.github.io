@@ -279,14 +279,13 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: lemon
+        Version: quince
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
         <div>
             <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
             <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
-            <button type="button" class="generate-button" onclick="generateYAML()">Generate YAML</button>
             <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
             <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
         </div>
@@ -464,10 +463,7 @@
 
         <!-- Magic Section -->
         <div class="section magic" id="magic-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Magic</h2>
-                <button type="button" class="add-button" id="magic-toggle" onclick="toggleMagic()">(click to open)</button>
-            </div>
+            <h2 id="magic-header" onclick="toggleMagic()" style="cursor: pointer;">Magic (click to open)</h2>
             <div id="magic-content" style="display: none;">
                 <div id="magic-levels">
                     <!-- Spell levels are added dynamically as needed -->
@@ -522,13 +518,6 @@
 
     </form>
 
-    <div class="output-section">
-        <h2>Generated YAML</h2>
-        <textarea id="yaml-output" readonly placeholder="Click 'Generate YAML' to see your character sheet YAML here..."></textarea>
-        <div>
-            <button type="button" class="add-button" onclick="copyYAML()">Copy to Clipboard</button>
-        </div>
-    </div>
 
     <script>
         // Initialize with some default entries
@@ -537,7 +526,8 @@
             addFeature();
             setupChangeTracking();
             
-            // Update download button text when character name changes
+            // Initialize and update download button text
+            updateDownloadButtonText();
             const characterNameField = document.getElementById('character-name');
             characterNameField.addEventListener('input', updateDownloadButtonText);
             characterNameField.addEventListener('change', updateDownloadButtonText);
@@ -595,18 +585,18 @@
 
         function toggleMagic() {
             const magicContent = document.getElementById('magic-content');
-            const toggleBtn = document.getElementById('magic-toggle');
+            const magicHeader = document.getElementById('magic-header');
             
             if (magicContent.style.display === 'none') {
                 magicContent.style.display = 'block';
-                toggleBtn.textContent = '(click to close)';
-                // Ensure at least cantrips level exists, or show "open cantrips" button
-                if (document.querySelectorAll('.spell-level').length === 0) {
-                    showNextLevelButton(0);
+                magicHeader.textContent = 'Magic';
+                // Always open cantrips automatically when magic section opens
+                if (!document.querySelector('[data-level="0"]')) {
+                    openSpellLevel(0);
                 }
             } else {
                 magicContent.style.display = 'none';
-                toggleBtn.textContent = '(click to open)';
+                magicHeader.textContent = 'Magic (click to open)';
             }
         }
         
@@ -824,6 +814,10 @@
             document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
                 el.addEventListener('input', markDirty);
                 el.addEventListener('change', markDirty);
+                // Update button text when character name changes
+                if (el.id === 'character-name') {
+                    el.addEventListener('input', updateDownloadButtonText);
+                }
             });
         }
 
@@ -995,10 +989,10 @@
                 if (data['MAGIC'] && Array.isArray(data['MAGIC'])) {
                     // Auto-open magic section
                     const magicContent = document.getElementById('magic-content');
-                    const toggleBtn = document.getElementById('magic-toggle');
+                    const magicHeader = document.getElementById('magic-header');
                     if (magicContent && magicContent.style.display === 'none') {
                         magicContent.style.display = 'block';
-                        toggleBtn.textContent = '(click to close)';
+                        magicHeader.textContent = 'Magic';
                     }
                     
                     // Clear existing spells and levels first
@@ -1306,6 +1300,41 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+
+        function getCharacterFilename(extension = 'yaml') {
+            // Get character name and clean it for filename use
+            const characterName = (document.querySelector('#character-name')?.value || 'character').trim();
+            const cleanName = characterName.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'character';
+            return `${cleanName}.${extension}`;
+        }
+
+        function updateDownloadButtonText() {
+            const downloadButton = document.querySelector('button[onclick="downloadYAML()"]');
+            if (downloadButton) {
+                const filename = getCharacterFilename();
+                downloadButton.innerHTML = `Download <tt>${filename}</tt>`;
+            }
+        }
+
+        function downloadYAML() {
+            // Generate YAML content using the shared function
+            const yamlContent = createYAMLContent();
+            
+            // Use consistent filename
+            const filename = getCharacterFilename();
+            
+            // Create download
+            const blob = new Blob([yamlContent], { type: 'text/yaml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
         
         async function generatePDF() {
             try {
@@ -1317,7 +1346,7 @@
                 console.log('YAML content preview:', yamlContent.substring(0, 200));
                 
                 // Send to server and let browser handle the response naturally
-                const response = await fetch('http://localhost/charsheet', {
+                const response = await fetch('/charsheet/render.cgi', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/yaml; charset=utf-8',
@@ -1334,6 +1363,8 @@
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
+                // Show user-friendly error message
+                alert(`Failed to generate PDF: ${error.message}. Please check that the server is running and accessible.`);
             }
         }
     </script>
