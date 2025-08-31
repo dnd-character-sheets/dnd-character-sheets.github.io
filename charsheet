@@ -24,6 +24,7 @@ local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
   :string('type as t', 'silverpine'):help('template for character sheet')
   :bool('verbose as v')
+  :bool('incomplete as i'):help('character sheet is not yet complete')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets')
          :help('directory where character-sheet templates live') 
@@ -237,6 +238,11 @@ end
 ---------------------------------------------------------------------------
 local function convert_mapping (map)
   local lines = {}
+
+  -- Incomplete character support
+  if fields.incomplete then
+    table.insert(lines, [[\completefalse]])
+  end
 
   -- Proficiency bonus (strip key after processing)
   local prof = map["PROFICIENCY BONUS"] or map["Proficiency Bonus"]
