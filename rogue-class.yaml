@@ -10,15 +10,15 @@ PROFICIENCIES:
   - "Simple weapons, hand crossbows, longswords, rapiers, shortswords"
   - "Thieves' tools"
   - "Rogue skill 1 (Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand, Stealth)"
-  - "Rogue skill 2 (Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand, Stealth)"
-  - "Rogue skill 3 (Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand, Stealth)"
-  - "Rogue skill 4 (Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand, Stealth)"
+  - "Rogue skill 2"
+  - "Rogue skill 3"
+  - "Rogue skill 4"
 
 # Starting equipment choices
 EQUIPMENT:
-  - "(a) rapier or (b) shortsword"
-  - "(a) shortbow and quiver of 20 arrows or (b) shortsword"
-  - "(a) burglar's pack, (b) dungeoneer's pack, or (c) explorer's pack"
+  - "rapier or shortsword"
+  - "shortbow and quiver of 20 arrows, or shortsword"
+  - "burglar's pack, dungeoneer's pack, or explorer's pack"
   - "Leather armor, two daggers, and thieves' tools"
 
 # Attack placeholders for starting weapons
@@ -45,8 +45,8 @@ ATTACKS:
 # 1st level features
 FEATURES:
   - name: "Expertise"
-    description: "Choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with thieves' tools. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies."
+    description: "Double proficiency bonus for two skills or one skill plus thieves' tools."
   - name: "Sneak Attack"
-    description: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon. You don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll."
+    description: "1d6 damage to target with finesse or ranged weapon.  Must have Advantage, or straight roll plus target is threatened.  Once per turn."
   - name: "Thieves' Cant"
-    description: "During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages. It takes four times longer to convey such a message than it does to speak the same idea plainly. In addition, you understand a set of secret signs and symbols used to convey short, simple messages, such as whether an area is dangerous or the territory of a thieves' guild, whether loot is nearby, or whether the people in an area are easy marks or will provide a safe house for thieves on the run."
+    description: "Hide messages in normal conversation (4x slowdown).  Plus secret signs and symbols."

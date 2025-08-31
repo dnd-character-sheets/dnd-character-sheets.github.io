@@ -1,0 +1,86 @@
+CHARACTER NAME: ''
+PLAYER NAME: Jess
+CLASS: Druid
+LEVEL: 1
+RACE: Stout Halfling
+BACKGROUND: Outlander [as?]
+MOTIVATION: "Motivation: fight evil"
+PROFICIENCY BONUS: "+2"
+HIT DICE: d8
+SPEED: '25'
+SENSES: ''
+PASSIVE PERCEPTION: ''
+PROFICIENCIES:
+  - Athletics
+  - Survival
+  - Druid skill 1 (Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion)
+  - Druid skill 2
+  - null
+  - Herbalism kit
+  - Musical instrument
+  - null
+  - Common
+  - Druidic
+  - Halfling
+  - Outlander language of choice
+  - null
+  - Light & medium armor
+  - Shields
+  - null
+  - >-
+    Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles,
+    slings, spears
+ATTACKS:
+  - NAME: 'scimitar/melee'
+    ATTACK: ''
+    DAMAGE: ''
+    TYPE: ''
+    RANGE: ''
+    AMMO: ''
+  - NAME: 'simple weapon?'
+    ATTACK: ''
+    DAMAGE: ''
+    TYPE: ''
+    RANGE: ''
+    AMMO: ''
+MAGIC:
+  - level: 0
+  - name: '1'
+  - name: '2'
+  - level:
+      number: 1
+      slots: 2
+  - name: '1'
+  - name: '2'
+FEATURES:
+  - name: Ability increases
+    description: |
+      Consitutition +1, Dex +2
+  - name: Stout resilience
+    description: Advantage to save vs poison.  Poison resistance.
+  - name: Lucky
+    description: Reroll a 1 on attack, ability check, or saving throw.
+  - name: Brave
+    description: Advantage to save vs Frightened
+  - name: Nimbleness
+    description: Move through the space of larger creatures.
+  - name: Wanderer
+    description: >-
+      Map and terrain reader.  Can forage for up to six people, if forage is
+      present.
+EQUIPMENT:
+  - wooden shield or any simple weapon
+  - scimitar or any simple melee weapon
+  - leather armor
+  - explorer's pack
+  - druidic focus
+  - staff
+  - snares for small game
+  - simple musical instrument
+  - traveler's clothes
+  - stone figure (ask GM)
+CP: ''
+SP: ''
+EP: ''
+GP: '10'
+PP: ''

@@ -6,18 +6,18 @@ LEVEL: 1
 
 # Class proficiencies
 PROFICIENCIES:
-  - "Light armor (non-metal)"
-  - "Medium armor (non-metal)"
-  - "Shields (non-metal)"
+  - "Light & medium armor (no metal)"
+  - "Shields (no metal)"
   - "Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, spears"
   - "Herbalism kit"
   - "Druid skill 1 (Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion, Survival)"
-  - "Druid skill 2 (Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion, Survival)"
+  - "Druid skill 2"
+  - "Druidic"
 
 # Starting equipment choices
 EQUIPMENT:
-  - "(a) wooden shield or (b) any simple weapon"
-  - "(a) scimitar or (b) any simple melee weapon"
+  - "wooden shield or any simple weapon"
+  - "scimitar or any simple melee weapon"
   - "Leather armor"
   - "Explorer's pack"
   - "Druidic focus"
@@ -25,6 +25,12 @@ EQUIPMENT:
 # Attack placeholders for starting weapons
 ATTACKS:
   - NAME: "Scimitar or Simple Melee Weapon"
+    ATTACK: ""
+    DAMAGE: ""
+    TYPE: ""
+    RANGE: ""
+    AMMO: ""
+  - NAME: "Simple Weapon"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
@@ -47,4 +53,4 @@ MAGIC:
 # 1st level features
 FEATURES:
   - name: "Druidic"
-    description: "You know Druidic, the secret language of druids. You can speak the language and use it to leave hidden messages. You and others who know this language automatically spot such a message. Others spot the message's presence with a successful DC 15 Wisdom (Perception) check but can't decipher it without magic."
+    description: "Read and write hidden messages."

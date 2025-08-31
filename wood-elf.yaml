@@ -1,0 +1,18 @@
+---
+# Wood Elf subrace template
+RACE: "Wood Elf"
+SPEED: "35"
+SENSES: "Darkvision 60 ft."
+
+# Core elf features
+FEATURES:
+  - name: "Wood Elf Ability+"
+    description: "Wisdom +1"
+#  - name: "Fleet of Foot"
+#    description: "Your base walking speed increases to 35 feet."
+  - name: "Mask of the Wild"
+    description: "Hide among natural phenomena even when only lightly obscured."
+
+# Languages and proficiencies
+PROFICIENCIES:
+  - "Longsword, shortsword, shortbow, longbow"  # Elf weapon training
