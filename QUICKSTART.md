@@ -47,7 +47,9 @@ Start with your character's basic identity:
 ```yaml
 "CHARACTER NAME": "Zanogh Greyfist"
 "PLAYER NAME": "Amelia"
-"CLASS & LEVEL": "Barbarian 3"
+CLASS: "Barbarian"
+LEVEL: 3
+SPECIALTY: ""  # Optional: subclass, domain, archetype, etc.
 "RACE": "Half-Orc"
 "BACKGROUND": "Hermit"
 "ALIGNMENT": ""
@@ -56,7 +58,8 @@ Start with your character's basic identity:
 
 **Key Notes:**
 - `"CHARACTER NAME"` appears prominently in large italic text
-- `"CLASS & LEVEL"` should include subclass if applicable (e.g., "Cleric (Life Domain) 3")
+- `CLASS` and `LEVEL` are separate fields for better form usability
+- `SPECIALTY` is optional - use for subclass, domain, archetype (e.g., "Life Domain", "Champion")
 - All keys with spaces must be quoted
 - Leave `"ALIGNMENT"` and `"EXPERIENCE POINTS"` empty if not yet determined
 

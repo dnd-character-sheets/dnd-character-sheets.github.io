@@ -304,13 +304,31 @@ local saving_throw_proficiencies = {
 local function extend(doc)
   local class = doc.CLASS or (doc['CLASS & LEVEL'] or ''):match '%a+' or ''
   doc.CLASS = class
+  
+  -- Extract SPECIALTY from "CLASS & LEVEL" if SPECIALTY is absent
+  if not doc.SPECIALTY and doc['CLASS & LEVEL'] then
+    doc.SPECIALTY = doc['CLASS & LEVEL']:match '%a+%s*%(([^)]+)%)'
+  end
+  
+  -- Extract LEVEL from "CLASS & LEVEL" if LEVEL is absent
+  doc.LEVEL = doc.LEVEL or doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:match '%d+' or nil
+  
+  -- Only build "CLASS & LEVEL" if we have separate CLASS/LEVEL/SPECIALTY fields
+  if doc.CLASS and doc.LEVEL and not doc['CLASS & LEVEL'] then
+    if doc.SPECIALTY and doc.SPECIALTY:find '%S' then
+      doc['CLASS & LEVEL'] = stringf('%s (%s) %s', class, doc.SPECIALTY, doc.LEVEL)
+    else
+      doc['CLASS & LEVEL'] = stringf('%s %s', class, doc.LEVEL)
+    end
+  end
+  
   local p = saving_throw_proficiencies[class]
   if p then
     for _, prof in ipairs(p) do
       doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
     end
   end
-  doc.LEVEL = doc.LEVEL or doc['CLASS & LEVEL']:match '%d+' or nil
+  
   return doc
 end
 

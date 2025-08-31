@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: blackberry
+        Version: coconut
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -337,6 +337,10 @@
                 <div class="field">
                     <label for="level">Level</label>
                     <input type="number" id="level" name="level" min="1" max="20">
+                </div>
+                <div class="field">
+                    <label for="specialty">Specialty</label>
+                    <input type="text" id="specialty" name="specialty" placeholder="e.g., Life Domain, Champion">
                 </div>
                 <div class="field">
                     <label for="race">Race</label>
@@ -873,13 +877,19 @@
                 // Handle "CLASS & LEVEL" first if present
                 if (data['CLASS & LEVEL']) {
                     const classLevel = data['CLASS & LEVEL'].toString();
-                    // Handle "Cleric (Life Domain) 3" format
-                    const match = classLevel.match(/^([A-Za-z]+)(?:\s+\([^)]+\))?\s+(\d+)$/) || 
+                    // Handle "Cleric (Life Domain) 3" format - extract specialty from parentheses
+                    const match = classLevel.match(/^([A-Za-z]+)(?:\s+\(([^)]+)\))?\s+(\d+)$/) || 
                                  classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
                                  classLevel.match(/^([A-Za-z]+)/);
                     if (match) {
                         setFormValue('#class', match[1]);
-                        if (match[2]) setFormValue('#level', match[2]);
+                        // If there are parentheses, extract specialty (match[2] in 3-group match)
+                        if (match.length === 4 && match[2]) {
+                            setFormValue('#specialty', match[2]);
+                            setFormValue('#level', match[3]);
+                        } else if (match[2]) {
+                            setFormValue('#level', match[2]);
+                        }
                     }
                 }
                 
@@ -891,6 +901,11 @@
                 // Override with individual LEVEL if present
                 if (data['LEVEL']) {
                     setFormValue('#level', data['LEVEL']);
+                }
+                
+                // Override with individual SPECIALTY if present
+                if (data['SPECIALTY']) {
+                    setFormValue('#specialty', data['SPECIALTY']);
                 }
                 
                 // Ability scores
@@ -1100,6 +1115,7 @@
             const playerName = form.querySelector('#player-name')?.value || '';
             const characterClass = form.querySelector('#class')?.value || '';
             const level = form.querySelector('#level')?.value || '';
+            const specialty = form.querySelector('#specialty')?.value || '';
             const race = form.querySelector('#race')?.value || '';
             const background = form.querySelector('#background')?.value || '';
             const alignment = form.querySelector('#alignment')?.value || '';
@@ -1111,6 +1127,7 @@
             data['PLAYER NAME'] = playerName;
             data['CLASS'] = characterClass;
             data['LEVEL'] = parseInt(level) || level;
+            if (specialty) data['SPECIALTY'] = specialty;  // Optional - only include when not empty
             data['RACE'] = race;
             data['BACKGROUND'] = background;
             data['ALIGNMENT'] = alignment;
