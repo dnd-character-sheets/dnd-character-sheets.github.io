@@ -1,0 +1,21 @@
+---
+# War Domain template
+SPECIALTY: "War Domain"
+
+# Domain features
+FEATURES:
+  - name: "War Priest"
+    description: "When you use the Attack action, you can make one weapon attack as a bonus action. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest."
+
+# Domain proficiencies
+PROFICIENCIES:
+  - "Martial weapons"
+  - "Heavy armor"
+
+# Domain spells (1st level only)
+MAGIC:
+  - level: 1
+  - name: "Divine Favor (Domain)"
+    description: "1st level domain spell. Always prepared."
+  - name: "Shield of Faith (Domain)" 
+    description: "1st level domain spell. Always prepared."

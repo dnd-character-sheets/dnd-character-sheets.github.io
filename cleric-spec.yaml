@@ -1,0 +1,58 @@
+---
+# Cleric class template (1st level)
+CLASS: "Cleric"
+LEVEL: 1
+"HIT DICE": "d8"
+
+# 1st level class features
+FEATURES:
+  - name: "Divine Domain"
+    description: "Choose a divine domain that grants domain spells and features."
+
+# Class proficiencies
+PROFICIENCIES:
+  - "Light armor"
+  - "Medium armor" 
+  - "Shields"
+  - "Simple weapons"
+  - "Cleric skill 1 (History, Insight, Medicine, Persuasion, Religion)"
+  - "Cleric skill 2 (History, Insight, Medicine, Persuasion, Religion)"
+
+# Starting equipment choices
+EQUIPMENT:
+  - "(a) mace or (b) warhammer (if proficient)"
+  - "(a) scale mail, (b) leather armor, or (c) chain mail (if proficient)"
+  - "(a) light crossbow and 20 bolts or (b) any simple weapon"
+  - "(a) priest's pack or (b) explorer's pack"
+  - "Shield"
+  - "Holy symbol"
+
+# Attack placeholders for starting weapons
+ATTACKS:
+  - NAME: "Mace or Warhammer"
+    ATTACK: ""
+    DAMAGE: ""
+    TYPE: ""
+    RANGE: ""
+    AMMO: ""
+  - NAME: "Light Crossbow or Simple Weapon"
+    ATTACK: ""
+    DAMAGE: ""
+    TYPE: ""
+    RANGE: ""
+    AMMO: ""
+
+# Spellcasting (1st level: 3 cantrips, 2 first-level slots)
+MAGIC:
+  - level: 0
+  - name: "Cantrip 1"
+    description: ""
+  - name: "Cantrip 2" 
+    description: ""
+  - name: "Cantrip 3"
+    description: ""
+  - level: 1
+  - name: "1st-level spell 1"
+    description: ""
+  - name: "1st-level spell 2"
+    description: ""
