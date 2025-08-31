@@ -246,10 +246,20 @@ local function convert_mapping (map)
 
   -- Proficiency bonus (strip key after processing)
   local prof = map["PROFICIENCY BONUS"] or map["Proficiency Bonus"]
-  if prof then
+  if prof and tostring(prof):find('%S') then
     local txt = tostring(prof)
     if not txt:match("^[+-]") then txt = "0"..txt end
     outf(lines, [[\setcounter{proficiency bonus}{%s}]], escape(txt))
+  else
+    -- Compute proficiency bonus from level if available
+    local level = tonumber(map.LEVEL)
+    if level then
+      local computed_prof = 2 + math.floor((level - 1) / 4)
+      outf(lines, [[\setcounter{proficiency bonus}{%d}]], computed_prof)
+    elseif fields.incomplete then
+      -- Default to +2 for incomplete characters when no level or proficiency bonus
+      outf(lines, [[\setcounter{proficiency bonus}{2}]])
+    end
   end
 
   -- Iterate in original order if lyaml preserved it (omap style)
