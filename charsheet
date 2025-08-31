@@ -296,11 +296,11 @@ end
 -- 5. Entry point
 ---------------------------------------------------------------------------
 local function slurp(filename)
-  if filename then
+  if filename == '-' or filename == '.' or not filename then
+    return io.stdin:read("*a")
+  else
     local f = assert(io.open(filename, "r"))
     local txt = f:read("*a"); f:close(); return txt
-  else
-    return io.stdin:read("*a")
   end
 end
 
