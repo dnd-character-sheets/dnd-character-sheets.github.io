@@ -1,0 +1,25 @@
+---
+# Entertainer background template
+BACKGROUND: "Entertainer"
+
+# Background feature
+FEATURES:
+  - name: "By Popular Demand"
+    description: "You can always find a place to perform, usually in an inn or tavern but possibly with a circus, at a theater, or even in a noble's court. At such a place, you receive free lodging and food of a modest or comfortable standard (depending on the quality of the establishment), as long as you perform each night. In addition, your performance makes you something of a local figure. When strangers recognize you in a town where you have performed, they typically take a liking to you."
+
+# Background proficiencies
+PROFICIENCIES:
+  - "Acrobatics"
+  - "Performance"
+  - "Disguise kit"
+  - "One type of musical instrument"
+
+# Starting equipment
+EQUIPMENT:
+  - "Musical instrument (one of your choice)"
+  - "Favor of an admirer (love letter, lock of hair, or trinket)"
+  - "Costume"
+  - "Pouch"
+
+# Starting money
+GP: 15

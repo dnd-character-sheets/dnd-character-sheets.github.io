@@ -1,0 +1,26 @@
+---
+# Outlander background template
+BACKGROUND: "Outlander"
+
+# Background feature
+FEATURES:
+  - name: "Wanderer"
+    description: "You have an excellent memory for maps and geography, and you can always recall the general layout of terrain, settlements, and other features around you. In addition, you can find food and fresh water for yourself and up to five other people each day, provided that the land offers berries, small game, water, and so forth."
+
+# Background proficiencies
+PROFICIENCIES:
+  - "Athletics"
+  - "Survival"
+  - "One type of musical instrument"
+  - "Language (your choice)"
+
+# Starting equipment
+EQUIPMENT:
+  - "Staff"
+  - "Hunting trap"
+  - "Trophy from an animal you killed"
+  - "Traveler's clothes"
+  - "Pouch"
+
+# Starting money
+GP: 10
