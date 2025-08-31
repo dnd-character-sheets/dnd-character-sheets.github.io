@@ -59,3 +59,14 @@
   want to see a placeholder for an attack.  So an attack with "mace or 
   warhammer" and one with "crossbow or simple weapon."  No stats for either
    of these attacks; just the name.
+
+
+Next I'm going to have you write a Lua script to merge character-sheet yaml files.  When the same key appears in two yaml structures, merge them as follows:
+
+  - Counts of gold pieces and other coins are added.
+  - When one file contains a scalar that is empty, use the value from the other file.
+  - When both files contain a scalar with the same value, use that value.
+  - When both files contain different scalars other than coins, halt with an error message, showing the key and the two values.
+  - Except for MAGIC, two lists are concatenated in the order in which the files are specified.
+  - Two MAGIC lists are concatenated level by level.  It is probably best to parse the MAGIC structure into a list of levels, each level to be represented by a table, each table to include a list of spells and possibly a number of slots.  The number of slots in each level should be merged using the same rules as for coin scalars: add slots at need.   The spells at the level are just concatenated.
+  - Write the script to load the yamls, merge them, and write out a yaml.  Use the Lua lyaml library.

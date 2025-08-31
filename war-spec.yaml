@@ -7,7 +7,7 @@ FEATURES:
   - name: "War Priest"
     description: "When you use the Attack action, you can make one weapon attack as a bonus action. You can use this feature a number of times equal to your Wisdom modifier (minimum of once). You regain all expended uses when you finish a long rest."
 
-# Domain proficiencies
+# Domain proficiencies (including bonus proficiencies)
 PROFICIENCIES:
   - "Martial weapons"
   - "Heavy armor"
