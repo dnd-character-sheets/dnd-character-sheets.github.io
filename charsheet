@@ -311,7 +311,9 @@ local function extend(doc)
   end
   
   -- Extract LEVEL from "CLASS & LEVEL" if LEVEL is absent
-  doc.LEVEL = doc.LEVEL or doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:match '%d+' or nil
+  doc.LEVEL = doc.LEVEL or
+              doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:match '%d+%s*$' or
+              nil
   
   -- Only build "CLASS & LEVEL" if we have separate CLASS/LEVEL/SPECIALTY fields
   if doc.CLASS and doc.LEVEL and not doc['CLASS & LEVEL'] then
