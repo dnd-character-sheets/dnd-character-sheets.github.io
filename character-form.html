@@ -547,8 +547,11 @@
             // Initialize and update download button text
             updateDownloadButtonText();
             const characterNameField = document.getElementById('character-name');
+            const classField = document.getElementById('class');
             characterNameField.addEventListener('input', updateDownloadButtonText);
             characterNameField.addEventListener('change', updateDownloadButtonText);
+            classField.addEventListener('input', updateDownloadButtonText);
+            classField.addEventListener('change', updateDownloadButtonText);
         });
 
         // Global keyboard shortcut handler
@@ -832,8 +835,8 @@
             document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
                 el.addEventListener('input', markDirty);
                 el.addEventListener('change', markDirty);
-                // Update button text when character name changes
-                if (el.id === 'character-name') {
+                // Update button text when character name or class changes
+                if (el.id === 'character-name' || el.id === 'class') {
                     el.addEventListener('input', updateDownloadButtonText);
                 }
             });
@@ -1350,10 +1353,14 @@
         }
 
         function getCharacterFilename(extension = 'yaml') {
-            // Get character name and clean it for filename use
-            const characterName = (document.querySelector('#character-name')?.value || 'character').trim();
+            // Get character name, or fall back to class name if no character name
+            const characterName = document.querySelector('#character-name')?.value?.trim() || '';
+            const className = document.querySelector('#class')?.value?.trim() || '';
+            
+            const baseName = characterName || className || 'character';
+            
             // Replace spaces (including non-breaking spaces) with regular spaces, then convert to dash
-            const cleanName = characterName.toLowerCase()
+            const cleanName = baseName.toLowerCase()
                 .replace(/[\s\u00A0]+/g, '-')  // Replace spaces and non-breaking spaces with dash
                 .replace(/[^a-z0-9-]/g, '')   // Remove other non-alphanumeric chars except dash
                 .replace(/--+/g, '-')         // Replace multiple dashes with single dash
