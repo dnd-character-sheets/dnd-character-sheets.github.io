@@ -211,8 +211,11 @@ local function render_struct_list (key, list)
       else
         outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]], escape(elem.level))
       end
-    elseif elem.name and elem.description and not elem.ATTACK then
-      outf(out, [[\described{%s}{%s}]], escape(elem.name), escape(elem.description))
+    elseif elem.name and elem.description and not elem.ATTACK
+        or key == 'MAGIC'
+    then
+      outf(out, [[\described{%s}{%s}]],
+           escape(elem.name or ''), escape(elem.description or ''))
     elseif elem.ATTACK then
       vprintf('rendering an attack\n')
       table.insert(out, render_attack_record(elem))
