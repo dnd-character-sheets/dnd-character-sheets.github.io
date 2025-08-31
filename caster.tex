@@ -206,12 +206,9 @@
   \ifDNDnonempty{#2}{%
     \dndstat{#1}{#2}%
   }{%
-    \begingroup
-      \let\signed=\relax
-      \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{}{}%
-        {\ifDNDnonempty{#2 SAVING}{*}{}}%
-      \gdef\nextstatloc{below=7mm of #1}%
-    \endgroup
+    \expandafter\blankstatbox\expandafter[\nextstatloc]{#1}
+             {\ifDNDnonempty{#2 SAVING}{*}{}}%
+    \gdef\nextstatloc{below=7mm of #1}%
   }%
 }
 

@@ -1995,6 +1995,14 @@
             at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
 }
 
+\newcommand\blankstatbox[3][]{% location name saving-throw
+  \node [statbox,#1] (#2) {} ;
+  \dndtoplabel{#2}{\tiny#2}
+  \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {};
+  \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
+            at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small{#3}}};
+}
+
 
 \newcommand\dndlabel[3][DEFAULT LABEL]{% [key for font] {node}{label text, which could be a macro}
   \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
@@ -2109,6 +2117,7 @@
        {\stat*{#1}{\rawgetDND{#2}}}
        {\stat{#1}{\rawgetDND{#2}}}
   }{%
+    \blankstatbox{#1}{#2}{\ifDNDdefined{#2 SAVING}{*}{}}%
   }
 }
 
