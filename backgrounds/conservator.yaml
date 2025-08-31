@@ -1,0 +1,22 @@
+BACKGROUND: "Conservator"
+
+# Background feature
+FEATURES:
+  - name: "Black Market"
+    description: "Even though you left it all behind, the world of poaching still thrives. With a coded phrase, you can find out if and where illegal sales occur. Those handling the sales may provide you safe haven or information for the right price."
+
+# Background proficiencies
+PROFICIENCIES:
+  - Nature
+  - Survival
+  - Herbalism kit
+  - "Language (your choice)"
+
+# Starting equipment
+EQUIPMENT:
+  - "Tool kit you are proficient with"
+  - "Traveler's clothes"
+  - "Belt pouch"
+
+# Starting money
+GP: 10

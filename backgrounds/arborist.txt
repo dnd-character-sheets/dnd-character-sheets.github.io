@@ -1,0 +1,15 @@
+#### Arborist
+
+You've gained extensive knowledge of the care, nutrition, growth, planting, pruning, and function of trees.  You are also aware of what kinds of creatures live in trees and of what trees which creatures prefer.
+
+Skill Proficiencies: Nature, Survival
+
+Tool Proficiencies: Arborist's tools
+
+Languages: One of your choice
+
+Equipment: Arborist's tools (pruning saw, felling saw, climbing rope, grappling hook), a set of traveler’s clothes, and a belt pouch containing 10 gp.
+
+Feature: Tree Surgeon
+Add your proficiency bonus, a second time if appropriate, to all INT, WIS, and DEX checks involving trees.
+

@@ -1,0 +1,26 @@
+---
+# Urchin background template
+BACKGROUND: "Orphan"
+
+# Background feature
+FEATURES:
+  - name: "City Secrets"
+    description: "2x travel speed in cities (non-combat)."
+
+# Background proficiencies
+PROFICIENCIES:
+  - "Sleight of Hand"
+  - "Stealth"
+  - "Disguise kit"
+  - "Thieves' tools"
+
+# Starting equipment
+EQUIPMENT:
+  - "Small knife"
+  - "Ancient coin (ask GM)"
+  - "Token to remember your parents by"
+  - "Common clothes"
+  - "Pouch"
+
+# Starting money
+GP: 10

@@ -1,5 +1,11 @@
 ---
+PLAYER NAME: Katie
+MOTIVATION: "Motivation: find family"
 FEATURES:
+- name: Wood Elf Ability+
+  description: Wisdom +1
+- name: Elf Ability+
+  description: Dexterity +2
 - name: Expertise
   description: Double proficiency bonus for two skills or one skill plus thieves'
     tools.
@@ -11,23 +17,21 @@ FEATURES:
     and symbols.
 - name: City Secrets
   description: 2x travel speed in cities (non-combat).
-- name: Elf Ability+
-  description: Dexterity +2
 - name: Fey Ancestry
   description: Advantage to save vs charmed.  Immune to magical sleep.
 - name: Trance
   description: 4 hours meditation substitutes for 8 hours sleep.
-- name: Wood Elf Ability+
-  description: Wisdom +1
 - name: Mask of the Wild
   description: Hide among natural phenomena even when only lightly obscured.
-SENSES: Darkvision 60 ft.
+SENSES: Darkvision 60 ft.
 RACE: Wood Elf
 EQUIPMENT:
 - rapier or shortsword
 - shortbow and quiver of 20 arrows, or shortsword
 - burglar's pack, dungeoneer's pack, or explorer's pack
-- Leather armor, two daggers, and thieves' tools
+- Leather armor
+- Two daggers
+- Thieves' tools
 - Small knife
 - Ancient coin (ask GM)
 - Token to remember your parents by
@@ -59,21 +63,24 @@ ATTACKS:
 HIT DICE: d8
 BACKGROUND: Orphan
 PROFICIENCIES:
-- Light armor
-- Simple weapons, hand crossbows, longswords, rapiers, shortswords
-- Thieves' tools
+- Perception
+- Sleight of Hand
+- Stealth
 - Rogue skill 1 (Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation,
-  Perception, Performance, Persuasion, Sleight of Hand, Stealth)
+  Performance, Persuasion)
 - Rogue skill 2
 - Rogue skill 3
 - Rogue skill 4
-- Sleight of Hand
-- Stealth
-- Disguise kit
-- Thieves' tools
+-
 - Common
 - Elvish
-- Perception
+-
+- Thieves' tools
+- Disguise kit
+- Thieves' tools
+- 
+- Light armor
+- Simple weapons, hand crossbows, longswords, rapiers, shortswords
 - Longsword, shortsword, shortbow, longbow
 ...
 

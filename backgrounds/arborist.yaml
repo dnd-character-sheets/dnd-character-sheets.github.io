@@ -1,0 +1,24 @@
+---
+# Arborist background template
+BACKGROUND: "Arborist"
+
+# Background feature
+FEATURES:
+  - name: "Tree Surgeon"
+    description: "Add your proficiency bonus, a second time if appropriate, to all Intelligence, Wisdom, and Dexterity checks involving trees."
+
+# Background proficiencies
+PROFICIENCIES:
+  - "Nature"
+  - "Survival"
+  - "Arborist's tools"
+  - "Language (your choice)"
+
+# Starting equipment
+EQUIPMENT:
+  - "Arborist's tools (pruning saw, felling saw, climbing rope, grappling hook)"
+  - "Traveler's clothes"
+  - "Belt pouch"
+
+# Starting money
+GP: 10

@@ -1,0 +1,25 @@
+---
+# Poacher background template
+BACKGROUND: "Poacher"
+
+# Background feature
+FEATURES:
+  - name: "Black Market"
+    description: "Even though you left it all behind, the world of poaching still thrives. With a coded phrase, you can find out if and where illegal sales occur. Those handling the sales may provide you safe haven or information for the right price."
+
+# Background proficiencies
+PROFICIENCIES:
+  - "Poacher skill 1 (Animal Handling, Nature, Survival)"
+  - "Poacher skill 2 (Animal Handling, Nature, Survival)"
+  - "Disguise kit or herbalism kit (your choice)"
+  - "Language (your choice)"
+
+# Starting equipment
+EQUIPMENT:
+  - "Tool kit you are proficient with"
+  - "Trophy from a past kill (scale or tooth)"
+  - "Traveler's clothes"
+  - "Belt pouch"
+
+# Starting money
+GP: 10
