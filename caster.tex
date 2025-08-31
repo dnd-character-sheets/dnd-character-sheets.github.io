@@ -5,6 +5,10 @@
 
 \usepackage{pgfkeys}
 
+% Incomplete character support
+\newif\ifcomplete
+\completetrue  % Default to complete character
+
 
 
 \newsectionenv[]{magic}{MAGIC}
@@ -198,12 +202,34 @@
 \node (stats background) 
       [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
 
-\dndstat{STRENGTH}{STR}
-\dndstat{DEXTERITY}{DEX}
-\dndstat{CONSTITUTION}{CON}
-\dndstat{INTELLIGENCE}{INT}
-\dndstat{WISDOM}{WIS}
-\dndstat{CHARISMA}{CHA}
+\newcommand{\incompletestat}[2]{% label, short name
+  \ifDNDnonempty{#2}{%
+    \dndstat{#1}{#2}%
+  }{%
+    \begingroup
+      \let\signed=\relax
+      \expandafter\fullstatbox\expandafter[\nextstatloc]{#1}{}{}%
+        {\ifDNDnonempty{#2 SAVING}{*}{}}%
+      \gdef\nextstatloc{below=7mm of #1}%
+    \endgroup
+  }%
+}
+
+\ifcomplete
+  \dndstat{STRENGTH}{STR}
+  \dndstat{DEXTERITY}{DEX}
+  \dndstat{CONSTITUTION}{CON}
+  \dndstat{INTELLIGENCE}{INT}
+  \dndstat{WISDOM}{WIS}
+  \dndstat{CHARISMA}{CHA}
+\else
+  \incompletestat{STRENGTH}{STR}
+  \incompletestat{DEXTERITY}{DEX}
+  \incompletestat{CONSTITUTION}{CON}
+  \incompletestat{INTELLIGENCE}{INT}
+  \incompletestat{WISDOM}{WIS}
+  \incompletestat{CHARISMA}{CHA}
+\fi
 
 % slots OK here
 
