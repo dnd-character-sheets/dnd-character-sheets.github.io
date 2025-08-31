@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: coconut
+        Version: date
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1324,33 +1324,11 @@
         }
 
         function updateDownloadButtonText() {
-            const characterName = document.getElementById('character-name').value.trim() || 'character';
-            const filename = characterName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.yaml';
+            const filename = getCharacterFilename();
             const downloadButton = document.querySelector('[onclick="downloadYAML()"]');
             downloadButton.innerHTML = `Download <tt>${filename}</tt>`;
         }
         
-        function downloadYAML() {
-            let yamlContent = document.getElementById('yaml-output').value;
-            if (!yamlContent.trim()) {
-                // Auto-generate YAML if it doesn't exist
-                generateYAML();
-                yamlContent = document.getElementById('yaml-output').value;
-            }
-
-            const characterName = document.getElementById('character-name').value.trim() || 'character';
-            const filename = characterName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.yaml';
-            
-            const blob = new Blob([yamlContent], { type: 'text/yaml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
 
         function getCharacterFilename(extension = 'yaml') {
             // Get character name, or fall back to class name if no character name
