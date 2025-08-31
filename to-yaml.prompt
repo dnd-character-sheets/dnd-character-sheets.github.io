@@ -1,0 +1,9 @@
+ Next I'd like you to examine three files: hill-dwarf.txt,                  │
+│   cleric-spec.txt, and war-spec.txt.  Each one contains character-creation   │
+│   instructions in informal English.  I'd like you to translate each one      │
+│   into a YAML file containing all the information needed to create the       │
+│   character.  Use the keys in YAML.md.   Information like ability-score      │
+│   increases should go as class features. Skill choices should be rendered    │
+│   as "[Class] skill (list of choices)" in proficiencies.   Generally         │
+│   anything you're unsure of is either a feature or a proficiency. Use your   │
+│   judgment.          
