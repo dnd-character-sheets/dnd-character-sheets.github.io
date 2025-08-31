@@ -1,0 +1,33 @@
+---
+# Circle of the Land (Mountain) archetype template
+SPECIALTY: "Circle of the Land (Mountain)"
+
+# 2nd level features
+FEATURES:
+  - name: "Bonus Cantrip"
+    description: "You learn one additional druid cantrip of your choice. This cantrip doesn't count against the number of druid cantrips you know."
+  - name: "Natural Recovery"
+    description: "You can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up), and none of the slots can be 6th level or higher. You can't use this feature again until you finish a long rest."
+
+# Circle spells for Mountain terrain
+MAGIC:
+  - level: 3
+  - name: "Spider Climb (Circle)"
+    description: ""
+  - name: "Spike Growth (Circle)"
+    description: ""
+  - level: 5
+  - name: "Lightning Bolt (Circle)"
+    description: ""
+  - name: "Meld into Stone (Circle)"
+    description: ""
+  - level: 7
+  - name: "Stone Shape (Circle)"
+    description: ""
+  - name: "Stoneskin (Circle)"
+    description: ""
+  - level: 9
+  - name: "Passwall (Circle)"
+    description: ""
+  - name: "Wall of Stone (Circle)"
+    description: ""

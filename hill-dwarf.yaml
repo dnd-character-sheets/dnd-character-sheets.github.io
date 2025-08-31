@@ -6,19 +6,19 @@ SENSES: "Darkvision 60 ft."
 
 # Ability score increases (as features since no base scores specified)
 FEATURES:
-  - name: "Ability Score Increase (Dwarf)"
+  - name: "Dwarf"
     description: "Constitution +2"
-  - name: "Ability Score Increase (Hill Dwarf)" 
+  - name: "Hill Dwarf" 
     description: "Wisdom +1"
   - name: "Dwarven Resilience"
     description: "Advantage on saving throws against poison, and resistance against poison damage."
   - name: "Dwarven Toughness"
     description: "Hit point maximum increases by 1, and increases by 1 every time you gain a level."
   - name: "Stonecunning"
-    description: "When you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check."
+    description: "Expert proficiency on History checks involving stonework."
 
 PROFICIENCIES:
-  - "Dwarven Combat Training: battleaxe, handaxe, light hammer, warhammer"
-  - "Tool Proficiency (choose one): smith's tools, brewer's supplies, or mason's tools"
-  - "Languages: Common"
-  - "Languages: Dwarvish"
+  - "battleaxe, handaxe, light hammer, warhammer"
+  - "smith's tools, brewer's supplies, or mason's tools"
+  - "Common"
+  - "Dwarvish"

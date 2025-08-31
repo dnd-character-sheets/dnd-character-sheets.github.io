@@ -1,0 +1,8 @@
+---
+# Beast Master archetype template
+SPECIALTY: "Beast Master"
+
+# 3rd level features
+FEATURES:
+  - name: "Ranger's Companion"
+    description: "You gain a beast companion that accompanies you on your adventures and is trained to fight alongside you. Choose a beast that is no larger than Medium and that has a challenge rating of 1/4 or lower (hawk, mastiff, panther, etc.). Add your proficiency bonus to the beast's AC, attack rolls, and damage rolls, as well as to any saving throws and skills it is proficient in. Its hit point maximum equals the hit point number in its stat block or four times your ranger level, whichever is higher. The beast obeys your commands and takes its turn on your initiative. You can verbally command the beast where to move (no action required). You can use your action to command it to take the Attack, Dash, Disengage, or Help action. If you don't issue a command, the beast takes the Dodge action. If the beast dies, you can obtain a new companion by spending 8 hours magically bonding with a beast that isn't hostile to you and that meets the requirements."

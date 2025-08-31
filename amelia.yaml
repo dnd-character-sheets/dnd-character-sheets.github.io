@@ -1,0 +1,93 @@
+---
+PLAYER NAME: Amelia
+MOTIVATION: "Motivation: Become an adult"
+FEATURES:
+- name: Dwarf
+  description: Constitution +2
+- name: Hill Dwarf
+  description: Wisdom +1
+- name: War Priest
+  description: After Attack action, make one weapon attack as a bonus action. WIS×
+    per long rest.
+- name: Dwarven Resilience
+  description: Advantage on saving throws against poison, and resistance against poison
+    damage.
+- name: Dwarven Toughness
+  description: Hit point maximum increases by 1, and increases by 1 every time you
+    gain a level.
+- name: Stonecunning
+  description: Expert proficiency on History checks involving stonework.
+- name: Shelter of the Faithful
+  description: Free healing and care from your faith.
+GP: 15
+BACKGROUND: Acolyte
+SENSES: Darkvision 60 ft.
+SPECIALTY: War Domain
+EQUIPMENT FONT: \footnotesize
+EQUIPMENT:
+- A rough map of Noralvsmarken
+- mace or warhammer
+- (a) light crossbow and 20 bolts or (b) any simple weapon
+- Shield
+- scale mail, leather armor, or chain mail
+- priest's pack or explorer's pack
+- Holy symbol
+- Prayer book or prayer wheel
+- Incense (5 sticks)
+- Vestments
+- Common clothes
+- Pouch
+MAGIC:
+- level: 0
+- name: Cantrip 1
+  description: ''
+- name: Cantrip 2
+  description: ''
+- name: Cantrip 3
+  description: ''
+- level: 1
+- name: 1st-level spell 1
+  description: ''
+- name: 1st-level spell 2
+  description: ''
+- name: Divine Favor [B,D]
+  description: For 1 minute, weapons deal extra 1d4 radiant.
+- name: Shield of Faith [D,B,C]
+  description: A creature within 60ft gains +2 AC for up to 10 min.
+LEVEL: 1
+CLASS: Cleric
+PROFICIENCIES:
+- Light armor
+- Medium armor
+- Shields
+- Simple weapons
+- Cleric skill 1 (History, Insight, Medicine, Persuasion, Religion)
+- Cleric skill 2
+- Martial weapons
+- Heavy armor
+- battleaxe, handaxe, light hammer, warhammer
+- smith's tools, brewer's supplies, or mason's tools
+- Common
+- Dwarvish
+- Insight
+- Religion
+- Language 1 (your choice)
+- Language 2 (your choice)
+ATTACKS:
+- DAMAGE: ''
+  TYPE: ''
+  NAME: Mace or Warhammer
+  AMMO: ''
+  RANGE: ''
+  ATTACK: ''
+- DAMAGE: ''
+  TYPE: ''
+  NAME: Light Crossbow or Simple Weapon
+  AMMO: ''
+  RANGE: ''
+  ATTACK: ''
+HIT DICE: d8
+RACE: Hill Dwarf
+SPEED: '25'
+...
+

@@ -1,0 +1,65 @@
+CHARACTER NAME: ''
+PLAYER NAME: Jess
+CLASS: Druid
+LEVEL: 1
+RACE: Stout Halfling
+BACKGROUND: Outlander
+ALIGNMENT: ''
+EXPERIENCE POINTS: ''
+MOTIVATION: fight evil
+STR: ''
+DEX: ''
+CON: ''
+INT: ''
+WIS: ''
+CHA: ''
+PROFICIENCY BONUS: ''
+MAX HP: ''
+CURRENT HIT POINTS: ''
+HIT DICE: d8
+INITIATIVE: ''
+SPEED: '25'
+ARMOR CLASS: ''
+SENSES: ''
+PASSIVE PERCEPTION: ''
+PROFICIENCIES:
+  - Druid skill 1
+  - Druid skill 2
+  - null
+  - Herbalism kit
+  - null
+  - Common
+  - Druidic
+  - Halfling
+  - null
+  - Light armor
+  - Medium armor
+  - Shields
+  - null
+  - >-
+    Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles,
+    slings, spears
+ATTACKS: []
+FEATURES:
+  - name: ability up
+    description: |
+      Consitutition +1, Dex +2
+  - name: Stout resilience
+    description: Advantage to save vs poison.  Poison resistance.
+  - name: Lucky
+    description: Reroll a 1 on attack, ability check, or saving throw.
+  - name: Brave
+    description: Advantage to save vs Frightened
+  - name: Nimbleness
+    description: Move through the space of larger creatures.
+EQUIPMENT:
+  - wooden shield or any simple weapon
+  - scimitar or any simple melee weapon
+  - leather armor
+  - explorer's pack
+  - druidic focus
+CP: ''
+SP: ''
+EP: ''
+GP: ''
+PP: ''

@@ -4,11 +4,6 @@ CLASS: "Cleric"
 LEVEL: 1
 "HIT DICE": "d8"
 
-# 1st level class features
-FEATURES:
-  - name: "Divine Domain"
-    description: "Choose a divine domain that grants domain spells and features."
-
 # Class proficiencies
 PROFICIENCIES:
   - "Light armor"
@@ -16,9 +11,11 @@ PROFICIENCIES:
   - "Shields"
   - "Simple weapons"
   - "Cleric skill 1 (History, Insight, Medicine, Persuasion, Religion)"
-  - "Cleric skill 2 (History, Insight, Medicine, Persuasion, Religion)"
+  - "Cleric skill 2"
 
 # Starting equipment choices
+EQUIPMENT FONT: \footnotesize
+
 EQUIPMENT:
   - "(a) mace or (b) warhammer (if proficient)"
   - "(a) scale mail, (b) leather armor, or (c) chain mail (if proficient)"

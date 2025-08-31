@@ -1,0 +1,63 @@
+"CHARACTER NAME": "Miriel"
+"PLAYER NAME": "Mel"
+"CLASS & LEVEL": "Cleric 3"
+"RACE": "Human"
+"BACKGROUND": "Acolyte"
+MOTIVATION: "Miriel is trying to prove herself"
+
+STR: 9
+DEX: 15
+CON: 14
+INT: 11
+WIS: 16
+CHA: 13
+
+"PROFICIENCY BONUS": "2"
+"MAX HP": 29
+"HIT DICE": "d8"
+"INITIATIVE": "+2"
+"SPEED": "30"
+"ARMOR CLASS": 18
+"PASSIVE PERCEPTION": 13
+
+PROFICIENCIES:
+  - "Insight"
+  - "Medicine"
+  - "Persuasion"
+  - "Religion"
+  - "Nature"
+  -   # Separator
+  - "Common"
+  - "Celestial"
+  - "Abyssal"
+  - "Infernal"
+  - "All Armor"
+  - "Shield"
+  - "Simple Weapons"
+
+ATTACKS:
+  - NAME: "Frost brand scimitar"
+    ATTACK: "+2"
+    DAMAGE: "1d6+2/1d6"
+    TYPE: "slashing/cold"
+    RANGE: "5 ft."
+    AMMO: "---"
+
+MAGIC FONT: \small
+FEATURES:
+  - name: "Light Crossbow"
+    description: "One touched creature gains +2 to attack rolls until the end of your next turn."
+
+EQUIPMENT:
+  - "Cleric's Vestments"
+  - "Holy Symbol"
+  - "Scale Mail Armor"
+  - "Shield (+2 AC)"
+  - "Backpack"
+  - "Blanket"
+  - "Candles (10)"
+  - "Incense Sticks (2)"
+  - "Censer"
+  - "Tinderbox"
+  - "Rations (10)"
+  - "Waterskin"

@@ -1,0 +1,50 @@
+---
+# Druid class template (1st level)
+CLASS: "Druid"
+LEVEL: 1
+"HIT DICE": "d8"
+
+# Class proficiencies
+PROFICIENCIES:
+  - "Light armor (non-metal)"
+  - "Medium armor (non-metal)"
+  - "Shields (non-metal)"
+  - "Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, spears"
+  - "Herbalism kit"
+  - "Druid skill 1 (Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion, Survival)"
+  - "Druid skill 2 (Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion, Survival)"
+
+# Starting equipment choices
+EQUIPMENT:
+  - "(a) wooden shield or (b) any simple weapon"
+  - "(a) scimitar or (b) any simple melee weapon"
+  - "Leather armor"
+  - "Explorer's pack"
+  - "Druidic focus"
+
+# Attack placeholders for starting weapons
+ATTACKS:
+  - NAME: "Scimitar or Simple Melee Weapon"
+    ATTACK: ""
+    DAMAGE: ""
+    TYPE: ""
+    RANGE: ""
+    AMMO: ""
+
+# Spellcasting (1st level: 2 cantrips, 2 first-level slots)
+MAGIC:
+  - level: 0
+  - name: "Cantrip 1"
+    description: ""
+  - name: "Cantrip 2"
+    description: ""
+  - level: 1
+  - name: "1st-level spell 1"
+    description: ""
+  - name: "1st-level spell 2"
+    description: ""
+
+# 1st level features
+FEATURES:
+  - name: "Druidic"
+    description: "You know Druidic, the secret language of druids. You can speak the language and use it to leave hidden messages. You and others who know this language automatically spot such a message. Others spot the message's presence with a successful DC 15 Wisdom (Perception) check but can't decipher it without magic."
