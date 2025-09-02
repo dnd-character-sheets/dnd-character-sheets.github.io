@@ -5,7 +5,9 @@ BACKGROUND: "Arborist"
 # Background feature
 FEATURES:
   - name: "Tree Surgeon"
-    description: "Add your proficiency bonus, a second time if appropriate, to all Intelligence, Wisdom, and Dexterity checks involving trees."
+    description: >
+      Add your proficiency bonus, a second time if appropriate, to
+      all Intelligence, Wisdom, and Dexterity checks involving trees.
 
 # Background proficiencies
 PROFICIENCIES:

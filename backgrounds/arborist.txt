@@ -8,8 +8,8 @@ Tool Proficiencies: Arborist's tools
 
 Languages: One of your choice
 
-Equipment: Arborist's tools (pruning saw, felling saw, climbing rope, grappling hook), a set of traveler’s clothes, and a belt pouch containing 10 gp.
+Equipment: Arborist's tools (pruning saw, 2-person felling saw, climbing rope, climbing harness, grappling hook), a set of traveler’s clothes, and a belt pouch containing 10 gp.
 
-Feature: Tree Surgeon
-Add your proficiency bonus, a second time if appropriate, to all INT, WIS, and DEX checks involving trees.
+Feature: *Tree Expert*
+Add your proficiency bonus, a second time if appropriate, to all checks involving trees.
 
