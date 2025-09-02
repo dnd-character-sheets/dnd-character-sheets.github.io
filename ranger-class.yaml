@@ -11,7 +11,8 @@ PROFICIENCIES:
   - "Shields"
   - "Simple weapons"
   - "Martial weapons"
-  - "Ranger skill 1 (Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth, Survival)"
+  - 'Ranger skill 1 (Animal Handling, Athletics, Insight, Investigation,
+       Nature, Perception, Stealth, Survival)'
   - "Ranger skill 2"
   - "Ranger skill 3"
 
@@ -40,6 +41,14 @@ ATTACKS:
 # 1st level features
 FEATURES:
   - name: Favored Enemy
-    description: 'Choose a type or two races. Advantage on Survival checks to track & on Intelligence checks to recall info."
+    description: 'Choose a type or two races. Advantage on Survival
+                  checks to track & on Intelligence checks to recall info.'
   - name: "Natural Explorer"
-    description: "Favored terrain: arctic, coast, desert, forest, grassland, mountain, or swamp.  Doubles proficiency on related Intelligence, Wisdom checks.  Travel in favored terrain: ignores difficult terrain; can't get lost (except by magic); always alert to danger; move stealthily at normal pace when alone; forage double food; learn exact details about tracked creatures."
+    description: >
+      Favored terrain: arctic, coast, desert, forest, grassland,
+      mountain, or swamp.  Doubles proficiency on related
+      Intelligence, Wisdom checks.  Travel in favored terrain: ignores
+      difficult terrain; can't get lost (except by magic); always
+      alert to danger; move stealthily at normal pace when alone;
+      forage double food; learn exact details about tracked
+      creatures.
