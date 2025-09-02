@@ -47,6 +47,7 @@ Start with your character's basic identity:
 ```yaml
 "CHARACTER NAME": "Zanogh Greyfist"
 "PLAYER NAME": "Amelia"
+AGE: "young adult"  # Optional: age category or life stage
 CLASS: "Barbarian"
 LEVEL: 3
 SPECIALTY: ""  # Optional: subclass, domain, archetype, etc.

@@ -317,6 +317,12 @@
             </div>
             <div class="field-row">
                 <div class="field">
+                    <label for="age">Age</label>
+                    <input type="text" id="age" name="age" placeholder="e.g., young adult">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
                     <label for="class">Class</label>
                     <select id="class" name="class">
                         <option value="">Select Class</option>
@@ -860,6 +866,7 @@
                 
                 setFormValue('#character-name', data['CHARACTER NAME']);
                 setFormValue('#player-name', data['PLAYER NAME']);
+                setFormValue('#age', data['AGE']);
                 setFormValue('#race', data['RACE']);
                 setFormValue('#background', data['BACKGROUND']);
                 setFormValue('#alignment', data['ALIGNMENT']);
@@ -1116,6 +1123,7 @@
             // Character Info (all required fields always included)
             const characterName = form.querySelector('#character-name')?.value || '';
             const playerName = form.querySelector('#player-name')?.value || '';
+            const age = form.querySelector('#age')?.value || '';
             const characterClass = form.querySelector('#class')?.value || '';
             const level = form.querySelector('#level')?.value || '';
             const specialty = form.querySelector('#specialty')?.value || '';
@@ -1128,6 +1136,7 @@
             // Required fields - always include even if empty
             data['CHARACTER NAME'] = characterName;
             data['PLAYER NAME'] = playerName;
+            if (age) data['AGE'] = age;  // Optional - only include when not empty
             data['CLASS'] = characterClass;
             data['LEVEL'] = parseInt(level) || level;
             if (specialty) data['SPECIALTY'] = specialty;  // Optional - only include when not empty

@@ -83,6 +83,18 @@ The system automatically sets saving throw proficiencies:
 
 ---
 
+## **AGE** (USER)
+**Usage**: Character's age category or life stage  
+**Type**: String  
+**Required**: No (optional)  
+**Template Usage**: Displayed in parentheses after character name when present and non-empty  
+**Examples**:
+- `AGE: "young adult"`
+- `AGE: "late middle age"`
+- `AGE: "elderly"`
+
+---
+
 ## **ARMOR CLASS** (USER)
 **Usage**: Character's Armor Class value  
 **Type**: Number  

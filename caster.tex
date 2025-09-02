@@ -104,7 +104,7 @@
 
   \ifDNDdefined{CHARACTER NAME}
 {\node[at=(charname center),font={\rmfamily\LARGE\itshape},anchor=center]
-      {\getDND{CHARACTER NAME}}
+      {\getDND{CHARACTER NAME}\ifDNDnonempty{AGE}{ (\getDND{AGE})}{}}
       ;
     }
     {}
