@@ -1499,6 +1499,12 @@
   }%
 }
 
+% 3. \addDNDitem{<category>}{<item>}   – add item to equipment category (for future use)
+%-----------------------------------------------------------------
+\newcommand{\addDNDitem}[2]{%
+  % For now, this macro does nothing - placeholder for future equipment categorization
+}
+
 \newcommand{\setDNDfont}[2]{%
   \@ifundefined{dnd@font@#1}{%
     \PackageError{dnd}{DND key `#1' has not been declared}{}%
@@ -2075,6 +2081,16 @@
 \newDND{EP}
 \newDND{EQUIPMENT}
 \newDND{EXPERIENCE POINTS}
+\newDND{FREE ITEMS}
+\newDND{HEAVY ARMOR}
+\newDND{HEAVY ITEMS}
+\newDND{HEAVY WEAPONS}
+\newDND{LIGHT ARMOR}
+\newDND{LIGHT WEAPONS}
+\newDND{NORMAL ARMOR}
+\newDND{NORMAL WEAPONS}
+\newDND{SHIELDS}
+\newDND{SLOTTED ITEMS}
 \newDND{FEATURES}
 \newDND{GP}
 \newDND{HIT DICE}

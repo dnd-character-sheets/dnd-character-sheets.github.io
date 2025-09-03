@@ -319,17 +319,46 @@ ATTACKS:
 
 ## **EQUIPMENT** (USER)
 **Usage**: Character's equipment list  
-**Type**: List of strings  
+**Type**: List of strings OR structured object with categorized sub-keys  
 **Required**: Yes (can be empty list)  
 **Template Usage**: Displayed in equipment section, may be multi-column  
+
+**Categorized Equipment Sub-keys** (optional, can be mixed with flat list):
+- `HEAVY WEAPONS`: List of heavy weapons
+- `NORMAL WEAPONS`: List of normal weapons  
+- `LIGHT WEAPONS`: List of light weapons
+- `SHIELDS`: List of shields
+- `HEAVY ARMOR`: List of heavy armor
+- `NORMAL ARMOR`: List of normal armor
+- `LIGHT ARMOR`: List of light armor
+- `HEAVY ITEMS`: List of heavy items (include stone weight in parentheses, e.g., "Meteor iron (4 stones)")
+- `SLOTTED ITEMS`: List of slotted items (identical items can be bundled into units of up to 20, bundle takes one slot)
+- `FREE ITEMS`: List of free items (take up no equipment space)
+
 **Examples**:
 ```yaml
+# Flat list style (traditional)
 EQUIPMENT:
   - "Leather Armor"
   - "Shortsword"
   - "Light Crossbow"
   - "Backpack"
   - "Bedroll"
+
+# Categorized style
+EQUIPMENT:
+  NORMAL WEAPONS:
+    - "Longsword"
+    - "Shortbow"
+  LIGHT ARMOR:
+    - "Leather Armor"
+  SLOTTED ITEMS:
+    - "Arrows (20)"
+    - "Rations (10 days)"
+  FREE ITEMS:
+    - "Clothes"
+  HEAVY ITEMS:
+    - "Anvil (8 stones)"
 ```
 
 ---

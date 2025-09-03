@@ -278,7 +278,41 @@ local function convert_mapping (map)
     if k ~= "PROFICIENCY BONUS" and k ~= "Proficiency Bonus" then
       local v = map[k]
       local t = type(v)
-      if t=="string" or t=="number" or t=="boolean" then
+      if k == "EQUIPMENT" and t == "table" and v[1] and type(v[1]) == "table" then
+        -- Handle new categorized equipment format
+        local flattened_equipment = {}
+        local equipment_categories = {
+          "SLOTTED ITEMS", "FREE ITEMS", 
+          "HEAVY WEAPONS", "NORMAL WEAPONS", "LIGHT WEAPONS",
+          "SHIELDS",
+          "HEAVY ARMOR", "NORMAL ARMOR", "LIGHT ARMOR",
+          "HEAVY ITEMS"
+        }
+        
+        -- Process in input order, but emit addDNDitem calls
+        for _,item in ipairs(v) do
+          if type(item) == "table" then
+            for category, items in pairs(item) do
+              if type(items) == "table" then
+                for _,equipment_item in ipairs(items) do
+                  table.insert(lines, string.format("\\addDNDitem{%s}{%s}", 
+                    category:gsub('&', '+'), escape(equipment_item)))
+                  table.insert(flattened_equipment, render_item(equipment_item))
+                end
+              end
+            end
+          else
+            -- Handle mixed old-style items
+            table.insert(flattened_equipment, render_item(item))
+          end
+        end
+        
+        -- Emit flattened equipment list
+        if #flattened_equipment > 0 then
+          table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}", 
+            table.concat(flattened_equipment, "\n")))
+        end
+      elseif t=="string" or t=="number" or t=="boolean" then
         table.insert(lines, render_simple_kv(k, tostring(v)))
       elseif t=="table" then
         if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
