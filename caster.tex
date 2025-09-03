@@ -362,7 +362,90 @@
 
 \end{charsheet}
 
+% Equipment Weight Summary Page
+\clearpage
 
+\begin{center}
+\Large\textbf{Equipment Weight Summary}
+\end{center}
 
+\vspace{1em}
+
+% Helper macro to display weight as fraction if needed
+\newcommand{\displayweight}[1]{%
+  \ifnum#1=0 \relax
+    % Skip zero weights
+  \else
+    \ifnum#1=5 \relax
+      $\frac{1}{2}$%
+    \else
+      \pgfmathparse{int(#1/10)}%
+      \let\wholestones\pgfmathresult%
+      \pgfmathparse{int(mod(#1,10))}%
+      \let\tenths\pgfmathresult%
+      \ifnum\tenths=0 \relax
+        \wholestones%
+      \else
+        \ifnum\wholestones=0 \relax
+          $\frac{\tenths}{10}$%
+        \else
+          $\wholestones\frac{\tenths}{10}$%
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+\begin{tabular}{lr}
+\toprule
+\emph{Category} & \emph{Weight (stones)} \\
+\midrule
+% Display non-zero weight categories
+\ifnum\value{weightHeavyWeapons}>0 \relax
+Heavy weapons & \displayweight{\value{weightHeavyWeapons}} \\
+\fi
+\ifnum\value{weightNormalWeapons}>0 \relax
+Normal weapons & \displayweight{\value{weightNormalWeapons}} \\
+\fi
+\ifnum\value{weightLightWeapons}>0 \relax
+Light weapons & \displayweight{\value{weightLightWeapons}} \\
+\fi
+\ifnum\value{weightShields}>0 \relax
+Shields & \displayweight{\value{weightShields}} \\
+\fi
+\ifnum\value{weightHeavyArmor}>0 \relax
+Heavy armor & \displayweight{\value{weightHeavyArmor}} \\
+\fi
+\ifnum\value{weightNormalArmor}>0 \relax
+Normal armor & \displayweight{\value{weightNormalArmor}} \\
+\fi
+\ifnum\value{weightLightArmor}>0 \relax
+Light armor & \displayweight{\value{weightLightArmor}} \\
+\fi
+\ifnum\value{weightHeavyItems}>0 \relax
+Heavy items & \displayweight{\value{weightHeavyItems}} \\
+\fi
+\ifnum\value{weightSlottedItems}>0 \relax
+Slotted items & \displayweight{\value{weightSlottedItems}} \\
+\fi
+\ifnum\value{weightFreeItems}>0 \relax
+Free items & \displayweight{\value{weightFreeItems}} \\
+\fi
+\midrule
+% Calculate and display total weight
+\newcounter{totalWeight}
+\setcounter{totalWeight}{\value{weightHeavyWeapons}}
+\addtocounter{totalWeight}{\value{weightNormalWeapons}}
+\addtocounter{totalWeight}{\value{weightLightWeapons}}
+\addtocounter{totalWeight}{\value{weightShields}}
+\addtocounter{totalWeight}{\value{weightHeavyArmor}}
+\addtocounter{totalWeight}{\value{weightNormalArmor}}
+\addtocounter{totalWeight}{\value{weightLightArmor}}
+\addtocounter{totalWeight}{\value{weightHeavyItems}}
+\addtocounter{totalWeight}{\value{weightSlottedItems}}
+\addtocounter{totalWeight}{\value{weightFreeItems}}
+\textbf{Total} & \textbf{\displayweight{\value{totalWeight}}} \\
+\bottomrule
+\end{tabular}
 
 \end{document}

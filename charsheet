@@ -278,7 +278,7 @@ local function convert_mapping (map)
     if k ~= "PROFICIENCY BONUS" and k ~= "Proficiency Bonus" then
       local v = map[k]
       local t = type(v)
-      if k == "EQUIPMENT" and t == "table" and v[1] and type(v[1]) == "table" then
+      if k == "EQUIPMENT" and t == "table" and not (#v > 0 and (type(v[1])=="string" or type(v[1])=="number")) then
         -- Handle new categorized equipment format
         local flattened_equipment = {}
         local equipment_categories = {
@@ -289,21 +289,24 @@ local function convert_mapping (map)
           "HEAVY ITEMS"
         }
         
-        -- Process in input order, but emit addDNDitem calls
-        for _,item in ipairs(v) do
-          if type(item) == "table" then
-            for category, items in pairs(item) do
-              if type(items) == "table" then
-                for _,equipment_item in ipairs(items) do
-                  table.insert(lines, string.format("\\addDNDitem{%s}{%s}", 
-                    category:gsub('&', '+'), escape(equipment_item)))
-                  table.insert(flattened_equipment, render_item(equipment_item))
+        -- Process categorized equipment format
+        for category, items in pairs(v) do
+          if type(items) == "table" and #items > 0 then
+            for _,equipment_item in ipairs(items) do
+              local weight_arg = ""
+              
+              -- Parse weight from heavy items like "Meteor iron (4 stones)"
+              if category == "HEAVY ITEMS" then
+                local stones = equipment_item:match("%((%d+) stones?%)")
+                if stones then
+                  weight_arg = string.format("[%d]", tonumber(stones) * 10)
                 end
               end
+              
+              table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
+                weight_arg, category:gsub('&', '+'), escape(equipment_item)))
+              table.insert(flattened_equipment, render_item(equipment_item))
             end
-          else
-            -- Handle mixed old-style items
-            table.insert(flattened_equipment, render_item(item))
           end
         end
         
@@ -311,6 +314,9 @@ local function convert_mapping (map)
         if #flattened_equipment > 0 then
           table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}", 
             table.concat(flattened_equipment, "\n")))
+        else
+          -- Empty equipment list for new format
+          table.insert(lines, "\\setDND{EQUIPMENT}{}")
         end
       elseif t=="string" or t=="number" or t=="boolean" then
         table.insert(lines, render_simple_kv(k, tostring(v)))

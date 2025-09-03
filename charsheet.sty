@@ -1499,10 +1499,49 @@
   }%
 }
 
-% 3. \addDNDitem{<category>}{<item>}   – add item to equipment category (for future use)
+% 3. \addDNDitem[<weight>]{<category>}{<item>}   – add item to equipment category
 %-----------------------------------------------------------------
-\newcommand{\addDNDitem}[2]{%
-  % For now, this macro does nothing - placeholder for future equipment categorization
+% Weight counters for equipment categories (in tenths of stones)
+\newcounter{weightHeavyWeapons}
+\newcounter{weightNormalWeapons}
+\newcounter{weightLightWeapons}
+\newcounter{weightShields}
+\newcounter{weightHeavyArmor}
+\newcounter{weightNormalArmor}
+\newcounter{weightLightArmor}
+\newcounter{weightHeavyItems}
+\newcounter{weightSlottedItems}
+\newcounter{weightFreeItems}
+
+\newcommand{\addDNDitem}[3][]{%
+  % Determine weight based on category if not specified
+  \ifthenelse{\equal{#1}{}}{%
+    % Default weights by category (in tenths of stones)
+    \ifthenelse{\equal{#2}{HEAVY WEAPONS}}{\addtocounter{weightHeavyWeapons}{10}}{%
+    \ifthenelse{\equal{#2}{NORMAL WEAPONS}}{\addtocounter{weightNormalWeapons}{5}}{%
+    \ifthenelse{\equal{#2}{LIGHT WEAPONS}}{\addtocounter{weightLightWeapons}{2}}{%
+    \ifthenelse{\equal{#2}{SHIELDS}}{\addtocounter{weightShields}{5}}{%
+    \ifthenelse{\equal{#2}{HEAVY ARMOR}}{\addtocounter{weightHeavyArmor}{40}}{%
+    \ifthenelse{\equal{#2}{NORMAL ARMOR}}{\addtocounter{weightNormalArmor}{20}}{%
+    \ifthenelse{\equal{#2}{LIGHT ARMOR}}{\addtocounter{weightLightArmor}{10}}{%
+    \ifthenelse{\equal{#2}{HEAVY ITEMS}}{\addtocounter{weightHeavyItems}{10}}{%
+    \ifthenelse{\equal{#2}{SLOTTED ITEMS}}{\addtocounter{weightSlottedItems}{2}}{%
+    \ifthenelse{\equal{#2}{FREE ITEMS}}{\addtocounter{weightFreeItems}{0}}{%
+    }}}}}}}}}}%
+  }{%
+    % Use specified weight
+    \ifthenelse{\equal{#2}{HEAVY WEAPONS}}{\addtocounter{weightHeavyWeapons}{#1}}{%
+    \ifthenelse{\equal{#2}{NORMAL WEAPONS}}{\addtocounter{weightNormalWeapons}{#1}}{%
+    \ifthenelse{\equal{#2}{LIGHT WEAPONS}}{\addtocounter{weightLightWeapons}{#1}}{%
+    \ifthenelse{\equal{#2}{SHIELDS}}{\addtocounter{weightShields}{#1}}{%
+    \ifthenelse{\equal{#2}{HEAVY ARMOR}}{\addtocounter{weightHeavyArmor}{#1}}{%
+    \ifthenelse{\equal{#2}{NORMAL ARMOR}}{\addtocounter{weightNormalArmor}{#1}}{%
+    \ifthenelse{\equal{#2}{LIGHT ARMOR}}{\addtocounter{weightLightArmor}{#1}}{%
+    \ifthenelse{\equal{#2}{HEAVY ITEMS}}{\addtocounter{weightHeavyItems}{#1}}{%
+    \ifthenelse{\equal{#2}{SLOTTED ITEMS}}{\addtocounter{weightSlottedItems}{#1}}{%
+    \ifthenelse{\equal{#2}{FREE ITEMS}}{\addtocounter{weightFreeItems}{#1}}{%
+    }}}}}}}}}}%
+  }%
 }
 
 \newcommand{\setDNDfont}[2]{%
