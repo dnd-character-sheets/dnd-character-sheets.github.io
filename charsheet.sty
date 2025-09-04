@@ -1508,50 +1508,67 @@
   }%
 }
 
-% 3. \addDNDitem[<weight>]{<category>}{<item>}   – add item to equipment category
+% 3. Equipment category system
 %-----------------------------------------------------------------
-% Weight counters for equipment categories (in tenths of stones)
-\newcounter{weightHeavyWeapons}
-\newcounter{weightNormalWeapons}
-\newcounter{weightLightWeapons}
-\newcounter{weightShields}
-\newcounter{weightHeavyArmor}
-\newcounter{weightNormalArmor}
-\newcounter{weightLightArmor}
-\newcounter{weightHeavyItems}
-\newcounter{weightSlottedItems}
-\newcounter{weightFreeItems}
+% \declareDNDitems{FOO}{N} - declare category FOO with weight N per item
+% \resetDNDitems - reinitialize all categories
+% \addDNDitem[<weight>]{<category>}{<item>} - add item to category
 
-\newcommand{\addDNDitem}[3][]{%
-  % Determine weight based on category if not specified
-  \ifthenelse{\equal{#1}{}}{%
-    % Default weights by category (in tenths of stones)
-    \ifthenelse{\equal{#2}{HEAVY WEAPONS}}{\addtocounter{weightHeavyWeapons}{10}}{%
-    \ifthenelse{\equal{#2}{NORMAL WEAPONS}}{\addtocounter{weightNormalWeapons}{5}}{%
-    \ifthenelse{\equal{#2}{LIGHT WEAPONS}}{\addtocounter{weightLightWeapons}{2}}{%
-    \ifthenelse{\equal{#2}{SHIELDS}}{\addtocounter{weightShields}{5}}{%
-    \ifthenelse{\equal{#2}{HEAVY ARMOR}}{\addtocounter{weightHeavyArmor}{40}}{%
-    \ifthenelse{\equal{#2}{NORMAL ARMOR}}{\addtocounter{weightNormalArmor}{20}}{%
-    \ifthenelse{\equal{#2}{LIGHT ARMOR}}{\addtocounter{weightLightArmor}{10}}{%
-    \ifthenelse{\equal{#2}{HEAVY ITEMS}}{\addtocounter{weightHeavyItems}{10}}{%
-    \ifthenelse{\equal{#2}{SLOTTED ITEMS}}{\addtocounter{weightSlottedItems}{2}}{%
-    \ifthenelse{\equal{#2}{FREE ITEMS}}{\addtocounter{weightFreeItems}{0}}{%
-    }}}}}}}}}}%
-  }{%
-    % Use specified weight
-    \ifthenelse{\equal{#2}{HEAVY WEAPONS}}{\addtocounter{weightHeavyWeapons}{#1}}{%
-    \ifthenelse{\equal{#2}{NORMAL WEAPONS}}{\addtocounter{weightNormalWeapons}{#1}}{%
-    \ifthenelse{\equal{#2}{LIGHT WEAPONS}}{\addtocounter{weightLightWeapons}{#1}}{%
-    \ifthenelse{\equal{#2}{SHIELDS}}{\addtocounter{weightShields}{#1}}{%
-    \ifthenelse{\equal{#2}{HEAVY ARMOR}}{\addtocounter{weightHeavyArmor}{#1}}{%
-    \ifthenelse{\equal{#2}{NORMAL ARMOR}}{\addtocounter{weightNormalArmor}{#1}}{%
-    \ifthenelse{\equal{#2}{LIGHT ARMOR}}{\addtocounter{weightLightArmor}{#1}}{%
-    \ifthenelse{\equal{#2}{HEAVY ITEMS}}{\addtocounter{weightHeavyItems}{#1}}{%
-    \ifthenelse{\equal{#2}{SLOTTED ITEMS}}{\addtocounter{weightSlottedItems}{#1}}{%
-    \ifthenelse{\equal{#2}{FREE ITEMS}}{\addtocounter{weightFreeItems}{#1}}{%
-    }}}}}}}}}}%
+% Storage for declared categories
+\newcommand{\@dnditemcategories}{}
+
+% \declareDNDitems{FOO}{N} - declare a new equipment category
+\newcommand{\declareDNDitems}[2]{%
+  % Add category to list
+  \expandafter\gdef\expandafter\@dnditemcategories\expandafter{\@dnditemcategories,#1}%
+  % Create counter for total weight (FOO stones)
+  \newcounter{#1 stones}%
+  % Define default weight per item (in tenths of stones)
+  \expandafter\gdef\csname @dndweight@#1\endcsname{#2}%
+  % Initialize item list (FOO list)
+  \expandafter\gdef\csname #1 list\endcsname{}%
+}
+
+% \resetDNDitems - reinitialize all declared categories
+\newcommand{\resetDNDitems}{%
+  \@for\@category:=\@dnditemcategories\do{%
+    \ifx\@category\empty\else
+      \setcounter{\@category\space stones}{0}%
+      \expandafter\gdef\csname \@category\space list\endcsname{}%
+    \fi
   }%
 }
+
+% \DNDitem{<name>}{<weight>} - format for items in lists
+\newcommand{\DNDitem}[2]{#1}
+
+% Updated \addDNDitem[<weight>]{<category>}{<item>}
+\newcommand{\addDNDitem}[3][]{%
+  % Determine weight to add
+  \ifthenelse{\equal{#1}{}}{%
+    % Use default weight for category
+    \edef\@itemweight{\csname @dndweight@#2\endcsname}%
+  }{%
+    % Use specified weight
+    \edef\@itemweight{#1}%
+  }%
+  % Add weight to category counter
+  \addtocounter{#2 stones}{\@itemweight}%
+  % Add item to category list with \DNDitem format and comma terminator
+  \expandafter\expandafter\expandafter\gdef\expandafter\csname #2 list\expandafter\endcsname\expandafter{\csname #2 list\endcsname\noexpand\DNDitem{#3}{\@itemweight},}%
+}
+
+% Declare all equipment categories with their default weights
+\declareDNDitems{HEAVY WEAPONS}{10}
+\declareDNDitems{NORMAL WEAPONS}{5}
+\declareDNDitems{LIGHT WEAPONS}{2}
+\declareDNDitems{SHIELDS}{5}
+\declareDNDitems{HEAVY ARMOR}{40}
+\declareDNDitems{NORMAL ARMOR}{20}
+\declareDNDitems{LIGHT ARMOR}{10}
+\declareDNDitems{HEAVY ITEMS}{10}
+\declareDNDitems{SLOTTED ITEMS}{2}
+\declareDNDitems{FREE ITEMS}{0}
 
 % \renderstones{<tenths>} - Render weight in stones with fractions
 \newcommand{\renderstones}[1]{%

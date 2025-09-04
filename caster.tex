@@ -413,13 +413,13 @@
   {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
 
 \newcounter{significantWeight}
-\setcounter{significantWeight}{\value{weightHeavyWeapons}}
-\addtocounter{significantWeight}{\value{weightNormalWeapons}}
-\addtocounter{significantWeight}{\value{weightShields}}
-\addtocounter{significantWeight}{\value{weightHeavyArmor}}
-\addtocounter{significantWeight}{\value{weightNormalArmor}}
-\addtocounter{significantWeight}{\value{weightLightArmor}}
-\addtocounter{significantWeight}{\value{weightHeavyItems}}
+\setcounter{significantWeight}{\value{HEAVY WEAPONS stones}}
+\addtocounter{significantWeight}{\value{NORMAL WEAPONS stones}}
+\addtocounter{significantWeight}{\value{SHIELDS stones}}
+\addtocounter{significantWeight}{\value{HEAVY ARMOR stones}}
+\addtocounter{significantWeight}{\value{NORMAL ARMOR stones}}
+\addtocounter{significantWeight}{\value{LIGHT ARMOR stones}}
+\addtocounter{significantWeight}{\value{HEAVY ITEMS stones}}
 
 \newcounter{remainingCapacity}
 \ifDNDnonempty{STR}{%
@@ -501,35 +501,35 @@
   \emph{Category} & \emph{Weight (stones)} \\
   \midrule
   % Display non-zero weight categories
-  \ifnum\value{weightHeavyWeapons}>0 \relax
-  Heavy weapons & \renderstones{\value{weightHeavyWeapons}} \\
+  \ifnum\value{HEAVY WEAPONS stones}>0 \relax
+  Heavy weapons & \renderstones{\value{HEAVY WEAPONS stones}} \\
   \fi
-  \ifnum\value{weightNormalWeapons}>0 \relax
-  Normal weapons & \renderstones{\value{weightNormalWeapons}} \\
+  \ifnum\value{NORMAL WEAPONS stones}>0 \relax
+  Normal weapons & \renderstones{\value{NORMAL WEAPONS stones}} \\
   \fi
-  \ifnum\value{weightLightWeapons}>0 \relax
-  Light weapons & \renderstones{\value{weightLightWeapons}} \\
+  \ifnum\value{LIGHT WEAPONS stones}>0 \relax
+  Light weapons & \renderstones{\value{LIGHT WEAPONS stones}} \\
   \fi
-  \ifnum\value{weightShields}>0 \relax
-  Shields & \renderstones{\value{weightShields}} \\
+  \ifnum\value{SHIELDS stones}>0 \relax
+  Shields & \renderstones{\value{SHIELDS stones}} \\
   \fi
-  \ifnum\value{weightHeavyArmor}>0 \relax
-  Heavy armor & \renderstones{\value{weightHeavyArmor}} \\
+  \ifnum\value{HEAVY ARMOR stones}>0 \relax
+  Heavy armor & \renderstones{\value{HEAVY ARMOR stones}} \\
   \fi
-  \ifnum\value{weightNormalArmor}>0 \relax
-  Normal armor & \renderstones{\value{weightNormalArmor}} \\
+  \ifnum\value{NORMAL ARMOR stones}>0 \relax
+  Normal armor & \renderstones{\value{NORMAL ARMOR stones}} \\
   \fi
-  \ifnum\value{weightLightArmor}>0 \relax
-  Light armor & \renderstones{\value{weightLightArmor}} \\
+  \ifnum\value{LIGHT ARMOR stones}>0 \relax
+  Light armor & \renderstones{\value{LIGHT ARMOR stones}} \\
   \fi
-  \ifnum\value{weightHeavyItems}>0 \relax
-  Heavy items & \renderstones{\value{weightHeavyItems}} \\
+  \ifnum\value{HEAVY ITEMS stones}>0 \relax
+  Heavy items & \renderstones{\value{HEAVY ITEMS stones}} \\
   \fi
-  \ifnum\value{weightSlottedItems}>0 \relax
-  Slotted items & \renderstones{\value{weightSlottedItems}} \\
+  \ifnum\value{SLOTTED ITEMS stones}>0 \relax
+  Slotted items & \renderstones{\value{SLOTTED ITEMS stones}} \\
   \fi
-  \ifnum\value{weightFreeItems}>0 \relax
-  Free items & \renderstones{\value{weightFreeItems}} \\
+  \ifnum\value{FREE ITEMS stones}>0 \relax
+  Free items & \renderstones{\value{FREE ITEMS stones}} \\
   \fi
   \bottomrule
   \end{tabular}
