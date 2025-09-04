@@ -365,74 +365,19 @@
 % Equipment Weight Summary Page
 \clearpage
 
-\begin{center}
-\Large\textbf{Equipment Weight Summary}
-\end{center}
+\begin{charsheet}
+\input{stats}
 
-\vspace{1em}
+% Define colors for capacity boxes
+\colorlet{carryingcolor}{white}
+\colorlet{encumberedcolor}{proficiencies}  % Use existing yellow from charsheet.sty
+\colorlet{heavilyencumberedcolor}{magic}   % Use existing red from charsheet.sty
 
-% Helper macro to display weight as fraction if needed
-\newcommand{\displayweight}[1]{%
-  \ifnum#1=0 \relax
-    % Skip zero weights
-  \else
-    \ifnum#1=5 \relax
-      $\frac{1}{2}$%
-    \else
-      \pgfmathparse{int(#1/10)}%
-      \let\wholestones\pgfmathresult%
-      \pgfmathparse{int(mod(#1,10))}%
-      \let\tenths\pgfmathresult%
-      \ifnum\tenths=0 \relax
-        \wholestones%
-      \else
-        \ifnum\wholestones=0 \relax
-          $\frac{\tenths}{10}$%
-        \else
-          $\wholestones\frac{\tenths}{10}$%
-        \fi
-      \fi
-    \fi
-  \fi
-}
+% Define height per tenth of stone for equipment slots
+\newdimen\tenthstoneheight
+\tenthstoneheight=8pt
 
-\begin{tabular}{lr}
-\toprule
-\emph{Category} & \emph{Weight (stones)} \\
-\midrule
-% Display non-zero weight categories
-\ifnum\value{weightHeavyWeapons}>0 \relax
-Heavy weapons & \displayweight{\value{weightHeavyWeapons}} \\
-\fi
-\ifnum\value{weightNormalWeapons}>0 \relax
-Normal weapons & \displayweight{\value{weightNormalWeapons}} \\
-\fi
-\ifnum\value{weightLightWeapons}>0 \relax
-Light weapons & \displayweight{\value{weightLightWeapons}} \\
-\fi
-\ifnum\value{weightShields}>0 \relax
-Shields & \displayweight{\value{weightShields}} \\
-\fi
-\ifnum\value{weightHeavyArmor}>0 \relax
-Heavy armor & \displayweight{\value{weightHeavyArmor}} \\
-\fi
-\ifnum\value{weightNormalArmor}>0 \relax
-Normal armor & \displayweight{\value{weightNormalArmor}} \\
-\fi
-\ifnum\value{weightLightArmor}>0 \relax
-Light armor & \displayweight{\value{weightLightArmor}} \\
-\fi
-\ifnum\value{weightHeavyItems}>0 \relax
-Heavy items & \displayweight{\value{weightHeavyItems}} \\
-\fi
-\ifnum\value{weightSlottedItems}>0 \relax
-Slotted items & \displayweight{\value{weightSlottedItems}} \\
-\fi
-\ifnum\value{weightFreeItems}>0 \relax
-Free items & \displayweight{\value{weightFreeItems}} \\
-\fi
-\midrule
-% Calculate and display total weight
+% Calculate total weight (in tenths of stones)
 \newcounter{totalWeight}
 \setcounter{totalWeight}{\value{weightHeavyWeapons}}
 \addtocounter{totalWeight}{\value{weightNormalWeapons}}
@@ -444,8 +389,163 @@ Free items & \displayweight{\value{weightFreeItems}} \\
 \addtocounter{totalWeight}{\value{weightHeavyItems}}
 \addtocounter{totalWeight}{\value{weightSlottedItems}}
 \addtocounter{totalWeight}{\value{weightFreeItems}}
-\textbf{Total} & \textbf{\displayweight{\value{totalWeight}}} \\
-\bottomrule
-\end{tabular}
+
+% Calculate carrying capacity thresholds (in tenths of stones)
+\newcounter{carryingCapacity}
+\newcounter{encumberedThreshold}
+\newcounter{heavilyEncumberedThreshold}
+
+\ifDNDnonempty{STR}{%
+  % Carrying capacity = STR score in stones (convert to tenths)
+  \setcounter{carryingCapacity}{\numexpr\rawgetDND{STR} * 10\relax}
+  
+  % Encumbered = 1/3 of carrying capacity, rounded down
+  \setcounter{encumberedThreshold}{\numexpr\rawgetDND{STR} * 10 / 3\relax}
+  
+  % Heavily encumbered = 2/3 of carrying capacity, rounded down  
+  \setcounter{heavilyEncumberedThreshold}{\numexpr\rawgetDND{STR} * 20 / 3\relax}
+}{%
+  % No STR defined - leave counters at zero
+}
+
+% Three capacity boxes centered below top
+\node (encumbered) [dndencumbrance,fill=encumberedcolor,below=of top,dndlabel=ENCUMBERED] 
+  {\Large\ifDNDnonempty{STR}{\textbf{$\geq$ \renderstones{\arabic{encumberedThreshold}}}}{empty
+  STR?}};
+
+\node (carrying) [dndencumbrance,fill=carryingcolor,left=5mm of encumbered,dndlabel=CARRYING CAPACITY]
+  {\Large\ifDNDnonempty{STR}{\textbf{$\leq$ \renderstones{\arabic{carryingCapacity}}}}{}};
+
+\node (heavily) [dndencumbrance,fill=heavilyencumberedcolor,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
+  {\Large\ifDNDnonempty{STR}{\textbf{$\geq$ \renderstones{\arabic{heavilyEncumberedThreshold}}}}{}};
+
+% Calculate remaining capacity for light weapons and slotted items (in stones)
+\newcounter{significantWeight}
+\setcounter{significantWeight}{\value{weightHeavyWeapons}}
+\addtocounter{significantWeight}{\value{weightNormalWeapons}}
+\addtocounter{significantWeight}{\value{weightShields}}
+\addtocounter{significantWeight}{\value{weightHeavyArmor}}
+\addtocounter{significantWeight}{\value{weightNormalArmor}}
+\addtocounter{significantWeight}{\value{weightLightArmor}}
+\addtocounter{significantWeight}{\value{weightHeavyItems}}
+
+\newcounter{remainingCapacity}
+\ifDNDnonempty{STR}{%
+  % Remaining = carrying capacity - significant weight (in tenths of stones)
+  \setcounter{remainingCapacity}{\numexpr\rawgetDND{STR} * 10 - \value{significantWeight}\relax}
+  % Convert to stones and multiply by 5 for line count
+  \setcounter{remainingCapacity}{\numexpr\value{remainingCapacity} * 5 / 10\relax}
+}{%
+  \setcounter{remainingCapacity}{0}
+}
+
+% Equipment slots box on the left with three-color backgrounds
+% First calculate positions for color transitions in terms of \tenthstoneheight
+\newcounter{greenLines}
+\newcounter{yellowLines}  
+\newcounter{redLines}
+
+\ifDNDnonempty{STR}{%
+  % Calculate how many lines each color region should have
+  % Total lines = 5 * remaining capacity (in stones)
+  \setcounter{greenLines}{\numexpr\value{encumberedThreshold} * 5 / 10\relax}%
+  \setcounter{yellowLines}{\numexpr(\value{heavilyEncumberedThreshold} - \value{encumberedThreshold}) * 5 / 10\relax}%
+  \setcounter{redLines}{\numexpr(\value{carryingCapacity} - \value{heavilyEncumberedThreshold}) * 5 / 10\relax}%
+}{%
+  \setcounter{greenLines}{0}%
+  \setcounter{yellowLines}{0}%
+  \setcounter{redLines}{0}%
+}
+
+% Calculate heights for each color region
+\newdimen\greenheight
+\newdimen\yellowheight
+\newdimen\redheight
+
+\greenheight=\numexpr\value{greenLines}\relax\tenthstoneheight
+\yellowheight=\numexpr\value{yellowLines}\relax\tenthstoneheight  
+\redheight=\numexpr\value{redLines}\relax\tenthstoneheight
+
+% Create the equipment slots box with colored backgrounds
+\node (slots) [dndbox,minimum width=60mm,minimum height=\dimexpr\greenheight+\yellowheight+\redheight+10mm\relax,right=of current bounding box.west,anchor=west] {
+  \begin{tabular}{l}
+  \toprule
+  \textbf{Equipment slots} \\
+  \midrule
+  % Add light weapons in light gray
+  \ifDNDnonempty{LIGHT WEAPONS}{\color{gray}\getDND{LIGHT WEAPONS}}{}%
+  % Add slotted items in light gray  
+  \ifDNDnonempty{SLOTTED ITEMS}{\color{gray}\getDND{SLOTTED ITEMS}}{}%
+  \bottomrule
+  \end{tabular}
+};
+
+% Add colored background rectangles behind the slots box
+\ifnum\value{greenLines}>0\relax
+  \fill [green!30] ([yshift=-2mm]slots.north west) rectangle ([yshift=-\greenheight-2mm]slots.north east);
+\fi
+\ifnum\value{yellowLines}>0\relax  
+  \fill [yellow!50] ([yshift=-\greenheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-2mm]slots.north east);
+\fi
+\ifnum\value{redLines}>0\relax
+  \fill [red!30] ([yshift=-\greenheight-\yellowheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-\redheight-2mm]slots.north east);
+\fi
+
+% Significant equipment list on the right
+\node [dndbox,minimum width=60mm,right=10mm of heavily,anchor=north west] {
+  \begin{tabular}{lr}
+  \toprule
+  \emph{Equipment} & \emph{Weight} \\
+  \midrule
+  % Include all equipment except SLOTTED ITEMS, LIGHT WEAPONS, and FREE ITEMS
+  % TODO: Add actual equipment items
+  \bottomrule
+  \end{tabular}
+};
+
+% Equipment weight breakdown table
+\node [below=10mm of encumbered,anchor=north] {
+  \begin{tabular}{lr}
+  \toprule
+  \emph{Category} & \emph{Weight (stones)} \\
+  \midrule
+  % Display non-zero weight categories
+  \ifnum\value{weightHeavyWeapons}>0 \relax
+  Heavy weapons & \renderstones{\value{weightHeavyWeapons}} \\
+  \fi
+  \ifnum\value{weightNormalWeapons}>0 \relax
+  Normal weapons & \renderstones{\value{weightNormalWeapons}} \\
+  \fi
+  \ifnum\value{weightLightWeapons}>0 \relax
+  Light weapons & \renderstones{\value{weightLightWeapons}} \\
+  \fi
+  \ifnum\value{weightShields}>0 \relax
+  Shields & \renderstones{\value{weightShields}} \\
+  \fi
+  \ifnum\value{weightHeavyArmor}>0 \relax
+  Heavy armor & \renderstones{\value{weightHeavyArmor}} \\
+  \fi
+  \ifnum\value{weightNormalArmor}>0 \relax
+  Normal armor & \renderstones{\value{weightNormalArmor}} \\
+  \fi
+  \ifnum\value{weightLightArmor}>0 \relax
+  Light armor & \renderstones{\value{weightLightArmor}} \\
+  \fi
+  \ifnum\value{weightHeavyItems}>0 \relax
+  Heavy items & \renderstones{\value{weightHeavyItems}} \\
+  \fi
+  \ifnum\value{weightSlottedItems}>0 \relax
+  Slotted items & \renderstones{\value{weightSlottedItems}} \\
+  \fi
+  \ifnum\value{weightFreeItems}>0 \relax
+  Free items & \renderstones{\value{weightFreeItems}} \\
+  \fi
+  \midrule
+  \textbf{Total} & \textbf{\renderstones{\value{totalWeight}}} \\
+  \bottomrule
+  \end{tabular}
+};
+
+\end{charsheet}
 
 \end{document}
