@@ -1,7 +1,7 @@
 \documentclass[11pt]{article}
-% \usepackage{lipsum} % not available on dreamhost
 \usepackage{charsheet}
 \usepackage{multicol}
+%\usepackage{amsmath}
 
 \usepackage{pgfkeys}
 
@@ -368,6 +368,9 @@
 \begin{charsheet}
 \input{stats}
 
+\colorlet{light gray}{white!90!black}
+
+
 % Define colors for capacity boxes
 \colorlet{carryingcolor}{white}
 \colorlet{encumberedcolor}{proficiencies}  % Use existing yellow from charsheet.sty
@@ -376,19 +379,6 @@
 % Define height per tenth of stone for equipment slots
 \newdimen\tenthstoneheight
 \tenthstoneheight=8pt
-
-% Calculate total weight (in tenths of stones)
-\newcounter{totalWeight}
-\setcounter{totalWeight}{\value{weightHeavyWeapons}}
-\addtocounter{totalWeight}{\value{weightNormalWeapons}}
-\addtocounter{totalWeight}{\value{weightLightWeapons}}
-\addtocounter{totalWeight}{\value{weightShields}}
-\addtocounter{totalWeight}{\value{weightHeavyArmor}}
-\addtocounter{totalWeight}{\value{weightNormalArmor}}
-\addtocounter{totalWeight}{\value{weightLightArmor}}
-\addtocounter{totalWeight}{\value{weightHeavyItems}}
-\addtocounter{totalWeight}{\value{weightSlottedItems}}
-\addtocounter{totalWeight}{\value{weightFreeItems}}
 
 % Calculate carrying capacity thresholds (in tenths of stones)
 \newcounter{carryingCapacity}
@@ -408,18 +398,19 @@
   % No STR defined - leave counters at zero
 }
 
+\node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment by stones}}}};
+
 % Three capacity boxes centered below top
-\node (encumbered) [dndencumbrance,fill=encumberedcolor,below=of top,dndlabel=ENCUMBERED] 
-  {\Large\ifDNDnonempty{STR}{\textbf{$\geq$ \renderstones{\arabic{encumberedThreshold}}}}{empty
+\node (encumbered) [dndencumbrance,fill=encumberedcolor,below=of banner,dndlabel=ENCUMBERED] 
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
   STR?}};
 
 \node (carrying) [dndencumbrance,fill=carryingcolor,left=5mm of encumbered,dndlabel=CARRYING CAPACITY]
-  {\Large\ifDNDnonempty{STR}{\textbf{$\leq$ \renderstones{\arabic{carryingCapacity}}}}{}};
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
 
 \node (heavily) [dndencumbrance,fill=heavilyencumberedcolor,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
-  {\Large\ifDNDnonempty{STR}{\textbf{$\geq$ \renderstones{\arabic{heavilyEncumberedThreshold}}}}{}};
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
 
-% Calculate remaining capacity for light weapons and slotted items (in stones)
 \newcounter{significantWeight}
 \setcounter{significantWeight}{\value{weightHeavyWeapons}}
 \addtocounter{significantWeight}{\value{weightNormalWeapons}}
@@ -466,30 +457,33 @@
 \yellowheight=\numexpr\value{yellowLines}\relax\tenthstoneheight  
 \redheight=\numexpr\value{redLines}\relax\tenthstoneheight
 
-% Create the equipment slots box with colored backgrounds
-\node (slots) [dndbox,minimum width=60mm,minimum height=\dimexpr\greenheight+\yellowheight+\redheight+10mm\relax,right=of current bounding box.west,anchor=west] {
-  \begin{tabular}{l}
-  \toprule
-  \textbf{Equipment slots} \\
-  \midrule
-  % Add light weapons in light gray
-  \ifDNDnonempty{LIGHT WEAPONS}{\color{gray}\getDND{LIGHT WEAPONS}}{}%
-  % Add slotted items in light gray  
-  \ifDNDnonempty{SLOTTED ITEMS}{\color{gray}\getDND{SLOTTED ITEMS}}{}%
-  \bottomrule
-  \end{tabular}
-};
+%% Add colored background rectangles behind the slots box
+%\ifnum\value{greenLines}>0\relax
+%  \fill [green!30] ([yshift=-2mm]slots.north west) rectangle ([yshift=-\greenheight-2mm]slots.north east);
+%\fi
+%\ifnum\value{yellowLines}>0\relax  
+%  \fill [yellow!50] ([yshift=-\greenheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-2mm]slots.north east);
+%\fi
+%\ifnum\value{redLines}>0\relax
+%  \fill [red!30] ([yshift=-\greenheight-\yellowheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-\redheight-2mm]slots.north east);
+%\fi
 
-% Add colored background rectangles behind the slots box
-\ifnum\value{greenLines}>0\relax
-  \fill [green!30] ([yshift=-2mm]slots.north west) rectangle ([yshift=-\greenheight-2mm]slots.north east);
-\fi
-\ifnum\value{yellowLines}>0\relax  
-  \fill [yellow!50] ([yshift=-\greenheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-2mm]slots.north east);
-\fi
-\ifnum\value{redLines}>0\relax
-  \fill [red!30] ([yshift=-\greenheight-\yellowheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-\redheight-2mm]slots.north east);
-\fi
+
+
+% Create the equipment slots box with colored backgrounds
+\node (slots) [dndbox,minimum width=60mm,right=of current bounding box.west,anchor=west] {
+  \begin{minipage}{60mm}
+  \vspace*{\greenheight+\yellowheight+\redheight+10mm\relax}
+  \end{minipage}
+ }
+ ;
+ \path (slots.north) ++(0,-10mm) coordinate (lastslot);
+
+  \foreach \thing in {{fish},{fowl},{fury}} {
+     \node [anchor=north] at (lastslot.south) (thisslot) {\thing};
+     \path (thisslot.south) coordinate (lastslot);
+  }
+
 
 % Significant equipment list on the right
 \node [dndbox,minimum width=60mm,right=10mm of heavily,anchor=north west] {
@@ -540,8 +534,6 @@
   \ifnum\value{weightFreeItems}>0 \relax
   Free items & \renderstones{\value{weightFreeItems}} \\
   \fi
-  \midrule
-  \textbf{Total} & \textbf{\renderstones{\value{totalWeight}}} \\
   \bottomrule
   \end{tabular}
 };
