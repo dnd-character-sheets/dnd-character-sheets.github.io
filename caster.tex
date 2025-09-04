@@ -372,9 +372,10 @@
 
 
 % Define colors for capacity boxes
-\colorlet{carryingcolor}{white}
-\colorlet{encumberedcolor}{proficiencies}  % Use existing yellow from charsheet.sty
-\colorlet{heavilyencumberedcolor}{magic}   % Use existing red from charsheet.sty
+\colorlet{carrying}{white}
+\colorlet{encumbered}{proficiencies}  % Use existing yellow from charsheet.sty
+\colorlet{heavilyencumbered}{magic}   % Use existing red from charsheet.sty
+\colorlet{unencumbered}{green!20!white}
 
 % Define height per tenth of stone for equipment slots
 \newdimen\tenthstoneheight
@@ -401,14 +402,14 @@
 \node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment by stones}}}};
 
 % Three capacity boxes centered below top
-\node (encumbered) [dndencumbrance,fill=encumberedcolor,below=of banner,dndlabel=ENCUMBERED] 
+\node (encumbered) [dndencumbrance,fill=encumbered,below=of banner,dndlabel=ENCUMBERED] 
   {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
   STR?}};
 
-\node (carrying) [dndencumbrance,fill=carryingcolor,left=5mm of encumbered,dndlabel=CARRYING CAPACITY]
+\node (carrying) [dndencumbrance,fill=carrying,left=5mm of encumbered,dndlabel=CARRYING CAPACITY]
   {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
 
-\node (heavily) [dndencumbrance,fill=heavilyencumberedcolor,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
+\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
   {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
 
 \newcounter{significantWeight}
@@ -457,33 +458,29 @@
 \yellowheight=\numexpr\value{yellowLines}\relax\tenthstoneheight  
 \redheight=\numexpr\value{redLines}\relax\tenthstoneheight
 
-%% Add colored background rectangles behind the slots box
-%\ifnum\value{greenLines}>0\relax
-%  \fill [green!30] ([yshift=-2mm]slots.north west) rectangle ([yshift=-\greenheight-2mm]slots.north east);
-%\fi
-%\ifnum\value{yellowLines}>0\relax  
-%  \fill [yellow!50] ([yshift=-\greenheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-2mm]slots.north east);
-%\fi
-%\ifnum\value{redLines}>0\relax
-%  \fill [red!30] ([yshift=-\greenheight-\yellowheight-2mm]slots.north west) rectangle ([yshift=-\greenheight-\yellowheight-\redheight-2mm]slots.north east);
-%\fi
-
-
-
 % Create the equipment slots box with colored backgrounds
-\node (slots) [dndbox,minimum width=60mm,right=of current bounding box.west,anchor=west] {
-  \begin{minipage}{60mm}
-  \vspace*{\greenheight+\yellowheight+\redheight+10mm\relax}
-  \end{minipage}
- }
- ;
- \path (slots.north) ++(0,-10mm) coordinate (lastslot);
+\node (slotspace) [slotblock,minimum height=\dimexpr\greenheight+\yellowheight+\redheight+10mm\relax,fill=white,right=of current bounding box.west,anchor=west] { };
 
-  \foreach \thing in {{fish},{fowl},{fury}} {
-     \node [anchor=north] at (lastslot.south) (thisslot) {\thing};
-     \path (thisslot.south) coordinate (lastslot);
-  }
+\node (slotgreen) [slotblock,fill=unencumbered,anchor=north west,
+                   minimum height=\dimexpr\greenheight+10mm\relax]
+  at (slotspace.north west) {DEBUG: \arabic{greenLines} slots} ;
 
+\node (slotyellow) [slotblock,fill=encumbered,anchor=north west,
+                   minimum height=\yellowheight]
+  at (slotgreen.south west) {DEBUG: \arabic{yellowLines} slots} ;
+
+\node (slotred) [slotblock,fill=heavilyencumbered,anchor=north west,
+                   minimum height=\redheight]
+  at (slotyellow.south west) {DEBUG: \arabic{redLines} slots} ;
+
+
+% \path (slots.north) ++(0,-10mm) coordinate (lastslot);
+%
+%  \foreach \thing in {{fish},{fowl},{fury}} {
+%     \node [anchor=north] at (lastslot.south) (thisslot) {\thing};
+%     \path (thisslot.south) coordinate (lastslot);
+%  }
+%
 
 % Significant equipment list on the right
 \node [dndbox,minimum width=60mm,right=10mm of heavily,anchor=north west] {

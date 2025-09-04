@@ -57,7 +57,7 @@
   dndencumbrance/.style={
     dndmaxhp,
     minimum width=40mm,
-    font={\large\bfseries\sffamily},
+    font={\large\boldmath\bfseries\sffamily},
   },
   dndmaxhp/.style={
     dndbox,
@@ -79,6 +79,10 @@
     minimum width=18mm,
     minimum height=20mm,
     fill=none,
+  },
+  slotblock/.style={
+    minimum width=60mm,
+    outer sep=0pt,
   },
 }
 
@@ -1549,6 +1553,64 @@
   }%
 }
 
+% \renderstones{<tenths>} - Render weight in stones with fractions
+\newcommand{\renderstones}[1]{%
+  \pgfmathsetmacro{\tenths}{int(#1)}%
+  \pgfmathsetmacro{\remainder}{int(mod(\tenths,10))}%
+  \ifnum\remainder=0\relax
+    % Multiple of 10 - display whole stones
+    \pgfmathparse{int(\tenths/10)}%
+    \edef\stonesrendered{\pgfmathresult}%
+    \ensuremath{\stonesrendered}%
+  \else
+    \pgfmathsetmacro{\remainderfive}{int(mod(\tenths,5))}%
+    \ifnum\remainderfive=0\relax
+      % Multiple of 5 but not 10 - display with halves
+      \pgfmathparse{int(\tenths/10)}%
+      \let\wholestones\pgfmathresult%
+      \ifnum\wholestones=0\relax
+        \ensuremath{\frac{1}{2}}%
+      \else
+        \ensuremath{\wholestones\frac{1}{2}}%
+      \fi
+    \else
+      \pgfmathsetmacro{\remaindertwo}{int(mod(\tenths,2))}%
+      \ifnum\remaindertwo=0\relax
+        % Multiple of 2 but not 10 - display with fifths
+        \pgfmathparse{int(\tenths/10)}%
+        \let\wholestones\pgfmathresult%
+        \pgfmathparse{int(mod(\tenths,10)/2)}%
+        \let\fifths\pgfmathresult%
+        \ifnum\wholestones=0\relax
+          \ensuremath{\frac{\fifths}{5}}%
+        \else
+          \ensuremath{\wholestones\frac{\fifths}{5}}%
+        \fi
+      \else
+        % Resort to tenths
+        \pgfmathparse{int(\tenths/10)}%
+        \let\wholestones\pgfmathresult%
+        \pgfmathparse{int(mod(\tenths,10))}%
+        \let\tenthspart\pgfmathresult%
+        \ifnum\wholestones=0\relax
+          \ensuremath{\frac{\tenthspart}{10}}%
+        \else
+          \ensuremath{\wholestones\frac{\tenthspart}{10}}%
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+% Macro to return "stone" or "stones" based on weight in tenths
+\newcommand{\stoneplural}[1]{%
+  \ifnum#1>10\relax
+    stones%
+  \else
+    stone%
+  \fi
+}
+
 \newcommand{\setDNDfont}[2]{%
   \@ifundefined{dnd@font@#1}{%
     \PackageError{dnd}{DND key `#1' has not been declared}{}%
@@ -2119,6 +2181,7 @@
 \newDND{CON SAVING}
 \newDND{CP}
 \newDND{CURRENT HIT POINTS}
+\newDND{DESCRIPTION}
 \newDND{DESCRIPTION + PERSONALITY}
 \newDND{DEX}
 \newDND{DEX SAVING}
@@ -2136,6 +2199,7 @@
 \newDND{SHIELDS}
 \newDND{SLOTTED ITEMS}
 \newDND{FEATURES}
+\newDND{GM NOTES}
 \newDND{GP}
 \newDND{HIT DICE}
 \newDND{INITIATIVE}
