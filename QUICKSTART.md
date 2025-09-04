@@ -48,6 +48,7 @@ Start with your character's basic identity:
 "CHARACTER NAME": "Zanogh Greyfist"
 "PLAYER NAME": "Amelia"
 AGE: "young adult"  # Optional: age category or life stage
+DESCRIPTION: "Tall half-orc with gray skin and fierce amber eyes"  # Optional: physical description
 CLASS: "Barbarian"
 LEVEL: 3
 SPECIALTY: ""  # Optional: subclass, domain, archetype, etc.
@@ -69,6 +70,7 @@ Optionally add a personal motivation that appears in italics:
 
 ```yaml
 MOTIVATION: "Zanogh wants to get in touch with her orcish side"
+GM NOTES: "Player is new to D&D - help with tactical decisions"  # Optional: GM-only notes
 ```
 
 </div>

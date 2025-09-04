@@ -95,6 +95,18 @@ The system automatically sets saving throw proficiencies:
 
 ---
 
+## **DESCRIPTION** (USER)
+**Usage**: Physical description of the character  
+**Type**: String (can be multi-line)  
+**Required**: No (optional)  
+**Template Usage**: Available on web form only, not rendered in PDF  
+**Examples**:
+- `DESCRIPTION: "Tall with dark hair and piercing blue eyes"`
+- `DESCRIPTION: "Short and stocky dwarf with braided beard"`
+- `DESCRIPTION: "Graceful elf with silver hair and pointed ears"`
+
+---
+
 ## **ARMOR CLASS** (USER)
 **Usage**: Character's Armor Class value  
 **Type**: Number  
@@ -391,6 +403,18 @@ FEATURES:
   - name: "Bardic Inspiration 2/day"  
     description: "Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes."
 ```
+
+---
+
+## **GM NOTES** (USER)
+**Usage**: Private notes for the game master  
+**Type**: String (can be multi-line)  
+**Required**: No (optional)  
+**Template Usage**: Not rendered in PDF or web form (GM only)  
+**Examples**:
+- `GM NOTES: "Player tends to be cautious in combat"`
+- `GM NOTES: "Has strong connection to the local thieves' guild"`
+- `GM NOTES: "Secretly searching for their missing sister"`
 
 ---
 
