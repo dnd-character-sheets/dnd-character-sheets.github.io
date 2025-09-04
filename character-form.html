@@ -323,6 +323,12 @@
             </div>
             <div class="field-row">
                 <div class="field">
+                    <label for="description">Physical Description</label>
+                    <textarea id="description" name="description" rows="3" placeholder="e.g., tall, dark hair, piercing blue eyes"></textarea>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
                     <label for="class">Class</label>
                     <select id="class" name="class">
                         <option value="">Select Class</option>
@@ -867,6 +873,7 @@
                 setFormValue('#character-name', data['CHARACTER NAME']);
                 setFormValue('#player-name', data['PLAYER NAME']);
                 setFormValue('#age', data['AGE']);
+                setFormValue('#description', data['DESCRIPTION']);
                 setFormValue('#race', data['RACE']);
                 setFormValue('#background', data['BACKGROUND']);
                 setFormValue('#alignment', data['ALIGNMENT']);
@@ -1124,6 +1131,7 @@
             const characterName = form.querySelector('#character-name')?.value || '';
             const playerName = form.querySelector('#player-name')?.value || '';
             const age = form.querySelector('#age')?.value || '';
+            const description = form.querySelector('#description')?.value || '';
             const characterClass = form.querySelector('#class')?.value || '';
             const level = form.querySelector('#level')?.value || '';
             const specialty = form.querySelector('#specialty')?.value || '';
@@ -1137,6 +1145,7 @@
             data['CHARACTER NAME'] = characterName;
             data['PLAYER NAME'] = playerName;
             if (age) data['AGE'] = age;  // Optional - only include when not empty
+            if (description) data['DESCRIPTION'] = description;  // Optional - only include when not empty
             data['CLASS'] = characterClass;
             data['LEVEL'] = parseInt(level) || level;
             if (specialty) data['SPECIALTY'] = specialty;  // Optional - only include when not empty
