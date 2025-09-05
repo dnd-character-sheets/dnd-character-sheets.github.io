@@ -3,6 +3,8 @@
 \usepackage{multicol}
 %\usepackage{amsmath}
 
+\newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
+
 \usepackage{pgfkeys}
 
 % Incomplete character support
@@ -57,14 +59,11 @@
 %\let\stat\stat@
 %\makeatother
 
+\input{zanogh}
+
 
 \noindent
 \begin{charsheet}
-
-\input{zanogh}
-%\input{miriel}
-%\input{kylane3}
-%  \setcounter{proficiency bonus}{2}
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
@@ -366,8 +365,8 @@
 \clearpage
 
 \begin{charsheet}
-\input{stats}
 
+\sffamily
 \colorlet{light gray}{white!90!black}
 
 
@@ -401,17 +400,7 @@
 
 \node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment by stones}}}};
 
-% Three capacity boxes centered below top
-\node (encumbered) [dndencumbrance,fill=encumbered,below=of banner,dndlabel=ENCUMBERED] 
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
-  STR?}};
-
-\node (carrying) [dndencumbrance,fill=carrying,left=5mm of encumbered,dndlabel=CARRYING CAPACITY]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
-
-\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
-
+% Calculate total weight (in tenths of stones)
 \newcounter{significantWeight}
 \setcounter{significantWeight}{\value{HEAVY WEAPONS stones}}
 \addtocounter{significantWeight}{\value{NORMAL WEAPONS stones}}
@@ -440,7 +429,7 @@
 \ifDNDnonempty{STR}{%
   % Calculate how many lines each color region should have
   % Total lines = 5 * remaining capacity (in stones)
-  \setcounter{greenLines}{\numexpr\value{encumberedThreshold} * 5 / 10\relax}%
+  \setcounter{greenLines}{\numexpr(\value{encumberedThreshold}-\value{significantWeight}) * 5 / 10\relax}%
   \setcounter{yellowLines}{\numexpr(\value{heavilyEncumberedThreshold} - \value{encumberedThreshold}) * 5 / 10\relax}%
   \setcounter{redLines}{\numexpr(\value{carryingCapacity} - \value{heavilyEncumberedThreshold}) * 5 / 10\relax}%
 }{%
@@ -454,16 +443,34 @@
 \newdimen\yellowheight
 \newdimen\redheight
 
-\greenheight=\numexpr\value{greenLines}\relax\tenthstoneheight
-\yellowheight=\numexpr\value{yellowLines}\relax\tenthstoneheight  
-\redheight=\numexpr\value{redLines}\relax\tenthstoneheight
+\greenheight=\numexpr2*\value{greenLines}\relax\tenthstoneheight
+\yellowheight=\numexpr2*\value{yellowLines}\relax\tenthstoneheight  
+\redheight=\numexpr2*\value{redLines}\relax\tenthstoneheight
 
-% Create the equipment slots box with colored backgrounds
-\node (slotspace) [slotblock,minimum height=\dimexpr\greenheight+\yellowheight+\redheight+10mm\relax,fill=white,right=of current bounding box.west,anchor=west] { };
+\path (top left) 
+ ++(0, -1cm)
+  node (slotstitle) [slotblock,anchor=north west,fill=blue!10!white] 
+  {\Large\textbf{Slotted Equipment}}
+  ;
+
+% Three capacity boxes centered below top
+\path (slotstitle.north east) ++(20pt,0)
+ node (carrying) [dndencumbrance,fill=carrying,anchor=north west,dndlabel=CARRYING CAPACITY]
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
+
+\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying,dndlabel=ENCUMBERED] 
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
+  STR?}};
+
+\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
+  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
+
+
+
 
 \node (slotgreen) [slotblock,fill=unencumbered,anchor=north west,
-                   minimum height=\dimexpr\greenheight+10mm\relax]
-  at (slotspace.north west) {DEBUG: \arabic{greenLines} slots} ;
+                   minimum height=\dimexpr\greenheight\relax]
+  at (slotstitle.south west) {DEBUG: \arabic{greenLines} slots} ;
 
 \node (slotyellow) [slotblock,fill=encumbered,anchor=north west,
                    minimum height=\yellowheight]
@@ -473,8 +480,26 @@
                    minimum height=\redheight]
   at (slotyellow.south west) {DEBUG: \arabic{redLines} slots} ;
 
+\foreach \deltay in {1,2,...,\numexpr\value{greenLines}+\value{yellowLines}+\value{redLines}\relax} {
+  \draw (slotstitle.south west)
+    ++(8pt,-\deltay*2*\tenthstoneheight)
+    -- ++(\slotblockwidth-8pt,0)
+   ;
+}
 
-% \path (slots.north) ++(0,-10mm) coordinate (lastslot);
+\path (slotstitle.south west) ++(5pt,2pt) coordinate (lastslot);
+
+\begingroup
+  \newcommand\DNDitem[2]{%
+     \path (lastslot)
+       ++(0,-2\tenthstoneheight)
+       node [anchor=base west] (thisslot) {\color{black!30!white}#1};
+     \path (thisslot.base west) coordinate (lastslot);
+  }
+  \doDNDitems{LIGHT WEAPONS}
+  \doDNDitems{SLOTTED ITEMS}
+\endgroup
+
 %
 %  \foreach \thing in {{fish},{fowl},{fury}} {
 %     \node [anchor=north] at (lastslot.south) (thisslot) {\thing};
@@ -482,56 +507,27 @@
 %  }
 %
 
-% Significant equipment list on the right
-\node [dndbox,minimum width=60mm,right=10mm of heavily,anchor=north west] {
-  \begin{tabular}{lr}
-  \toprule
-  \emph{Equipment} & \emph{Weight} \\
-  \midrule
-  % Include all equipment except SLOTTED ITEMS, LIGHT WEAPONS, and FREE ITEMS
-  % TODO: Add actual equipment items
-  \bottomrule
-  \end{tabular}
-};
 
 % Equipment weight breakdown table
-\node [below=10mm of encumbered,anchor=north] {
-  \begin{tabular}{lr}
-  \toprule
-  \emph{Category} & \emph{Weight (stones)} \\
+\path (heavily.south east) ++(0,-10mm) 
+  node [dndbox, anchor=north east,fill=equipment,inner sep=15pt] {
+  \def\arraystretch{1.3}%
+  \newcommand{\DNDitem}[2]{#1 & $\mathbf{\renderstones{#2}}$&\stonesplural{#2}\cr}%
+  \begin{tabular}{lr@{~}l}
+  \multicolumn3{c}{\bigstrut \Large \textbf{Heavy Equipment}}\\[5pt]
+  % Local definition of \DNDitem for display
+  % Display all significant equipment items
+  \doDNDitems{HEAVY WEAPONS}%
+  \doDNDitems{NORMAL WEAPONS}%
+  \doDNDitems{SHIELDS}%
+  \doDNDitems{HEAVY ARMOR}%
+  \doDNDitems{NORMAL ARMOR}%
+  \doDNDitems{LIGHT ARMOR}%
+  \doDNDitems{HEAVY ITEMS}%
+  \crcr
   \midrule
-  % Display non-zero weight categories
-  \ifnum\value{HEAVY WEAPONS stones}>0 \relax
-  Heavy weapons & \renderstones{\value{HEAVY WEAPONS stones}} \\
-  \fi
-  \ifnum\value{NORMAL WEAPONS stones}>0 \relax
-  Normal weapons & \renderstones{\value{NORMAL WEAPONS stones}} \\
-  \fi
-  \ifnum\value{LIGHT WEAPONS stones}>0 \relax
-  Light weapons & \renderstones{\value{LIGHT WEAPONS stones}} \\
-  \fi
-  \ifnum\value{SHIELDS stones}>0 \relax
-  Shields & \renderstones{\value{SHIELDS stones}} \\
-  \fi
-  \ifnum\value{HEAVY ARMOR stones}>0 \relax
-  Heavy armor & \renderstones{\value{HEAVY ARMOR stones}} \\
-  \fi
-  \ifnum\value{NORMAL ARMOR stones}>0 \relax
-  Normal armor & \renderstones{\value{NORMAL ARMOR stones}} \\
-  \fi
-  \ifnum\value{LIGHT ARMOR stones}>0 \relax
-  Light armor & \renderstones{\value{LIGHT ARMOR stones}} \\
-  \fi
-  \ifnum\value{HEAVY ITEMS stones}>0 \relax
-  Heavy items & \renderstones{\value{HEAVY ITEMS stones}} \\
-  \fi
-  \ifnum\value{SLOTTED ITEMS stones}>0 \relax
-  Slotted items & \renderstones{\value{SLOTTED ITEMS stones}} \\
-  \fi
-  \ifnum\value{FREE ITEMS stones}>0 \relax
-  Free items & \renderstones{\value{FREE ITEMS stones}} \\
-  \fi
-  \bottomrule
+%  \doDNDitems{SLOTTED ITEMS}%
+  Total&\renderstones{\value{significantWeight}}&\stonesplural{\value{significantWeight}}\\
   \end{tabular}
 };
 
