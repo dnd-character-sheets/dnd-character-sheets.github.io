@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \usepackage{charsheet}
 \usepackage{multicol}
+\usetikzlibrary{fit}
 %\usepackage{amsmath}
 
 \newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
@@ -490,6 +491,15 @@
   \doDNDitems{LIGHT WEAPONS}
   \doDNDitems{SLOTTED ITEMS}
 \endgroup
+
+\path (slotred.south west) ++(1pt,2pt) coordinate (decor ll)
+      (slotstitle.north east) ++(-1pt,-2pt) coordinate (decor ur)
+
+\node [draw,decorated stub rectangle,
+        fit=(decor ll) (decor ur),
+      ]
+  {};
+
 
 %
 %  \foreach \thing in {{fish},{fowl},{fury}} {
