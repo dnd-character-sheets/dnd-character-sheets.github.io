@@ -35,7 +35,7 @@ local vprintf = fields.verbose and eprintf or function() end
 
 local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error'
-    or 'pdflatex -interaction=scrollmode'
+    or 'pdflatex -interaction=scrollmode -halt-on-error'
 
 
 
@@ -175,6 +175,9 @@ end
 
 local function render_attack_record (rec)
   local parts = {}
+  if type(rec.ATTACK) == 'number' then
+    rec.ATTACK = stringf('%+d', rec.ATTACK)
+  end
   for _,k in ipairs(keys_in_canonical_order(rec, ATTACK_INDEX)) do
 --    require 'inspect'.show { k = k, field = rec[k] or 'nil' }
     outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
