@@ -35,7 +35,7 @@ local vprintf = fields.verbose and eprintf or function() end
 
 local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error'
-    or 'pdflatex'
+    or 'pdflatex -interaction=scrollmode'
 
 
 
