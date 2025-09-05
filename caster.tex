@@ -46,21 +46,7 @@
 \newcommand\nextstatloc{inside north west corner=of stats background}
 
 
-
-%\makeatletter
-%\newcommand{\stat@starred}[2]{%
-%  \newcounter{tempmodifier}%
-%  \newcounter{tempmodifierwithprof}%
-%  \setcounter{tempmodifier}{(#2 - 10) / 2}%
-%  \setcounter{tempmodifierwithprof}{\value{tempmodifier} + \value{proficiencybonus}}%
-%  \fullstatbox[\nextstatloc]{#1}{#2}{\thetempmodifier}{\thetempmodifierwithprof}%
-%}
-%\newcommand{\stat@}{\@ifstar{\stat@starred}{\stat}}
-%\let\stat\stat@
-%\makeatother
-
-\input{zanogh}
-
+\input{stats}
 
 \noindent
 \begin{charsheet}
