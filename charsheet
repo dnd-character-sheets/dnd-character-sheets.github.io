@@ -277,6 +277,83 @@ local function heuristic_category(s)
   return 'SLOTTED ITEMS'
 end
 
+---------------------------------------------------------------------------
+-- 3.6. Equipment format detection and processing
+---------------------------------------------------------------------------
+
+local function is_string_list_with_categories(equipment_data)
+  if type(equipment_data) ~= "table" or #equipment_data == 0 then
+    return false
+  end
+  if type(equipment_data[1]) ~= "string" and type(equipment_data[1]) ~= "number" then
+    return false
+  end
+  -- Check if any item has category syntax
+  for _, item in ipairs(equipment_data) do
+    if type(item) == "string" and (item:match(":") or item:match("^-")) then
+      return true
+    end
+  end
+  return false
+end
+
+local function is_structured_object(equipment_data)
+  if type(equipment_data) ~= "table" or #equipment_data > 0 then
+    return false
+  end
+  -- Has string keys (categories) rather than numeric indices
+  return next(equipment_data) ~= nil
+end
+
+
+-- Helper functions for equipment processing
+local function extract_weight_arg(category, equipment_item)
+  if category == "HEAVY ITEMS" then
+    local stones = equipment_item:match("%((%d+) stones?%)")
+    if stones then
+      return string.format("[%d]", tonumber(stones) * 10)
+    end
+  end
+  return ""
+end
+
+local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
+  local weight_arg = extract_weight_arg(category, equipment_item)
+  table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
+    weight_arg, category:gsub('&', '+'), escape(equipment_item)))
+  table.insert(flattened_equipment, render_item(equipment_item))
+end
+
+-- Process structured equipment and generate LaTeX output
+local function emit_structured_equipment(structured_equipment, lines)
+  local flattened_equipment = {}
+  
+  -- Process all categories
+  for category, items in pairs(structured_equipment) do
+    if type(items) == "table" and #items > 0 then
+      if category ~= "UNCATEGORIZED" then
+        -- Categorized items get \addDNDitem commands
+        for _, equipment_item in ipairs(items) do
+          add_equipment_item(category, equipment_item, lines, flattened_equipment)
+        end
+      else
+        -- Uncategorized items only go to flattened list
+        for _, equipment_item in ipairs(items) do
+          table.insert(flattened_equipment, render_item(equipment_item))
+        end
+      end
+    end
+  end
+  
+  -- Emit flattened equipment list
+  if #flattened_equipment > 0 then
+    table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}", 
+      table.concat(flattened_equipment, "\n")))
+  else
+    table.insert(lines, "\\setDND{EQUIPMENT}{}")
+  end
+end
+
 -- Parse equipment from a list of strings into structured format
 -- Supports both inline format ("NORMAL WEAPONS: Longsword") and
 -- block format ("NORMAL WEAPONS:", "- Longsword", "- Shortbow")
@@ -290,8 +367,9 @@ local function parse_equipment_strings(lines)
   end
   
   while i <= #lines do
+    -- see grammar for EQUIPMENT in YAML.md
     local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
-    local block_header = line:match("^(.+):$"):lower()
+    local block_header = line:match("^(.+):$")
     
     if line == "" then
       -- Skip empty lines
@@ -323,6 +401,22 @@ local function parse_equipment_strings(lines)
     end
   end
   return equipment
+end
+
+-- Convert any equipment format to unified structured format
+local function equipment(equipment_data)
+  if is_string_list_with_categories(equipment_data) then
+    return parse_equipment_strings(equipment_data)
+  elseif is_structured_object(equipment_data) then
+    return equipment_data -- already in structured format
+  elseif type(equipment_data) == "table" and #equipment_data > 0 then
+    -- Traditional string list - put everything in heuristic category
+    local result = {}
+    result[heuristic_category()] = equipment_data
+    return result
+  else
+    return {} -- empty equipment
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -367,47 +461,8 @@ local function convert_mapping (map)
     if k ~= "PROFICIENCY BONUS" and k ~= "Proficiency Bonus" then
       local v = map[k]
       local t = type(v)
-      if k == "EQUIPMENT" and t == "table" and not (#v > 0 and (type(v[1])=="string" or type(v[1])=="number")) then
-        -- Handle new categorized equipment format
-        local flattened_equipment = {}
--- xxx needs a fix
---        local equipment_categories = {
---          "HEAVY WEAPONS", "NORMAL WEAPONS", "LIGHT WEAPONS",
---          "HEAVY ARMOR", "NORMAL ARMOR", "LIGHT ARMOR",
---          "HEAVY ITEMS",
---          "SLOTTED ITEMS", "FREE ITEMS", 
---          "SHIELDS",
---        }
-        
-        -- Process categorized equipment format
-        for category, items in pairs(v) do
-          if type(items) == "table" and #items > 0 then
-            for _,equipment_item in ipairs(items) do
-              local weight_arg = ""
-              
-              -- Parse weight from heavy items like "Meteor iron (4 stones)"
-              if category == "HEAVY ITEMS" then
-                local stones = equipment_item:match("%((%d+) stones?%)")
-                if stones then
-                  weight_arg = string.format("[%d]", tonumber(stones) * 10)
-                end
-              end
-              
-              table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
-                weight_arg, category:gsub('&', '+'), escape(equipment_item)))
-              table.insert(flattened_equipment, render_item(equipment_item))
-            end
-          end
-        end
-        
-        -- Emit flattened equipment list
-        if #flattened_equipment > 0 then
-          table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}", 
-            table.concat(flattened_equipment, "\n")))
-        else
-          -- Empty equipment list for new format
-          table.insert(lines, "\\setDND{EQUIPMENT}{}")
-        end
+      if k == "EQUIPMENT" and t == "table" then
+        emit_structured_equipment(equipment(v), lines)
       elseif t=="string" or t=="number" or t=="boolean" then
         table.insert(lines, render_simple_kv(k, tostring(v)))
       elseif t=="table" then
