@@ -415,9 +415,14 @@
 \ifDNDnonempty{STR}{%
   % Calculate how many lines each color region should have
   % Total lines = 5 * remaining capacity (in stones)
-  \setcounter{greenLines}{\numexpr(\value{encumberedThreshold}-\value{significantWeight}) * 5 / 10\relax}%
-  \setcounter{yellowLines}{\numexpr(\value{heavilyEncumberedThreshold} - \value{encumberedThreshold}) * 5 / 10\relax}%
-  \setcounter{redLines}{\numexpr(\value{carryingCapacity} - \value{heavilyEncumberedThreshold}) * 5 / 10\relax}%
+  % Use PGF arithmetic for truncation instead of \numexpr rounding
+  % \pgfmathtruncatemacro truncates toward zero, giving us floor division for positive numbers
+  \pgfmathtruncatemacro{\tempgreenlines}{(\value{encumberedThreshold}-\value{significantWeight}) * 5 / 10}%
+  \setcounter{greenLines}{\tempgreenlines}%
+  \pgfmathtruncatemacro{\tempyellowlines}{(\value{heavilyEncumberedThreshold} - \value{encumberedThreshold}) * 5 / 10}%
+  \setcounter{yellowLines}{\tempyellowlines}%
+  \pgfmathtruncatemacro{\tempredlines}{(\value{carryingCapacity} - \value{heavilyEncumberedThreshold}) * 5 / 10}%
+  \setcounter{redLines}{\tempredlines}%
 }{%
   \setcounter{greenLines}{0}%
   \setcounter{yellowLines}{0}%
