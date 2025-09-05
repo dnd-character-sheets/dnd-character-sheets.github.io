@@ -281,13 +281,14 @@ local function convert_mapping (map)
       if k == "EQUIPMENT" and t == "table" and not (#v > 0 and (type(v[1])=="string" or type(v[1])=="number")) then
         -- Handle new categorized equipment format
         local flattened_equipment = {}
-        local equipment_categories = {
-          "SLOTTED ITEMS", "FREE ITEMS", 
-          "HEAVY WEAPONS", "NORMAL WEAPONS", "LIGHT WEAPONS",
-          "SHIELDS",
-          "HEAVY ARMOR", "NORMAL ARMOR", "LIGHT ARMOR",
-          "HEAVY ITEMS"
-        }
+-- xxx needs a fix
+--        local equipment_categories = {
+--          "HEAVY WEAPONS", "NORMAL WEAPONS", "LIGHT WEAPONS",
+--          "HEAVY ARMOR", "NORMAL ARMOR", "LIGHT ARMOR",
+--          "HEAVY ITEMS",
+--          "SLOTTED ITEMS", "FREE ITEMS", 
+--          "SHIELDS",
+--        }
         
         -- Process categorized equipment format
         for category, items in pairs(v) do
