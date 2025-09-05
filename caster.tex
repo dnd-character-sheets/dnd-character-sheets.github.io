@@ -103,8 +103,9 @@
 
       \node (hitdice)
              [dndhits,width=20mm,inside south east corner=of hpbackground,
-             dndlabel=HIT DICE] 
-         { \Large \getDND*{HIT DICE}{} }
+             dndlabel=HIT DICE,label footer height=-8pt,
+             font=\Large] 
+         {\tracingmacros=1 \getDND*{HIT DICE}}
          ;
 
      \ifDNDdefined{LEVEL}{
@@ -120,12 +121,12 @@
 
       \node [dndmaxhp,above left corner=of curhp,dndlabel=MAX HP] 
          (maxhp)
-         { \Large \getDND*{MAX HP} }
+         {\getDND*{MAX HP}}
          ;
 
       \node (initiative)
             [dndmaxhp,right=of maxhp,dndlabel=INITIATIVE] 
-         { \getDND*{INITIATIVE} }
+         {\getDND*{INITIATIVE}}
          ;
 
 %\node [draw,above=of initiative] % {\slotsliteral7};
@@ -134,14 +135,16 @@
 
       \node (speed)
             [dndmaxhp,right=of initiative,dndlabel=SPEED] 
-         { \getDND*{SPEED} }
+         {\getDND*{SPEED}}
          ;
 
 
        \node (ac) [dndmaxhp,shield,innershield,draw,ultra thick,right=of speed,width=15mm,
                    dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
+                   font=\Large,
+                   label footer height=12pt,
             ]
-      {\raisebox{4mm}{\getDND*{ARMOR CLASS}}}
+      {\getDND*{ARMOR CLASS}}
       ;
 
   \endgroup
@@ -244,7 +247,7 @@
 \node (proficiency bonus)
       [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
        right of upper corner=3.5mm of stats background]
-   {\hbox to 0pt{\hss\hspace*{9mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
+   {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
    ;
 \node [anchor=west,proficiencies,circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
