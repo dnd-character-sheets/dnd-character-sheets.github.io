@@ -1544,6 +1544,14 @@
   \expandafter\newtoks\csname #1 list\endcsname
 }
 
+\newcommand\withitemweight[2]{%
+  \@ifundefined{c@#2 stones}{%
+    \PackageError{dnd}{DND item type `#2' has not been declared}{}%
+  }{%
+    #1{\value{#2 stones}}%
+  }%
+}
+
 % \resetDNDitems - reinitialize all declared categories
 \newcommand{\resetDNDitems}{%
   \@for\@category:=\@dnditemcategories\do{%
