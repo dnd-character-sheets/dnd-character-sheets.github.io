@@ -237,6 +237,92 @@ local function render_struct_list (key, list)
 end
 
 ---------------------------------------------------------------------------
+-- 3.5. Equipment string list parsing
+---------------------------------------------------------------------------
+
+local category_map = {
+  ["heavy weapon"] = "HEAVY WEAPONS",
+  ["normal weapon"] = "NORMAL WEAPONS",
+  ["light weapon"] = "LIGHT WEAPONS",
+  ["shield"] = "SHIELDS",
+  ["heavy armor"] = "HEAVY ARMOR",
+  ["heavy armour"] = "HEAVY ARMOR",
+  ["normal armor"] = "NORMAL ARMOR",
+  ["normal armour"] = "NORMAL ARMOR", 
+  ["medium armor"] = "NORMAL ARMOR",
+  ["medium armour"] = "NORMAL ARMOR",
+  ["light armor"] = "LIGHT ARMOR",
+  ["light armour"] = "LIGHT ARMOR",
+  ["heavy item"] = "HEAVY ITEMS",
+  ["slotted item"] = "SLOTTED ITEMS",
+  ["free item"] = "FREE ITEMS"
+}
+
+local function strip_s(s)
+  if s:sub(-1) == 's' then
+    return s:sub(1, -2)
+  else
+    return s
+  end
+end
+
+local function category(s)
+  return category_map[strip_s(s:lower())]
+end
+
+local function heuristic_category(s)
+  return 'SLOTTED ITEMS'
+end
+
+-- Parse equipment from a list of strings into structured format
+-- Supports both inline format ("NORMAL WEAPONS: Longsword") and
+-- block format ("NORMAL WEAPONS:", "- Longsword", "- Shortbow")
+local function parse_equipment_strings(lines)
+  local equipment = {}
+  local i = 1
+
+  local function add(category, item)
+    equipment[category] = equipment[category] or {}
+    table.insert(equipment[category], item)
+  end
+  
+  while i <= #lines do
+    local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
+    local block_header = line:match("^(.+):$"):lower()
+    
+    if line == "" then
+      -- Skip empty lines
+      i = i + 1
+    elseif block_header and category(block_header) then
+      -- Block format category header: "CATEGORY:"
+      local cat = category(block_header)
+      i = i + 1
+      while i <= #lines and lines[i]:find '^%s*%-%s' do
+        local item = lines[i]:gsub("^%s*%-%s+", ""):gsub("%s+$", "")
+        add(cat, item)
+        i = i + 1
+      end
+    elseif block_header then
+      eprintf("Warning: Unknown equipment category %q\n", block_header)
+      i = i + 1
+    elseif line:match("^%S.*:") then
+      -- Inline format: "CATEGORY: Item Name"
+      local cat, item = assert(line:match("^([^:]-)%s*:%s*(.*)$"))
+      if category(cat) then
+        add(category(cat), item)
+      else
+        eprintf("Warning: Unknown equipment category %q in line %q\n", cat, line)
+      end
+      i = i + 1
+    else
+      add(heuristic_category(line), line)
+      i = i + 1
+    end
+  end
+  return equipment
+end
+
+---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
 ---------------------------------------------------------------------------
 local function convert_mapping (map)
