@@ -442,7 +442,8 @@
 
 \path (top left) 
  ++(0, -1cm)
-  node (slotstitle) [slotblock,anchor=north west,fill=blue!10!white] 
+  node (slotstitle)
+    [slotblock,anchor=north west,fill=blue!10!white,minimum height=28pt] 
   {\Large\textbf{Slotted Equipment}}
   ;
 
@@ -476,7 +477,7 @@
 \foreach \deltay in {1,2,...,\numexpr\value{greenLines}+\value{yellowLines}+\value{redLines}\relax} {
   \draw (slotstitle.south west)
     ++(8pt,-\deltay*2*\tenthstoneheight)
-    -- ++(\slotblockwidth-8pt,0)
+    -- ++(\slotblockwidth-16pt,0)
    ;
 }
 
