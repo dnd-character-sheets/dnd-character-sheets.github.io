@@ -383,6 +383,24 @@ is defined by this EBNF grammar:
     <category>  ::= light armor | medium armor | ...
                  |  <category>s
 
+**String List Format (Informal Description):**
+
+When using a list of strings for equipment, you can mix two styles:
+
+1. **Inline Category Format**: Each line can optionally start with a category name followed by a colon, then the item name:
+   - `"Longsword"` (no category, will be auto-categorized)
+   - `"NORMAL WEAPONS: Longsword"` (explicitly categorized)
+   - `"light armor: Leather Armor"` (categories can be singular or plural)
+
+2. **Block Category Format**: A category header line followed by bulleted items:
+   - `"NORMAL WEAPONS:"` (category header line ending with colon)
+   - `"- Longsword"` (item line starting with dash and space)
+   - `"- Shortbow"` (additional items in same category)
+
+You can freely mix both styles in the same equipment list. Category names are case-insensitive and can be singular or plural (e.g., "light armor" or "light armors"). The system will automatically map them to the standard category names.
+
+**Note**: See QUICKSTART.md for examples of this format in use.
+
 
 
 ---
