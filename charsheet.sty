@@ -1559,34 +1559,38 @@
 % Updated \addDNDitem[<weight>]{<category>}{<item>}
 %    adds \DNDitem{item}{weight} to list
 \newcommand{\addDNDitem}[3][]{%
-  % Determine weight to add
-  \ifthenelse{\equal{#1}{}}{%
-    % Use default weight for category
-    \edef\@itemweight{\csname @dndweight@#2\endcsname}%
+  \@ifundefined{c@#2 stones}{%
+    \PackageError{dnd}{adding item: DND item type `#2' has not been declared}{}%
   }{%
-    % Use specified weight
-    \edef\@itemweight{#1}%
-  }%
-  % Add weight to category counter
-  \addtocounter{#2 stones}{\@itemweight}%
-\begingroup
-%\tracingmacros=1
-%\tracingcommands=1
-  \expandafter\let\expandafter\@thelist\csname#2 list\endcsname
-  \edef\@doit{\noexpand\@thelist={\the\@thelist\noexpand\DNDitem{#3}{\@itemweight}}}%
-  \global\@doit
-\endgroup
-  %
-  % Add item to category list with \DNDitem format
-%  \edef\@addit{\noexpand\@dnditemtoks{\the\csname#2 list\endcsname\noexpand\DNDitem{#3}{\@itemweight}}}%
-%  \@addit
-%  \expandafter\csname#2 list\endcsname\expandafter{\the\@dnditemtoks}%
+    % Determine weight to add
+    \ifthenelse{\equal{#1}{}}{%
+      % Use default weight for category
+      \edef\@itemweight{\csname @dndweight@#2\endcsname}%
+    }{%
+      % Use specified weight
+      \edef\@itemweight{#1}%
+    }%
+    % Add weight to category counter
+    \addtocounter{#2 stones}{\@itemweight}%
+  \begingroup
+  %\tracingmacros=1
+  %\tracingcommands=1
+    \expandafter\let\expandafter\@thelist\csname#2 list\endcsname
+    \edef\@doit{\noexpand\@thelist={\the\@thelist\noexpand\DNDitem{#3}{\@itemweight}}}%
+    \global\@doit
+  \endgroup
+  }
 }
 
 \newcommand\doDNDitems[1]{%
   \relax
-  \expandafter\let\expandafter\@thelist\csname#1 list\endcsname
-  \the\@thelist}
+  \@ifundefined{#1 list}{%
+    \PackageError{dnd}{DND item type `#1' has not been declared}{}%
+  }{%
+    \expandafter\let\expandafter\@thelist\csname#1 list\endcsname
+    \the\@thelist
+  }
+}
 
 % Declare all equipment categories with their default weights
 \newDNDitems{HEAVY WEAPONS}{10}
