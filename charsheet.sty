@@ -31,6 +31,9 @@
 \newif\ifcaster
 \casterfalse
 
+\newdimen\slotblockwidth
+\slotblockwidth=60mm
+
 \tikzset{
   dndbox/.style={ 
     decorated stub rectangle,
@@ -81,7 +84,7 @@
     fill=none,
   },
   slotblock/.style={
-    minimum width=60mm,
+    minimum width=\slotblockwidth,
     outer sep=0pt,
   },
 }
@@ -185,7 +188,7 @@
              +(#1, #2) coordinate (ur)
              +(0, #2)  coordinate (ul);
   
-  % Main outer frame (heavy lines)
+ % Main outer frame (heavy lines)
   \draw[line width=1.5pt] 
     ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
     ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
@@ -1510,23 +1513,22 @@
 
 % 3. Equipment category system
 %-----------------------------------------------------------------
-% \declareDNDitems{FOO}{N} - declare category FOO with weight N per item
+% \newDNDitems{FOO}{N} - declare category FOO with weight N per item
 % \resetDNDitems - reinitialize all categories
 % \addDNDitem[<weight>]{<category>}{<item>} - add item to category
 
 % Storage for declared categories
 \newcommand{\@dnditemcategories}{}
 
-% \declareDNDitems{FOO}{N} - declare a new equipment category
-\newcommand{\declareDNDitems}[2]{%
+% \newDNDitems{FOO}{N} - declare a new equipment category
+\newcommand{\newDNDitems}[2]{%
   % Add category to list
   \expandafter\gdef\expandafter\@dnditemcategories\expandafter{\@dnditemcategories,#1}%
   % Create counter for total weight (FOO stones)
   \newcounter{#1 stones}%
   % Define default weight per item (in tenths of stones)
   \expandafter\gdef\csname @dndweight@#1\endcsname{#2}%
-  % Initialize item list (FOO list)
-  \expandafter\gdef\csname #1 list\endcsname{}%
+  \expandafter\newtoks\csname #1 list\endcsname
 }
 
 % \resetDNDitems - reinitialize all declared categories
@@ -1539,10 +1541,10 @@
   }%
 }
 
-% \DNDitem{<name>}{<weight>} - format for items in lists
-\newcommand{\DNDitem}[2]{#1}
+\newtoks\@dnditemtoks
 
 % Updated \addDNDitem[<weight>]{<category>}{<item>}
+%    adds \DNDitem{item}{weight} to list
 \newcommand{\addDNDitem}[3][]{%
   % Determine weight to add
   \ifthenelse{\equal{#1}{}}{%
@@ -1554,21 +1556,36 @@
   }%
   % Add weight to category counter
   \addtocounter{#2 stones}{\@itemweight}%
-  % Add item to category list with \DNDitem format and comma terminator
-  \expandafter\expandafter\expandafter\gdef\expandafter\csname #2 list\expandafter\endcsname\expandafter{\csname #2 list\endcsname\noexpand\DNDitem{#3}{\@itemweight},}%
+\begingroup
+%\tracingmacros=1
+%\tracingcommands=1
+  \expandafter\let\expandafter\@thelist\csname#2 list\endcsname
+  \edef\@doit{\noexpand\@thelist={\the\@thelist\noexpand\DNDitem{#3}{\@itemweight}}}%
+  \global\@doit
+\endgroup
+  %
+  % Add item to category list with \DNDitem format
+%  \edef\@addit{\noexpand\@dnditemtoks{\the\csname#2 list\endcsname\noexpand\DNDitem{#3}{\@itemweight}}}%
+%  \@addit
+%  \expandafter\csname#2 list\endcsname\expandafter{\the\@dnditemtoks}%
 }
 
+\newcommand\doDNDitems[1]{%
+  \relax
+  \expandafter\let\expandafter\@thelist\csname#1 list\endcsname
+  \the\@thelist}
+
 % Declare all equipment categories with their default weights
-\declareDNDitems{HEAVY WEAPONS}{10}
-\declareDNDitems{NORMAL WEAPONS}{5}
-\declareDNDitems{LIGHT WEAPONS}{2}
-\declareDNDitems{SHIELDS}{5}
-\declareDNDitems{HEAVY ARMOR}{40}
-\declareDNDitems{NORMAL ARMOR}{20}
-\declareDNDitems{LIGHT ARMOR}{10}
-\declareDNDitems{HEAVY ITEMS}{10}
-\declareDNDitems{SLOTTED ITEMS}{2}
-\declareDNDitems{FREE ITEMS}{0}
+\newDNDitems{HEAVY WEAPONS}{10}
+\newDNDitems{NORMAL WEAPONS}{5}
+\newDNDitems{LIGHT WEAPONS}{2}
+\newDNDitems{SHIELDS}{5}
+\newDNDitems{HEAVY ARMOR}{40}
+\newDNDitems{NORMAL ARMOR}{20}
+\newDNDitems{LIGHT ARMOR}{10}
+\newDNDitems{HEAVY ITEMS}{10}
+\newDNDitems{SLOTTED ITEMS}{2}
+\newDNDitems{FREE ITEMS}{0}
 
 % \renderstones{<tenths>} - Render weight in stones with fractions
 \newcommand{\renderstones}[1]{%
@@ -1620,7 +1637,7 @@
 }
 
 % Macro to return "stone" or "stones" based on weight in tenths
-\newcommand{\stoneplural}[1]{%
+\newcommand{\stonesplural}[1]{%
   \ifnum#1>10\relax
     stones%
   \else
