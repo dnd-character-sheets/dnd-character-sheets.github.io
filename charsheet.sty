@@ -35,6 +35,12 @@
 \slotblockwidth=60mm
 
 \tikzset{
+  % how much vertical room (height+depth) the bottom label consumes
+  label footer height/.initial=0pt,
+}
+
+
+\tikzset{
   dndbox/.style={ 
     decorated stub rectangle,
     stub radius=2.3mm,
@@ -65,6 +71,8 @@
   dndmaxhp/.style={
     dndbox,
     decorated clipped rectangle,
+    label footer height=8pt,
+    font=\LARGE,
     fill=white,
     minimum height=18mm,
     minimum width=24mm,
@@ -653,6 +661,11 @@
     \southwest \my@W=\pgf@x \my@S=\pgf@y
     \northeast \my@E=\pgf@x \my@N=\pgf@y
     \pgfpoint{0.5\my@W+0.5\my@E}{0.4\my@S+0.6\my@N}}     
+
+  \anchor{text}{%
+    \pgf@x=0pt
+    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+  }
 
   % Background path (defines the shape outline)
   \backgroundpath{
@@ -1888,6 +1901,11 @@
   \inheritanchor[from=stub rectangle]{south west}
   \inheritbackgroundpath[from=stub rectangle]
   
+  \anchor{text}{%
+    \pgf@x=0pt
+    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+  }
+
   % Add decorations before the background
   \beforebackgroundpath{%
     % Get coordinates and stub radius
@@ -1952,6 +1970,13 @@
   \inheritanchor[from=clipped rectangle]{south west}
   \inheritbackgroundpath[from=clipped rectangle]
   
+  % --- shift where the node text is placed
+  % (center + 1/2 * footer height, upwards)
+  \anchor{text}{%
+    \pgf@x=0pt
+    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+  }
+
   % Add decorations before the background
   \beforebackgroundpath{%
     % Get coordinates and stub radius
