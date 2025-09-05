@@ -373,6 +373,18 @@ EQUIPMENT:
     - "Anvil (8 stones)"
 ```
 
+It is also possible to code the structured object using a list of strings.
+Assuming the strings are originally written one per line, the format
+is defined by this EBNF grammar:
+
+    <equipment> ::= { [<category>:] <item> NL
+                    | <category>: NL {- <item> NL}
+                    }
+    <category>  ::= light armor | medium armor | ...
+                 |  <category>s
+
+
+
 ---
 
 ## **EXPERIENCE POINTS** (USER)
