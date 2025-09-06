@@ -421,6 +421,104 @@ local function equipment(equipment_data)
   end
 end
 
+-- Helper function to visualize table structure for debugging
+local function visualize_table(t, indent)
+  indent = indent or 0
+  local spaces = string.rep("  ", indent)
+  local result = {}
+  for k, v in pairs(t) do
+    if type(v) == "table" then
+      table.insert(result, spaces .. tostring(k) .. " = {")
+      table.insert(result, visualize_table(v, indent + 1))
+      table.insert(result, spaces .. "}")
+    else
+      table.insert(result, spaces .. tostring(k) .. " = " .. tostring(v))
+    end
+  end
+  return table.concat(result, "\n")
+end
+
+-- Local recursive table equality comparison
+local function table_eq(t1, t2)
+  if t1 == t2 then
+    return true
+  elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
+    return false
+  else
+    for k, v in pairs(t1) do
+      if not table_eq(v, t2[k]) then
+        return false
+      end
+    end
+    for k, v in pairs(t2) do
+      if t1[k] == nil then
+        return false
+      end
+    end
+    return true
+  end
+end
+
+-- Convert structured equipment back to string list format
+local function unparse_equipment_structure(structured_equipment)
+  local lines = {}
+  
+  -- Helper to capitalize first letter of each word
+  local function capitalize(s)
+    return s:gsub("(%a)([%w_']*)", function(first, rest)
+      return first:upper() .. rest:lower()
+    end)
+  end
+  
+  -- Helper to get singular form and proper capitalization
+  local function format_category_name(category)
+    return capitalize(category:lower():gsub("s$", ""))
+  end
+  
+  for category, items in pairs(structured_equipment) do
+    if type(items) == "table" then
+      if #items == 1 then
+        -- Single item: use inline format
+        local formatted_category = format_category_name(category)
+        table.insert(lines, formatted_category .. ": " .. items[1])
+      else
+        -- Multiple items or empty: use block format
+        local formatted_category = format_category_name(category)
+        table.insert(lines, formatted_category .. "s:")
+        for _, item in ipairs(items) do
+          table.insert(lines, "- " .. item)
+        end
+      end
+    end
+  end
+  
+  return lines
+end
+
+-- Round-trip validation function
+local function validate_equipment_parsing(structured_equipment)
+  -- Skip validation for empty structures
+  if not structured_equipment or (type(structured_equipment) == "table" and next(structured_equipment) == nil) then
+    return structured_equipment
+  end
+  
+  -- Unparse to string list format
+  local unparsed_lines = unparse_equipment_structure(structured_equipment)
+  
+  -- Parse it back
+  local reparsed_structure = parse_equipment_strings(unparsed_lines)
+  
+  -- Compare with original
+  if not table_eq(structured_equipment, reparsed_structure) then
+    error(string.format("Equipment round-trip validation failed!\nOriginal:\n%s\n\nUnparsed lines:\n%s\n\nReparsed:\n%s", 
+      visualize_table(structured_equipment),
+      table.concat(unparsed_lines, "\n"),
+      visualize_table(reparsed_structure)))
+  end
+  
+  return structured_equipment
+end
+
 ---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
 ---------------------------------------------------------------------------
@@ -464,7 +562,7 @@ local function convert_mapping (map)
       local v = map[k]
       local t = type(v)
       if k == "EQUIPMENT" and t == "table" then
-        emit_structured_equipment(equipment(v), lines)
+        emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
       elseif t=="string" or t=="number" or t=="boolean" then
         table.insert(lines, render_simple_kv(k, tostring(v)))
       elseif t=="table" then
