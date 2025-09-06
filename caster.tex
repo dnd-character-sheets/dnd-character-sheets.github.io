@@ -5,6 +5,8 @@
 %\usepackage{amsmath}
 \colorlet{grayed out}{white!70!black}
 
+\newcommand\scrm[1]{\textrm{\textsc{#1}}}
+
 \newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
 
 \usepackage{pgfkeys}
@@ -400,7 +402,7 @@
   % No STR defined - leave counters at zero
 }
 
-\node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment by stones}}}};
+\node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment and Encumbrance by Stones}}}};
 
 % Calculate total weight (in tenths of stones)
 \newcounter{significantWeight}
@@ -485,6 +487,17 @@
   {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
 
 
+\node (e warning) [below=of encumbered] {\small(Speed drops by 10~ft)};
+\node (h warning) [below=of heavily,inner sep=2pt] {%
+  \hspace*{3mm}%
+  \begin{minipage}{40mm}\raggedright
+   \small
+   (Speed drops by 20~ft;
+   Disadvantage on ability checks, saving throws, and attack rolls that use \scrm{str}, \scrm{dex}, or \scrm{con}.)
+   \end{minipage}}
+  ;
+
+
 \path (slotstitle) coordinate (slotsbottom);
 
 \ifdim\greenheight>0pt
@@ -560,26 +573,6 @@
 %
 
 
-% Equipment weight breakdown table
-\node [dndbox,below left corner=5mm of carrying,fill=equipment,inner sep=15pt] 
-   (heavy equipment)
-{
-  \def\arraystretch{1.32}%
-  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\\}%
-  \begin{tabular}{lr@{~}l}
-  \multicolumn3{c}{\bigstrut \Large \textbf{Heavy Equipment}}\\[5pt]
-  \doDNDitems{HEAVY WEAPONS}%
-  \doDNDitems{NORMAL WEAPONS}%
-  \doDNDitems{SHIELDS}%
-  \doDNDitems{HEAVY ARMOR}%
-  \doDNDitems{MEDIUM ARMOR}%
-  \doDNDitems{LIGHT ARMOR}%
-  \doDNDitems{HEAVY ITEMS}%
-  \midrule
-  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
-  \end{tabular}%
-};
-
 %%%%    \node [dndbox,slotblock,below=5mm of heavy equipment,fill=equipment,inner sep=15pt] 
 %%%%       (worn items)
 %%%%    {
@@ -598,15 +591,17 @@
 %%%%      \end{tabular}%
 %%%%    };
 
+%\path (heavily.east |- h warning.south) coordinate (h warning r);
 
-\node [dndbox,slotblock,below right corner=5mm of heavily,fill=equipment,minimum height= 82\tenthstoneheight]
+\node [dndbox,slotblock,anchor=south east,at=(heavily.east |- slots decoration.south),
+       fill=equipment,minimum height= 74\tenthstoneheight]
   (small items)
   { }
 ;
 
 \node [below top=5mm of small items,minimum width=\slotblockwidth] (smalltitle) {\Large\textbf{Small Items}};
 
-\foreach \deltay in {1,2,...,39} {
+\foreach \deltay in {1,2,...,34} {
   \draw (smalltitle.south west)
     ++(12pt,-\deltay*2*\tenthstoneheight)
     -- ++(\slotblockwidth-24pt,0)
@@ -623,6 +618,28 @@
   }
   \doDNDitems{SMALL ITEMS}
 \endgroup
+
+
+% Equipment weight breakdown table
+\node [dndbox,anchor=north west,at=(carrying.west |- small items.north),fill=equipment,inner sep=15pt] 
+   (heavy equipment)
+{
+  \def\arraystretch{1.32}%
+  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\\}%
+  \begin{tabular}{lr@{~}l}
+  \multicolumn3{c}{\bigstrut \Large \textbf{Heavy Equipment}}\\[5pt]
+  \doDNDitems{HEAVY WEAPONS}%
+  \doDNDitems{NORMAL WEAPONS}%
+  \doDNDitems{SHIELDS}%
+  \doDNDitems{HEAVY ARMOR}%
+  \doDNDitems{MEDIUM ARMOR}%
+  \doDNDitems{LIGHT ARMOR}%
+  \doDNDitems{HEAVY ITEMS}%
+  \midrule
+  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
+  \end{tabular}%
+};
+
 
 
 
