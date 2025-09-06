@@ -3,6 +3,7 @@
 \usepackage{multicol}
 \usetikzlibrary{fit}
 %\usepackage{amsmath}
+\colorlet{grayed out}{white!70!black}
 
 \newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
 
@@ -560,26 +561,23 @@
 
 
 % Equipment weight breakdown table
-\path (heavily.south east) ++(0,-10mm) 
-  node [dndbox, anchor=north east,fill=equipment,inner sep=15pt] {
-  \def\arraystretch{1.3}%
-  \newcommand{\DNDitem}[2]{#1 & $\mathbf{\renderstones{#2}}$&\stonesplural{#2}\cr}%
+\node [dndbox,below left corner=5mm of carrying,fill=equipment,inner sep=15pt] 
+   (heavy equipment)
+{
+  \def\arraystretch{1.32}%
+  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\\}%
   \begin{tabular}{lr@{~}l}
   \multicolumn3{c}{\bigstrut \Large \textbf{Heavy Equipment}}\\[5pt]
-  % Local definition of \DNDitem for display
-  % Display all significant equipment items
   \doDNDitems{HEAVY WEAPONS}%
   \doDNDitems{NORMAL WEAPONS}%
   \doDNDitems{SHIELDS}%
   \doDNDitems{HEAVY ARMOR}%
-  \doDNDitems{NORMAL ARMOR}%
+  \doDNDitems{MEDIUM ARMOR}%
   \doDNDitems{LIGHT ARMOR}%
   \doDNDitems{HEAVY ITEMS}%
-  \crcr
   \midrule
-%  \doDNDitems{SLOTTED ITEMS}%
-  Total&\renderstones{\value{significantWeight}}&\stonesplural{\value{significantWeight}}\\
-  \end{tabular}
+  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
+  \end{tabular}%
 };
 
 %%%%    \node [dndbox,slotblock,below=5mm of heavy equipment,fill=equipment,inner sep=15pt] 
