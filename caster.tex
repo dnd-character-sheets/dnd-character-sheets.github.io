@@ -14,6 +14,13 @@
 
 
 
+\newcommand\equipcolsstart{%
+  \ifDNDfalse{EQUIPMENT 2UP}{\typeout{no 2up}}{\begin{multicols}{2}}%
+}
+\newcommand\equipcolsend{%
+  \ifDNDfalse{EQUIPMENT 2UP}{}{\end{multicols}}%
+}
+
 \newsectionenv[]{magic}{MAGIC}
   {\begin{minipage}[t]{\hsize}
    \featurespostspace=0pt
@@ -24,11 +31,15 @@
 \newsectionenv{features}{FEATURES}{}{}
 \newsectionenv[width=70mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
    {\medskip
-    \ifDNDdefined{MAGIC}{}{\begin{multicols}{2}}%
+    \noindent
+    \hspace*{21mm-5pt}%
+    \begin{minipage}{\hsize-21mm-5pt}
+    \ifDNDdefined{MAGIC}{\begin{multicols}{2}}{\equipcolsstart}%
     \small
      \begin{eqlist}}
    {\end{eqlist}%
-    \ifDNDdefined{MAGIC}{}{\end{multicols}}%
+    \ifDNDdefined{MAGIC}{\end{multicols}}{\equipcolsend}%
+    \end{minipage}%
    }
 
 

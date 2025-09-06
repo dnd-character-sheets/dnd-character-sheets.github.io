@@ -502,12 +502,14 @@
   {\end{list}}
 
 \newenvironment{eqlist}
-  {\begin{list}{}{%
+  {\clubpenalty=10000
+   \widowpenalty=10000
+   \begin{list}{}{%
       \raggedright
-      \setlength{\leftmargin}{22mm}% no indentation
+      \setlength{\leftmargin}{5pt}% no indentation
       \setlength{\labelwidth}{0pt}%
       \setlength{\labelsep}{0pt}%
-      \setlength{\itemindent}{-4mm}%
+      \setlength{\itemindent}{-3mm}%
       \setlength{\topsep}{0pt}% space before/after the list
       \setlength{\partopsep}{0pt}%
       \setlength{\parsep}{0pt}%
