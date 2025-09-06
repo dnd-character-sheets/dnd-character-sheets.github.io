@@ -1603,10 +1603,7 @@
   \@ifundefined{#1 list}{%
     \PackageError{dnd}{DND item type `#1' has not been declared}{}%
   }{%
-    \expandafter\let\expandafter\@thelist\csname#1 list\endcsname
-%    \showthe\everycr
-    \the\@thelist
-%    \showthe\everycr
+    \expandafter\the\csname#1 list\endcsname
   }%
 }
 
