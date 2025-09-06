@@ -463,11 +463,12 @@
 \yellowheight=\numexpr2*\value{yellowLines}\relax\tenthstoneheight  
 \redheight=\numexpr2*\value{redLines}\relax\tenthstoneheight
 
+
 \path (top left) 
- ++(0, -1cm)
+ ++(0, -13mm)
   node (slotstitle)
     [slotblock,anchor=north west,fill=blue!10!white,minimum height=28pt] 
-  {\Large\textbf{Slotted Equipment}}
+  {\Large\textbf{Slotted Items}}
   ;
 
 % Three capacity boxes centered below top
@@ -483,19 +484,39 @@
   {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
 
 
+\path (slotstitle) coordinate (slotsbottom);
+
+\ifdim\greenheight>0pt
+
+  \node (slotgreen) [slotblock,fill=unencumbered,anchor=north west,
+                     minimum height=\greenheight]
+    at (slotstitle.south west) {} ;
+
+  \path (slotgreen.south west) coordinate (slotsbottom);
 
 
-\node (slotgreen) [slotblock,fill=unencumbered,anchor=north west,
-                   minimum height=\dimexpr\greenheight\relax]
-  at (slotstitle.south west) {DEBUG: \arabic{greenLines} slots} ;
+  \ifdim\yellowheight>0pt
 
-\node (slotyellow) [slotblock,fill=encumbered,anchor=north west,
-                   minimum height=\yellowheight]
-  at (slotgreen.south west) {DEBUG: \arabic{yellowLines} slots} ;
+     \node (slotyellow) [slotblock,fill=encumbered,anchor=north west,
+                        minimum height=\yellowheight]
+       at (slotgreen.south west) {} ;
 
-\node (slotred) [slotblock,fill=heavilyencumbered,anchor=north west,
-                   minimum height=\redheight]
-  at (slotyellow.south west) {DEBUG: \arabic{redLines} slots} ;
+     \path (slotyellow.south west) coordinate (slotsbottom);
+
+
+     \ifdim\redheight>0pt
+
+        \node (slotred) [slotblock,fill=heavilyencumbered,anchor=north west,
+                           minimum height=\redheight]
+          at (slotyellow.south west) {} ;
+
+        \path (slotred.south west) coordinate (slotsbottom);
+
+
+
+     \fi
+  \fi
+\fi
 
 \foreach \deltay in {1,2,...,\numexpr\value{greenLines}+\value{yellowLines}+\value{redLines}\relax} {
   \draw (slotstitle.south west)
