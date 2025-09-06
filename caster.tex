@@ -531,19 +531,23 @@
   \newcommand\DNDitem[2]{%
      \path (lastslot)
        ++(0,-2\tenthstoneheight)
-       node [anchor=base west] (thisslot) {\color{black!30!white}#1};
+       node [anchor=base west] (thisslot) {\color{grayed out}#1};
      \path (thisslot.base west) coordinate (lastslot);
   }
   \doDNDitems{LIGHT WEAPONS}
   \doDNDitems{SLOTTED ITEMS}
 \endgroup
 
-\path (slotred.south west) ++(1pt,2pt) coordinate (decor ll)
+\path (slotsbottom) ++(1pt,2pt) coordinate (decor ll)
       (slotstitle.north east) ++(-1pt,-2pt) coordinate (decor ur)
+  ;
 
-\node [draw,decorated stub rectangle,
+\node [draw,decorated stub rectangle,thick,
+    stub radius=2.3mm,
+    line width=1.2pt,
         fit=(decor ll) (decor ur),
       ]
+  (slots decoration)
   {};
 
 
