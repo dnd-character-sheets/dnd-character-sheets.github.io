@@ -1745,7 +1745,8 @@
 \newcommand{\ifDNDfalse}[3]{%
   \ifDNDdefined{#1}{%
     % Variable is defined, check its value
-    \edef\tempval{\csname dnd@val@#1\endcsname}%
+    \expandafter\let\expandafter\@dnd@variable@value\csname dnd@val@#1\endcsname
+    \expandafter\def\expandafter\tempval\expandafter{\@dnd@variable@value}%
     \ifx\tempval\empty
       % Empty string - false
       #2%
