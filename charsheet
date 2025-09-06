@@ -378,6 +378,7 @@ local function parse_equipment_strings(lines)
     elseif block_header and category(block_header) then
       -- Block format category header: "CATEGORY:"
       local cat = category(block_header)
+      equipment[cat] = equipment[cat] or {} -- populate even if no items follow
       i = i + 1
       while i <= #lines and lines[i]:find '^%s*%-%s' do
         local item = lines[i]:gsub("^%s*%-%s+", ""):gsub("%s+$", "")
