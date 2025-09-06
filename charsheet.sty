@@ -1029,6 +1029,13 @@
             at={($(\tikz@corner@node.south east)+(0,-\tikz@corner@distance)$)},%
         }%
     },
+    below top/.code={%
+        \tikz@corner@parse#1\tikz@stop%
+        \tikzset{%
+            anchor=north,
+            at={($(\tikz@corner@node.north)+(0,-\tikz@corner@distance)$)},%
+        }%
+    },
     % Above left corner with optional distance
     above left corner/.code={%
         \tikz@corner@parse#1\tikz@stop%
