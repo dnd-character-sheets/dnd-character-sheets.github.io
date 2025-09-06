@@ -582,6 +582,66 @@
   \end{tabular}
 };
 
+%%%%    \node [dndbox,slotblock,below=5mm of heavy equipment,fill=equipment,inner sep=15pt] 
+%%%%       (worn items)
+%%%%    {
+%%%%      \def\arraystretch{1.32}%
+%%%%    %  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\crcr}%
+%%%%      \newcommand{\DNDitem}[2]{#1\crcr}%
+%%%%      \begin{tabular}{l}
+%%%%      \multicolumn1{c}{\bigstrut \Large \textbf{Worn Items}}\\[5pt]
+%%%%      % Local definition of \DNDitem for display
+%%%%      % Display all significant equipment items
+%%%%      \doDNDitems{WORN ITEMS}%
+%%%%    %  Z\crcr
+%%%%    %  \midrule
+%%%%    %  \doDNDitems{SLOTTED ITEMS}%
+%%%%    %  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
+%%%%      \end{tabular}%
+%%%%    };
+
+
+\node [dndbox,slotblock,below right corner=5mm of heavily,fill=equipment,minimum height= 82\tenthstoneheight]
+  (small items)
+  { }
+;
+
+\node [below top=5mm of small items,minimum width=\slotblockwidth] (smalltitle) {\Large\textbf{Small Items}};
+
+\foreach \deltay in {1,2,...,39} {
+  \draw (smalltitle.south west)
+    ++(12pt,-\deltay*2*\tenthstoneheight)
+    -- ++(\slotblockwidth-24pt,0)
+   ;
+}
+
+\begingroup
+  \path (smalltitle.south west) ++(9pt, 2pt) coordinate (lastslot);
+  \newcommand\DNDitem[2]{%
+     \path (lastslot)
+       ++(0,-2\tenthstoneheight)
+       node [anchor=base west] (thisslot) {\color{black!30!white}#1};
+     \path (thisslot.base west) coordinate (lastslot);
+  }
+  \doDNDitems{SMALL ITEMS}
+\endgroup
+
+
+
+\node [slotblock,anchor=south west,inner sep=0pt]
+  at (slots decoration.south -| heavy equipment.west)
+  {\Large\begin{tabular}{@{}l@{ = }l@{}}
+   1 Slot &Bundle of up to 20\\
+   \multicolumn1{@{}l@{}}{}&identical items, \emph{or}\\[3pt]
+   \multicolumn1{@{}l@{}}{}&150~coins, \emph{or}\\[3pt]
+   \multicolumn1{@{}l@{}}{}&1 stowed weapon\\[8pt]
+   5 Slots&1 Stone\\
+  \end{tabular}}
+;
+   
+
+
+  
 \end{charsheet}
 
 \end{document}
