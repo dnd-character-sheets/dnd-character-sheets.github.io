@@ -345,7 +345,7 @@ ATTACKS:
 - `LIGHT ARMOR`: List of light armor
 - `HEAVY ITEMS`: List of heavy items (include stone weight in parentheses, e.g., "Meteor iron (4 stones)")
 - `SLOTTED ITEMS`: List of slotted items (identical items can be bundled into units of up to 20, bundle takes one slot)
-- `FREE ITEMS`: List of free items (take up no equipment space)
+- `SMALL ITEMS`: List of items that don't count against encumbrance)
 
 **Examples**:
 ```yaml
