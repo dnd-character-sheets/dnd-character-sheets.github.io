@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: fennel
+        Version: garlic
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -517,8 +517,24 @@
         <div class="section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
-                <p>Enter one equipment item per line.</p>
+                <p>Enter one equipment item per line. You can use the <strong>new categorized format</strong>:</p>
+                <ul style="font-size: 0.9em; margin: 0.5em 0; color: #666;">
+                    <li><code>Heavy weapon: Greatsword</code> (single item)</li>
+                    <li><code>Slotted items:</code> followed by <code>- Backpack</code>, <code>- Rations</code> (multiple items)</li>
+                </ul>
                 <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin" style="width: 100%; box-sizing: border-box;"></textarea>
+                
+                <div style="margin-top: 0.5em; display: flex; gap: 0.5em; flex-wrap: wrap;">
+                    <button type="button" class="add-button" onclick="convertStructuredToLines()" title="Convert your equipment list to the new categorized format">
+                        📝 Categorize Equipment
+                    </button>
+                    <button type="button" class="add-button" onclick="convertEquipmentToStructured()" title="Show how your equipment would be parsed into categories">
+                        🔍 Preview Categories
+                    </button>
+                    <button type="button" class="add-button" onclick="testEquipmentParsing()" title="Run tests to verify the equipment parsing system works correctly">
+                        🧪 Test Parser
+                    </button>
+                </div>
             </div>
             
             <h3>Currency</h3>
@@ -973,10 +989,27 @@
                     setFormValue('#proficiencies-text', profList.join('\n'));
                 }
                 
-                // Equipment
-                if (data['EQUIPMENT'] && Array.isArray(data['EQUIPMENT'])) {
-                    const equipList = data['EQUIPMENT'].map(item => item?.toString() || '');
-                    setFormValue('#equipment-text', equipList.join('\n'));
+                // Equipment - handle both array (flat list) and object (structured) formats
+                if (data['EQUIPMENT']) {
+                    const equipmentEl = form.querySelector('#equipment-text');
+                    if (equipmentEl) {
+                        let equipmentText = '';
+                        
+                        if (Array.isArray(data['EQUIPMENT'])) {
+                            // Handle flat list format
+                            const equipList = data['EQUIPMENT'].map(item => item?.toString() || '');
+                            equipmentText = equipList.join('\n');
+                        } else if (typeof data['EQUIPMENT'] === 'object') {
+                            // Handle structured format - unparse it
+                            const unparsedLines = unparseEquipmentStructure(data['EQUIPMENT']);
+                            equipmentText = unparsedLines.join('\n');
+                        } else {
+                            // Handle single string (fallback)
+                            equipmentText = data['EQUIPMENT'].toString();
+                        }
+                        
+                        equipmentEl.value = equipmentText;
+                    }
                 }
                 
                 // Features
@@ -1297,16 +1330,21 @@
             });
             data['FEATURES'] = features;
 
-            // Equipment (required, can be empty list)
+            // Equipment (parse to structured format)
             const equipmentText = form.querySelector('#equipment-text')?.value || '';
-            data['EQUIPMENT'] = [];
             if (equipmentText.trim()) {
-                equipmentText.split('\n').forEach(line => {
-                    line = line.trim();
-                    if (line) {
-                        data['EQUIPMENT'].push(line);
-                    }
-                });
+                const lines = equipmentText.split('\n').map(line => line.trim()).filter(line => line);
+                try {
+                    // Parse equipment text into structured format
+                    const structuredEquipment = parseEquipmentStrings(lines);
+                    data['EQUIPMENT'] = structuredEquipment;
+                } catch (error) {
+                    // Fallback to list format if parsing fails
+                    console.warn('Equipment parsing failed, falling back to list format:', error);
+                    data['EQUIPMENT'] = lines;
+                }
+            } else {
+                data['EQUIPMENT'] = {};
             }
 
             // Currency (all required, can be empty)
@@ -1421,6 +1459,328 @@
                 alert(`Failed to generate PDF: ${error.message}. Please check that the server is running and accessible.`);
             }
         }
+
+        // ===============================================
+        // Equipment Format Conversion Functions
+        // ===============================================
+        
+        // Category mapping (from Lua charsheet parser)
+        const categoryMap = {
+            "heavy weapon": "HEAVY WEAPONS",
+            "normal weapon": "NORMAL WEAPONS", 
+            "light weapon": "LIGHT WEAPONS",
+            "shield": "SHIELDS",
+            "heavy armor": "HEAVY ARMOR",
+            "heavy armour": "HEAVY ARMOR",
+            "normal armor": "MEDIUM ARMOR",
+            "normal armour": "MEDIUM ARMOR", 
+            "medium armor": "MEDIUM ARMOR",
+            "medium armour": "MEDIUM ARMOR",
+            "light armor": "LIGHT ARMOR",
+            "light armour": "LIGHT ARMOR",
+            "heavy item": "HEAVY ITEMS",
+            "slotted item": "SLOTTED ITEMS",
+            "free item": "SMALL ITEMS",
+            "small item": "SMALL ITEMS"
+        };
+
+        function stripS(s) {
+            return s.endsWith('s') ? s.slice(0, -1) : s;
+        }
+
+        function getCategory(s) {
+            return categoryMap[stripS(s.toLowerCase())];
+        }
+
+        function capitalize(s) {
+            return s.replace(/\b\w+/g, word => 
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            );
+        }
+
+        function formatCategoryName(category) {
+            return capitalize(category.toLowerCase().replace(/s$/, ''));
+        }
+
+        // Equipment format detection
+        function isStringListWithCategories(equipmentData) {
+            if (!Array.isArray(equipmentData) || equipmentData.length === 0) {
+                return false;
+            }
+            if (typeof equipmentData[0] !== 'string') {
+                return false;
+            }
+            // Check if any item has category syntax
+            return equipmentData.some(item => 
+                typeof item === 'string' && (item.includes(':') || item.startsWith('-'))
+            );
+        }
+
+        function isStructuredObject(equipmentData) {
+            if (typeof equipmentData !== 'object' || Array.isArray(equipmentData) || !equipmentData) {
+                return false;
+            }
+            return Object.keys(equipmentData).length > 0;
+        }
+
+        // Parse equipment strings (port of Lua function)
+        function parseEquipmentStrings(lines) {
+            const equipment = {};
+            let i = 0;
+
+            function add(category, item) {
+                if (!equipment[category]) {
+                    equipment[category] = [];
+                }
+                equipment[category].push(item);
+            }
+
+            while (i < lines.length) {
+                const line = lines[i].trim();
+                const blockHeader = line.match(/^(.+):$/);
+                
+                if (line === "") {
+                    // Skip empty lines
+                    i++;
+                } else if (blockHeader && getCategory(blockHeader[1])) {
+                    // Block format category header: "CATEGORY:"
+                    const cat = getCategory(blockHeader[1]);
+                    equipment[cat] = equipment[cat] || []; // populate even if no items follow
+                    i++;
+                    while (i < lines.length && /^\s*-\s/.test(lines[i])) {
+                        const item = lines[i].replace(/^\s*-\s+/, "").trim();
+                        add(cat, item);
+                        i++;
+                    }
+                } else if (blockHeader) {
+                    console.warn(`Unknown equipment category "${blockHeader[1]}"`);
+                    i++;
+                } else if (/^\S.*:/.test(line)) {
+                    // Inline format: "CATEGORY: Item Name"
+                    const match = line.match(/^([^:]+?):\s*(.*)$/);
+                    if (match) {
+                        const [, cat, item] = match;
+                        if (getCategory(cat.trim())) {
+                            add(getCategory(cat.trim()), item.trim());
+                        } else {
+                            console.warn(`Unknown equipment category "${cat}" in line "${line}"`);
+                        }
+                    }
+                    i++;
+                } else {
+                    add('SLOTTED ITEMS', line); // heuristic category
+                    i++;
+                }
+            }
+            return equipment;
+        }
+
+        // Convert structured equipment back to string list format
+        function unparseEquipmentStructure(structuredEquipment) {
+            const lines = [];
+            
+            for (const [category, items] of Object.entries(structuredEquipment)) {
+                if (Array.isArray(items)) {
+                    if (items.length === 1) {
+                        // Single item: use inline format
+                        const formattedCategory = formatCategoryName(category);
+                        lines.push(`${formattedCategory}: ${items[0]}`);
+                    } else {
+                        // Multiple items or empty: use block format
+                        const formattedCategory = formatCategoryName(category);
+                        lines.push(`${formattedCategory}s:`);
+                        items.forEach(item => {
+                            lines.push(`- ${item}`);
+                        });
+                    }
+                }
+            }
+            
+            return lines;
+        }
+
+        // Deep equality check for objects/arrays
+        function deepEqual(obj1, obj2) {
+            if (obj1 === obj2) return true;
+            
+            if (obj1 == null || obj2 == null) return obj1 === obj2;
+            
+            if (typeof obj1 !== typeof obj2) return false;
+            
+            if (typeof obj1 !== 'object') return obj1 === obj2;
+            
+            if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
+            
+            const keys1 = Object.keys(obj1);
+            const keys2 = Object.keys(obj2);
+            
+            if (keys1.length !== keys2.length) return false;
+            
+            return keys1.every(key => deepEqual(obj1[key], obj2[key]));
+        }
+
+        // Convert any equipment format to unified structured format
+        function equipmentToStructured(equipmentData) {
+            if (isStringListWithCategories(equipmentData)) {
+                return parseEquipmentStrings(equipmentData);
+            } else if (isStructuredObject(equipmentData)) {
+                return equipmentData; // already in structured format
+            } else if (Array.isArray(equipmentData) && equipmentData.length > 0) {
+                // Traditional string list - put everything in heuristic category
+                return { 'SLOTTED ITEMS': equipmentData };
+            } else {
+                return {}; // empty equipment
+            }
+        }
+
+        // Round-trip validation function
+        function validateEquipmentRoundTrip(structuredEquipment) {
+            // Skip validation for empty structures
+            if (!structuredEquipment || Object.keys(structuredEquipment).length === 0) {
+                return structuredEquipment;
+            }
+            
+            // Unparse to string list format
+            const unparsedLines = unparseEquipmentStructure(structuredEquipment);
+            
+            // Parse it back
+            const reparsedStructure = parseEquipmentStrings(unparsedLines);
+            
+            // Compare with original
+            if (!deepEqual(structuredEquipment, reparsedStructure)) {
+                const error = {
+                    message: 'Equipment round-trip validation failed!',
+                    original: structuredEquipment,
+                    unparsedLines: unparsedLines,
+                    reparsed: reparsedStructure
+                };
+                console.error(error);
+                throw new Error(error.message + '\nCheck console for details.');
+            }
+            
+            return structuredEquipment;
+        }
+
+        // ===============================================
+        // Equipment UI Functions
+        // ===============================================
+        
+        function convertEquipmentToStructured() {
+            const equipmentText = document.getElementById('equipment-text').value;
+            if (!equipmentText.trim()) {
+                alert('No equipment text to convert!');
+                return;
+            }
+            
+            try {
+                const lines = equipmentText.split('\n');
+                const structured = equipmentToStructured(lines);
+                const validated = validateEquipmentRoundTrip(structured);
+                
+                // Display result in a nice format
+                let display = 'Structured Equipment:\n\n';
+                for (const [category, items] of Object.entries(validated)) {
+                    display += `${category}:\n`;
+                    if (Array.isArray(items)) {
+                        items.forEach(item => display += `  - ${item}\n`);
+                    }
+                    display += '\n';
+                }
+                
+                alert(display);
+                
+            } catch (error) {
+                alert(`Error converting equipment: ${error.message}`);
+            }
+        }
+        
+        function convertStructuredToLines() {
+            const equipmentText = document.getElementById('equipment-text').value;
+            if (!equipmentText.trim()) {
+                alert('No equipment text to convert!');
+                return;
+            }
+            
+            try {
+                const lines = equipmentText.split('\n');
+                const structured = equipmentToStructured(lines);
+                const validated = validateEquipmentRoundTrip(structured);
+                const converted = unparseEquipmentStructure(validated);
+                
+                // Update the textarea with converted format
+                document.getElementById('equipment-text').value = converted.join('\n');
+                
+                alert('Equipment converted to categorized format!');
+                
+            } catch (error) {
+                alert(`Error converting equipment: ${error.message}`);
+            }
+        }
+
+        // Test function for the equipment parsing
+        function testEquipmentParsing() {
+            const testCases = [
+                {
+                    name: "Single items",
+                    input: {
+                        "HEAVY WEAPONS": ["Maul"],
+                        "SHIELDS": ["Shield"],
+                        "SLOTTED ITEMS": ["Backpack"]
+                    }
+                },
+                {
+                    name: "Multiple items and empty",
+                    input: {
+                        "SLOTTED ITEMS": ["Backpack", "Bedroll", "Rations"],
+                        "SMALL ITEMS": [],
+                        "NORMAL WEAPONS": ["Longsword"]
+                    }
+                },
+                {
+                    name: "String list with categories",
+                    input: [
+                        "Heavy weapon: Greatsword",
+                        "Light armor: Leather armor",
+                        "Slotted items:",
+                        "- Backpack",
+                        "- Rations (5 days)",
+                        "Small items:"
+                    ]
+                },
+                {
+                    name: "Traditional flat list", 
+                    input: ["Leather armor", "Shortsword", "Backpack", "Bedroll"]
+                }
+            ];
+
+            let results = 'Equipment Parsing Test Results:\n\n';
+            let allPassed = true;
+
+            testCases.forEach(testCase => {
+                try {
+                    const structured = equipmentToStructured(testCase.input);
+                    const validated = validateEquipmentRoundTrip(structured);
+                    const unparsed = unparseEquipmentStructure(validated);
+                    
+                    results += `✅ ${testCase.name}: PASSED\n`;
+                    results += `   Unparsed format:\n`;
+                    unparsed.forEach(line => results += `     ${line}\n`);
+                    results += '\n';
+                    
+                } catch (error) {
+                    results += `❌ ${testCase.name}: FAILED\n`;
+                    results += `   Error: ${error.message}\n\n`;
+                    allPassed = false;
+                }
+            });
+            
+            results += allPassed ? '\n🎉 All tests PASSED!' : '\n⚠️  Some tests FAILED!';
+            
+            // Show results in a popup and log to console
+            alert(results);
+            console.log('Equipment parsing test results:', results);
+        }
+
     </script>
 </body>
 </html>
