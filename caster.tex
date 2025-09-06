@@ -403,13 +403,13 @@
 
 % Calculate total weight (in tenths of stones)
 \newcounter{significantWeight}
-\setcounter{significantWeight}{\value{HEAVY WEAPONS stones}}
-\addtocounter{significantWeight}{\value{NORMAL WEAPONS stones}}
-\addtocounter{significantWeight}{\value{SHIELDS stones}}
-\addtocounter{significantWeight}{\value{HEAVY ARMOR stones}}
-\addtocounter{significantWeight}{\value{NORMAL ARMOR stones}}
-\addtocounter{significantWeight}{\value{LIGHT ARMOR stones}}
-\addtocounter{significantWeight}{\value{HEAVY ITEMS stones}}
+\withitemweight{\setcounter{significantWeight}}{HEAVY WEAPONS}
+\withitemweight{\addtocounter{significantWeight}}{NORMAL WEAPONS}
+\withitemweight{\addtocounter{significantWeight}}{SHIELDS}
+\withitemweight{\addtocounter{significantWeight}}{HEAVY ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{MEDIUM ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{LIGHT ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{HEAVY ITEMS}
 
 \newcounter{remainingCapacity}
 \ifDNDnonempty{STR}{%
