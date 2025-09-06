@@ -26,6 +26,7 @@ local fields = require 'flags'.parser()
   :bool('verbose as v')
   :bool('incomplete as i'):help('character sheet is not yet complete')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
+  :bool('strict'):help('halt on field validation errors (default: warn and continue)')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets')
          :help('directory where character-sheet templates live') 
   :numarg(1)
@@ -57,6 +58,453 @@ else
     return { doc }
   end
 end
+
+------------------------------------------------------------------------
+--
+-- Field validation
+
+local function inrange(lo, hi)
+  return function (v)
+    return tonumber(v) and tonumber(v) >= lo and tonumber(v) <= hi
+  end
+end
+
+local isnumber = inrange(-math.huge, math.huge)
+
+local function anyvalue(v)
+  return true
+end
+
+local function optional(p)
+  return function (v) 
+    -- Handle YAML null, nil, and empty string as valid "empty" values
+    if v == '' or v == nil or v == lyaml.null then
+      return true
+    else
+      return p(v)
+    end
+  end
+end
+
+-- Higher-order validator functions
+local positive = inrange(1, math.huge)
+
+local function all(p, list)
+  for _, v in ipairs(list) do
+    local ok, msg = p(v)
+    if not ok then
+      return ok, msg
+    end
+  end
+  return true
+end
+
+local function any(p, list)
+  for _, v in ipairs(list) do
+    local ok, msg = p(v)
+    if ok then
+      return ok
+    end
+  end
+  return false
+end
+
+local function is_type(...)
+  local types = { ... }
+  return function(v) return any(function(t) return type(v) == t end, types) end
+end
+
+local function listof(predicate)
+  return function(list)
+    if not is_type 'table'(list) then
+      return false, "must be a list"
+    end
+    local ok, msg = all(predicate, list)
+    if not ok then
+      return false, msg or "contains invalid items"
+    end
+    return true
+  end
+end
+
+local nonempty_string = function(v) return is_type 'string'(v) and v:find('%S') end
+
+-- Extract valid equipment categories from category_map (single point of truth)
+-- This will be updated after category_map is defined
+local valid_equipment_categories
+
+-- Structure-specific validators
+local function validate_attack_entry(attack)
+  local required_fields = {'NAME', 'ATTACK', 'DAMAGE', 'TYPE', 'RANGE', 'AMMO'}
+  local optional_fields = {'NOTES'}
+  
+  if not is_type 'table'(attack) then
+    return false, "%s is not a table with attack fields"
+  end
+  
+  -- Check for missing and wrong-type fields separately
+  local missing = {}
+  local wrong_type = {}
+  for _, field in ipairs(required_fields) do
+    if not attack[field] then
+      table.insert(missing, field)
+    elseif not is_type 'string'(attack[field]) then
+      table.insert(wrong_type, string.format("%s (got %s)", field, type(attack[field])))
+    end
+  end
+  
+  if #missing > 0 or #wrong_type > 0 then
+    local errors = {}
+    if #missing > 0 then
+      table.insert(errors, string.format("missing required field(s): %s", table.concat(missing, ", ")))
+    end
+    if #wrong_type > 0 then
+      table.insert(errors, string.format("wrong type for field(s): %s", table.concat(wrong_type, ", ")))
+    end
+    return false, table.concat(errors, "; ")
+  end
+  
+  local optional_check = function(field)
+    return not attack[field] or is_type 'string'(attack[field])
+  end
+  if not all(optional_check, optional_fields) then
+    for _, field in ipairs(optional_fields) do
+      if not optional_check(field) then
+        return false, string.format("field %s must be string if present", field)
+      end
+    end
+  end
+  
+  return true
+end
+
+local function validate_feature_entry(feature)
+  local required_fields = {'name', 'description'}
+  
+  if not is_type 'table'(feature) then
+    return false, "must be a table with name and description"
+  end
+  
+  local required_check = function(field)
+    return feature[field] and is_type 'string'(feature[field]) and feature[field] ~= ""
+  end
+  if not all(required_check, required_fields) then
+    local missing = {}
+    for _, field in ipairs(required_fields) do
+      if not required_check(field) then
+        table.insert(missing, field)
+      end
+    end
+    return false, string.format("missing required field(s): %s", table.concat(missing, ", "))
+  end
+  
+  return true
+end
+
+local function validate_magic_entry(entry)
+  if not is_type 'table'(entry) then
+    return false, "must be a table"
+  end
+  
+  if entry.level ~= nil then
+    -- Level indicator entry
+    if is_type 'number'(entry.level) then
+      if entry.level < 0 or entry.level > 9 then
+        return false, string.format("level must be 0-9, got %d", entry.level)
+      end
+    elseif is_type 'table'(entry.level) then
+      if not entry.level.number or not is_type 'number'(entry.level.number) 
+         or entry.level.number < 1 or entry.level.number > 9 then
+        return false, string.format("level.number must be 1-9, got %s", tostring(entry.level.number))
+      end
+      if entry.level.slots and (not is_type 'number'(entry.level.slots) or entry.level.slots < 0) then
+        return false, "level.slots must be non-negative number if present"
+      end
+    else
+      return false, "level must be number (0-9) or table with number/slots"
+    end
+  elseif entry.name then
+    -- Spell entry
+    if not is_type 'string'(entry.name) or entry.name == "" then
+      return false, "spell must have non-empty string name"
+    end
+    if entry.description and not is_type 'string'(entry.description) then
+      return false, "description must be string if present"
+    end
+  else
+    return false, "must have either 'level' or 'name' field"
+  end
+  
+  return true
+end
+
+local function validate_equipment_structure(equipment)
+  if not is_type 'table'(equipment) then
+    return false, "must be a table or list"
+  end
+  
+  -- Empty table is valid
+  if next(equipment) == nil then return true end
+  
+  -- Check if it's a flat list (array-style)
+  if #equipment > 0 then
+    return listof(is_type 'string')(equipment)
+  else
+    -- Structured format (object-style) 
+    for category, items in pairs(equipment) do
+      if not valid_equipment_categories[category:upper()] then
+        return false, string.format("invalid equipment category: %s", category)
+      end
+      local ok, err = listof(is_type 'string')(items)
+      if not ok then
+        return false, string.format("category %s: %s", category, err or "all items must be strings")
+      end
+    end
+  end
+  
+  return true
+end
+
+-- Main structure validators using listof
+local validate_equipment = validate_equipment_structure
+local validate_attacks = listof(validate_attack_entry)
+local validate_features = listof(validate_feature_entry)
+local validate_magic = listof(validate_magic_entry)
+
+-- Validate proficiencies structure (custom logic)
+local function validate_proficiency_entry(entry)
+  if entry == lyaml.null then
+    -- does for blank line
+  elseif is_type 'string'(entry) then
+    -- Regular proficiency entry - empty strings within list are not allowed
+    if entry == "" then 
+      return false, "A proficiency cannot be the empty string"
+    end
+  elseif is_type 'table'(entry) then
+    -- Special entry (like proficiencies_skip)
+    if entry.proficiencies_skip ~= nil then
+      if not is_type 'boolean'(entry.proficiencies_skip) then 
+        return false, "proficiencies_skip must be boolean"
+      end
+    else
+      return false, "unknown table entry (expected proficiencies_skip)"
+    end
+  else
+    return false, "proficiency is neither string nor empty"
+  end
+  return true
+end
+
+local validate_proficiencies = listof(validate_proficiency_entry)
+
+-- Validate CLASS & LEVEL requirement and parsing
+local function validate_class_level_requirement(doc)
+  local has_class_level = doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:find('%S')
+  local has_separate = doc.CLASS and doc.CLASS:find('%S') and doc.LEVEL
+  
+  if not has_class_level and not has_separate then
+    return false, "must have either 'CLASS & LEVEL' field or both 'CLASS' and 'LEVEL' fields"
+  end
+  
+  -- If CLASS & LEVEL exists, validate it can be parsed
+  if has_class_level then
+    local class_level = doc['CLASS & LEVEL']
+    local class = class_level:match('%a+')
+    local level = class_level:match('%d+%s*$')
+    
+    if not class then
+      return false, "CLASS & LEVEL must contain a valid class name"
+    end
+    if not level then
+      return false, "CLASS & LEVEL must end with a valid level number"
+    end
+    
+    local level_num = tonumber(level)
+    if not level_num or level_num < 1 or level_num > 20 then
+      return false, string.format("level in CLASS & LEVEL must be 1-20, got %s", level)
+    end
+  end
+  
+  return true
+end
+
+local field_specs = {
+  -- Each entry has: p (predicate), fs (field list), m (message), required (boolean)
+  
+  -- Required ability scores (1-20)
+  { p = inrange(1, 20), m = '%s must be a number in the range 1..20', required = true,
+    fs = {'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'} },
+  
+  -- Required basic character info
+  { p = nonempty_string, m = '%s is required and must be a non-empty string', required = true,
+    fs = {'CHARACTER NAME', 'PLAYER NAME', 'RACE', 'BACKGROUND'} },
+  
+  -- Required numeric stats
+  { p = positive, m = '%s is required and must be a positive number', required = true,
+    fs = {'MAX HP', 'ARMOR CLASS', 'PASSIVE PERCEPTION'} },
+  
+  -- Required structured data
+  { p = optional(validate_equipment), m = '%s must be a valid equipment structure', required = true,
+    fs = {'EQUIPMENT'} },
+  { p = optional(validate_attacks), m = '%s must be a valid attacks list', required = true,
+    fs = {'ATTACKS'} },
+  { p = optional(validate_features), m = '%s must be a valid features list', required = true,  
+    fs = {'FEATURES'} },
+  { p = optional(validate_magic), m = '%s must be a valid magic structure', required = true,
+    fs = {'MAGIC'} },
+  { p = optional(validate_proficiencies), m = '%s must be a valid proficiencies list', required = true,
+    fs = {'PROFICIENCIES'} },
+    
+  -- Optional fields that can be present
+  { p = optional(inrange(1, 20)), m = '%s must be a number in the range 1..20',
+    fs = {'LEVEL'} },
+  { p = optional(positive), m = '%s must be a positive number',  
+    fs = {'SPELL DC', 'DOMAIN SPELLS', 'SPELLS KNOWN', 'SORCERY POINTS'} },
+  { p = optional(is_type('string', 'number')), m = '%s must be a string or number',
+    fs = {'ALIGNMENT', 'HIT DICE', 'INITIATIVE', 'SPEED', 'EXPERIENCE POINTS',
+          'CURRENT HIT POINTS', 'SENSES', 'PROFICIENCY BONUS', 'CP', 'SP', 'EP', 'GP', 'PP'} },
+  { p = optional(is_type 'string'), m = '%s must be a string',  
+    fs = {'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES'} },
+  { p = optional(is_type 'boolean'), m = '%s must be a boolean',
+    fs = {'PREGENERATED', 'MAGIC SEPARATE'} },
+  { p = optional(function(v) return is_type 'string'(v) and v:match("^\\") end), m = '%s must be a LaTeX font command',
+    fs = {'MAGIC FONT'} },
+  { p = optional(is_type 'table'), m = '%s must be a table structure',
+    fs = {'DESCRIPTION & PERSONALITY', 'TRAITS'} },
+}
+
+local validator = { }
+
+do
+  for _, spec in ipairs(field_specs) do
+    for _, field in ipairs(spec.fs) do
+      validator[field] = { 
+        predicate = spec.p, 
+        message = spec.m,
+        required = spec.required or false
+      }
+    end
+  end
+end
+
+-- Forward declaration
+local value_string
+
+local function table_string(t)
+  -- Use Lua's unified syntax: show array elements first, then non-array keys
+  local items = {}
+  local max_n = table.maxn and table.maxn(t) or 0
+  
+  -- Add array elements 1, 2, 3, ..., max_n
+  for i = 1, max_n do
+    table.insert(items, value_string(t[i]))
+  end
+  
+  -- Add non-array keys (keys that are not integers in range 1..max_n)
+  local extra_items = {}
+  for k, val in pairs(t) do
+    if not (type(k) == 'number' and k >= 1 and k <= max_n and k == math.floor(k)) then
+      local key_str
+      if type(k) == 'string' and k:match('^[%a_][%w_]*$') then
+        -- Valid identifier, no quotes needed
+        key_str = k
+      else
+        -- Need to quote or bracket the key
+        key_str = "[" .. value_string(k) .. "]"
+      end
+      table.insert(extra_items, key_str .. "=" .. value_string(val))
+    end
+  end
+  table.sort(extra_items) -- Sort for consistent output
+  
+  -- Combine array and key-value elements
+  for _, item in ipairs(extra_items) do
+    table.insert(items, item)
+  end
+  
+  return "{" .. table.concat(items, ", ") .. "}"
+end
+
+function value_string(v)
+  if type(v) == 'string' then
+    return stringf('%q', v)
+  elseif type(v) == 'table' then
+    -- Handle special cases
+    if v == lyaml.null then
+      return "null"
+    end
+    
+    return table_string(v)
+  else
+    return tostring(v)
+  end
+end
+
+local function validation_message(message, field, v)
+  return message:format(stringf('%s [%s]', field, value_string(v)))
+end
+
+-- Validation function  
+local function validate_document(doc)
+  local errors = {}
+  local found_fields = {}
+  
+  for field_name, value in pairs(doc) do
+    found_fields[field_name] = true
+    
+    -- Skip system-generated fields that shouldn't be validated  
+    if not field_name:match(' SAVING$') then
+      local spec = validator[field_name]
+      if spec then
+        -- Handle YAML null and nil as empty values
+        local test_value = value
+        if value == nil or tostring(value) == 'lyaml.null' then
+          test_value = ""
+        end
+        
+        local valid, custom_msg = spec.predicate(test_value)
+        if not valid then
+          -- Use custom message if provided, otherwise use spec message
+          if custom_msg then
+            table.insert(errors, string.format("%s [%s]: %s", field_name, value_string(value), custom_msg))
+          else
+            table.insert(errors, validation_message(spec.message, field_name, value))
+          end
+        end
+      elseif fields.strict then
+        -- In strict mode, unknown fields are errors
+        table.insert(errors, string.format("Unknown field: %s", field_name))
+      elseif fields.verbose then
+        -- In verbose mode, warn about unknown fields
+        eprintf("Warning: Unknown field: %s\n", field_name)
+      end
+    end
+  end
+  
+  -- Check for missing required fields
+  for field_name, spec in pairs(validator) do
+    if spec.required and not found_fields[field_name] then
+      table.insert(errors, validation_message("Required field missing: %s", field_name, nil))
+    end
+  end
+  
+  -- Validate CLASS & LEVEL requirement
+  local class_level_valid, class_level_msg = validate_class_level_requirement(doc)
+  if not class_level_valid then
+    -- Show relevant values for CLASS/LEVEL validation
+    local relevant_values = {
+      ["CLASS & LEVEL"] = doc["CLASS & LEVEL"],
+      CLASS = doc.CLASS,
+      LEVEL = doc.LEVEL
+    }
+    table.insert(errors, string.format("CLASS/LEVEL [%s]: %s", value_string(relevant_values), class_level_msg))
+  end
+  
+  return errors
+end
+
+
+
 
 ---------------------------------------------------------------------------
 -- 1. TeX-escaping utility
@@ -132,7 +580,7 @@ local function render(v)
   elseif type(v) ~= 'table' then
     return tostring(v)
   else
-    if v.proficiencies_skip then
+    if v == lyaml.null or v.proficiencies_skip then
       return [[\profskip{}]]
     elseif v.smallskip then
       return [[\smallskip{}]]
@@ -262,6 +710,12 @@ local category_map = {
   ["small item"] = "SMALL ITEMS",
 }
 
+-- Extract valid equipment categories from category_map (single point of truth)
+valid_equipment_categories = {}
+for _, category in pairs(category_map) do
+  valid_equipment_categories[category] = true
+end
+
 local function strip_s(s)
   if s:sub(-1) == 's' then
     return s:sub(1, -2)
@@ -290,12 +744,10 @@ local function is_string_list_with_categories(equipment_data)
     return false
   end
   -- Check if any item has category syntax
-  for _, item in ipairs(equipment_data) do
-    if type(item) == "string" and (item:match(":") or item:match("^-")) then
-      return true
-    end
+  local has_category_syntax = function(item)
+    return type(item) == "string" and (item:match(":") or item:match("^-"))
   end
-  return false
+  return any(has_category_syntax, equipment_data)
 end
 
 local function is_structured_object(equipment_data)
@@ -721,6 +1173,23 @@ local main = function(arg)
       eprintf("YAML loaded as string %q.\n", doc)
       os.exit(1)
     end
+    
+    -- Validate document before processing
+    local validation_errors = validate_document(doc)
+    if #validation_errors > 0 then
+      for _, error in ipairs(validation_errors) do
+        eprintf("Validation error: %s\n", error)
+      end
+      if fields.strict then
+        eprintf("Validation failed in strict mode. Exiting.\n")
+        os.exit(1)
+      else
+        eprintf("Validation warnings encountered. Continuing...\n")
+        -- In non-strict mode, accumulate validation errors in the document
+        doc['VALIDATION ERRORS'] = validation_errors
+      end
+    end
+    
     extend(doc)
     if type(doc)=="table" then
       emit(convert_mapping(doc))
