@@ -258,7 +258,8 @@ local category_map = {
   ["light armour"] = "LIGHT ARMOR",
   ["heavy item"] = "HEAVY ITEMS",
   ["slotted item"] = "SLOTTED ITEMS",
-  ["free item"] = "FREE ITEMS"
+  ["free item"] = "SMALL ITEMS",
+  ["small item"] = "SMALL ITEMS",
 }
 
 local function strip_s(s)
