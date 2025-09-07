@@ -12,8 +12,6 @@
 \usepackage{pgfkeys}
 
 % Incomplete character support
-\newif\ifcomplete
-\completetrue  % Default to complete character
 
 
 
@@ -205,36 +203,15 @@
 \node (stats background) 
       [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
 
-\newcommand{\incompletestat}[2]{% label, short name
-  \ifDNDnonempty{#2}{%
-    \dndstat{#1}{#2}%
-  }{%
-    \expandafter\blankstatbox\expandafter[\nextstatloc]{#1}
-             {\ifDNDnonempty{#2 SAVING}{*}{}}%
-    \gdef\nextstatloc{below=7mm of #1}%
-  }%
-}
-
-\ifcomplete
-  \dndstat{STRENGTH}{STR}
-  \dndstat{DEXTERITY}{DEX}
-  \dndstat{CONSTITUTION}{CON}
-  \dndstat{INTELLIGENCE}{INT}
-  \dndstat{WISDOM}{WIS}
-  \dndstat{CHARISMA}{CHA}
-\else
-  \incompletestat{STRENGTH}{STR}
-  \incompletestat{DEXTERITY}{DEX}
-  \incompletestat{CONSTITUTION}{CON}
-  \incompletestat{INTELLIGENCE}{INT}
-  \incompletestat{WISDOM}{WIS}
-  \incompletestat{CHARISMA}{CHA}
-\fi
+\dndstat{STRENGTH}{STR}
+\dndstat{DEXTERITY}{DEX}
+\dndstat{CONSTITUTION}{CON}
+\dndstat{INTELLIGENCE}{INT}
+\dndstat{WISDOM}{WIS}
+\dndstat{CHARISMA}{CHA}
 
 % slots OK here
 
-\typeout{WTF magic}
-  
 \ifDNDdefined{EQUIPMENT}{%
 %  \typeout{equipment, not magic}%
   {%

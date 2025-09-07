@@ -24,7 +24,6 @@ local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
   :string('type as t', 'silverpine'):help('template for character sheet')
   :bool('verbose as v')
-  :bool('incomplete as i'):help('character sheet is not yet complete')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
   :bool('strict'):help('halt on field validation errors (default: warn and continue)')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets')
@@ -977,27 +976,10 @@ end
 local function convert_mapping (map)
   local lines = {}
 
-  -- Incomplete character support
-  if fields.incomplete then
-    table.insert(lines, [[\completefalse]])
-  end
-
-  -- Proficiency bonus (strip key after processing)
-  local prof = map["PROFICIENCY BONUS"] or map["Proficiency Bonus"]
-  if prof and tostring(prof):find('%S') then
-    local txt = tostring(prof)
-    if not txt:match("^[+-]") then txt = "0"..txt end
-    outf(lines, [[\setcounter{proficiency bonus}{%s}]], escape(txt))
-  else
-    -- Compute proficiency bonus from level if available
+  do -- proficiency
     local level = tonumber(map.LEVEL)
-    if level then
-      local computed_prof = 2 + math.floor((level - 1) / 4)
-      outf(lines, [[\setcounter{proficiency bonus}{%d}]], computed_prof)
-    elseif fields.incomplete then
-      -- Default to +2 for incomplete characters when no level or proficiency bonus
-      outf(lines, [[\setcounter{proficiency bonus}{2}]])
-    end
+    local prof = level and (2 + math.floor((level - 1) / 4)) or 2
+    outf(lines, [[\setcounter{proficiency bonus}{%d}]], prof)
   end
 
   -- Iterate in original order if lyaml preserved it (omap style)
@@ -1010,19 +992,17 @@ local function convert_mapping (map)
   end
 
   for _,k in ipairs(keys) do
-    if k ~= "PROFICIENCY BONUS" and k ~= "Proficiency Bonus" then
-      local v = map[k]
-      local t = type(v)
-      if k == "EQUIPMENT" and t == "table" then
-        emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
-      elseif t=="string" or t=="number" or t=="boolean" then
-        table.insert(lines, render_simple_kv(k, tostring(v)))
-      elseif t=="table" then
-        if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
-          table.insert(lines, render_item_list(k, v))
-        else
-          table.insert(lines, render_struct_list(k, v))
-        end
+    local v = map[k]
+    local t = type(v)
+    if k == "EQUIPMENT" and t == "table" then
+      emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
+    elseif t=="string" or t=="number" or t=="boolean" then
+      table.insert(lines, render_simple_kv(k, tostring(v)))
+    elseif t=="table" then
+      if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
+        table.insert(lines, render_item_list(k, v))
+      else
+        table.insert(lines, render_struct_list(k, v))
       end
     end
   end
