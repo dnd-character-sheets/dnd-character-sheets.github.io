@@ -35,11 +35,17 @@
     \noindent
     \hspace*{21mm-5pt}%
     \begin{minipage}{\hsize-21mm-5pt}
-    \ifDNDdefined{MAGIC}{\begin{multicols}{2}}{\equipcolsstart}%
+    \ifnum\rawgetDND{EQUIPMENT COLS}=1
+    \else
+       \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
+    \fi
     \small
      \begin{eqlist}}
    {\end{eqlist}%
-    \ifDNDdefined{MAGIC}{\end{multicols}}{\equipcolsend}%
+    \ifnum\rawgetDND{EQUIPMENT COLS}=1
+    \else
+       \end{multicols}
+    \fi
     \end{minipage}%
    }
 

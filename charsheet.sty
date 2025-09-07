@@ -2229,6 +2229,12 @@
   \statcommon{#1}{#2}{\value{proficiency bonus}}%
 }
 
+\newcommand\blankstat[2]{% label, short name
+    \expandafter\blankstatbox\expandafter[\nextstatloc]{#1}%
+             {\ifDNDnonempty{#2 SAVING}{*}{}}%
+    \gdef\nextstatloc{below=7mm of #1}%
+}
+
 \newcommand\fullcoinbox[4][]{% location-setter nodename label number
   \node (preliminary #2) [coin,#1,fill=equipment] {#4};
   \node [dndbox,long octagon,long octagon end height=1.5mm,long
@@ -2266,7 +2272,8 @@
 \newDND{DEX SAVING}
 \newDND{EP}
 \newDND{EQUIPMENT}
-\newDND{EQUIPMENT 2UP}
+\newDND{EQUIPMENT COLS}
+\setDND{EQUIPMENT COLS}{2} % default
 \newDND{EXPERIENCE POINTS}
 \newDND{FEATURES}
 \newDND{GM NOTES}
@@ -2307,13 +2314,23 @@
 
 
 
-\newcommand\dndstat[2]{% label, short name
+\newcommand\odndstat[2]{% label, short name
   \ifDNDdefined{#2}{%
     \ifDNDdefined{#2 SAVING}%
        {\stat*{#1}{\rawgetDND{#2}}}
        {\stat{#1}{\rawgetDND{#2}}}
   }{%
     \blankstatbox{#1}{#2}{\ifDNDdefined{#2 SAVING}{*}{}}%
+  }
+}
+
+\newcommand\dndstat[2]{% label, short name
+  \ifDNDnonempty{#2}{%
+    \ifDNDdefined{#2 SAVING}%
+       {\stat*{#1}{\rawgetDND{#2}}}
+       {\stat{#1}{\rawgetDND{#2}}}
+  }{%
+    \blankstat{#1}{#2}%
   }
 }
 
@@ -2339,6 +2356,9 @@
   },
   AMMO/.code={%
     \gdef\@attackammo{#1}%
+  },
+  GRAYAMMO/.code={%
+    \gdef\@attackammo{{\color{attacks!70!black}#1}}%
   },
   .unknown/.code={} % ignore everything else
 }%
