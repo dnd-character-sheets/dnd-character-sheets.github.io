@@ -11,7 +11,7 @@ local function printf(...) return io.stdout:write(stringf(...)) end
 local function eprintf(...) return io.stderr:write(stringf(...)) end
 local function fprintf(fd, ...) return fd:write(stringf(...)) end
 local function dief(...) eprintf(...); os.exit(1) end
-local function errorf(...) return error(stringf(...)) end
+local function luaerrorf(...) return error(stringf(...)) end
 local function runf(...) return os.execute(stringf(...)) end
 local function warnf(...)
   io.stderr:write 'Warning: '; eprintf(...); io.stderr:write '\n'
@@ -20,6 +20,16 @@ local function outf(out, ...)
   table.insert(out, stringf(...))
   return out
 end
+
+-- Global validation errors list
+local global_validation_errors = {}
+
+local function verrorf(...)
+  local msg = stringf(...)
+  table.insert(global_validation_errors, msg)
+  eprintf('Validation error: %s\n', msg)
+end
+
 ----------------------------------------------------------------
 
 local fields = require 'flags'.parser()
@@ -146,8 +156,11 @@ local function nonempty_string(v)
   return can_be 'string'(v) and tostring(v):find('%S')
 end
 
-local function nonempty(v)
-  return v and (type(v) ~= 'string' or v:find '%S')
+local function empty(v)
+  return v == nil
+      or type(v) == 'table' and next(v) == nil
+      or type(v) == 'string' and not v:find '%S'
+      or false
 end
 
 assert(nonempty_string 'Arborist')
@@ -338,6 +351,32 @@ end
 
 local validate_proficiencies = listof(validate_proficiency_entry)
 
+local casting_modifier = {
+  Bard      = 'CHA',
+  Cleric    = 'WIS',
+  Druid     = 'WIS',
+  Paladin   = 'CHA',
+  Ranger    = 'WIS',
+  Sorcerer  = 'CHA',
+  Warlock   = 'CHA',
+  Wizard    = 'INT',
+}
+
+local function get_class_from_doc(doc)
+  -- Try CLASS & first LEVEL
+  if not empty(doc['CLASS & LEVEL']) then
+    local class = doc['CLASS & LEVEL']:match('%a+')
+    return class
+  end
+  
+  -- Fall back to CLASS field
+  if not empty(doc.CLASS) then
+    return doc.CLASS:match('%a+')
+  end
+  
+  return nil
+end
+
 -- Validate CLASS & LEVEL requirement and parsing
 local function validate_class_level_requirement(doc)
   local has_class_level = doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:find('%S')
@@ -485,12 +524,8 @@ end
 
 -- Validation function  
 local function validate_document(doc)
-  local errors = {}
-  local found_fields = {}
-  
+  -- Clear global validation errors from previous documents
   for field_name, value in pairs(doc) do
-    found_fields[field_name] = true
-    
     -- Skip system-generated fields that shouldn't be validated  
     if not field_name:match(' SAVING$') then
       local spec = validator[field_name]
@@ -517,14 +552,14 @@ local function validate_document(doc)
         if not valid then
           -- Use custom message if provided, otherwise use spec message
           if custom_msg then
-            table.insert(errors, string.format("%s [%s]: %s", field_name, value_string(value), custom_msg))
+            verrorf("%s [%s]: %s", field_name, value_string(value), custom_msg)
           else
-            table.insert(errors, validation_message(spec.message, field_name, value))
+            verrorf(validation_message(spec.message, field_name, value))
           end
         end
       elseif fields.strict then
         -- In strict mode, unknown fields are errors
-        table.insert(errors, string.format("Unknown field: %s", field_name))
+        verrorf("Unknown field: %s", field_name)
       elseif fields.verbose then
         -- In verbose mode, warn about unknown fields
         eprintf("Warning: Unknown field: %s\n", field_name)
@@ -532,20 +567,9 @@ local function validate_document(doc)
     end
   end
   
-  -- Check for missing required fields
-  if false then
-    for field_name, spec in pairs(validator) do
-      if spec.required and not found_fields[field_name] then
-        table.insert(errors, validation_message("Required field missing: %s", field_name, nil))
-      end
-    end
+  if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
+    verrorf('WIS present but PASSIVE PERCEPTION missing')
   end
-  
-  if nonempty(doc.WIS) and not nonempty(doc['PASSIVE PERCEPTION']) then
-    warnf('Missing PASSIVE PERCEPTION')
-    table.insert(errors, 'WIS present but PASSIVE PERCEPTION missing')
-  end
-  
 
   -- Validate CLASS & LEVEL requirement
   local class_level_valid, class_level_msg = validate_class_level_requirement(doc)
@@ -556,10 +580,8 @@ local function validate_document(doc)
       CLASS = doc.CLASS,
       LEVEL = doc.LEVEL
     }
-    table.insert(errors, string.format("CLASS/LEVEL [%s]: %s", value_string(relevant_values), class_level_msg))
+    verrorf("CLASS/LEVEL [%s]: %s", value_string(relevant_values), class_level_msg)
   end
-  
-  return errors
 end
 
 
@@ -1115,6 +1137,67 @@ local function extend(doc)
     end
   end
 
+  -- Handle SPELL DC calculation and validation
+  if not empty(doc.MAGIC) then
+    local modifier = casting_modifier[class]
+    if modifier and not empty(doc[modifier]) then
+      -- Calculate spell DC: 8 + proficiency bonus + ability modifier
+      local ability_score = tonumber(doc[modifier])
+      local level = tonumber(doc.LEVEL) or 1
+      local prof_bonus = 2 + math.floor((level - 1) / 4)
+      local ability_modifier = math.floor((ability_score - 10) / 2)
+      local calculated_dc = 8 + prof_bonus + ability_modifier
+      
+      if not empty(doc['SPELL DC']) then
+        -- Validate existing SPELL DC
+        local existing_dc = tonumber(doc['SPELL DC'])
+        if existing_dc and existing_dc ~= calculated_dc then
+          verrorf('SPELL DC mismatch: got %d, expected %d (8 + prof %d + %s mod %+d)', 
+                  existing_dc, calculated_dc, prof_bonus, modifier, ability_modifier)
+        end
+      else
+        -- Set calculated SPELL DC
+        doc['SPELL DC'] = calculated_dc
+      end
+    end
+  end
+
+  -- Handle PASSIVE PERCEPTION calculation and validation
+  if not empty(doc.WIS) then
+    -- Check if character has Expertise feature (case-insensitive)
+    local has_expertise = false
+    if doc.FEATURES and type(doc.FEATURES) == "table" then
+      for _, feature in ipairs(doc.FEATURES) do
+        if type(feature) == "table" and feature.name and 
+           type(feature.name) == "string" and feature.name:lower():find('expertise') then
+          has_expertise = true
+          break
+        end
+      end
+    end
+    
+    if not has_expertise then
+      -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
+      local wis_score = tonumber(doc.WIS)
+      local level = tonumber(doc.LEVEL) or 1
+      local prof_bonus = 2 + math.floor((level - 1) / 4)
+      local wis_modifier = math.floor((wis_score - 10) / 2)
+      local calculated_pp = 10 + wis_modifier + prof_bonus
+      
+      if not empty(doc['PASSIVE PERCEPTION']) then
+        -- Validate existing PASSIVE PERCEPTION
+        local existing_pp = tonumber(doc['PASSIVE PERCEPTION'])
+        if existing_pp and existing_pp ~= calculated_pp then
+          verrorf('PASSIVE PERCEPTION mismatch: got %d, expected %d (10 + WIS mod %+d + prof %d)', 
+                  existing_pp, calculated_pp, wis_modifier, prof_bonus)
+        end
+      else
+        -- Set calculated PASSIVE PERCEPTION
+        doc['PASSIVE PERCEPTION'] = calculated_pp
+      end
+    end
+  end
+
   return doc
 end
 
@@ -1203,18 +1286,15 @@ local main = function(arg)
     end
     
     -- Validate document before processing
-    local validation_errors = validate_document(doc)
-    if #validation_errors > 0 then
-      for _, error in ipairs(validation_errors) do
-        eprintf("Validation error: %s\n", error)
-      end
+    validate_document(doc)
+    if #global_validation_errors > 0 then
       if fields.strict then
         eprintf("Validation failed in strict mode. Exiting.\n")
         os.exit(1)
       else
         eprintf("Validation warnings encountered. Continuing...\n")
         -- In non-strict mode, accumulate validation errors in the document
-        doc['VALIDATION ERRORS'] = validation_errors
+        doc['VALIDATION ERRORS'] = global_validation_errors
       end
     end
     
