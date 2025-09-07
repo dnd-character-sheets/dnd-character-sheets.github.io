@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Sheet Creator</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        body {
+            font-family: tahoma, verdana, arial, sans-serif;
+            font-size: 11pt;
+            max-width: 52em;
+            margin-left: 1em;
+            margin-right: 1em;
+            background-color: #f9f9f9;
+        }
+        
+        h1 {
+            color: #35A;
+            border-bottom: 1px solid silver;
+            padding-bottom: 4px;
+        }
+        
+        .section {
+            margin: 1em 0;
+            padding: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        
+        .playername { background-color: #e8f5d0; }
+        .stats { background-color: #e6f2ff; }
+        .hpetc { background-color: #e6e6e6; }
+        .proficiencies { background-color: #fffae6; }
+        .attacks { background-color: #ffe6cc; }
+        .magic { background-color: #ffe6e6; }
+        .features { background-color: #f0e6f7; }
+        .equipment { background-color: #e8f5d0; }
+        
+        .section h2 {
+            color: #631;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+        
+        .field-group {
+            margin-bottom: 0.5em;
+        }
+        
+        .field-row {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 0.5em;
+            flex-wrap: wrap;
+        }
+        
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field.wide {
+            flex: 1;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 0.2em;
+            color: #333;
+        }
+        
+        input, textarea, select {
+            padding: 0.3em;
+            border: 1px solid #999;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #35A;
+            box-shadow: 0 0 3px rgba(53, 170, 170, 0.3);
+        }
+        
+        .ability-scores {
+            display: flex;
+            gap: 0.5em;
+            flex-wrap: wrap;
+        }
+        
+        .ability-scores .field {
+            align-items: center;
+        }
+        
+        .ability-scores input {
+            width: 3em;
+            max-width: 4em;
+        }
+        
+        .list-container {
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 2px;
+        }
+        
+        .list-item {
+            display: flex;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+            align-items: center;
+        }
+        
+        .list-item input {
+            flex: 1;
+        }
+        
+        .list-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.2em 0.5em;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        
+        .add-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.4em 0.8em;
+            border-radius: 2px;
+            cursor: pointer;
+            margin-top: 0.3em;
+        }
+        
+        .attack-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .attack-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+            margin-bottom: 0.3em;
+            padding-left: 4em;
+        }
+        
+        .attack-fields > * {
+            flex: 1;
+            min-width: 8em;
+        }
+        
+        .attack-fields > *:first-child {
+            flex: 2;
+            min-width: 12em;
+            margin-left: -4em;
+        }
+        
+        .attack-fields .range-field {
+            flex: 0 0 10em;
+            max-width: 10em;
+        }
+        
+        .attack-fields .ammo-field {
+            flex: 0 0 4ch;
+            max-width: 4ch;
+            width: 4ch;
+        }
+        
+        .attack-fields::after {
+            content: '';
+            flex: 1;
+        }
+        
+        .spell-level {
+            margin-bottom: 1.5em;
+            padding: 0.8em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: rgba(255,255,255,0.3);
+        }
+        
+        .spell-level h3 {
+            margin: 0 0 0.5em 0;
+            color: #631;
+            font-size: 1.1em;
+        }
+        
+        .spell-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.8);
+        }
+        
+        .spells-container {
+            margin-bottom: 0.5em;
+        }
+        
+        .feature-item {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 2px;
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .feature-item textarea,
+        .spell-item textarea {
+            resize: vertical;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .output-section {
+            margin-top: 2em;
+            padding: 1em;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .output-section h2 {
+            margin-top: 0;
+            color: #631;
+        }
+        
+        #yaml-output {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            font-size: 10pt;
+            background-color: white;
+            border: 1px solid #999;
+            padding: 0.5em;
+        }
+        
+        .generate-button {
+            background: #35A;
+            color: white;
+            border: none;
+            padding: 0.6em 1.2em;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12pt;
+            margin: 1em 0;
+        }
+        
+        .generate-button:hover {
+            background: #2a8;
+        }
+        
+        .currency-fields {
+            display: flex;
+            gap: 1em;
+        }
+        
+        .currency-fields .field {
+            min-width: 80px;
+        }
+        
+        kbd {
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 0.2em 0.4em;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>D&D Character Sheet Creator</h1>
+    <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
+        Version: garlic
+    </div>
+    
+    <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
+        <div>
+            <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
+            <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
+            <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
+            <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="pregenerated" name="pregenerated">
+                Pregenerated character
+            </label>
+        </div>
+    </div>
+    
+    <div id="status-bar" style="text-align: center; margin: 0.5em 0; font-size: 0.9em; color: #666; min-height: 1.2em;">
+        <strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections
+    </div>
+    
+    <form id="character-form">
+        <!-- Character Info Section -->
+        <div class="section playername">
+            <h2>Character Info</h2>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="character-name">Character Name</label>
+                    <input type="text" id="character-name" name="character-name">
+                </div>
+                <div class="field wide">
+                    <label for="player-name">Player Name</label>
+                    <input type="text" id="player-name" name="player-name">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="age">Age</label>
+                    <input type="text" id="age" name="age" placeholder="e.g., young adult">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="description">Physical Description</label>
+                    <textarea id="description" name="description" rows="3" placeholder="e.g., tall, dark hair, piercing blue eyes"></textarea>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="class">Class</label>
+                    <select id="class" name="class">
+                        <option value="">Select Class</option>
+                        <option value="Barbarian">Barbarian</option>
+                        <option value="Bard">Bard</option>
+                        <option value="Cleric">Cleric</option>
+                        <option value="Druid">Druid</option>
+                        <option value="Fighter">Fighter</option>
+                        <option value="Monk">Monk</option>
+                        <option value="Paladin">Paladin</option>
+                        <option value="Ranger">Ranger</option>
+                        <option value="Rogue">Rogue</option>
+                        <option value="Sorcerer">Sorcerer</option>
+                        <option value="Warlock">Warlock</option>
+                        <option value="Wizard">Wizard</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="level">Level</label>
+                    <input type="number" id="level" name="level" min="1" max="20">
+                </div>
+                <div class="field">
+                    <label for="specialty">Specialty</label>
+                    <input type="text" id="specialty" name="specialty" placeholder="e.g., Life Domain, Champion">
+                </div>
+                <div class="field">
+                    <label for="race">Race</label>
+                    <input type="text" id="race" name="race">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="background">Background</label>
+                    <input type="text" id="background" name="background">
+                </div>
+                <div class="field">
+                    <label for="alignment">Alignment</label>
+                    <input type="text" id="alignment" name="alignment">
+                </div>
+                <div class="field">
+                    <label for="experience">Experience Points</label>
+                    <input type="text" id="experience" name="experience">
+                </div>
+            </div>
+            <div class="field-group">
+                <label for="motivation">Motivation</label>
+                <input type="text" id="motivation" name="motivation" placeholder="Character's personal motivation" style="width: 100%;">
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="section stats">
+            <h2>Ability Scores</h2>
+            <div class="ability-scores">
+                <div class="field">
+                    <label for="str">Strength</label>
+                    <input type="number" id="str" name="str" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="dex">Dexterity</label>
+                    <input type="number" id="dex" name="dex" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="con">Constitution</label>
+                    <input type="number" id="con" name="con" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="int">Intelligence</label>
+                    <input type="number" id="int" name="int" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="wis">Wisdom</label>
+                    <input type="number" id="wis" name="wis" min="1" max="30">
+                </div>
+                <div class="field">
+                    <label for="cha">Charisma</label>
+                    <input type="number" id="cha" name="cha" min="1" max="30">
+                </div>
+            </div>
+        </div>
+
+        <!-- Combat Stats Section -->
+        <div class="section hpetc">
+            <h2>Combat Stats</h2>
+            <div class="field-row">
+                <div class="field">
+                    <label for="max-hp">Max HP</label>
+                    <input type="number" id="max-hp" name="max-hp" min="1">
+                </div>
+                <div class="field">
+                    <label for="hit-dice">Hit Die</label>
+                    <select id="hit-dice" name="hit-dice">
+                        <option value="">Select</option>
+                        <option value="d6">d6</option>
+                        <option value="d8">d8</option>
+                        <option value="d10">d10</option>
+                        <option value="d12">d12</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="initiative">Initiative</label>
+                    <input type="text" id="initiative" name="initiative" placeholder="+1">
+                </div>
+                <div class="field">
+                    <label for="speed">Speed</label>
+                    <input type="text" id="speed" name="speed" placeholder="30">
+                </div>
+                <div class="field">
+                    <label for="armor-class">Armor Class</label>
+                    <input type="number" id="armor-class" name="armor-class" min="1">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field wide">
+                    <label for="senses">Senses</label>
+                    <input type="text" id="senses" name="senses" placeholder="Darkvision 60 ft.">
+                </div>
+                <div class="field">
+                    <label for="passive-perception">Passive Perception</label>
+                    <input type="number" id="passive-perception" name="passive-perception" min="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Proficiencies Section -->
+        <div class="section proficiencies">
+            <h2>Proficiencies</h2>
+            <div class="field-group" style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 1em;">
+                <span>Proficiency Bonus +</span>
+                <input type="number" id="proficiency-bonus" name="proficiency-bonus" min="2" max="6" style="width: 2em; text-align: center;" placeholder="2">
+            </div>
+            <div class="field-group">
+                <p>Enter one proficiency per line. Include skill, language, and equipment proficiencies. Leave a blank line between categories.</p>
+                <textarea id="proficiencies-text" name="proficiencies-text" rows="8" placeholder="Athletics&#10;Medicine&#10;Nature&#10;&#10;Common&#10;Orcish&#10;&#10;Light Armor&#10;Shield&#10;Simple Weapons" style="width: 100%; box-sizing: border-box;"></textarea>
+            </div>
+        </div>
+
+        <!-- Attacks Section -->
+        <div class="section attacks">
+            <h2>Attacks</h2>
+            <div id="attacks-list">
+                <!-- Dynamic attacks will be added here -->
+            </div>
+            <button type="button" class="add-button" onclick="addAttack()">Add Attack</button>
+        </div>
+
+        <!-- Magic Section -->
+        <div class="section magic" id="magic-section">
+            <h2 id="magic-header" onclick="toggleMagic()" style="cursor: pointer;">Magic (click to open)</h2>
+            <div id="magic-content" style="display: none;">
+                <div class="field-group" style="margin-bottom: 1em;">
+                    <span>Render:</span>
+                    <div style="margin-top: 0.5em;">
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="normal" checked> at normal size
+                        </label>
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="small"> in a small font
+                        </label>
+                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                            <input type="radio" name="magic-render" value="separate"> on a page of its own
+                        </label>
+                    </div>
+                </div>
+                <div id="magic-levels">
+                    <!-- Spell levels are added dynamically as needed -->
+                </div>
+                <div id="next-level-button-container">
+                    <!-- Next level button will appear here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section features">
+            <h2>Features</h2>
+            <div id="features-list">
+                <!-- Dynamic features will be added here -->
+            </div>
+            <button type="button" class="add-button" onclick="addFeature()">Add Feature</button>
+        </div>
+
+        <!-- Equipment Section -->
+        <div class="section equipment">
+            <h2>Equipment</h2>
+            <div class="field-group">
+                <p>Enter one equipment item per line. You can use the <strong>new categorized format</strong>:</p>
+                <ul style="font-size: 0.9em; margin: 0.5em 0; color: #666;">
+                    <li><code>Heavy weapon: Greatsword</code> (single item)</li>
+                    <li><code>Slotted items:</code> followed by <code>- Backpack</code>, <code>- Rations</code> (multiple items)</li>
+                </ul>
+                <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin" style="width: 100%; box-sizing: border-box;"></textarea>
+                
+                <div style="margin-top: 0.5em; display: flex; gap: 0.5em; flex-wrap: wrap;">
+                    <button type="button" class="add-button" onclick="convertStructuredToLines()" title="Convert your equipment list to the new categorized format">
+                        📝 Categorize Equipment
+                    </button>
+                    <button type="button" class="add-button" onclick="convertEquipmentToStructured()" title="Show how your equipment would be parsed into categories">
+                        🔍 Preview Categories
+                    </button>
+                    <button type="button" class="add-button" onclick="testEquipmentParsing()" title="Run tests to verify the equipment parsing system works correctly">
+                        🧪 Test Parser
+                    </button>
+                </div>
+            </div>
+            
+            <h3>Currency</h3>
+            <div class="currency-fields">
+                <div class="field">
+                    <label for="cp">Copper (CP)</label>
+                    <input type="text" id="cp" name="cp">
+                </div>
+                <div class="field">
+                    <label for="sp">Silver (SP)</label>
+                    <input type="text" id="sp" name="sp">
+                </div>
+                <div class="field">
+                    <label for="ep">Electrum (EP)</label>
+                    <input type="text" id="ep" name="ep">
+                </div>
+                <div class="field">
+                    <label for="gp">Gold (GP)</label>
+                    <input type="text" id="gp" name="gp">
+                </div>
+                <div class="field">
+                    <label for="pp">Platinum (PP)</label>
+                    <input type="text" id="pp" name="pp">
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+
+    <script>
+        // Initialize with some default entries
+        document.addEventListener('DOMContentLoaded', function() {
+            addAttack();
+            addFeature();
+            setupChangeTracking();
+            
+            // Initialize and update download button text
+            updateDownloadButtonText();
+            const characterNameField = document.getElementById('character-name');
+            const classField = document.getElementById('class');
+            characterNameField.addEventListener('input', updateDownloadButtonText);
+            characterNameField.addEventListener('change', updateDownloadButtonText);
+            classField.addEventListener('input', updateDownloadButtonText);
+            classField.addEventListener('change', updateDownloadButtonText);
+        });
+
+        // Global keyboard shortcut handler
+        document.addEventListener('keydown', function(event) {
+            // Check for Ctrl+Enter (or Cmd+Enter on Mac)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                
+                // Find which section the focus is in
+                const activeElement = document.activeElement;
+                const attacksSection = document.getElementById('attacks-list');
+                const magicSection = document.getElementById('magic-list');
+                const featuresSection = document.getElementById('features-list');
+                
+                // Check if focus is within any of these sections
+                if (attacksSection && attacksSection.contains(activeElement)) {
+                    addAttack();
+                    // Focus on the name field of the new attack
+                    setTimeout(() => {
+                        const newAttack = document.querySelector('.attack-item:last-child [data-field="name"]');
+                        if (newAttack) newAttack.focus();
+                    }, 10);
+                } else if (magicSection && magicSection.contains(activeElement)) {
+                    // Find which spell level section we're in
+                    const spellLevelDiv = activeElement.closest('.spell-level');
+                    const level = spellLevelDiv ? spellLevelDiv.getAttribute('data-level') : '0';
+                    addSpellToLevel(parseInt(level));
+                    // Focus on the name field of the new spell
+                    setTimeout(() => {
+                        const container = spellLevelDiv.querySelector('.spells-container');
+                        const newSpell = container ? container.querySelector('.spell-item:last-child [data-field="name"]') : null;
+                        if (newSpell) newSpell.focus();
+                    }, 10);
+                } else if (featuresSection && featuresSection.contains(activeElement)) {
+                    addFeature();
+                    // Focus on the name field of the new feature
+                    setTimeout(() => {
+                        const newFeature = document.querySelector('.feature-item:last-child [data-field="name"]');
+                        if (newFeature) newFeature.focus();
+                    }, 10);
+                } else {
+                    // If not in a specific section, check which section is closest or most recently used
+                    // Default to adding an attack
+                    addAttack();
+                    setTimeout(() => {
+                        const newAttack = document.querySelector('.attack-item:last-child [data-field="name"]');
+                        if (newAttack) newAttack.focus();
+                    }, 10);
+                }
+            }
+        });
+
+        function toggleMagic() {
+            const magicContent = document.getElementById('magic-content');
+            const magicHeader = document.getElementById('magic-header');
+            
+            if (magicContent.style.display === 'none') {
+                magicContent.style.display = 'block';
+                magicHeader.textContent = 'Magic';
+                // Always open cantrips automatically when magic section opens
+                if (!document.querySelector('[data-level="0"]')) {
+                    openSpellLevel(0);
+                }
+            } else {
+                magicContent.style.display = 'none';
+                magicHeader.textContent = 'Magic (click to open)';
+            }
+        }
+        
+        function getSpellLevelName(level) {
+            if (level === 0) return 'Cantrips';
+            const suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'];
+            return `${level}${suffixes[level]}-Level Spells`;
+        }
+        
+        function openSpellLevel(level) {
+            const magicLevels = document.getElementById('magic-levels');
+            const levelDiv = document.createElement('div');
+            levelDiv.className = 'spell-level';
+            levelDiv.setAttribute('data-level', level);
+            
+            const levelName = level === 0 ? 'Cantrips' : `${getSpellLevelName(level)} (<input type="number" min="0" max="9" maxlength="1" data-slots="${level}" placeholder="0" style="width: 2.5em; border: 1px solid #999; text-align: center;"> slots)`;
+            
+            levelDiv.innerHTML = `
+                <h3>${levelName}</h3>
+                <div class="spells-container"></div>
+                <button type="button" class="add-button" onclick="addSpellToLevel(${level})">Add ${level === 0 ? 'Cantrip' : getSpellLevelName(level).replace('-Level Spells', '-Level Spell')}</button>
+            `;
+            
+            magicLevels.appendChild(levelDiv);
+            
+            // Add change tracking for the new slot input if it exists
+            const slotsInputEl = levelDiv.querySelector('[data-slots]');
+            if (slotsInputEl) {
+                slotsInputEl.addEventListener('input', markDirty);
+                slotsInputEl.addEventListener('change', markDirty);
+            }
+            
+            updateNextLevelButton();
+        }
+        
+        function showNextLevelButton(level) {
+            const container = document.getElementById('next-level-button-container');
+            const nextLevel = level;
+            const maxLevel = 9;
+            
+            if (nextLevel <= maxLevel) {
+                const levelName = nextLevel === 0 ? 'Cantrips' : getSpellLevelName(nextLevel);
+                container.innerHTML = `
+                    <button type="button" class="add-button" onclick="openSpellLevel(${nextLevel}); addSpellToLevel(${nextLevel});">Open ${levelName}</button>
+                `;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+        
+        function updateNextLevelButton() {
+            const existingLevels = Array.from(document.querySelectorAll('.spell-level')).map(el => parseInt(el.getAttribute('data-level')));
+            if (existingLevels.length === 0) {
+                showNextLevelButton(0);
+                return;
+            }
+            
+            const maxExistingLevel = Math.max(...existingLevels);
+            const nextLevel = maxExistingLevel + 1;
+            showNextLevelButton(nextLevel);
+        }
+
+        function addAttack() {
+            const container = document.getElementById('attacks-list');
+            const item = document.createElement('div');
+            item.className = 'attack-item';
+            item.innerHTML = `
+                <div class="attack-fields">
+                    <input type="text" placeholder="Weapon" data-field="name" />
+                    <input type="text" placeholder="Attack Bonus" data-field="attack" />
+                    <input type="text" placeholder="Damage Amount" data-field="damage" />
+                    <input type="text" placeholder="Damage Type" data-field="type" list="damage-types" />
+                    <datalist id="damage-types">
+                        <option value="slashing">
+                        <option value="piercing">
+                        <option value="bludgeoning">
+                        <option value="acid">
+                        <option value="cold">
+                        <option value="fire">
+                        <option value="force">
+                        <option value="lightning">
+                        <option value="necrotic">
+                        <option value="poison">
+                        <option value="psychic">
+                        <option value="radiant">
+                        <option value="thunder">
+                        <option value="slashing/cold">
+                        <option value="piercing/fire">
+                        <option value="bludgeoning/thunder">
+                    </datalist>
+                    <input type="text" placeholder="Range" data-field="range" class="range-field" />
+                    <input type="text" placeholder="Ammo" data-field="ammo" class="ammo-field" />
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove Attack</button>
+            `;
+            container.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        function addSpellToLevel(level) {
+            // Ensure the level exists first
+            let spellLevelDiv = document.querySelector(`[data-level="${level}"]`);
+            if (!spellLevelDiv) {
+                openSpellLevel(level);
+                spellLevelDiv = document.querySelector(`[data-level="${level}"]`);
+            }
+            
+            const spellContainer = spellLevelDiv.querySelector('.spells-container');
+            const item = document.createElement('div');
+            item.className = 'spell-item';
+            item.innerHTML = `
+                <div class="field-group">
+                    <label>Name</label>
+                    <input type="text" placeholder="e.g., Magic Missile" data-field="name" data-level="${level}" />
+                </div>
+                <div class="field-group">
+                    <label>Description</label>
+                    <textarea placeholder="Spell description..." data-field="description" rows="2"></textarea>
+                </div>
+                <button type="button" onclick="this.parentElement.remove(); setupChangeTracking();">Remove Spell</button>
+            `;
+            spellContainer.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+        
+        // Legacy function for compatibility
+        function addSpell() {
+            addSpellToLevel(0); // Default to cantrips
+        }
+
+        function addFeature() {
+            const container = document.getElementById('features-list');
+            const item = document.createElement('div');
+            item.className = 'feature-item';
+            item.innerHTML = `
+                <div class="field-group">
+                    <label>Name</label>
+                    <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" />
+                </div>
+                <div class="field-group">
+                    <label>Description</label>
+                    <textarea placeholder="Feature description..." data-field="description" rows="2"></textarea>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove Feature</button>
+            `;
+            container.appendChild(item);
+            
+            // Add change tracking to new elements
+            item.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+            });
+        }
+
+        let isDirty = false;
+        let loadedFileName = '';
+
+        function loadYAMLFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        parseYAMLIntoForm(e.target.result);
+                        loadedFileName = file.name;
+                        isDirty = false;
+                        updateStatusBar();
+                        setupChangeTracking();
+                        updateDownloadButtonText();
+                    } catch (error) {
+                        updateStatusBar('Error loading YAML file: ' + error.message, true);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function updateStatusBar(message = null, isError = false) {
+            const statusBar = document.getElementById('status-bar');
+            if (message) {
+                statusBar.innerHTML = `<span style="color: ${isError ? '#d32f2f' : '#666'}">${message}</span>`;
+            } else if (loadedFileName) {
+                const dirtyMark = isDirty ? ' (dirty)' : '';
+                statusBar.innerHTML = `Loaded from <strong>${loadedFileName}</strong>${dirtyMark}`;
+            } else {
+                statusBar.innerHTML = '<strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections';
+            }
+        }
+
+        function markDirty() {
+            if (!isDirty) {
+                isDirty = true;
+                updateStatusBar();
+            }
+        }
+
+        function setupChangeTracking() {
+            // Remove existing listeners first
+            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
+                el.removeEventListener('input', markDirty);
+                el.removeEventListener('change', markDirty);
+            });
+            
+            // Add listeners to all form elements
+            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
+                el.addEventListener('input', markDirty);
+                el.addEventListener('change', markDirty);
+                // Update button text when character name or class changes
+                if (el.id === 'character-name' || el.id === 'class') {
+                    el.addEventListener('input', updateDownloadButtonText);
+                }
+            });
+        }
+
+        // Field factory functions
+        function textField(yamlKey, selector, options = {}) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = data[yamlKey];
+                    if (el && value !== undefined && value !== null) {
+                        el.value = value.toString();
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = el?.value || '';
+                    if (options.required || value) {
+                        data[yamlKey] = value;
+                    }
+                }
+            };
+        }
+
+        function numberField(yamlKey, selector, options = {}) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = data[yamlKey];
+                    if (el && value !== undefined && value !== null) {
+                        el.value = value.toString();
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = el?.value || '';
+                    if (options.required || value) {
+                        data[yamlKey] = value ? (parseInt(value) || value) : value;
+                    }
+                }
+            };
+        }
+
+        function checkboxField(yamlKey, selector) {
+            return {
+                populate(data) {
+                    const el = document.querySelector(selector);
+                    if (el) {
+                        const value = data[yamlKey];
+                        console.log(`${yamlKey} value:`, value, 'type:', typeof value);
+                        const shouldCheck = !ifDNDfalse(value);
+                        console.log('Should check:', shouldCheck);
+                        el.checked = shouldCheck;
+                    }
+                },
+                capture(data) {
+                    const el = document.querySelector(selector);
+                    const checked = el?.checked || false;
+                    if (checked) {
+                        data[yamlKey] = true;
+                    }
+                }
+            };
+        }
+
+        // Complex field factories
+        function arrayField(yamlKey, selector, itemProcessor = null) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    if (el && data[yamlKey] && Array.isArray(data[yamlKey])) {
+                        const items = itemProcessor 
+                            ? data[yamlKey].map(itemProcessor)
+                            : data[yamlKey].map(item => item?.toString() || '');
+                        el.value = items.join('\n');
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const text = el?.value || '';
+                    if (text.trim()) {
+                        const lines = text.split('\n').filter(line => line.trim());
+                        data[yamlKey] = itemProcessor ? lines.map(itemProcessor) : lines;
+                    } else {
+                        data[yamlKey] = [];
+                    }
+                }
+            };
+        }
+
+        function classLevelField() {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const setFormValue = (selector, value) => {
+                        const el = form.querySelector(selector);
+                        if (el && value !== undefined && value !== null) {
+                            el.value = value.toString();
+                        }
+                    };
+                    
+                    // Handle "CLASS & LEVEL" format
+                    if (data['CLASS & LEVEL']) {
+                        const classLevel = data['CLASS & LEVEL'].toString();
+                        const match = classLevel.match(/^([A-Za-z]+)(?:\s+\(([^)]+)\))?\s+(\d+)$/) || 
+                                     classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
+                                     classLevel.match(/^([A-Za-z]+)/);
+                        if (match) {
+                            setFormValue('#class', match[1]);
+                            if (match.length === 4 && match[2]) {
+                                setFormValue('#specialty', match[2]);
+                                setFormValue('#level', match[3]);
+                            } else if (match[2]) {
+                                setFormValue('#level', match[2]);
+                            }
+                        }
+                    }
+                    
+                    // Override with individual fields if present
+                    if (data['CLASS']) setFormValue('#class', data['CLASS']);
+                    if (data['LEVEL']) setFormValue('#level', data['LEVEL']);
+                    if (data['SPECIALTY']) setFormValue('#specialty', data['SPECIALTY']);
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const characterClass = form.querySelector('#class')?.value || '';
+                    const level = form.querySelector('#level')?.value || '';
+                    const specialty = form.querySelector('#specialty')?.value || '';
+
+                    data['CLASS'] = characterClass;
+                    data['LEVEL'] = level ? (parseInt(level) || level) : level;
+                    if (specialty) data['SPECIALTY'] = specialty;
+                }
+            };
+        }
+
+        // Field registry
+        const FIELDS = [
+            // Character info fields - required
+            textField('CHARACTER NAME', '#character-name', {required: true}),
+            textField('PLAYER NAME', '#player-name', {required: true}),
+            textField('RACE', '#race', {required: true}),
+            textField('BACKGROUND', '#background', {required: true}),
+            textField('ALIGNMENT', '#alignment', {required: true}),
+            textField('EXPERIENCE POINTS', '#experience', {required: true}),
+            
+            // Optional character info
+            textField('AGE', '#age'),
+            textField('DESCRIPTION', '#description'),
+            textField('MOTIVATION', '#motivation'),
+            
+            // Checkbox
+            checkboxField('PREGENERATED', '#pregenerated'),
+            
+            // Class/Level complex logic
+            classLevelField(),
+            
+            // Ability scores
+            numberField('STR', '#str', {required: true}),
+            numberField('DEX', '#dex', {required: true}),
+            numberField('CON', '#con', {required: true}),
+            numberField('INT', '#int', {required: true}),
+            numberField('WIS', '#wis', {required: true}),
+            numberField('CHA', '#cha', {required: true}),
+            
+            // Combat stats
+            textField('PROFICIENCY BONUS', '#proficiency-bonus'),
+            textField('MAX HP', '#max-hp'),
+            textField('HIT DICE', '#hit-dice'),
+            textField('INITIATIVE', '#initiative'),
+            textField('SPEED', '#speed'),
+            textField('ARMOR CLASS', '#armor-class'),
+            textField('SENSES', '#senses'),
+            textField('PASSIVE PERCEPTION', '#passive-perception'),
+            
+            // Currency
+            textField('CP', '#cp'),
+            textField('SP', '#sp'),
+            textField('EP', '#ep'),
+            textField('GP', '#gp'),
+            textField('PP', '#pp'),
+            
+            // Array fields
+            arrayField('PROFICIENCIES', '#proficiencies-text', item => {
+                if (typeof item === 'string') return item;
+                if (typeof item === 'object' && item === null) return '';
+                if (item && item.proficiencies_skip) return '';
+                if (item && typeof item === 'object') {
+                    const keys = Object.keys(item);
+                    if (keys.length === 1) {
+                        const key = keys[0];
+                        const value = item[key];
+                        if (key === 'Languages') return value;
+                        if (key === 'Armor') return `${value} Armor`;
+                        if (key === 'Weapons') return `${value} Weapons`;
+                        return `${key}: ${value}`;
+                    }
+                }
+                return item?.toString() || '';
+            })
+        ];
+
+        function parseYAMLIntoForm(yamlText) {
+            try {
+                // Use js-yaml to parse the YAML
+                const data = jsyaml.load(yamlText);
+                if (!data) return;
+                
+                // Populate all fields using message-passing
+                FIELDS.forEach(field => field.populate(data));
+                
+                // Handle remaining complex fields that need special DOM manipulation
+                const form = document.getElementById('character-form');
+                
+                // Equipment - handle both array (flat list) and object (structured) formats
+                if (data['EQUIPMENT']) {
+                    const equipmentEl = form.querySelector('#equipment-text');
+                    if (equipmentEl) {
+                        let equipmentText = '';
+                        
+                        if (Array.isArray(data['EQUIPMENT'])) {
+                            // Handle flat list format
+                            const equipList = data['EQUIPMENT'].map(item => item?.toString() || '');
+                            equipmentText = equipList.join('\n');
+                        } else if (typeof data['EQUIPMENT'] === 'object') {
+                            // Handle structured format - unparse it
+                            const unparsedLines = unparseEquipmentStructure(data['EQUIPMENT']);
+                            equipmentText = unparsedLines.join('\n');
+                        } else {
+                            // Handle single string (fallback)
+                            equipmentText = data['EQUIPMENT'].toString();
+                        }
+                        
+                        equipmentEl.value = equipmentText;
+                    }
+                }
+                
+                // Features
+                if (data['FEATURES'] && Array.isArray(data['FEATURES'])) {
+                    // Clear existing features first
+                    document.querySelectorAll('.feature-item').forEach(item => item.remove());
+                    
+                    data['FEATURES'].forEach(feature => {
+                        if (feature && typeof feature === 'object' && feature.name) {
+                            addFeature();
+                            const items = document.querySelectorAll('.feature-item');
+                            const lastItem = items[items.length - 1];
+                            if (lastItem) {
+                                const nameEl = lastItem.querySelector('[data-field="name"]');
+                                const descEl = lastItem.querySelector('[data-field="description"]');
+                                if (nameEl) nameEl.value = feature.name || '';
+                                if (descEl) descEl.value = feature.description || '';
+                            }
+                        }
+                    });
+                }
+                
+                // Attacks
+                if (data['ATTACKS'] && Array.isArray(data['ATTACKS'])) {
+                    // Clear existing attacks first
+                    document.querySelectorAll('.attack-item').forEach(item => item.remove());
+                    
+                    data['ATTACKS'].forEach(attack => {
+                        if (attack && typeof attack === 'object') {
+                            addAttack();
+                            const items = document.querySelectorAll('.attack-item');
+                            const lastItem = items[items.length - 1];
+                            if (lastItem) {
+                                const nameEl = lastItem.querySelector('[data-field="name"]');
+                                const attackEl = lastItem.querySelector('[data-field="attack"]');
+                                const damageEl = lastItem.querySelector('[data-field="damage"]');
+                                const typeEl = lastItem.querySelector('[data-field="type"]');
+                                const rangeEl = lastItem.querySelector('[data-field="range"]');
+                                const ammoEl = lastItem.querySelector('[data-field="ammo"]');
+                                
+                                if (nameEl) nameEl.value = attack['NAME'] || '';
+                                if (attackEl) attackEl.value = attack['ATTACK'] || '';
+                                if (damageEl) damageEl.value = attack['DAMAGE'] || '';
+                                if (typeEl) typeEl.value = attack['TYPE'] || '';
+                                if (rangeEl) rangeEl.value = attack['RANGE'] || '';
+                                if (ammoEl) ammoEl.value = attack['AMMO'] || '';
+                            }
+                        }
+                    });
+                }
+                
+                // Magic/Spells
+                if (data['MAGIC'] && Array.isArray(data['MAGIC'])) {
+                    // Auto-open magic section
+                    const magicContent = document.getElementById('magic-content');
+                    const magicHeader = document.getElementById('magic-header');
+                    if (magicContent && magicContent.style.display === 'none') {
+                        magicContent.style.display = 'block';
+                        magicHeader.textContent = 'Magic';
+                    }
+                    
+                    // Clear existing spells and levels first
+                    document.getElementById('magic-levels').innerHTML = '';
+                    document.getElementById('next-level-button-container').innerHTML = '';
+                    
+                    // Process each magic entry
+                    let currentLevel = null;
+                    data['MAGIC'].forEach(spell => {
+                        if (spell && typeof spell === 'object') {
+                            // Handle level markers with slot information
+                            if (spell.level !== undefined && !spell.name) {
+                                currentLevel = spell.level;
+                                // If this is a level with slot information, handle slots
+                                if (typeof spell.level === 'object' && spell.level.number !== undefined) {
+                                    currentLevel = spell.level.number;
+                                    // Ensure the level exists before setting slots
+                                    if (!document.querySelector(`[data-level="${currentLevel}"]`)) {
+                                        openSpellLevel(currentLevel);
+                                    }
+                                    const slotsInput = document.querySelector(`[data-slots="${currentLevel}"]`);
+                                    if (slotsInput && spell.level.slots !== undefined) {
+                                        slotsInput.value = spell.level.slots;
+                                    }
+                                } else if (typeof spell.level === 'number') {
+                                    currentLevel = spell.level;
+                                }
+                                return;
+                            }
+                            
+                            // Add spell with name and description
+                            if (spell.name && currentLevel !== null) {
+                                addSpellToLevel(currentLevel);
+                                const levelContainer = document.querySelector(`[data-level="${currentLevel}"] .spells-container`);
+                                if (levelContainer) {
+                                    const items = levelContainer.querySelectorAll('.spell-item');
+                                    const lastItem = items[items.length - 1];
+                                    if (lastItem) {
+                                        const nameEl = lastItem.querySelector('[data-field="name"]');
+                                        const descEl = lastItem.querySelector('[data-field="description"]');
+                                        
+                                        if (nameEl) nameEl.value = spell.name || '';
+                                        if (descEl) descEl.value = spell.description || '';
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Update the next level button after loading
+                    updateNextLevelButton();
+                }
+
+                // Handle magic rendering options
+                let magicRenderOption = 'normal'; // default
+                
+                if (data['MAGIC SEPARATE'] && !ifDNDfalse(data['MAGIC SEPARATE'])) {
+                    magicRenderOption = 'separate';
+                } else if (data['MAGIC FONT'] && typeof data['MAGIC FONT'] === 'string') {
+                    const magicFont = data['MAGIC FONT'].toString();
+                    if (magicFont.includes('small')) {
+                        magicRenderOption = 'small';
+                    } else if (magicFont.includes('normalsize')) {
+                        magicRenderOption = 'normal';
+                    }
+                }
+                
+                // Set the radio button
+                const radioToCheck = document.querySelector(`input[name="magic-render"][value="${magicRenderOption}"]`);
+                if (radioToCheck) {
+                    radioToCheck.checked = true;
+                }
+                
+            } catch (error) {
+                throw new Error('YAML parsing failed: ' + error.message);
+            }
+        }
+
+
+        function ifDNDfalse(value) {
+            // Following \ifDNDfalse semantics: undefined, empty, "0", or "false" are false
+            // Convert to string for comparison to handle both numeric and string values
+            if (value === undefined || value === null) return true;
+            const valueStr = value.toString().toLowerCase();
+            return valueStr === '' || valueStr === '0' || valueStr === 'false';
+        }
+
+        function createYAMLContent() {
+            const data = {};
+            
+            // Capture all simple fields using message-passing
+            FIELDS.forEach(field => field.capture(data));
+            
+            // Add required fields that are always present but computed
+            data['CURRENT HIT POINTS'] = '';  // Required, typically empty
+
+            // Attacks (required, can be empty list)
+            const attacks = [];
+            document.querySelectorAll('.attack-item').forEach(attackDiv => {
+                const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
+                const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
+                const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
+                const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
+                const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
+                const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
+
+                if (name || attack || damage || type || range || ammo) {
+                    attacks.push({
+                        'NAME': name,
+                        'ATTACK': attack,
+                        'DAMAGE': damage,
+                        'TYPE': type,
+                        'RANGE': range,
+                        'AMMO': ammo
+                    });
+                }
+            });
+            data['ATTACKS'] = attacks;
+
+            // Magic (only include when not empty)
+            const magic = [];
+            const magicLevels = document.querySelectorAll('.spell-level');
+            let hasMagic = false;
+            
+            magicLevels.forEach(levelDiv => {
+                const level = levelDiv.getAttribute('data-level');
+                const spellItems = levelDiv.querySelectorAll('.spell-item');
+                const slotsInput = levelDiv.querySelector(`[data-slots="${level}"]`);
+                
+                if (spellItems.length > 0) {
+                    // Add level header with slot information
+                    if (level === '0') {
+                        magic.push({ level: 0 });
+                    } else {
+                        const slots = slotsInput?.value || '';
+                        if (slots) {
+                            magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
+                        } else {
+                            magic.push({ level: parseInt(level) });
+                        }
+                    }
+                    
+                    // Add spells for this level
+                    spellItems.forEach(spellDiv => {
+                        const name = spellDiv.querySelector('[data-field="name"]')?.value || '';
+                        const description = spellDiv.querySelector('[data-field="description"]')?.value || '';
+                        
+                        if (name || description) {
+                            hasMagic = true;
+                            const spell = {};
+                            if (name) spell.name = name;
+                            if (description) spell.description = description;
+                            magic.push(spell);
+                        }
+                    });
+                }
+            });
+            
+            if (hasMagic) {
+                data['MAGIC'] = magic;
+            }
+
+            // Magic rendering options
+            const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
+            if (magicRenderOption === 'small') {
+                data['MAGIC FONT'] = '\\small';
+            } else if (magicRenderOption === 'separate') {
+                data['MAGIC SEPARATE'] = true;
+            }
+
+            // Features (required, can be empty list)
+            const features = [];
+            document.querySelectorAll('.feature-item').forEach(featureDiv => {
+                const name = featureDiv.querySelector('[data-field="name"]')?.value || '';
+                const description = featureDiv.querySelector('[data-field="description"]')?.value || '';
+
+                if (name || description) {
+                    const feature = {};
+                    if (name) feature.name = name;
+                    if (description) feature.description = description;
+                    features.push(feature);
+                }
+            });
+            data['FEATURES'] = features;
+
+            // Equipment (parse to structured format)
+            const equipmentText = form.querySelector('#equipment-text')?.value || '';
+            if (equipmentText.trim()) {
+                const lines = equipmentText.split('\n').map(line => line.trim()).filter(line => line);
+                try {
+                    // Parse equipment text into structured format
+                    const structuredEquipment = parseEquipmentStrings(lines);
+                    data['EQUIPMENT'] = structuredEquipment;
+                } catch (error) {
+                    // Fallback to list format if parsing fails
+                    console.warn('Equipment parsing failed, falling back to list format:', error);
+                    data['EQUIPMENT'] = lines;
+                }
+            } else {
+                data['EQUIPMENT'] = {};
+            }
+
+            // Currency (all required, can be empty)
+            const cp = form.querySelector('#cp')?.value || '';
+            const sp = form.querySelector('#sp')?.value || '';
+            const ep = form.querySelector('#ep')?.value || '';
+            const gp = form.querySelector('#gp')?.value || '';
+            const pp = form.querySelector('#pp')?.value || '';
+
+            data['CP'] = cp;
+            data['SP'] = sp;
+            data['EP'] = ep;
+            data['GP'] = gp;
+            data['PP'] = pp;
+
+            // Use js-yaml to serialize the data structure
+            return jsyaml.dump(data, { 
+                indent: 2,
+                noRefs: true,
+                sortKeys: false 
+            });
+        }
+
+        function generateYAML() {
+            document.getElementById('yaml-output').value = createYAMLContent();
+        }
+
+        function copyYAML() {
+            const yamlOutput = document.getElementById('yaml-output');
+            yamlOutput.select();
+            document.execCommand('copy');
+            alert('YAML copied to clipboard!');
+        }
+
+        function updateDownloadButtonText() {
+            const filename = getCharacterFilename();
+            const downloadButton = document.querySelector('[onclick="downloadYAML()"]');
+            downloadButton.innerHTML = `Download <tt>${filename}</tt>`;
+        }
+        
+
+        function getCharacterFilename(extension = 'yaml') {
+            // Get character name, or fall back to class name if no character name
+            const characterName = document.querySelector('#character-name')?.value?.trim() || '';
+            const className = document.querySelector('#class')?.value?.trim() || '';
+            
+            const baseName = characterName || className || 'character';
+            
+            // Replace spaces (including non-breaking spaces) with regular spaces, then convert to dash
+            const cleanName = baseName.toLowerCase()
+                .replace(/[\s\u00A0]+/g, '-')  // Replace spaces and non-breaking spaces with dash
+                .replace(/[^a-z0-9-]/g, '')   // Remove other non-alphanumeric chars except dash
+                .replace(/--+/g, '-')         // Replace multiple dashes with single dash
+                .replace(/^-+|-+$/g, '')      // Remove leading/trailing dashes
+                || 'character';
+            return `${cleanName}.${extension}`;
+        }
+
+        function updateDownloadButtonText() {
+            const downloadButton = document.querySelector('button[onclick="downloadYAML()"]');
+            if (downloadButton) {
+                const filename = getCharacterFilename();
+                downloadButton.innerHTML = `Download <tt>${filename}</tt>`;
+            }
+        }
+
+        function downloadYAML() {
+            // Generate YAML content using the shared function
+            const yamlContent = createYAMLContent();
+            
+            // Use consistent filename
+            const filename = getCharacterFilename();
+            
+            // Create download
+            const blob = new Blob([yamlContent], { type: 'text/yaml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        async function generatePDF() {
+            try {
+                // Generate YAML content using the shared function
+                const yamlContent = createYAMLContent();
+                
+                // Send to server and let browser handle the response completely
+                // Use form submission to let browser handle response naturally
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/charsheet/render.cgi';
+                form.target = '_blank'; // Open result in new window
+                form.enctype = 'text/plain';
+                form.style.display = 'none';
+                
+                const textarea = document.createElement('textarea');
+                textarea.name = 'yaml';
+                textarea.value = yamlContent;
+                
+                form.appendChild(textarea);
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert(`Failed to generate PDF: ${error.message}. Please check that the server is running and accessible.`);
+            }
+        }
+
+        // ===============================================
+        // Equipment Format Conversion Functions
+        // ===============================================
+        
+        // Category mapping (from Lua charsheet parser)
+        const categoryMap = {
+            "heavy weapon": "HEAVY WEAPONS",
+            "normal weapon": "NORMAL WEAPONS", 
+            "light weapon": "LIGHT WEAPONS",
+            "shield": "SHIELDS",
+            "heavy armor": "HEAVY ARMOR",
+            "heavy armour": "HEAVY ARMOR",
+            "normal armor": "MEDIUM ARMOR",
+            "normal armour": "MEDIUM ARMOR", 
+            "medium armor": "MEDIUM ARMOR",
+            "medium armour": "MEDIUM ARMOR",
+            "light armor": "LIGHT ARMOR",
+            "light armour": "LIGHT ARMOR",
+            "heavy item": "HEAVY ITEMS",
+            "slotted item": "SLOTTED ITEMS",
+            "free item": "SMALL ITEMS",
+            "small item": "SMALL ITEMS"
+        };
+
+        function stripS(s) {
+            return s.endsWith('s') ? s.slice(0, -1) : s;
+        }
+
+        function getCategory(s) {
+            return categoryMap[stripS(s.toLowerCase())];
+        }
+
+        function capitalize(s) {
+            return s.replace(/\b\w+/g, word => 
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            );
+        }
+
+        function formatCategoryName(category) {
+            return capitalize(category.toLowerCase().replace(/s$/, ''));
+        }
+
+        // Equipment format detection
+        function isStringListWithCategories(equipmentData) {
+            if (!Array.isArray(equipmentData) || equipmentData.length === 0) {
+                return false;
+            }
+            if (typeof equipmentData[0] !== 'string') {
+                return false;
+            }
+            // Check if any item has category syntax
+            return equipmentData.some(item => 
+                typeof item === 'string' && (item.includes(':') || item.startsWith('-'))
+            );
+        }
+
+        function isStructuredObject(equipmentData) {
+            if (typeof equipmentData !== 'object' || Array.isArray(equipmentData) || !equipmentData) {
+                return false;
+            }
+            return Object.keys(equipmentData).length > 0;
+        }
+
+        // Parse equipment strings (port of Lua function)
+        function parseEquipmentStrings(lines) {
+            const equipment = {};
+            let i = 0;
+
+            function add(category, item) {
+                if (!equipment[category]) {
+                    equipment[category] = [];
+                }
+                equipment[category].push(item);
+            }
+
+            while (i < lines.length) {
+                const line = lines[i].trim();
+                const blockHeader = line.match(/^(.+):$/);
+                
+                if (line === "") {
+                    // Skip empty lines
+                    i++;
+                } else if (blockHeader && getCategory(blockHeader[1])) {
+                    // Block format category header: "CATEGORY:"
+                    const cat = getCategory(blockHeader[1]);
+                    equipment[cat] = equipment[cat] || []; // populate even if no items follow
+                    i++;
+                    while (i < lines.length && /^\s*-\s/.test(lines[i])) {
+                        const item = lines[i].replace(/^\s*-\s+/, "").trim();
+                        add(cat, item);
+                        i++;
+                    }
+                } else if (blockHeader) {
+                    console.warn(`Unknown equipment category "${blockHeader[1]}"`);
+                    i++;
+                } else if (/^\S.*:/.test(line)) {
+                    // Inline format: "CATEGORY: Item Name"
+                    const match = line.match(/^([^:]+?):\s*(.*)$/);
+                    if (match) {
+                        const [, cat, item] = match;
+                        if (getCategory(cat.trim())) {
+                            add(getCategory(cat.trim()), item.trim());
+                        } else {
+                            console.warn(`Unknown equipment category "${cat}" in line "${line}"`);
+                        }
+                    }
+                    i++;
+                } else {
+                    add('SLOTTED ITEMS', line); // heuristic category
+                    i++;
+                }
+            }
+            return equipment;
+        }
+
+        // Convert structured equipment back to string list format
+        function unparseEquipmentStructure(structuredEquipment) {
+            const lines = [];
+            
+            for (const [category, items] of Object.entries(structuredEquipment)) {
+                if (Array.isArray(items)) {
+                    if (items.length === 1) {
+                        // Single item: use inline format
+                        const formattedCategory = formatCategoryName(category);
+                        lines.push(`${formattedCategory}: ${items[0]}`);
+                    } else {
+                        // Multiple items or empty: use block format
+                        const formattedCategory = formatCategoryName(category);
+                        lines.push(`${formattedCategory}s:`);
+                        items.forEach(item => {
+                            lines.push(`- ${item}`);
+                        });
+                    }
+                }
+            }
+            
+            return lines;
+        }
+
+        // Deep equality check for objects/arrays
+        function deepEqual(obj1, obj2) {
+            if (obj1 === obj2) return true;
+            
+            if (obj1 == null || obj2 == null) return obj1 === obj2;
+            
+            if (typeof obj1 !== typeof obj2) return false;
+            
+            if (typeof obj1 !== 'object') return obj1 === obj2;
+            
+            if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
+            
+            const keys1 = Object.keys(obj1);
+            const keys2 = Object.keys(obj2);
+            
+            if (keys1.length !== keys2.length) return false;
+            
+            return keys1.every(key => deepEqual(obj1[key], obj2[key]));
+        }
+
+        // Convert any equipment format to unified structured format
+        function equipmentToStructured(equipmentData) {
+            if (isStringListWithCategories(equipmentData)) {
+                return parseEquipmentStrings(equipmentData);
+            } else if (isStructuredObject(equipmentData)) {
+                return equipmentData; // already in structured format
+            } else if (Array.isArray(equipmentData) && equipmentData.length > 0) {
+                // Traditional string list - put everything in heuristic category
+                return { 'SLOTTED ITEMS': equipmentData };
+            } else {
+                return {}; // empty equipment
+            }
+        }
+
+        // Round-trip validation function
+        function validateEquipmentRoundTrip(structuredEquipment) {
+            // Skip validation for empty structures
+            if (!structuredEquipment || Object.keys(structuredEquipment).length === 0) {
+                return structuredEquipment;
+            }
+            
+            // Unparse to string list format
+            const unparsedLines = unparseEquipmentStructure(structuredEquipment);
+            
+            // Parse it back
+            const reparsedStructure = parseEquipmentStrings(unparsedLines);
+            
+            // Compare with original
+            if (!deepEqual(structuredEquipment, reparsedStructure)) {
+                const error = {
+                    message: 'Equipment round-trip validation failed!',
+                    original: structuredEquipment,
+                    unparsedLines: unparsedLines,
+                    reparsed: reparsedStructure
+                };
+                console.error(error);
+                throw new Error(error.message + '\nCheck console for details.');
+            }
+            
+            return structuredEquipment;
+        }
+
+        // ===============================================
+        // Equipment UI Functions
+        // ===============================================
+        
+        function convertEquipmentToStructured() {
+            const equipmentText = document.getElementById('equipment-text').value;
+            if (!equipmentText.trim()) {
+                alert('No equipment text to convert!');
+                return;
+            }
+            
+            try {
+                const lines = equipmentText.split('\n');
+                const structured = equipmentToStructured(lines);
+                const validated = validateEquipmentRoundTrip(structured);
+                
+                // Display result in a nice format
+                let display = 'Structured Equipment:\n\n';
+                for (const [category, items] of Object.entries(validated)) {
+                    display += `${category}:\n`;
+                    if (Array.isArray(items)) {
+                        items.forEach(item => display += `  - ${item}\n`);
+                    }
+                    display += '\n';
+                }
+                
+                alert(display);
+                
+            } catch (error) {
+                alert(`Error converting equipment: ${error.message}`);
+            }
+        }
+        
+        function convertStructuredToLines() {
+            const equipmentText = document.getElementById('equipment-text').value;
+            if (!equipmentText.trim()) {
+                alert('No equipment text to convert!');
+                return;
+            }
+            
+            try {
+                const lines = equipmentText.split('\n');
+                const structured = equipmentToStructured(lines);
+                const validated = validateEquipmentRoundTrip(structured);
+                const converted = unparseEquipmentStructure(validated);
+                
+                // Update the textarea with converted format
+                document.getElementById('equipment-text').value = converted.join('\n');
+                
+                alert('Equipment converted to categorized format!');
+                
+            } catch (error) {
+                alert(`Error converting equipment: ${error.message}`);
+            }
+        }
+
+        // Test function for the equipment parsing
+        function testEquipmentParsing() {
+            const testCases = [
+                {
+                    name: "Single items",
+                    input: {
+                        "HEAVY WEAPONS": ["Maul"],
+                        "SHIELDS": ["Shield"],
+                        "SLOTTED ITEMS": ["Backpack"]
+                    }
+                },
+                {
+                    name: "Multiple items and empty",
+                    input: {
+                        "SLOTTED ITEMS": ["Backpack", "Bedroll", "Rations"],
+                        "SMALL ITEMS": [],
+                        "NORMAL WEAPONS": ["Longsword"]
+                    }
+                },
+                {
+                    name: "String list with categories",
+                    input: [
+                        "Heavy weapon: Greatsword",
+                        "Light armor: Leather armor",
+                        "Slotted items:",
+                        "- Backpack",
+                        "- Rations (5 days)",
+                        "Small items:"
+                    ]
+                },
+                {
+                    name: "Traditional flat list", 
+                    input: ["Leather armor", "Shortsword", "Backpack", "Bedroll"]
+                }
+            ];
+
+            let results = 'Equipment Parsing Test Results:\n\n';
+            let allPassed = true;
+
+            testCases.forEach(testCase => {
+                try {
+                    const structured = equipmentToStructured(testCase.input);
+                    const validated = validateEquipmentRoundTrip(structured);
+                    const unparsed = unparseEquipmentStructure(validated);
+                    
+                    results += `✅ ${testCase.name}: PASSED\n`;
+                    results += `   Unparsed format:\n`;
+                    unparsed.forEach(line => results += `     ${line}\n`);
+                    results += '\n';
+                    
+                } catch (error) {
+                    results += `❌ ${testCase.name}: FAILED\n`;
+                    results += `   Error: ${error.message}\n\n`;
+                    allPassed = false;
+                }
+            });
+            
+            results += allPassed ? '\n🎉 All tests PASSED!' : '\n⚠️  Some tests FAILED!';
+            
+            // Show results in a popup and log to console
+            alert(results);
+            console.log('Equipment parsing test results:', results);
+        }
+
+    </script>
+</body>
+</html>
