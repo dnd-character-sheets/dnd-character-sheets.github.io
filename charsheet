@@ -1259,6 +1259,37 @@ local function fill_template(assignments)
   end
 end
 
+local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what doesn't need quotes
+local function shell_quote(s)
+  if s:find(quote_me) or s == '' then
+    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
+  else
+    return s
+  end
+end
+
+
+local runlatex = [=[
+pdflatex=$PDFLATEX
+output=$OUTPUT
+
+rm -f "$OUTPUT"
+
+dir="$(mktemp -d)"
+trap "rm -rf $dir" 0
+tee /tmp/debug > "$dir/sheet.tex"
+$pdflatex -output-directory "$dir" "$dir/sheet.tex"
+rc=$?
+
+if [[ $rc != 0 ]]; then
+  exit $rc
+fi
+
+if [[ -r "$dir/sheet.pdf" ]]; then
+  cp "$dir/sheet.pdf" "$output"
+fi
+]=]
+
 local function emit(assignments)
   local output = fields.standalone and assignments or fill_template(assignments)
 
@@ -1267,13 +1298,27 @@ local function emit(assignments)
   elseif fields.output:find '%.tex$' then
     set_contents(fields.output, output)
   elseif fields.output:find '%.pdf$' then
-    local tex = fields.output:gsub('%.pdf$', '.tex')
-    set_contents(tex, output)
-    local rc = runf('%s -output-directory %s %s',
-                    pdflatex, osquote(dirname(fields.output)), osquote(tex))
-    if rc ~= 0 then
-      os.exit(rc)
+    local command = runlatex:gsub('%$PDFLATEX', shell_quote(pdflatex))
+                            :gsub('%$OUTPUT', shell_quote(fields.output))
+    local fd = assert(io.popen(stringf('bash -c %s', shell_quote(command)), 'w'))
+    fd:write(output)
+    fd:close()
+    do -- check success
+      local fd = io.open(fields.output)
+      if fd then
+        fd:close()
+      else
+        os.exit(1)
+      end
     end
+--
+--    local tex = fields.output:gsub('%.pdf$', '.tex')
+--    set_contents(tex, output)
+--    local rc = runf('%s -output-directory %s %s',
+--                    pdflatex, osquote(dirname(fields.output)), osquote(tex))
+--    if rc ~= 0 then
+--      os.exit(rc)
+--    end
   end
 end
 
