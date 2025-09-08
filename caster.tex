@@ -31,16 +31,21 @@
 \newsectionenv{attacks}{ATTACKS}{}{}
 \newsectionenv{features}{FEATURES}{}{}
 \newsectionenv[width=70mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
-   {\medskip
-    \noindent
-    \hspace*{21mm-5pt}%
-    \begin{minipage}{\hsize-21mm-5pt}
-    \ifnum\rawgetDND{EQUIPMENT COLS}=1
-    \else
-       \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
-    \fi
-    \small
-     \begin{eqlist}}
+   {%
+     \medskip
+     \noindent
+     \hspace*{21mm-5pt}%
+     \begin{minipage}{\hsize-21mm-5pt}
+     \ifnum\rawgetDND{EQUIPMENT COLS}=1
+     \else
+        \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
+     \fi
+     \small
+      \begin{eqlist}%
+     \ifDNDnonempty{EQUIPMENT}{}{%
+       \item \noindent\vrule width 0pt height 0pt depth 8\baselineskip (Placeholder: Equipment will go here.)
+     }%
+   }
    {\end{eqlist}%
     \ifnum\rawgetDND{EQUIPMENT COLS}=1
     \else
