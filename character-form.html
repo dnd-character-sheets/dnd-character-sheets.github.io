@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: garlic
+        Version: ginger
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1436,23 +1436,19 @@
                 // Generate YAML content using the shared function
                 const yamlContent = createYAMLContent();
                 
-                // Send to server and let browser handle the response completely
-                // Use form submission to let browser handle response naturally
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/charsheet/render.cgi';
-                form.target = '_blank'; // Open result in new window
-                form.enctype = 'text/plain';
-                form.style.display = 'none';
+                // Send YAML directly to server (not as parameter)
+                const response = await fetch('/charsheet/render.cgi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/yaml; charset=utf-8',
+                    },
+                    body: yamlContent
+                });
                 
-                const textarea = document.createElement('textarea');
-                textarea.name = 'yaml';
-                textarea.value = yamlContent;
-                
-                form.appendChild(textarea);
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
+                // Get the blob and open it in a new window
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
                 
             } catch (error) {
                 console.error('Error generating PDF:', error);
