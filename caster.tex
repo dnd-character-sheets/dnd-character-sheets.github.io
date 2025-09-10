@@ -390,7 +390,9 @@
   % No STR defined - leave counters at zero
 }
 
-\node (banner) [below=of top] {\LARGE{\textsf{\textbf{Equipment and Encumbrance by Stones}}}};
+\node (banner) [below=of top]
+      {\LARGE{\textsf{\textbf{Equipment and Encumbrance by Stones%
+        \ifDNDnonempty{CHARACTER NAME}{ (\getDND{CHARACTER NAME})}{}}}}};
 
 % Calculate total weight (in tenths of stones)
 \newcounter{significantWeight}
