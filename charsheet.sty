@@ -2168,12 +2168,12 @@
 \newcounter{ptemp}
 
 \newcommand\signed[1]{%
-  \ifnum#1<0
-    \setcounter{ptemp}{#1}%
+  \setcounter{ptemp}{#1}%
+  \expandafter\ifnum\value{ptemp}<0
     \setcounter{ptemp}{0-\value{ptemp}}%
-    \textminus\the\value{ptemp}%
+    \textminus\arabic{ptemp}%
   \else
-    +#1%
+    +\arabic{ptemp}%
   \fi
 }
 
@@ -2299,6 +2299,8 @@
 \newDND{SPECIALTY}
 \newDND{SPEED}
 \newDND{SPELL DC}
+\newDND{SPELL ATTACK MODIFIER}
+\newDND{SPELLCASTING ABILITY MODIFIER}
 \newDND{SPELLS KNOWN}
 \newDND{TRAITS}
 \newDND{DOMAIN SPELLS}
@@ -2311,6 +2313,21 @@
 \setDNDfont{PASSIVE PERCEPTION}{\tiny}
 \setDNDfont{SORCERY POINTS}{\tiny}
 \setDNDfont{DEFAULT LABEL}{\footnotesize}
+
+\newcommand\satk{%  Add to user documentation
+  \ifDNDnonempty{SPELL ATTACK MODIFIER}%
+    {~\getDND{SPELL ATTACK MODIFIER}}%
+    {}%
+}
+
+\newcommand\psam{%  Add to user documentation
+  \ifDNDnonempty{SPELLCASTING ABILITY MODIFIER}%
+    {\expandafter\ifnum\rawgetDND{SPELLCASTING ABILITY MODIFIER}>0
+       \signed{SPELLCASTING ABILITY MODIFIER}%
+     \fi
+    }
+    {+?}%
+}
 
 
 
