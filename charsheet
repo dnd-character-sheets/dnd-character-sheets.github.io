@@ -1107,7 +1107,27 @@ local saving_throw_proficiencies = {
 }
 
 
+local function same_values(v1, v2)
+  local s1, s2 = tostring(s1), tostring(s2)
+  return v1 == v2 or
+         v1:find '^%d+$' and v2 == '+' .. v1 or
+         v2:find '^%d+$' and v1 == '+' .. v2
+end
+
 local function extend(doc)
+
+  local function update(field, value) -- checks for consistency
+    local v = doc[field]
+    if v and tostring(v):find '%S' and not same_values(v, value) then
+      verror('Value %s computed as %s, but input says %s\n',
+             field, tostring(value), tostring(v))
+    elseif not tostring(v):find '^%+' then
+      doc[field] = value
+    end
+  end
+    
+      
+
   local class = doc.CLASS or (doc['CLASS & LEVEL'] or ''):match '%a+' or ''
   doc.CLASS = class
   
@@ -1146,19 +1166,10 @@ local function extend(doc)
       local level = tonumber(doc.LEVEL) or 1
       local prof_bonus = 2 + math.floor((level - 1) / 4)
       local ability_modifier = math.floor((ability_score - 10) / 2)
-      local calculated_dc = 8 + prof_bonus + ability_modifier
       
-      if not empty(doc['SPELL DC']) then
-        -- Validate existing SPELL DC
-        local existing_dc = tonumber(doc['SPELL DC'])
-        if existing_dc and existing_dc ~= calculated_dc then
-          verrorf('SPELL DC mismatch: got %d, expected %d (8 + prof %d + %s mod %+d)', 
-                  existing_dc, calculated_dc, prof_bonus, modifier, ability_modifier)
-        end
-      else
-        -- Set calculated SPELL DC
-        doc['SPELL DC'] = calculated_dc
-      end
+      update('SPELL DC', 8 + prof_bonus + ability_modifier)
+      update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + ability_modifier))
+      update('SPELLCASTING ABILITY MODIFIER', ability_modifier)
     end
   end
 
@@ -1176,11 +1187,12 @@ local function extend(doc)
       end
     end
     
+    local level = tonumber(doc.LEVEL) or 1
+    local prof_bonus = 2 + math.floor((level - 1) / 4)
+
     if not has_expertise then
       -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
       local wis_score = tonumber(doc.WIS)
-      local level = tonumber(doc.LEVEL) or 1
-      local prof_bonus = 2 + math.floor((level - 1) / 4)
       local wis_modifier = math.floor((wis_score - 10) / 2)
       local calculated_pp = 10 + wis_modifier + prof_bonus
       
