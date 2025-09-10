@@ -200,7 +200,12 @@ local function mkplayer(doc)
     doc[key] = doc[key] or doc[key:gsub('_', ' ')]
   end
 
-  return player_template:gsub('%u[%u_]*', doc)
+  local escaped = { }
+  for k, v in pairs(doc) do
+    escaped[k] = escape(v)
+  end
+
+  return player_template:gsub('%u[%u_]*', escaped)
 end
 
 ---------------------------------------------------------------------------
