@@ -84,7 +84,7 @@ end
 local player_template = [[
 \player{%
   name={CLASS{} CHARNAME{} (RACE)},
-  spelldc={SPELL_DC},
+%  spelldc={SPELL_DC},
   passivep={PASSIVE_PERCEPTION},
   description={DESCRIPTION},
   stats={STATS},
@@ -174,13 +174,25 @@ local function mkplayer(doc)
     doc.THEMOTIVATION = doc.THEMOTIVATION or ''
   end
 
-  doc.DMFEATURES = doc.DMFEATURES or doc.SENSES or ''
+
+  doc.DMFEATURES = doc.DMFEATURES or doc['GM NOTES'] or ''
+  if doc.BACKGROUND then
+    doc.DMFEATURES = stringf('%s. %s', doc.BACKGROUND, doc.DMFEATURES)
+  end
+  if doc.SENSES then
+    doc.DMFEATURES = stringf('%s. %s', doc.SENSES, doc.DMFEATURES)
+  end
+
   
   doc.DESCRIPTION = doc.DESCRIPTION or ''
 
   doc.STATS = mkstats(doc)
 
-  doc['SPELL DC'] = doc['SPELL DC'] or ''
+  doc['SPELL_DC'] = doc['SPELL DC'] or ''
+
+  if doc['SPELL DC'] and doc['SPELL DC']:find '%S' then
+    doc.DMFEATURES = stringf('Spell DC %s.  %s', doc['SPELL DC'], doc.DMFEATURES)
+  end
 
 
   -- make underscores in template work like spaces
