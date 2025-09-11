@@ -79,7 +79,7 @@
 
 \newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
    {\medskip
-    \begin{minipage}[t][138mm][t]{\hsize}
+    \begin{minipage}[t]{\hsize}
      \begin{proflist}}
    {\end{proflist}
     \end{minipage}}
@@ -288,9 +288,11 @@
   }%
   {\end{itemize}}
 
+\path (motivation.south west) ++(0mm, -3mm) coordinate (features upper fit);
+
 
 \ifDNDdefined{FEATURES}{
-  \begin{features}[below=of motivation]{}
+  \begin{features}[fit=(bottom right)(features upper fit)]{}
   \raggedright
   \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
   \getDND{FEATURES}
@@ -334,10 +336,14 @@
 
 % slots OK here
 
+\path (attacks.south west) ++(0mm, -3mm) coordinate (equipment upper left fit);
+\path (attacks.south east) ++(0mm, -3mm) coordinate (equipment upper right fit);
+
 \ifDNDdefined{EQUIPMENT}{%
 %  \typeout{equipment, not magic}%
   {%
-  \begin{equipment}[below=of attacks]
+  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
+  right fit)(current bounding box.south)]
      \useDNDfont{EQUIPMENT}%
      \getDND{EQUIPMENT}
   \end{equipment}
@@ -354,9 +360,33 @@
 \coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
 \coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
   
+\node (inspiration)
+      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=38.001mm,height=8mm,
+       right of upper corner=3.5mm of stats background]
+   {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{INSPIRATION}\hss}}
+   ;
+\node [anchor=west,proficiencies,fill=white,decorated stub rectangle,
+       width=10mm,height=10mm,line width=1.5pt,draw]
+       at ($(inspiration.west)+(-2mm,0mm)$)
+      {};
+
+\node[columnbox,width=38.002mm,dndlabel=SAVING THROWS,
+      fill=white,below=4mm of inspiration,
+      height=1.6in,
+    ]
+    (saving throws)
+    {\begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
+      \(\circ\)&Strength\\
+      \(\circ\)&Dexterity\\
+      \(\circ\)&Constitution\\
+      \(\circ\)&Intelligence\\
+      \(\circ\)&Wisdom\\
+      \(\circ\)&Charisma\\
+    \end{tabular}}
+  ;
 \node (proficiency bonus)
       [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
-       right of upper corner=3.5mm of stats background]
+       below=6mm of saving throws]
    {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
    ;
 \node [anchor=west,proficiencies,circle,
@@ -365,7 +395,7 @@
       {\large\textsf{+\arabic{proficiency bonus}}};
 
 % Proficiencies section (middle top)
-\begin{proficiencies}[below=of proficiency bonus,width=38.002mm,height=3in]
+\begin{proficiencies}[below=4mm of proficiency bonus,width=38.002mm,height=2in]
   \small
 \ifDNDdefined{PROFICIENCIES}{%
 {\tracingmacros=1
