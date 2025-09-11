@@ -26,6 +26,7 @@
     decorated stub rectangle,
     minimum width=\colwidth,
     draw, line width=1.2pt,
+    label footer height=8pt,
   },
   initiative/.style={
     decorated clipped rectangle,
@@ -78,8 +79,8 @@
 
 
 \newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
-   {\medskip
-    \begin{minipage}[t]{\hsize}
+   {\par\medskip
+    \begin{minipage}[t]{34mm}
      \begin{proflist}}
    {\end{proflist}
     \end{minipage}}
@@ -145,7 +146,7 @@
 \Large
 
       \node (hpbackground) 
-        [outer sep=0pt,stub rectangle,fill=hpetc,below=of splash.south,width=\colwidth, minimum height=86mm] 
+        [outer sep=0pt,stub rectangle,fill=hpetc,below=5mm of splash.south,width=\colwidth, minimum height=86mm] 
        { };
 
       \node (initiative)
@@ -255,9 +256,9 @@
 \end{attacks}
 
 
-\node[columnbox,below right corner=of splash,dndlabel=Description \&\ Personality,
+\node[columnbox,anchor=north east,dndlabel=Description \&\ Personality,
       minimum height=1.5in,
-    ] (motivation)
+    ] (motivation) at (splash.east |- hpbackground.north)
    { }
 ;
 
@@ -292,7 +293,7 @@
 
 
 \ifDNDdefined{FEATURES}{
-  \begin{features}[fit=(bottom right)(features upper fit)]{}
+  \begin{features}[fit=(bottom right)(features upper fit),dndlabel=FEATURES \&\ TRAITS]{}
   \raggedright
   \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
   \getDND{FEATURES}
@@ -323,7 +324,9 @@
 }{}
 
 \node (stats background) 
-      [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
+      [fill=stats,width=24mm,height=163mm,anchor=north west]
+      at (splash.west |- hpbackground.north)
+ { };
 
 \dndstat{STRENGTH}{STR}
 \dndstat{DEXTERITY}{DEX}
@@ -336,34 +339,10 @@
 
 % slots OK here
 
-\path (attacks.south west) ++(0mm, -3mm) coordinate (equipment upper left fit);
-\path (attacks.south east) ++(0mm, -3mm) coordinate (equipment upper right fit);
-
-\ifDNDdefined{EQUIPMENT}{%
-%  \typeout{equipment, not magic}%
-  {%
-  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
-  right fit)(current bounding box.south)]
-     \useDNDfont{EQUIPMENT}%
-     \getDND{EQUIPMENT}
-  \end{equipment}
-  }
-}
-{\node (equipment) [left of lower corner=of features] {};
-}
-
-\path (equipment.north west) +(3mm,-4mm) coordinate (coin top left);
-
-
-\coin{cp}{Cu}{\color{grayed out}\getDND*{CP}}
-\coin{sp}{Ag}{\color{grayed out}\getDND*{SP}}
-\coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
-\coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
-  
 \node (inspiration)
       [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=38.001mm,height=8mm,
-       right of upper corner=3.5mm of stats background]
-   {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{INSPIRATION}\hss}}
+       right of upper corner=5mm of stats background]
+   {\hbox to 0pt{\hss\hspace*{6mm}\small\textsf{INSPIRATION}\hss}}
    ;
 \node [anchor=west,proficiencies,fill=white,decorated stub rectangle,
        width=10mm,height=10mm,line width=1.5pt,draw]
@@ -372,7 +351,7 @@
 
 \node[columnbox,width=38.002mm,dndlabel=SAVING THROWS,
       fill=white,below=4mm of inspiration,
-      height=1.6in,
+      height=35mm,
     ]
     (saving throws)
     {\begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
@@ -394,8 +373,12 @@
        at ($(proficiency bonus.west)+(-2mm,0mm)$)
       {\large\textsf{+\arabic{proficiency bonus}}};
 
+\path (inspiration.south |- stats background.south) coordinate (prof bot fit);
+\path (proficiency bonus.south) ++ (0,-5mm) coordinate (prof top fit);
+
 % Proficiencies section (middle top)
-\begin{proficiencies}[below=4mm of proficiency bonus,width=38.002mm,height=2in]
+\begin{proficiencies}[width=38.002mm,height=2in,inner sep=0pt,
+                      fit=(prof bot fit)(prof top fit -| saving throws.west)(prof top fit -| saving throws.east)]
   \small
 \ifDNDdefined{PROFICIENCIES}{%
 {\tracingmacros=1
@@ -417,6 +400,31 @@
 %\node (motivation) [below=of proficiencies] 
 %  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
 %  ;
+
+\path (attacks.south west) ++(0mm, -3mm) coordinate (equipment upper left fit);
+\path (attacks.south east) ++(0mm, -3mm) coordinate (equipment upper right fit);
+
+\ifDNDdefined{EQUIPMENT}{%
+%  \typeout{equipment, not magic}%
+  {%
+  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
+  right fit)(current bounding box.south)]
+     \useDNDfont{EQUIPMENT}%
+     \getDND{EQUIPMENT}
+  \end{equipment}
+  }
+}
+{\node (equipment) [left of lower corner=of features] {};
+}
+
+\path (equipment.south west) +(5mm,40mm) coordinate (coin top left);
+
+
+\coin{cp}{Cu}{\color{grayed out}\getDND*{CP}}
+\coin{sp}{Ag}{\color{grayed out}\getDND*{SP}}
+\coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
+\coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
+  
 
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
   {\Large\textit{\getDND*{MOTIVATION}}}
