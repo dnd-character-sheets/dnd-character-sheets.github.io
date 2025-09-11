@@ -721,9 +721,9 @@ local function render_struct_list (key, list)
       outf(out, [[\item %s]], escape(tostring(elem)))
     elseif elem.level and not next(elem, 'level') then
       if type(elem.level) == 'table' then
-        outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel[%s]{%s}}\\]], elem.level.slots, elem.level.number)
+        outf(out, [[\spellslevellabel{%s}{%s}]], elem.level.number, elem.level.slots)
       else
-        outf(out, [[\multicolumn2{@{}l@{}}{\spellslevel{%s}}\\]], escape(elem.level))
+        outf(out, [[\spellslevellabel{%s}{%s}]], escape(elem.level), 0)
       end
     elseif elem.name and elem.description and not elem.ATTACK
         or key == 'MAGIC'

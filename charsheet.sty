@@ -1801,6 +1801,11 @@
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
   
+  \anchor{text}{%
+    \pgf@x=0pt
+    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+  }
+
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
@@ -1857,6 +1862,11 @@
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
   
+  \anchor{text}{%
+    \pgf@x=0pt
+    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+  }
+
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
@@ -1919,13 +1929,9 @@
   \inheritanchor[from=stub rectangle]{north west}
   \inheritanchor[from=stub rectangle]{south east}
   \inheritanchor[from=stub rectangle]{south west}
+  \inheritanchor[from=stub rectangle]{text}
   \inheritbackgroundpath[from=stub rectangle]
   
-  \anchor{text}{%
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-  }
-
   % Add decorations before the background
   \beforebackgroundpath{%
     % Get coordinates and stub radius
@@ -1988,15 +1994,9 @@
   \inheritanchor[from=clipped rectangle]{north west}
   \inheritanchor[from=clipped rectangle]{south east}
   \inheritanchor[from=clipped rectangle]{south west}
+  \inheritanchor[from=clipped rectangle]{text}
   \inheritbackgroundpath[from=clipped rectangle]
   
-  % --- shift where the node text is placed
-  % (center + 1/2 * footer height, upwards)
-  \anchor{text}{%
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-  }
-
   % Add decorations before the background
   \beforebackgroundpath{%
     % Get coordinates and stub radius
@@ -2203,6 +2203,11 @@
   \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
         {\textsf{\footnotesize #2}};
 }
+
+\newcounter{modifier}
+\newcommand\modifier[1]{%
+  \pgfmathsetcounter{modifier}{floor((#1 - 10) / 2)}%
+  \arabic{modifier}}
 
 
 
@@ -2548,3 +2553,28 @@
   \begin@optional
 }
   
+
+
+\long\def\SplitAtProfskip#1{%
+  \SplitAtProfskip@i#1\profskip\@nil
+}
+\long\def\SplitAtProfskip@i#1\profskip#2\@nil{%
+  \def\prof@before{#1}% before part
+  \def\prof@after{#2}%  after part (empty if no \profskip in input)
+}
+\long\def\profskipCar#1{%
+  \SplitAtProfskip@i#1\profskip\@nil
+  \prof@before
+}
+\long\def\profskipCdr#1{%
+  \SplitAtProfskip@i#1\profskip\@nil
+  \prof@after
+}
+\newcommand*\SplitAtProfskipTwice[1]{%
+  \edef\prof@tmp{%
+    \noexpand\SplitAtProfskip
+    % Two-step expansion of #1, then freeze the result with \unexpanded{...}
+    \unexpanded{#1}%
+  }%
+  \prof@tmp
+}

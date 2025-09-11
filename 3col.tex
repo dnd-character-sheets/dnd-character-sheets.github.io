@@ -1,6 +1,7 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{charsheet}
 \usepackage{multicol}
+\usepackage{enumitem}
 \usetikzlibrary{fit}
 %\usepackage{amsmath}
 \colorlet{grayed out}{white!70!black}
@@ -11,26 +12,47 @@
 
 \usepackage{pgfkeys}
 
-% Incomplete character support
+\newlength\colwidth
+\newlength\colgap
+\colgap=10pt
+\setlength\colwidth{(\textwidth-2\colgap)/3}
+\dndrightwidth=\colwidth % XXX ugly
 
+\newlength\hpwidth
+\setlength\hpwidth{\colwidth-12pt}
 
-
-\newcommand\equipcolsstart{%
-  \ifDNDfalse{EQUIPMENT 2UP}{\typeout{no 2up}}{\begin{multicols}{2}}%
+\tikzset{%
+  columnbox/.style={
+    decorated stub rectangle,
+    minimum width=\colwidth,
+    draw, line width=1.2pt,
+  },
+  initiative/.style={
+    decorated clipped rectangle,
+    minimum width=\hpwidth/3-10pt,
+    draw, line width=1.2pt,
+    fill=white,
+    minimum height=18mm,
+    label footer height=8pt,
+  },
+  dndhits/.style={
+    dndmaxhp,
+    minimum width=\hpwidth/2-5pt,
+    minimum height=18mm,
+    font=\footnotesize,
+  }
 }
-\newcommand\equipcolsend{%
-  \ifDNDfalse{EQUIPMENT 2UP}{}{\end{multicols}}%
-}
 
-\newsectionenv[]{magic}{MAGIC}
+
+\newsectionenv[width=\colwidth]{magic}{MAGIC}
   {\begin{minipage}[t]{\hsize}
    \featurespostspace=0pt
    \useDNDfont{MAGIC}
   }
   {\end{minipage}}
-\newsectionenv{attacks}{ATTACKS}{}{}
-\newsectionenv{features}{FEATURES}{}{}
-\newsectionenv[width=70mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
+\newsectionenv[width=\colwidth]{attacks}{ATTACKS}{}{}
+\newsectionenv[width=\colwidth]{features}{FEATURES}{}{}
+\newsectionenv[width=\colwidth,decorated clipped rectangle]{equipment}{EQUIPMENT}
    {%
      \medskip
      \noindent
@@ -71,6 +93,8 @@
 
 
 \input{stats}
+
+\setDND{EQUIPMENT COLS}{1}
 
 \noindent
 \begin{charsheet}
@@ -121,48 +145,15 @@
 \Large
 
       \node (hpbackground) 
-        [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
+        [outer sep=0pt,stub rectangle,fill=hpetc,below=of splash.south,width=\colwidth, minimum height=86mm] 
        { };
 
-      \node (hitdice)
-             [dndhits,width=20mm,inside south east corner=of hpbackground,
-             dndlabel=HIT DICE,label footer height=-8pt,
-             font=\Large] 
-         {\tracingmacros=1 \getDND*{HIT DICE}}
-         ;
-
-     \ifDNDdefined{LEVEL}{
-         \node [at=(hitdice.north),anchor=north] 
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-     }{}
-
-      \node (curhp)
-            [dndhits,fill=white,width=72mm,left=of hitdice,
-             dnd/label={CURRENT HIT POINTS}] 
-         { }
-         ;
-
-      \node [dndmaxhp,above left corner=of curhp,dndlabel=MAX HP] 
-         (maxhp)
-         {\getDND*{MAX HP}}
-         ;
-
       \node (initiative)
-            [dndmaxhp,right=of maxhp,dndlabel=INITIATIVE] 
+            [initiative,below=of hpbackground.north,dndlabel=\noexpand\footnotesize INITIATIVE] 
          {\getDND*{INITIATIVE}}
          ;
 
-%\node [draw,above=of initiative] % {\slotsliteral7};
-%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-
-
-      \node (speed)
-            [dndmaxhp,right=of initiative,dndlabel=SPEED] 
-         {\getDND*{SPEED}}
-         ;
-
-
-       \node (ac) [dndmaxhp,shield,innershield,draw,ultra thick,right=of speed,width=15mm,
+       \node (ac) [initiative,shield,innershield,draw,ultra thick,left=of initiative,width=15mm,
                    dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
                    font=\Large,
                    label footer height=12pt,
@@ -170,45 +161,162 @@
       {\getDND*{ARMOR CLASS}}
       ;
 
+      \node (speed)
+            [initiative,right=of initiative,dndlabel=SPEED] 
+         {\getDND*{SPEED}}
+         ;
+
+      \node [dndmaxhp,below=of initiative,dndlabel=CURRENT HIT
+             POINTS,minimum height=20mm,width=\hpwidth] 
+         (maxhp)
+         {}
+         ;
+      \node [below=of maxhp.north,font=\scriptsize] {%
+         \hbox to \hpwidth{%
+             ~~~Maximum Hit Points~~\rlap{\raisebox{4pt}{\smash{\normalsize~~~\getDND*{MAX HP}}}}%
+               \hrulefill~~~}}
+       ;
+
+      \node[dndmaxhp,below=of maxhp,minimum height=20mm,width=\hpwidth,dndlabel=TEMPORARY HIT POINTS]
+        (temphp)
+        {}
+        ;
+
+
+
+      \node (hitdice)
+             [dndhits,below left corner=of temphp,
+             dndlabel=HIT DICE,label footer height=-2pt,
+             font=\Large] 
+         {\getDND*{HIT DICE}}
+         ;
+
+     \ifDNDdefined{LEVEL}{
+         \node [at=(hitdice.north),anchor=north] 
+              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+     }{}
+
+      \node (death saves)
+            [dndhits,fill=white,below right corner=of temphp,
+             dnd/label={DEATH SAVES},font=\small] 
+         { \tiny\begin{tabular}{@{}r@{\hskip1pt}l@{}}
+            \raisebox{1pt}{SUCCESSES}&\slotsliteral3\\[2pt]
+            \raisebox{1pt}{FAILURES}&\slotsliteral3\\
+            \end{tabular}
+          }
+         ;
+
+
+%\node [draw,above=of initiative] % {\slotsliteral7};
+%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+
+
+
+
+
   \endgroup
 
 
-\begin{attacks}[below right corner=of hpbackground]{}
+\makeatletter
+\renewcommand\attackkeys[1]{%
+  \gdef\@attackname{}%
+  \gdef\@attackattack{}%
+  \gdef\@attackdamage{}%
+  \gdef\@attacktype{}%
+  \gdef\@attackrange{}%
+  \gdef\@attackammo{}%
+  \pgfkeys{/attacks/.cd, #1}%
+  \small \@attackname&\@attackattack&\@attackdamage\ \small\@attacktype\\
+}
+\makeatother
+
+
+\newenvironment{attackstab*}
+  {\renewcommand\arraystretch{1.3}%
+   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \tabcolsep=0.5\tabcolsep
+   \normalsize
+   \let\dndkeys=\attackkeys
+   \begin{tabular*}{\hsize-4mm}{@{}lll@{}}
+   \textsf{\footnotesize NAME}&
+   \textsf{\scriptsize \llap{ATK BO}NUS}&
+   \textsf{\scriptsize DAMAGE/TYPE}\\
+   \midrule
+  }
+  {\end{tabular*}}
+
+\begin{attacks}[below=of hpbackground]{}
     \centering
-    \begin{attackstab}
+    \begin{attackstab*}
     \getDND{ATTACKS}
-    \end{attackstab}
+    \end{attackstab*}
+
+    \$RANGES
 \end{attacks}
 
 
+\node[columnbox,below right corner=of splash,dndlabel=Description \&\ Personality,
+      minimum height=1.5in,
+    ] (motivation)
+   { }
+;
+
 % \node (attacks) at (hpbackground.south west) {A};
 
-\ifDNDdefined{MAGIC}
-{
-\begin{magic}[below=of attacks]{}
-\centering
-\newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
-\begin{featurestab}
-% Magic section (right side, middle)
-\rawgetDND{MAGIC}
-%  \textsf{CANTRIPS}\\
-%  Friends& Does a thing\\
-%  Ray of Frost& asdf\\
-%  \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
-\end{featurestab}
-\end{magic}
-}
-{\path (attacks.south east) coordinate (magic);} % anchor is to east
+%%\ifDNDdefined{MAGIC}
+%%{
+%%\begin{magic}[below=of attacks]{}
+%%\newcommand\spellslevellabel[2][0]{\multicolumn2{@{}l@{}}{\spellslevel[#1]{#2}}\\}%
+%%\centering
+%%\begin{featurestab}
+%%% Magic section (right side, middle)
+%%\rawgetDND{MAGIC}
+%%%  \textsf{CANTRIPS}\\
+%%%  Friends& Does a thing\\
+%%%  Ray of Frost& asdf\\
+%%%  \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
+%%\end{featurestab}
+%%\end{magic}
+%%}
+%%{\path (attacks.south east) coordinate (magic);} % anchor is to east
+%%
+
+\newenvironment{itemize spells}
+  {\clubpenalty=10000
+   \widowpenalty=10000
+   \begin{itemize}[topsep=0pt,itemsep=0pt,leftmargin=6pt,parsep=0pt,labelsep=2pt]
+  }%
+  {\end{itemize}}
+
 
 \ifDNDdefined{FEATURES}{
-  \ifDNDdefined{MAGIC}
-     {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}}
-     {\def\where{below right corner=of attacks}}%
-  \beginExpand{features}[\where]{}
-  \let\described=\feature
-  \begin{featurestab}
+  \begin{features}[below=of motivation]{}
+  \raggedright
+  \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
   \getDND{FEATURES}
-  \end{featurestab}
+
+  \ifDNDnonempty{MAGIC}{%
+    \smallskip
+    \footnotesize
+    \newcommand\spellslevellabel[2]{%
+      \ifnum#1=0
+         Cantrips: You can cast these spells as often as you like using 1~action.
+      \else
+         \end{itemize spells}
+         Level~#1 spells: Cast these spells in any combination%
+         \ifnum#2>0\relax
+            \ #2~times per long rest.
+         \else
+            .
+         \fi
+        Casting is 1~action unless noted.
+      \fi
+      \begin{itemize spells}
+    }
+    \def\described#1#2{\item #1: #2}%
+    \getDND{MAGIC}
+    \end{itemize spells}
+  }{}%
   \end{features}
 }{}
 
@@ -222,15 +330,14 @@
 \dndstat{WISDOM}{WIS}
 \dndstat{CHARISMA}{CHA}
 
+
+
 % slots OK here
 
 \ifDNDdefined{EQUIPMENT}{%
 %  \typeout{equipment, not magic}%
   {%
-   \ifDNDdefined{MAGIC}{\def\where{left of lower corner=of features}}
-                       {\def\where{below right corner=of features,width=\dndrightwidth}}%
-
-  \beginExpand{equipment}[\where]
+  \begin{equipment}[below=of attacks]
      \useDNDfont{EQUIPMENT}%
      \getDND{EQUIPMENT}
   \end{equipment}
@@ -260,7 +367,21 @@
 % Proficiencies section (middle top)
 \begin{proficiencies}[below=of proficiency bonus,width=38.002mm,height=3in]
   \small
-\getDND*{PROFICIENCIES}
+\ifDNDdefined{PROFICIENCIES}{%
+{\tracingmacros=1
+  \long\def\split#1\profskip#2\nil{%
+    \def\profbefore{#1}% before part
+    \def\profafter{#2}%  after part (empty if no \profskip in input)
+  }
+  \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\split\rawgetDND{PROFICIENCIES}\profskip\nil
+  \profbefore
+  \expandafter\gdef\expandafter\otherproficiencies\expandafter{\profafter}%
+%  \expandafter\def\expandafter\theprofs\expandafter{\rawgetDND{PROFICIENCIES}}%
+%  \expandafter\profskipCar\expandafter{\theprofs}%
+}%
+}{%
+  (None specified)
+}
 \end{proficiencies}
 
 %\node (motivation) [below=of proficiencies] 
@@ -270,6 +391,39 @@
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
   {\Large\textit{\getDND*{MOTIVATION}}}
   ;
+
+
+\node [anchor=south west,columnbox,minimum height=45mm,
+       dndlabel={Weapon, Armor, \&\ Language Proficiencies},
+      ]
+   (other proficiencies)
+   at (bottom left)
+  {\begin{minipage}[t]{\colwidth-10pt}
+    \begin{multicols}{2}
+    \begin{proflist}
+    \itemsep=1pt
+    \otherproficiencies
+    \end{proflist}
+    \end{multicols}
+  \end{minipage}
+  }
+  ;
+
+\node (passive perception)
+      [decorated stub rectangle,width=\colwidth-8mm,height=8mm,
+       line width=1.2pt,draw,
+       above right corner=5mm of other proficiencies]
+   {\hbox to 0pt{\hss\footnotesize\textsf{PASSIVE WISDOM (PERCEPTION)}\hss}}
+   ;
+
+\node [anchor=east,circle,fill=white,
+       width=10mm,height=10mm,line width=1.5pt,draw]
+       at ($(passive perception.west)+(+2mm,0mm)$)
+      {\ifDNDnonempty{PASSIVE PERCEPTION}
+         {\large\textsf{\signed{\rawgetDND{PASSIVE PERCEPTION}}}}
+         {?}
+      }
+      ;
 
 
 %\node [draw,below=of initiative] % {\slotsliteral7};
@@ -326,28 +480,28 @@
 \fi
 
 %\show\pp
-%\show\upperdndlabel
-
-  \node (upper val)
-         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-         {\Large\textsf{\upperdndcontents}}
-         ;
-
-      \ifDNDfont{\upperdndlabel}
-         {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
-         {\dndlabel{upper val}{\upperdndlabel}}
-
-\ifx\lowerdndlabel\empty\else
-
-   \node (lower val)
-      [dndmaxhp,left=10mm of curhp,width=24mm] 
-      {\Large\textsf{\lowerdndcontents}}
-      ;
-      \ifDNDfont{\lowerdndlabel}
-         {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
-         {\dndlabel{lower val}{\lowerdndlabel}}
-
-\fi
+%%\show\upperdndlabel
+%
+%  \node (upper val)
+%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
+%         {\Large\textsf{\upperdndcontents}}
+%         ;
+%
+%      \ifDNDfont{\upperdndlabel}
+%         {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
+%         {\dndlabel{upper val}{\upperdndlabel}}
+%
+%\ifx\lowerdndlabel\empty\else
+%
+%   \node (lower val)
+%      [dndmaxhp,left=10mm of curhp,width=24mm] 
+%      {\Large\textsf{\lowerdndcontents}}
+%      ;
+%      \ifDNDfont{\lowerdndlabel}
+%         {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
+%         {\dndlabel{lower val}{\lowerdndlabel}}
+%
+%\fi
 
 
 %\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};
