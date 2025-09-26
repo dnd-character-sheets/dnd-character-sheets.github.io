@@ -2329,7 +2329,7 @@
 \newcommand\psam{%  Add to user documentation
   \ifDNDnonempty{SPELLCASTING ABILITY MODIFIER}%
     {\expandafter\ifnum\rawgetDND{SPELLCASTING ABILITY MODIFIER}>0
-       \signed{SPELLCASTING ABILITY MODIFIER}%
+       \expandafter\signed\expandafter{\rawgetDND{SPELLCASTING ABILITY MODIFIER}}%
      \fi
     }
     {+?}%
