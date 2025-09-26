@@ -631,6 +631,27 @@
   \end{tabular}%
 };
 
+\begingroup
+  \let\ifstored=\iffalse
+  \newcommand\DNDitem[2]{\let\ifstored=\iftrue}
+  \doDNDitems{STORED ITEMS}
+
+  \ifstored
+
+     \node [dndbox,width=\slotblockwidth,below=10mm of heavy equipment,fill=equipment,inner sep=15pt] 
+        (in storage)
+     {
+       \def\arraystretch{1.32}%
+       \renewcommand{\DNDitem}[2]{#1\\}%
+       \begin{tabular*}{\slotblockwidth-30pt}{@{}l@{}}
+%       \multicolumn1{c}{\hfil\bigstrut \Large \textbf{In Storage}\hfil}\\[5pt]
+       \rlap{\hbox to \slotblockwidth{\hss\bigstrut \Large \textbf{In Storage}\hss\kern30pt}}\\[5pt]
+       \doDNDitems{STORED ITEMS}%
+       \end{tabular*}%
+     };
+
+  \fi
+\endgroup
 
 
 
