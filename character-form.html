@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: ginger
+        Version: haricot
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -732,9 +732,6 @@
                         <option value="psychic">
                         <option value="radiant">
                         <option value="thunder">
-                        <option value="slashing/cold">
-                        <option value="piercing/fire">
-                        <option value="bludgeoning/thunder">
                     </datalist>
                     <input type="text" placeholder="Range" data-field="range" class="range-field" />
                     <input type="text" placeholder="Ammo" data-field="ammo" class="ammo-field" />
@@ -870,129 +867,407 @@
             });
         }
 
-        function parseYAMLIntoForm(yamlText) {
-            const form = document.getElementById('character-form');
-            
-            try {
-                // Use js-yaml to parse the YAML
-                const data = jsyaml.load(yamlText);
-                if (!data) return;
-                
-                // Character info fields
-                const setFormValue = (selector, value) => {
+        // Field factory functions
+        function textField(yamlKey, selector) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
                     const el = form.querySelector(selector);
+                    const value = data[yamlKey];
                     if (el && value !== undefined && value !== null) {
                         el.value = value.toString();
                     }
-                };
-                
-                setFormValue('#character-name', data['CHARACTER NAME']);
-                setFormValue('#player-name', data['PLAYER NAME']);
-                setFormValue('#age', data['AGE']);
-                setFormValue('#description', data['DESCRIPTION']);
-                setFormValue('#race', data['RACE']);
-                setFormValue('#background', data['BACKGROUND']);
-                setFormValue('#alignment', data['ALIGNMENT']);
-                setFormValue('#experience', data['EXPERIENCE POINTS']);
-                setFormValue('#motivation', data['MOTIVATION']);
-                
-                // Pregenerated checkbox
-                const pregeneratedEl = document.querySelector('#pregenerated');
-                if (pregeneratedEl) {
-                    const pregeneratedValue = data['PREGENERATED'];
-                    console.log('PREGENERATED value:', pregeneratedValue, 'type:', typeof pregeneratedValue);
-                    // Use ifDNDfalse helper function - note: ifDNDfalse returns true when LaTeX would be false
-                    const shouldCheck = !ifDNDfalse(pregeneratedValue);
-                    console.log('Should check:', shouldCheck);
-                    pregeneratedEl.checked = shouldCheck;
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    data[yamlKey] = el?.value || '';
                 }
-                
-                // Handle "CLASS & LEVEL" first if present
-                if (data['CLASS & LEVEL']) {
-                    const classLevel = data['CLASS & LEVEL'].toString();
-                    // Handle "Cleric (Life Domain) 3" format - extract specialty from parentheses
-                    const match = classLevel.match(/^([A-Za-z]+)(?:\s+\(([^)]+)\))?\s+(\d+)$/) || 
-                                 classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
-                                 classLevel.match(/^([A-Za-z]+)/);
-                    if (match) {
-                        setFormValue('#class', match[1]);
-                        // If there are parentheses, extract specialty (match[2] in 3-group match)
-                        if (match.length === 4 && match[2]) {
-                            setFormValue('#specialty', match[2]);
-                            setFormValue('#level', match[3]);
-                        } else if (match[2]) {
-                            setFormValue('#level', match[2]);
+            };
+        }
+
+        function numberField(yamlKey, selector) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = data[yamlKey];
+                    if (el && value !== undefined && value !== null) {
+                        el.value = value.toString();
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const value = el?.value || '';
+                    data[yamlKey] = value ? (parseInt(value) || value) : value;
+                }
+            };
+        }
+
+        function checkboxField(yamlKey, selector) {
+            return {
+                populate(data) {
+                    const el = document.querySelector(selector);
+                    if (el) {
+                        const value = data[yamlKey];
+                        console.log(`${yamlKey} value:`, value, 'type:', typeof value);
+                        const shouldCheck = !ifDNDfalse(value);
+                        console.log('Should check:', shouldCheck);
+                        el.checked = shouldCheck;
+                    }
+                },
+                capture(data) {
+                    const el = document.querySelector(selector);
+                    const checked = el?.checked || false;
+                    if (checked) {
+                        data[yamlKey] = true;
+                    }
+                }
+            };
+        }
+
+        // Complex field factories
+        function arrayField(yamlKey, selector, itemProcessor = null) {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    if (el && data[yamlKey] && Array.isArray(data[yamlKey])) {
+                        const items = itemProcessor 
+                            ? data[yamlKey].map(itemProcessor)
+                            : data[yamlKey].map(item => item?.toString() || '');
+                        el.value = items.join('\n');
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector(selector);
+                    const text = el?.value || '';
+                    if (text.trim()) {
+                        const lines = text.split('\n').filter(line => line.trim());
+                        data[yamlKey] = itemProcessor ? lines.map(itemProcessor) : lines;
+                    } else {
+                        data[yamlKey] = [];
+                    }
+                }
+            };
+        }
+
+        function classLevelField() {
+            return {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const setFormValue = (selector, value) => {
+                        const el = form.querySelector(selector);
+                        if (el && value !== undefined && value !== null) {
+                            el.value = value.toString();
+                        }
+                    };
+                    
+                    // Handle "CLASS & LEVEL" format
+                    if (data['CLASS & LEVEL']) {
+                        const classLevel = data['CLASS & LEVEL'].toString();
+                        const match = classLevel.match(/^([A-Za-z]+)(?:\s+\(([^)]+)\))?\s+(\d+)$/) || 
+                                     classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
+                                     classLevel.match(/^([A-Za-z]+)/);
+                        if (match) {
+                            setFormValue('#class', match[1]);
+                            if (match.length === 4 && match[2]) {
+                                setFormValue('#specialty', match[2]);
+                                setFormValue('#level', match[3]);
+                            } else if (match[2]) {
+                                setFormValue('#level', match[2]);
+                            }
+                        }
+                    }
+                    
+                    // Override with individual fields if present
+                    if (data['CLASS']) setFormValue('#class', data['CLASS']);
+                    if (data['LEVEL']) setFormValue('#level', data['LEVEL']);
+                    if (data['SPECIALTY']) setFormValue('#specialty', data['SPECIALTY']);
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const characterClass = form.querySelector('#class')?.value || '';
+                    const level = form.querySelector('#level')?.value || '';
+                    const specialty = form.querySelector('#specialty')?.value || '';
+
+                    data['CLASS'] = characterClass;
+                    data['LEVEL'] = level ? (parseInt(level) || level) : level;
+                    if (specialty) data['SPECIALTY'] = specialty;
+                }
+            };
+        }
+
+        // Name-description pair handler - reusable for Features and Magic
+        function nameDescPairs(yamlKey, itemSelector, addFunction) {
+            return {
+                populate(data) {
+                    if (data[yamlKey] && Array.isArray(data[yamlKey])) {
+                        // Clear existing items first
+                        document.querySelectorAll(itemSelector).forEach(item => item.remove());
+                        
+                        data[yamlKey].forEach(item => {
+                            if (item && typeof item === 'object' && item.name) {
+                                addFunction();
+                                const items = document.querySelectorAll(itemSelector);
+                                const lastItem = items[items.length - 1];
+                                if (lastItem) {
+                                    const nameEl = lastItem.querySelector('[data-field="name"]');
+                                    const descEl = lastItem.querySelector('[data-field="description"]');
+                                    if (nameEl) nameEl.value = item.name || '';
+                                    if (descEl) descEl.value = item.description || '';
+                                }
+                            }
+                        });
+                    }
+                },
+                capture(data) {
+                    const items = [];
+                    document.querySelectorAll(itemSelector).forEach(itemDiv => {
+                        const name = itemDiv.querySelector('[data-field="name"]')?.value || '';
+                        const description = itemDiv.querySelector('[data-field="description"]')?.value || '';
+
+                        if (name || description) {
+                            const item = {};
+                            if (name) item.name = name;
+                            if (description) item.description = description;
+                            items.push(item);
+                        }
+                    });
+                    data[yamlKey] = items;
+                }
+            };
+        }
+
+        // Attacks field factory
+        function attacksField() {
+            return {
+                populate(data) {
+                    if (data['ATTACKS'] && Array.isArray(data['ATTACKS'])) {
+                        // Clear existing attacks first
+                        document.querySelectorAll('.attack-item').forEach(item => item.remove());
+                        
+                        data['ATTACKS'].forEach(attack => {
+                            if (attack && typeof attack === 'object') {
+                                addAttack();
+                                const items = document.querySelectorAll('.attack-item');
+                                const lastItem = items[items.length - 1];
+                                if (lastItem) {
+                                    const nameEl = lastItem.querySelector('[data-field="name"]');
+                                    const attackEl = lastItem.querySelector('[data-field="attack"]');
+                                    const damageEl = lastItem.querySelector('[data-field="damage"]');
+                                    const typeEl = lastItem.querySelector('[data-field="type"]');
+                                    const rangeEl = lastItem.querySelector('[data-field="range"]');
+                                    const ammoEl = lastItem.querySelector('[data-field="ammo"]');
+                                    
+                                    if (nameEl) nameEl.value = attack['NAME'] || '';
+                                    if (attackEl) attackEl.value = attack['ATTACK'] || '';
+                                    if (damageEl) damageEl.value = attack['DAMAGE'] || '';
+                                    if (typeEl) typeEl.value = attack['TYPE'] || '';
+                                    if (rangeEl) rangeEl.value = attack['RANGE'] || '';
+                                    if (ammoEl) ammoEl.value = attack['AMMO'] || '';
+                                }
+                            }
+                        });
+                    }
+                },
+                capture(data) {
+                    const attacks = [];
+                    document.querySelectorAll('.attack-item').forEach(attackDiv => {
+                        const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
+                        const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
+                        const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
+                        const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
+                        const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
+                        const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
+
+                        if (name || attack || damage || type || range || ammo) {
+                            attacks.push({
+                                'NAME': name,
+                                'ATTACK': attack,
+                                'DAMAGE': damage,
+                                'TYPE': type,
+                                'RANGE': range,
+                                'AMMO': ammo
+                            });
+                        }
+                    });
+                    data['ATTACKS'] = attacks;
+                }
+            };
+        }
+
+        // Magic field factory
+        function magicField() {
+            return {
+                populate(data) {
+                    if (data['MAGIC'] && Array.isArray(data['MAGIC'])) {
+                        // Auto-open magic section
+                        const magicContent = document.getElementById('magic-content');
+                        const magicHeader = document.getElementById('magic-header');
+                        if (magicContent && magicContent.style.display === 'none') {
+                            magicContent.style.display = 'block';
+                            magicHeader.textContent = 'Magic';
+                        }
+                        
+                        // Clear existing spells first
+                        document.querySelectorAll('.spell-item').forEach(item => item.remove());
+                        
+                        let currentLevel = null;
+                        data['MAGIC'].forEach(item => {
+                            if (item.level !== undefined) {
+                                // This is a level header
+                                if (typeof item.level === 'number') {
+                                    currentLevel = item.level;
+                                } else if (typeof item.level === 'object' && item.level.number !== undefined) {
+                                    currentLevel = item.level.number;
+                                    // Set slot count if provided
+                                    const slotsInput = document.querySelector(`[data-slots="${currentLevel}"]`);
+                                    if (slotsInput && item.level.slots !== undefined) {
+                                        slotsInput.value = item.level.slots;
+                                    }
+                                }
+                            } else if (item.name && currentLevel !== null) {
+                                // This is a spell
+                                addSpell(currentLevel);
+                                const levelDiv = document.querySelector(`[data-level="${currentLevel}"]`);
+                                const spellItems = levelDiv?.querySelectorAll('.spell-item');
+                                const lastItem = spellItems?.[spellItems.length - 1];
+                                if (lastItem) {
+                                    const nameEl = lastItem.querySelector('[data-field="name"]');
+                                    const descEl = lastItem.querySelector('[data-field="description"]');
+                                    if (nameEl) nameEl.value = item.name || '';
+                                    if (descEl) descEl.value = item.description || '';
+                                }
+                            }
+                        });
+                    }
+                },
+                capture(data) {
+                    const magic = [];
+                    const magicLevels = document.querySelectorAll('.spell-level');
+                    let hasMagic = false;
+                    
+                    magicLevels.forEach(levelDiv => {
+                        const level = levelDiv.getAttribute('data-level');
+                        const spellItems = levelDiv.querySelectorAll('.spell-item');
+                        const slotsInput = levelDiv.querySelector(`[data-slots="${level}"]`);
+                        
+                        if (spellItems.length > 0) {
+                            // Add level header with slot information
+                            if (level === '0') {
+                                magic.push({ level: 0 });
+                            } else {
+                                const slots = slotsInput?.value || '';
+                                if (slots) {
+                                    magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
+                                } else {
+                                    magic.push({ level: parseInt(level) });
+                                }
+                            }
+                            
+                            // Add spells for this level
+                            spellItems.forEach(spellDiv => {
+                                const name = spellDiv.querySelector('[data-field="name"]')?.value || '';
+                                const description = spellDiv.querySelector('[data-field="description"]')?.value || '';
+                                
+                                if (name || description) {
+                                    hasMagic = true;
+                                    const spell = {};
+                                    if (name) spell.name = name;
+                                    if (description) spell.description = description;
+                                    magic.push(spell);
+                                }
+                            });
+                        }
+                    });
+                    
+                    if (hasMagic) {
+                        data['MAGIC'] = magic;
+                        
+                        // Magic rendering options
+                        const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
+                        if (magicRenderOption === 'small') {
+                            data['MAGIC FONT'] = '\\small';
+                        } else if (magicRenderOption === 'separate') {
+                            data['MAGIC SEPARATE'] = true;
                         }
                     }
                 }
-                
-                // Override with individual CLASS if present
-                if (data['CLASS']) {
-                    setFormValue('#class', data['CLASS']);
+            };
+        }
+
+        // Field registry
+        const FIELDS = [
+            // Character info fields
+            textField('CHARACTER NAME', '#character-name'),
+            textField('PLAYER NAME', '#player-name'),
+            textField('RACE', '#race'),
+            textField('BACKGROUND', '#background'),
+            textField('ALIGNMENT', '#alignment'),
+            textField('EXPERIENCE POINTS', '#experience'),
+            textField('AGE', '#age'),
+            textField('DESCRIPTION', '#description'),
+            textField('MOTIVATION', '#motivation'),
+            
+            // Checkbox
+            checkboxField('PREGENERATED', '#pregenerated'),
+            
+            // Class/Level complex logic
+            classLevelField(),
+            
+            // Ability scores
+            numberField('STR', '#str'),
+            numberField('DEX', '#dex'),
+            numberField('CON', '#con'),
+            numberField('INT', '#int'),
+            numberField('WIS', '#wis'),
+            numberField('CHA', '#cha'),
+            
+            // Combat stats
+            textField('PROFICIENCY BONUS', '#proficiency-bonus'),
+            textField('MAX HP', '#max-hp'),
+            textField('HIT DICE', '#hit-dice'),
+            textField('INITIATIVE', '#initiative'),
+            textField('SPEED', '#speed'),
+            textField('ARMOR CLASS', '#armor-class'),
+            textField('SENSES', '#senses'),
+            textField('PASSIVE PERCEPTION', '#passive-perception'),
+            
+            // Currency
+            textField('CP', '#cp'),
+            textField('SP', '#sp'),
+            textField('EP', '#ep'),
+            textField('GP', '#gp'),
+            textField('PP', '#pp'),
+            
+            // Array fields
+            arrayField('PROFICIENCIES', '#proficiencies-text', item => {
+                if (typeof item === 'string') return item;
+                if (typeof item === 'object' && item === null) return '';
+                if (item && item.proficiencies_skip) return '';
+                if (item && typeof item === 'object') {
+                    const keys = Object.keys(item);
+                    if (keys.length === 1) {
+                        const key = keys[0];
+                        const value = item[key];
+                        if (key === 'Languages') return value;
+                        if (key === 'Armor') return `${value} Armor`;
+                        if (key === 'Weapons') return `${value} Weapons`;
+                        return `${key}: ${value}`;
+                    }
                 }
-                
-                // Override with individual LEVEL if present
-                if (data['LEVEL']) {
-                    setFormValue('#level', data['LEVEL']);
-                }
-                
-                // Override with individual SPECIALTY if present
-                if (data['SPECIALTY']) {
-                    setFormValue('#specialty', data['SPECIALTY']);
-                }
-                
-                // Ability scores
-                setFormValue('#str', data['STR']);
-                setFormValue('#dex', data['DEX']);
-                setFormValue('#con', data['CON']);
-                setFormValue('#int', data['INT']);
-                setFormValue('#wis', data['WIS']);
-                setFormValue('#cha', data['CHA']);
-                
-                // Combat stats
-                setFormValue('#proficiency-bonus', data['PROFICIENCY BONUS']);
-                setFormValue('#max-hp', data['MAX HP']);
-                setFormValue('#hit-dice', data['HIT DICE']);
-                setFormValue('#initiative', data['INITIATIVE']);
-                setFormValue('#speed', data['SPEED']);
-                setFormValue('#armor-class', data['ARMOR CLASS']);
-                setFormValue('#senses', data['SENSES']);
-                setFormValue('#passive-perception', data['PASSIVE PERCEPTION']);
-                
-                // Currency
-                setFormValue('#cp', data['CP']);
-                setFormValue('#sp', data['SP']);
-                setFormValue('#ep', data['EP']);
-                setFormValue('#gp', data['GP']);
-                setFormValue('#pp', data['PP']);
-                
-                // Proficiencies
-                if (data['PROFICIENCIES'] && Array.isArray(data['PROFICIENCIES'])) {
-                    const profList = data['PROFICIENCIES'].map(item => {
-                        if (typeof item === 'string') return item;
-                        if (typeof item === 'object' && item === null) return ''; // blank separator
-                        if (item && item.proficiencies_skip) return '';
-                        if (item && typeof item === 'object') {
-                            // Handle objects like {Languages: "Common"}, {Armor: "Light"}
-                            const keys = Object.keys(item);
-                            if (keys.length === 1) {
-                                const key = keys[0];
-                                const value = item[key];
-                                if (key === 'Languages') return value;
-                                if (key === 'Armor') return `${value} Armor`;
-                                if (key === 'Weapons') return `${value} Weapons`;
-                                return `${key}: ${value}`;
-                            }
-                        }
-                        return item?.toString() || '';
-                    });
-                    setFormValue('#proficiencies-text', profList.join('\n'));
-                }
-                
-                // Equipment - handle both array (flat list) and object (structured) formats
-                if (data['EQUIPMENT']) {
+                return item?.toString() || '';
+            }),
+            
+            // Equipment field factory
+            {
+                populate(data) {
+                    const form = document.getElementById('character-form');
                     const equipmentEl = form.querySelector('#equipment-text');
-                    if (equipmentEl) {
+                    if (equipmentEl && data['EQUIPMENT']) {
                         let equipmentText = '';
                         
                         if (Array.isArray(data['EQUIPMENT'])) {
@@ -1010,137 +1285,42 @@
                         
                         equipmentEl.value = equipmentText;
                     }
-                }
-                
-                // Features
-                if (data['FEATURES'] && Array.isArray(data['FEATURES'])) {
-                    // Clear existing features first
-                    document.querySelectorAll('.feature-item').forEach(item => item.remove());
-                    
-                    data['FEATURES'].forEach(feature => {
-                        if (feature && typeof feature === 'object' && feature.name) {
-                            addFeature();
-                            const items = document.querySelectorAll('.feature-item');
-                            const lastItem = items[items.length - 1];
-                            if (lastItem) {
-                                const nameEl = lastItem.querySelector('[data-field="name"]');
-                                const descEl = lastItem.querySelector('[data-field="description"]');
-                                if (nameEl) nameEl.value = feature.name || '';
-                                if (descEl) descEl.value = feature.description || '';
-                            }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const equipmentText = form.querySelector('#equipment-text')?.value || '';
+                    if (equipmentText.trim()) {
+                        const lines = equipmentText.split('\n').map(line => line.trim()).filter(line => line);
+                        try {
+                            // Parse equipment text into structured format
+                            const structuredEquipment = parseEquipmentStrings(lines);
+                            data['EQUIPMENT'] = structuredEquipment;
+                        } catch (error) {
+                            // Fallback to list format if parsing fails
+                            console.warn('Equipment parsing failed, falling back to list format:', error);
+                            data['EQUIPMENT'] = lines;
                         }
-                    });
-                }
-                
-                // Attacks
-                if (data['ATTACKS'] && Array.isArray(data['ATTACKS'])) {
-                    // Clear existing attacks first
-                    document.querySelectorAll('.attack-item').forEach(item => item.remove());
-                    
-                    data['ATTACKS'].forEach(attack => {
-                        if (attack && typeof attack === 'object') {
-                            addAttack();
-                            const items = document.querySelectorAll('.attack-item');
-                            const lastItem = items[items.length - 1];
-                            if (lastItem) {
-                                const nameEl = lastItem.querySelector('[data-field="name"]');
-                                const attackEl = lastItem.querySelector('[data-field="attack"]');
-                                const damageEl = lastItem.querySelector('[data-field="damage"]');
-                                const typeEl = lastItem.querySelector('[data-field="type"]');
-                                const rangeEl = lastItem.querySelector('[data-field="range"]');
-                                const ammoEl = lastItem.querySelector('[data-field="ammo"]');
-                                
-                                if (nameEl) nameEl.value = attack['NAME'] || '';
-                                if (attackEl) attackEl.value = attack['ATTACK'] || '';
-                                if (damageEl) damageEl.value = attack['DAMAGE'] || '';
-                                if (typeEl) typeEl.value = attack['TYPE'] || '';
-                                if (rangeEl) rangeEl.value = attack['RANGE'] || '';
-                                if (ammoEl) ammoEl.value = attack['AMMO'] || '';
-                            }
-                        }
-                    });
-                }
-                
-                // Magic/Spells
-                if (data['MAGIC'] && Array.isArray(data['MAGIC'])) {
-                    // Auto-open magic section
-                    const magicContent = document.getElementById('magic-content');
-                    const magicHeader = document.getElementById('magic-header');
-                    if (magicContent && magicContent.style.display === 'none') {
-                        magicContent.style.display = 'block';
-                        magicHeader.textContent = 'Magic';
+                    } else {
+                        data['EQUIPMENT'] = {};
                     }
-                    
-                    // Clear existing spells and levels first
-                    document.getElementById('magic-levels').innerHTML = '';
-                    document.getElementById('next-level-button-container').innerHTML = '';
-                    
-                    // Process each magic entry
-                    let currentLevel = null;
-                    data['MAGIC'].forEach(spell => {
-                        if (spell && typeof spell === 'object') {
-                            // Handle level markers with slot information
-                            if (spell.level !== undefined && !spell.name) {
-                                currentLevel = spell.level;
-                                // If this is a level with slot information, handle slots
-                                if (typeof spell.level === 'object' && spell.level.number !== undefined) {
-                                    currentLevel = spell.level.number;
-                                    // Ensure the level exists before setting slots
-                                    if (!document.querySelector(`[data-level="${currentLevel}"]`)) {
-                                        openSpellLevel(currentLevel);
-                                    }
-                                    const slotsInput = document.querySelector(`[data-slots="${currentLevel}"]`);
-                                    if (slotsInput && spell.level.slots !== undefined) {
-                                        slotsInput.value = spell.level.slots;
-                                    }
-                                } else if (typeof spell.level === 'number') {
-                                    currentLevel = spell.level;
-                                }
-                                return;
-                            }
-                            
-                            // Add spell with name and description
-                            if (spell.name && currentLevel !== null) {
-                                addSpellToLevel(currentLevel);
-                                const levelContainer = document.querySelector(`[data-level="${currentLevel}"] .spells-container`);
-                                if (levelContainer) {
-                                    const items = levelContainer.querySelectorAll('.spell-item');
-                                    const lastItem = items[items.length - 1];
-                                    if (lastItem) {
-                                        const nameEl = lastItem.querySelector('[data-field="name"]');
-                                        const descEl = lastItem.querySelector('[data-field="description"]');
-                                        
-                                        if (nameEl) nameEl.value = spell.name || '';
-                                        if (descEl) descEl.value = spell.description || '';
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    
-                    // Update the next level button after loading
-                    updateNextLevelButton();
                 }
+            },
+            
+            // Dynamic list field factories
+            attacksField(),
+            nameDescPairs('FEATURES', '.feature-item', addFeature),
+            magicField()
+        ];
 
-                // Handle magic rendering options
-                let magicRenderOption = 'normal'; // default
+        function parseYAMLIntoForm(yamlText) {
+            try {
+                // Use js-yaml to parse the YAML
+                const data = jsyaml.load(yamlText);
+                if (!data) return;
                 
-                if (data['MAGIC SEPARATE'] && !ifDNDfalse(data['MAGIC SEPARATE'])) {
-                    magicRenderOption = 'separate';
-                } else if (data['MAGIC FONT'] && typeof data['MAGIC FONT'] === 'string') {
-                    const magicFont = data['MAGIC FONT'].toString();
-                    if (magicFont.includes('small')) {
-                        magicRenderOption = 'small';
-                    } else if (magicFont.includes('normalsize')) {
-                        magicRenderOption = 'normal';
-                    }
-                }
+                // Populate all fields using message-passing
+                FIELDS.forEach(field => field.populate(data));
                 
-                // Set the radio button
-                const radioToCheck = document.querySelector(`input[name="magic-render"][value="${magicRenderOption}"]`);
-                if (radioToCheck) {
-                    radioToCheck.checked = true;
-                }
                 
             } catch (error) {
                 throw new Error('YAML parsing failed: ' + error.message);
@@ -1159,206 +1339,7 @@
         function createYAMLContent() {
             const form = document.getElementById('character-form');
             const data = {};
-
-            // Character Info (all required fields always included)
-            const characterName = form.querySelector('#character-name')?.value || '';
-            const playerName = form.querySelector('#player-name')?.value || '';
-            const age = form.querySelector('#age')?.value || '';
-            const description = form.querySelector('#description')?.value || '';
-            const characterClass = form.querySelector('#class')?.value || '';
-            const level = form.querySelector('#level')?.value || '';
-            const specialty = form.querySelector('#specialty')?.value || '';
-            const race = form.querySelector('#race')?.value || '';
-            const background = form.querySelector('#background')?.value || '';
-            const alignment = form.querySelector('#alignment')?.value || '';
-            const experience = form.querySelector('#experience')?.value || '';
-            const motivation = form.querySelector('#motivation')?.value || '';
-
-            // Required fields - always include even if empty
-            data['CHARACTER NAME'] = characterName;
-            data['PLAYER NAME'] = playerName;
-            if (age) data['AGE'] = age;  // Optional - only include when not empty
-            if (description) data['DESCRIPTION'] = description;  // Optional - only include when not empty
-            data['CLASS'] = characterClass;
-            data['LEVEL'] = parseInt(level) || level;
-            if (specialty) data['SPECIALTY'] = specialty;  // Optional - only include when not empty
-            data['RACE'] = race;
-            data['BACKGROUND'] = background;
-            data['ALIGNMENT'] = alignment;
-            data['EXPERIENCE POINTS'] = experience;
-            if (motivation) data['MOTIVATION'] = motivation;
-            
-            // Pregenerated
-            const pregenerated = document.querySelector('#pregenerated')?.checked || false;
-            if (pregenerated) data['PREGENERATED'] = true;
-
-            // Ability Scores (all required)
-            const str = form.querySelector('#str')?.value || '';
-            const dex = form.querySelector('#dex')?.value || '';
-            const con = form.querySelector('#con')?.value || '';
-            const int = form.querySelector('#int')?.value || '';
-            const wis = form.querySelector('#wis')?.value || '';
-            const cha = form.querySelector('#cha')?.value || '';
-
-            data['STR'] = parseInt(str) || str;
-            data['DEX'] = parseInt(dex) || dex;
-            data['CON'] = parseInt(con) || con;
-            data['INT'] = parseInt(int) || int;
-            data['WIS'] = parseInt(wis) || wis;
-            data['CHA'] = parseInt(cha) || cha;
-
-            // Combat Stats (all required)
-            const profBonus = form.querySelector('#proficiency-bonus')?.value || '';
-            const maxHp = form.querySelector('#max-hp')?.value || '';
-            const hitDice = form.querySelector('#hit-dice')?.value || '';
-            const initiative = form.querySelector('#initiative')?.value || '';
-            const speed = form.querySelector('#speed')?.value || '';
-            const ac = form.querySelector('#armor-class')?.value || '';
-            const senses = form.querySelector('#senses')?.value || '';
-            const passivePerc = form.querySelector('#passive-perception')?.value || '';
-
-            data['PROFICIENCY BONUS'] = profBonus;
-            data['MAX HP'] = parseInt(maxHp) || maxHp;
-            data['CURRENT HIT POINTS'] = '';  // Required, typically empty
-            data['HIT DICE'] = hitDice;
-            data['INITIATIVE'] = initiative;
-            data['SPEED'] = speed;
-            data['ARMOR CLASS'] = parseInt(ac) || ac;
-            data['SENSES'] = senses;
-            data['PASSIVE PERCEPTION'] = parseInt(passivePerc) || passivePerc;
-
-            // Proficiencies (required)
-            const proficienciesText = form.querySelector('#proficiencies-text')?.value || '';
-            data['PROFICIENCIES'] = [];
-            if (proficienciesText.trim()) {
-                proficienciesText.split('\n').forEach(line => {
-                    line = line.trim();
-                    if (line) {
-                        data['PROFICIENCIES'].push(line);
-                    } else {
-                        data['PROFICIENCIES'].push(null); // Separator
-                    }
-                });
-            }
-
-            // Attacks (required, can be empty list)
-            const attacks = [];
-            document.querySelectorAll('.attack-item').forEach(attackDiv => {
-                const name = attackDiv.querySelector('[data-field="name"]')?.value || '';
-                const attack = attackDiv.querySelector('[data-field="attack"]')?.value || '';
-                const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
-                const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
-                const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
-                const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
-
-                if (name || attack || damage || type || range || ammo) {
-                    attacks.push({
-                        'NAME': name,
-                        'ATTACK': attack,
-                        'DAMAGE': damage,
-                        'TYPE': type,
-                        'RANGE': range,
-                        'AMMO': ammo
-                    });
-                }
-            });
-            data['ATTACKS'] = attacks;
-
-            // Magic (only include when not empty)
-            const magic = [];
-            const magicLevels = document.querySelectorAll('.spell-level');
-            let hasMagic = false;
-            
-            magicLevels.forEach(levelDiv => {
-                const level = levelDiv.getAttribute('data-level');
-                const spellItems = levelDiv.querySelectorAll('.spell-item');
-                const slotsInput = levelDiv.querySelector(`[data-slots="${level}"]`);
-                
-                if (spellItems.length > 0) {
-                    // Add level header with slot information
-                    if (level === '0') {
-                        magic.push({ level: 0 });
-                    } else {
-                        const slots = slotsInput?.value || '';
-                        if (slots) {
-                            magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
-                        } else {
-                            magic.push({ level: parseInt(level) });
-                        }
-                    }
-                    
-                    // Add spells for this level
-                    spellItems.forEach(spellDiv => {
-                        const name = spellDiv.querySelector('[data-field="name"]')?.value || '';
-                        const description = spellDiv.querySelector('[data-field="description"]')?.value || '';
-                        
-                        if (name || description) {
-                            hasMagic = true;
-                            const spell = {};
-                            if (name) spell.name = name;
-                            if (description) spell.description = description;
-                            magic.push(spell);
-                        }
-                    });
-                }
-            });
-            
-            if (hasMagic) {
-                data['MAGIC'] = magic;
-            }
-
-            // Magic rendering options
-            const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
-            if (magicRenderOption === 'small') {
-                data['MAGIC FONT'] = '\\small';
-            } else if (magicRenderOption === 'separate') {
-                data['MAGIC SEPARATE'] = true;
-            }
-
-            // Features (required, can be empty list)
-            const features = [];
-            document.querySelectorAll('.feature-item').forEach(featureDiv => {
-                const name = featureDiv.querySelector('[data-field="name"]')?.value || '';
-                const description = featureDiv.querySelector('[data-field="description"]')?.value || '';
-
-                if (name || description) {
-                    const feature = {};
-                    if (name) feature.name = name;
-                    if (description) feature.description = description;
-                    features.push(feature);
-                }
-            });
-            data['FEATURES'] = features;
-
-            // Equipment (parse to structured format)
-            const equipmentText = form.querySelector('#equipment-text')?.value || '';
-            if (equipmentText.trim()) {
-                const lines = equipmentText.split('\n').map(line => line.trim()).filter(line => line);
-                try {
-                    // Parse equipment text into structured format
-                    const structuredEquipment = parseEquipmentStrings(lines);
-                    data['EQUIPMENT'] = structuredEquipment;
-                } catch (error) {
-                    // Fallback to list format if parsing fails
-                    console.warn('Equipment parsing failed, falling back to list format:', error);
-                    data['EQUIPMENT'] = lines;
-                }
-            } else {
-                data['EQUIPMENT'] = {};
-            }
-
-            // Currency (all required, can be empty)
-            const cp = form.querySelector('#cp')?.value || '';
-            const sp = form.querySelector('#sp')?.value || '';
-            const ep = form.querySelector('#ep')?.value || '';
-            const gp = form.querySelector('#gp')?.value || '';
-            const pp = form.querySelector('#pp')?.value || '';
-
-            data['CP'] = cp;
-            data['SP'] = sp;
-            data['EP'] = ep;
-            data['GP'] = gp;
-            data['PP'] = pp;
+            FIELDS.forEach(field => field.capture(data));
 
             // Use js-yaml to serialize the data structure
             return jsyaml.dump(data, { 
@@ -1478,6 +1459,8 @@
             "slotted item": "SLOTTED ITEMS",
             "free item": "SMALL ITEMS",
             "small item": "SMALL ITEMS"
+            "stored": "STORED ITEMS"
+            "stored item": "STORED ITEMS"
         };
 
         function stripS(s) {
