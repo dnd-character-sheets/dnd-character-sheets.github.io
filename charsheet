@@ -771,6 +771,8 @@ local category_map = {
   ["slotted item"] = "SLOTTED ITEMS",
   ["free item"] = "SMALL ITEMS",
   ["small item"] = "SMALL ITEMS",
+  ["stored item"] = "STORED ITEMS",
+  ["stored"] = "STORED ITEMS",
 }
 
 -- Extract valid equipment categories from category_map (single point of truth)
