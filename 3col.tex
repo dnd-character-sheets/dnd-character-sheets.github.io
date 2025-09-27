@@ -44,6 +44,13 @@
   }
 }
 
+\begingroup
+  \tikzset{dndbox}%
+  \pgfkeysgetvalue{/tikz/stub radius}{\srtmp}%
+  \xdef\dndStubRadius{\srtmp}
+\endgroup
+
+
 
 \newsectionenv[width=\colwidth]{magic}{MAGIC}
   {\begin{minipage}[t]{\hsize}
