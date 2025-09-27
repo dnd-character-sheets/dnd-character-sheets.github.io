@@ -239,28 +239,9 @@
 \makeatother
 
 
-\newenvironment{attackstab*}
-  {\renewcommand\arraystretch{1.3}%
-   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
-   \tabcolsep=0.5\tabcolsep
-   \normalsize
-   \let\dndkeys=\attackkeys
-   \begin{tabular*}{\hsize-4mm}{@{}lll@{}}
-   \textsf{\footnotesize NAME}&
-   \textsf{\scriptsize \llap{ATK BO}NUS}&
-   \textsf{\scriptsize DAMAGE/TYPE}\\
-   \midrule
-  }
-  {\end{tabular*}}
+\newdimen\attacksInnerSep
+\attacksInnerSep=4pt
 
-\begin{attacks}[below=of hpbackground]{}
-    \centering
-    \begin{attackstab*}
-    \getDND{ATTACKS}
-    \end{attackstab*}
-
-    \DNDranges
-\end{attacks}
 
 
 \node[columnbox,anchor=north east,dndlabel=Description \&\ Personality,
@@ -286,25 +267,6 @@
    }
 ;
 
-% \node (attacks) at (hpbackground.south west) {A};
-
-%%\ifDNDdefined{MAGIC}
-%%{
-%%\begin{magic}[below=of attacks]{}
-%%\newcommand\spellslevellabel[2][0]{\multicolumn2{@{}l@{}}{\spellslevel[#1]{#2}}\\}%
-%%\centering
-%%\begin{featurestab}
-%%% Magic section (right side, middle)
-%%\rawgetDND{MAGIC}
-%%%  \textsf{CANTRIPS}\\
-%%%  Friends& Does a thing\\
-%%%  Ray of Frost& asdf\\
-%%%  \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
-%%\end{featurestab}
-%%\end{magic}
-%%}
-%%{\path (attacks.south east) coordinate (magic);} % anchor is to east
-%%
 
 \newenvironment{itemize spells}
   {\clubpenalty=10000
@@ -425,14 +387,14 @@
 %  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
 %  ;
 
-\path (attacks.south west) ++(0mm, -3mm) coordinate (equipment upper left fit);
-\path (attacks.south east) ++(0mm, -3mm) coordinate (equipment upper right fit);
+\path (hpbackground.south |- features.south) coordinate (bottom center);
 
 \ifDNDdefined{EQUIPMENT}{%
 %  \typeout{equipment, not magic}%
   {%
-  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
-  right fit)(current bounding box.south)]
+%  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
+%  right fit)(current bounding box.south)]
+  \begin{equipment}[height=124pt,width=\colwidth,anchor=south,at=(bottom center)]
      \useDNDfont{EQUIPMENT}%
      \getDND{EQUIPMENT}
   \end{equipment}
@@ -449,6 +411,38 @@
 \coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
 \coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
   
+\newenvironment{attackstab*}
+  {\renewcommand\arraystretch{1.3}%
+   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \tabcolsep=0.5\tabcolsep
+   \normalsize
+   \let\dndkeys=\attackkeys
+   \noindent
+   \hspace*{\attacksInnerSep}%   
+   \begin{tabular*}{\hsize-2\attacksInnerSep}{@{}lll@{}}
+   \textsf{\footnotesize NAME}&
+   \textsf{\scriptsize \llap{ATK BO}NUS}&
+   \textsf{\scriptsize DAMAGE/TYPE}\\
+   \midrule
+  }
+  {\end{tabular*}\hspace*{\attacksInnerSep}\par}
+
+\path (hpbackground.south west) ++(\dndStubRadius, -4mm) coordinate (attacks upper left fit);
+\path (equipment.north east) ++(-\dndStubRadius, 4mm) coordinate (attacks lower right fit);
+
+\begin{attacks}[fit=(attacks upper left fit)(attacks lower right fit)]{}
+    \centering
+    \begin{attackstab*}
+    \getDND{ATTACKS}
+    \end{attackstab*}
+
+    \medskip
+
+    \begin{minipage}{\hsize-2\attacksInnerSep}
+    \DNDranges
+    \end{minipage}
+    \vfill
+\end{attacks}
 
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
   {\Large\textit{\getDND*{MOTIVATION}}}
@@ -459,7 +453,7 @@
        dndlabel={Weapon, Armor, \&\ Language Proficiencies},
       ]
    (other proficiencies)
-   at (bottom left)
+   at (bottom left |- features.south)
   {\begin{minipage}[t]{\colwidth-10pt}
     \begin{multicols}{2}
     \begin{proflist}
