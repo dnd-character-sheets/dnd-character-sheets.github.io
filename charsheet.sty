@@ -2109,7 +2109,7 @@
 \newdimen\mytemp
 
 \newcommand\newsectionenv[5][]{%
-   % [width]{name}{label}{pre-code}{post-code}
+   % [width=...,...]{name}{label}{pre-code}{post-code}
   \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
   \expandafter\newdimen\csname#2width\endcsname
   \runwidth{\setsectionenvwidth{#2}}{width=\dndrightwidth,#1}%
@@ -2119,7 +2119,8 @@
     \setlength{\my@xa}{\csname#2width\endcsname-7mm}%
 %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
     \typeout{\string\node{}  [#2,#1,##1] (#2) ...}%
-    \node [width=\dndrightwidth,#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
+    \node [%inner sep=0pt,
+           width=\dndrightwidth,#2,#1,##1] (#2) {{\begin{minipage}[t]{\my@xa}
          #4%
          \csname#2body\endcsname
          #5%
@@ -2308,6 +2309,8 @@
 \newDND{SPELL ATTACK MODIFIER}
 \newDND{SPELLCASTING ABILITY MODIFIER}
 \newDND{SPELLS KNOWN}
+\newDND{SUGGESTED MOTIVATIONS}
+\newDND{SUGGESTED NAMES}
 \newDND{TRAITS}
 \newDND{DOMAIN SPELLS}
 \newDND{STR}

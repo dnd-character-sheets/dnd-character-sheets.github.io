@@ -257,9 +257,26 @@
 
 
 \node[columnbox,anchor=north east,dndlabel=Description \&\ Personality,
-      minimum height=1.5in,
+      inner sep=10pt,
     ] (motivation) at (splash.east |- hpbackground.north)
-   { }
+   {\begin{minipage}{\colwidth-22pt}
+    \newcommand\hangpar{\hangindent=1em \hangafter=1 \par}
+    \smallskip
+    Motivation:\\
+    \getDND*{MOTIVATION}
+    \hangpar
+    \bigskip
+    \ifDNDnonempty{SUGGESTED MOTIVATIONS}{%
+       Suggested Motivations:\\ \getDND{SUGGESTED MOTIVATIONS} \hangpar
+       \bigskip
+    }{}
+    \ifDNDnonempty{SUGGESTED NAMES}{%
+       Suggested Names:\\ \getDND{SUGGESTED NAMES} \hangpar
+       \bigskip
+    }{}
+    \hbox{}
+   \end{minipage}
+   }
 ;
 
 % \node (attacks) at (hpbackground.south west) {A};
