@@ -3101,7 +3101,7 @@
               % This is a ranged attack - add to list
               \global\def\@hasrangedattacks{true}%
               \begingroup
-                \edef\x{\endgroup\noexpand\g@addto@macro\noexpand\@rangedlist{\noexpand\item \@attackname\space range: \@attackrange}}%
+                \edef\x{\endgroup\noexpand\g@addto@macro\noexpand\@rangedlist{\noexpand\item \@attackname\space range: \@attackrange\noexpand\\\@attackname\space ammo:}}%
               \x
             }%
           }%

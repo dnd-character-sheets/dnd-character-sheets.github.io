@@ -40,7 +40,7 @@
 
 \tikzset{%
   yseparated/.style={
-     outer ysep=2.5pt,
+%     outer ysep=2.5pt,
   },
   every label node part/.style={
      text width=,
@@ -98,6 +98,7 @@
 
 \noindent
 \begin{charsheet}
+  \tikzset{node distance=7pt}
 
   %%%%% banner at top
 
@@ -142,13 +143,15 @@
     }
     {}
 
-  %%% central column: hit-point thing
+  %%% central column: hit-point thing, equipment, attacks fill
 
 \Large
 
       \node (hpbackground) 
-        [stub rectangle,fill=hpetc,below=of splash,width=\colwidth, minimum height=87mm] 
+        [stub rectangle,yseparated,fill=hpetc,below=of splash,width=\colwidth, minimum height=87mm] 
        { };
+
+\begin{scope}[node distance=7pt]
 
       \node (initiative)
             [initiative,below=of hpbackground.north,dndlabel=\noexpand\footnotesize INITIATIVE] 
@@ -213,8 +216,7 @@
 %              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
 
 
-
-
+\end{scope}
 
   \endgroup
 
@@ -269,11 +271,11 @@
   }%
   {\end{itemize}}
 
-\path (motivation.south west) ++(0mm, -3mm) coordinate (features upper fit);
-
-\setdeltay\sectionheight{motivation.south}{bottom right}
+\node (features top) [below=of motivation] {};
+\setdeltay\sectionheight{features top}{bottom right}
 
 \ifDNDdefined{FEATURES}{%
+  %%% XXX drops below bottom right
   \node (features) [columnbox,height=\sectionheight,fill=features,below=of motivation]  {
     \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
     \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
@@ -338,9 +340,14 @@
 %%  }{}
 
 \node (stats background) 
-      [fill=stats,width=24mm,height=163mm,anchor=north west]
+      [fill=stats,width=25.3mm,height=166mm,anchor=north west]
       at (splash.west |- hpbackground.north)
  { };
+
+\path (stats background.north west) ++(-0.3mm,-2mm) coordinate (first stat);
+\renewcommand\nextstatloc{inside north west corner=of first stat}
+
+
 
 \dndstat{STRENGTH}{STR}
 \dndstat{DEXTERITY}{DEX}
@@ -355,7 +362,7 @@
 
 \node (inspiration)
       [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=38.001mm,height=8mm,
-       right of upper corner=5mm of stats background]
+       right of upper corner=3.3mm of stats background]
    {\hbox to 0pt{\hss\hspace*{6mm}\small\textsf{INSPIRATION}\hss}}
    ;
 \node [anchor=west,proficiencies,fill=white,decorated stub rectangle,
@@ -364,7 +371,7 @@
       {};
 
 \node[narrowcolumnbox,% width=38.002mm,
-      fill=white,below=4mm of inspiration,align=center,
+      fill=white,below=2mm of inspiration,align=center,
       height=35mm,
     ]
     (saving throws)
@@ -388,12 +395,13 @@
        at ($(proficiency bonus.west)+(-2mm,0mm)$)
       {\large\textsf{+\arabic{proficiency bonus}}};
 
+\path (proficiency bonus.south) ++ (0,-3mm) coordinate (prof top fit);
 \path (inspiration.south |- stats background.south) coordinate (prof bot fit);
-\path (proficiency bonus.south) ++ (0,-5mm) coordinate (prof top fit);
 
   \setdeltay\sectionheight{prof top fit}{prof bot fit}
   \node (proficiencies) [narrowcolumnbox,fill=proficiencies,height=\sectionheight,
         anchor=north east,at=(prof top fit -| saving throws.east),
+%below=3mm of proficiency bonus,
                         ] % at (prof bot fit -| saving throws.west)
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
     \ifDNDdefined{PROFICIENCIES}{%
@@ -430,7 +438,7 @@
 \ifDNDdefined{EQUIPMENT}{%
 
   \node (equipment) [columnbox,decorated labeled clipped rectangle,fill=equipment,
-                     height=124pt,
+                     minimum height=124pt, % make enough room for coins
                      anchor=south,at=(bottom center)]
    {%
      \medskip
@@ -449,7 +457,7 @@
    }
   ;
 }
-{\node (equipment) [left of lower corner=of features] {};
+{\node (equipment) [at=(bottom center)] {};
 }
 
 \path (equipment.south west) +(5mm,40mm) coordinate (coin top left);
@@ -460,6 +468,8 @@
 \coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
 \coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
   
+%%%%%% attacks
+
 \newenvironment{attackstab*}
   {\renewcommand\arraystretch{1.3}%
    \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
@@ -476,13 +486,16 @@
   }
   {\end{tabular*}\hspace*{\attacksInnerSep}\par}
 
-%\path (hpbackground.south west) ++(\dndStubRadius, -4mm) coordinate (attacks upper left fit);
-%\path (equipment.north east) ++(-\dndStubRadius, 4mm) coordinate (attacks lower right fit);
+\node (attacks bottom) [above=of equipment] {};
 
-\setdeltay\sectionheight{hpbackground.south}{equipment.north}
+\setdeltay\sectionheight{hpbackground.south}{attacks bottom.north}
+
 
   \node (attacks) [columnbox,fill=attacks,height=\sectionheight,
-                   anchor=north west,at=(hpbackground.south west)]
+                   below=of hpbackground,
+%at={(0,0)},
+%   anchor=north,at=(hpbackground.south),
+]
    {
     \nodepart{label}ATTACKS\nodepart{text}%
     \centering
@@ -499,31 +512,26 @@
    }
 ;
 
+%\draw (hpbackground.south) [red] circle [radius=3pt];
+%\draw (equipment.north) [red] circle [radius=3pt];
+%
+%\draw (attacks.south) [blue] circle [radius=3pt];
+%\draw (attacks.north) [blue] circle [radius=3pt];
+%
+%\path [fill=white] (attacks.south) circle [radius=0.5pt];
+
+
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
   {\Large\textit{\getDND*{MOTIVATION}}}
   ;
 
 
-\node [anchor=south west,columnbox,minimum height=45mm,
-       dndlabel={Weapon, Armor, \&\ Language Proficiencies},
-      ]
-   (other proficiencies)
-   at (bottom left |- features.south)
-  {\begin{minipage}[t]{\colwidth-10pt}
-    \begin{multicols}{2}
-    \begin{proflist}
-    \itemsep=1pt
-    \otherproficiencies
-    \end{proflist}
-    \end{multicols}
-  \end{minipage}
-  }
-  ;
+%%% left-hand column
 
 \node (passive perception)
       [decorated stub rectangle,width=\colwidth-8mm,height=8mm,
        line width=1.2pt,draw,
-       above right corner=5mm of other proficiencies]
+       below right corner=of proficiencies]
    {\hbox to 0pt{\hss\footnotesize\textsf{PASSIVE WISDOM (PERCEPTION)}\hss}}
    ;
 
@@ -535,6 +543,27 @@
          {?}
       }
       ;
+
+
+\node (other proficiencies top) [below=of passive perception] { };
+
+\setdeltay\sectionheight{other proficiencies top}{bottom left}
+
+\node [anchor=south west,columnbox,minimum height=\sectionheight,
+       dndlabel={Weapon, Armor, \&\ Language Proficiencies},
+      ]
+   (other proficiencies)
+   at (bottom left |- equipment.south)
+  {\begin{minipage}[t]{\colwidth-10pt}
+    \begin{multicols}{2}
+    \begin{proflist}
+    \itemsep=1pt
+    \otherproficiencies
+    \end{proflist}
+    \end{multicols}
+  \end{minipage}
+  }
+  ;
 
 
 %\node [draw,below=of initiative] % {\slotsliteral7};
