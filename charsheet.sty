@@ -3123,3 +3123,25 @@
     }{}%
   }{}%
 }
+
+
+%%% tikz point delta calculations
+
+\newcommand{\pgfpointtikz}[1]{%
+  \tikz@scan@one@point\pgfutil@firstofone(#1)\relax
+   % sets \pgf@x and \pgf@y
+}
+\newcommand\setdeltay[3]{%  #1 := #2.y - #3.y
+  \pgfpointtikz{#2}%
+  #1=\pgf@y
+  \pgfpointtikz{#3}%
+  \advance#1 by -\pgf@y
+}
+%%%%    
+
+\newcommand\setdeltax[3]{%
+  \pgfpointtikz{#2}%
+  #1=\pgf@x
+  \pgfpointtikz{#3}%
+  \advance#1 by -\pgf@x
+}
