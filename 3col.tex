@@ -15,69 +15,9 @@
   \expandafter\def\expandafter#1\expandafter{#1}%
 }
 
-\makeatletter
-
-% https://tex.stackexchange.com/questions/33703/extract-x-y-coordinate-of-an-arbitrary-point-in-tikz
-%
-\newdimen\@XCoord
-\newdimen\@YCoord
-\newdimen\XCoord
-\newdimen\YCoord
-\newcommand*{\ExtractCoordinates}[1]{%
-    \getscale{\@scalefactor}
-    \path [transform canvas] (#1); \pgfgetlastxy{\@XCoord}{\@YCoord}
-    \pgfmathsetlength{\XCoord}{\@XCoord/\@scalefactor}
-    \pgfmathsetlength{\YCoord}{\@YCoord/\@scalefactor}
-}
-
-
-\newcommand\setdeltay[3]{%
-  \ExtractCoordinates{#2}%
-  #1=\YCoord
-  \ExtractCoordinates{#3}%
-  \advance#1 by -\YCoord
-}
-
-%
-% look nice but don't work
-%  
-%%%%    \newcommand{\gettikzxy}[3]{%
-%%%%      \tikz@scan@one@point\pgfutil@firstofone#1\relax
-%%%%      \edef#2{\the\pgf@x}%
-%%%%      \edef#3{\the\pgf@y}%
-%%%%    }
-%%%%    
-\newcommand{\pgfpointtikz}[1]{%
-  \tikz@scan@one@point\pgfutil@firstofone(#1)\relax
-   % sets \pgf@x and \pgf@y
-}
-%%%%    
-%%%%    %% \tikzpoint{<anything TikZ would accept inside (...)>}
-%%%%    %% Expands to a \pgfpoint{<x>}{<y>}
-%%%%    %\newcommand*\tikzpoint[1]{%
-%%%%    %  \begingroup
-%%%%    %  \tikz@scan@one@point\tikzpoint@aux{(#1)}%
-%%%%    %}
-%%%%    %\def\tikzpoint@aux#1{%
-%%%%    %  \endgroup
-%%%%    %  #1% <- this is the \pgfpoint returned by TikZ’s parser
-%%%%    %}
-%%%%    %\makeatother
-%%%%    
-%%%%    
-    \renewcommand\setdeltay[3]{%
-      \pgfpointtikz{#2}%
-      #1=\pgf@y
-      \pgfpointtikz{#3}%
-      \advance#1 by -\pgf@y
-    }
-%%%%    
-
-
-
-\makeatother
 
 \newdimen\sectionheight
+\newdimen\sectionwidth
 
 \newcommand\savemark[1]{{\Large\ifDNDfalse{#1 SAVING}{\(\circ\)}{\(\bullet\)}}}
 
@@ -99,6 +39,9 @@
 \setlength\hpwidth{\colwidth-12pt}
 
 \tikzset{%
+  yseparated/.style={
+     outer ysep=2.5pt,
+  },
   every label node part/.style={
      text width=,
      font=\sffamily\small,
@@ -111,7 +54,7 @@
     font={\rightskip=0pt plus 2em},
     inner ysep=6pt,
     outer xsep=0pt, % x placement is happening by hand
-    outer ysep=3.5pt,
+    yseparated,
     draw, line width=1.2pt,
 %    label footer height=8pt,
   },
@@ -124,11 +67,14 @@
     minimum width=\hpwidth/3-10pt,
     draw, line width=1.2pt,
     fill=white,
-    minimum height=18mm,
+    yseparated,
+    outer xsep=3pt,
+    minimum height=17mm,
     label footer height=8pt,
   },
   dndhits/.style={
     dndmaxhp,
+    yseparated,
     minimum width=\hpwidth/2-5pt,
     minimum height=18mm,
     font=\footnotesize,
@@ -155,7 +101,7 @@
 
   %%%%% banner at top
 
-  \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
+  \node [dndfull,yseparated,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
   \colorlet{splashgray}{white!85.765!black}
@@ -196,12 +142,12 @@
     }
     {}
 
-  %%% central hit-point thing
+  %%% central column: hit-point thing
 
 \Large
 
       \node (hpbackground) 
-        [outer sep=0pt,stub rectangle,fill=hpetc,below=5mm of splash.south,width=\colwidth, minimum height=86mm] 
+        [stub rectangle,fill=hpetc,below=of splash,width=\colwidth, minimum height=87mm] 
        { };
 
       \node (initiative)
@@ -530,13 +476,13 @@
   }
   {\end{tabular*}\hspace*{\attacksInnerSep}\par}
 
-\path (hpbackground.south west) ++(\dndStubRadius, -4mm) coordinate (attacks upper left fit);
-\path (equipment.north east) ++(-\dndStubRadius, 4mm) coordinate (attacks lower right fit);
+%\path (hpbackground.south west) ++(\dndStubRadius, -4mm) coordinate (attacks upper left fit);
+%\path (equipment.north east) ++(-\dndStubRadius, 4mm) coordinate (attacks lower right fit);
 
-\setdeltay\sectionheight{attacks upper left fit}{attacks lower right fit}
+\setdeltay\sectionheight{hpbackground.south}{equipment.north}
 
   \node (attacks) [columnbox,fill=attacks,height=\sectionheight,
-                   anchor=north west,at=(attacks upper left fit)]
+                   anchor=north west,at=(hpbackground.south west)]
    {
     \nodepart{label}ATTACKS\nodepart{text}%
     \centering
@@ -581,9 +527,9 @@
    {\hbox to 0pt{\hss\footnotesize\textsf{PASSIVE WISDOM (PERCEPTION)}\hss}}
    ;
 
-\node [anchor=east,circle,fill=white,
-       width=10mm,height=10mm,line width=1.5pt,draw]
-       at ($(passive perception.west)+(+2mm,0mm)$)
+\node [anchor=east,chamfered rectangle,chamfered rectangle angle=60,fill=white,
+       width=10mm,height=9mm,line width=2.0pt,draw]
+       at ($(passive perception.west)+(+4mm,0mm)$)
       {\ifDNDnonempty{PASSIVE PERCEPTION}
          {\large\textsf{\signed{\rawgetDND{PASSIVE PERCEPTION}}}}
          {?}
