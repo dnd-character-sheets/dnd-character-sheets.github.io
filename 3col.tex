@@ -6,15 +6,80 @@
 %\usepackage{amsmath}
 \colorlet{grayed out}{white!70!black}
 
-\makeatletter
-\newcommand\setdeltay[3]{%
-  \pgfpointanchor{#2}{center}%
-  #1=\pgf@y
-  \pgfpointanchor{#3}{center}%
-  \advance#1 by -\pgf@y
+\newcommand*\getscale[1]{%
+  \begingroup
+    \pgfgettransformentries{\scaleA}{\scaleB}{\scaleC}{\scaleD}{\whatevs}{\whatevs}%
+    \pgfmathsetmacro{#1}{sqrt(abs(\scaleA*\scaleD-\scaleB*\scaleC))}%
+    \expandafter
+  \endgroup
+  \expandafter\def\expandafter#1\expandafter{#1}%
 }
+
+\makeatletter
+
+% https://tex.stackexchange.com/questions/33703/extract-x-y-coordinate-of-an-arbitrary-point-in-tikz
+%
+\newdimen\@XCoord
+\newdimen\@YCoord
+\newdimen\XCoord
+\newdimen\YCoord
+\newcommand*{\ExtractCoordinates}[1]{%
+    \getscale{\@scalefactor}
+    \path [transform canvas] (#1); \pgfgetlastxy{\@XCoord}{\@YCoord}
+    \pgfmathsetlength{\XCoord}{\@XCoord/\@scalefactor}
+    \pgfmathsetlength{\YCoord}{\@YCoord/\@scalefactor}
+}
+
+
+\newcommand\setdeltay[3]{%
+  \ExtractCoordinates{#2}%
+  #1=\YCoord
+  \ExtractCoordinates{#3}%
+  \advance#1 by -\YCoord
+}
+
+%
+% look nice but don't work
+%  
+%%%%    \newcommand{\gettikzxy}[3]{%
+%%%%      \tikz@scan@one@point\pgfutil@firstofone#1\relax
+%%%%      \edef#2{\the\pgf@x}%
+%%%%      \edef#3{\the\pgf@y}%
+%%%%    }
+%%%%    
+\newcommand{\pgfpointtikz}[1]{%
+  \tikz@scan@one@point\pgfutil@firstofone(#1)\relax
+   % sets \pgf@x and \pgf@y
+}
+%%%%    
+%%%%    %% \tikzpoint{<anything TikZ would accept inside (...)>}
+%%%%    %% Expands to a \pgfpoint{<x>}{<y>}
+%%%%    %\newcommand*\tikzpoint[1]{%
+%%%%    %  \begingroup
+%%%%    %  \tikz@scan@one@point\tikzpoint@aux{(#1)}%
+%%%%    %}
+%%%%    %\def\tikzpoint@aux#1{%
+%%%%    %  \endgroup
+%%%%    %  #1% <- this is the \pgfpoint returned by TikZ’s parser
+%%%%    %}
+%%%%    %\makeatother
+%%%%    
+%%%%    
+    \renewcommand\setdeltay[3]{%
+      \pgfpointtikz{#2}%
+      #1=\pgf@y
+      \pgfpointtikz{#3}%
+      \advance#1 by -\pgf@y
+    }
+%%%%    
+
+
+
 \makeatother
 
+\newdimen\sectionheight
+
+\newcommand\savemark[1]{{\Large\ifDNDfalse{#1 SAVING}{\(\circ\)}{\(\bullet\)}}}
 
 \newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
 
@@ -34,11 +99,25 @@
 \setlength\hpwidth{\colwidth-12pt}
 
 \tikzset{%
+  every label node part/.style={
+     text width=,
+     font=\sffamily\small,
+  },
   columnbox/.style={
-    decorated stub rectangle,
-    minimum width=\colwidth,
+    labeled decorated stub rectangle,
+    text width=\colwidth-16pt,
+    inner xsep=8pt,
+    align=justify,
+    font={\rightskip=0pt plus 2em},
+    inner ysep=6pt,
+    outer xsep=0pt, % x placement is happening by hand
+    outer ysep=3.5pt,
     draw, line width=1.2pt,
-    label footer height=8pt,
+%    label footer height=8pt,
+  },
+  narrowcolumnbox/.style={
+    columnbox,
+    text width=36mm-16pt,
   },
   initiative/.style={
     decorated clipped rectangle,
@@ -63,49 +142,6 @@
 \endgroup
 
 
-
-\newsectionenv[width=\colwidth]{magic}{MAGIC}
-  {\begin{minipage}[t]{\hsize}
-   \featurespostspace=0pt
-   \useDNDfont{MAGIC}
-  }
-  {\end{minipage}}
-\newsectionenv[width=\colwidth]{attacks}{ATTACKS}{}{}
-\newsectionenv[width=\colwidth]{features}{FEATURES}{}{}
-\newsectionenv[width=\colwidth,decorated labeled clipped rectangle]{equipment}{EQUIPMENT}
-   {%
-     \medskip
-     \noindent
-     \hspace*{21mm}%
-     \begin{minipage}{\hsize-21mm}
-     \ifnum\rawgetDND{EQUIPMENT COLS}=1
-     \else
-        \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
-     \fi
-     \small
-      \begin{eqlist}%
-     \ifDNDnonempty{EQUIPMENT}{}{%
-       \item \noindent\vrule width 0pt height 0pt depth 8\baselineskip (Placeholder: Equipment will go here.)
-     }%
-   }
-   {\end{eqlist}%
-    \ifnum\rawgetDND{EQUIPMENT COLS}=1
-    \else
-       \end{multicols}
-    \fi
-    \end{minipage}%
-   }
-
-
-\newsectionenv[width=38mm,labeled rectangle]{proficiencies}{PROFICIENCIES}
-   {\par\medskip
-    \begin{minipage}[t]{34mm}
-     \begin{proflist}}
-   {\end{proflist}
-    \end{minipage}}
-
-  
-
 \begin{document}
 
 
@@ -114,17 +150,15 @@
 
 \input{stats}
 
-\setDND{EQUIPMENT COLS}{1}
-
 \noindent
 \begin{charsheet}
+
+  %%%%% banner at top
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
   \colorlet{splashgray}{white!85.765!black}
-
-
 
   \begingroup\sffamily
 
@@ -161,6 +195,8 @@
       ;
     }
     {}
+
+  %%% central hit-point thing
 
 \Large
 
@@ -256,11 +292,10 @@
 
 
 
-\node[columnbox,anchor=north east,dndlabel=Description \&\ Personality,
-      inner sep=10pt,
-    ] (motivation) at (splash.east |- hpbackground.north)
-   {\begin{minipage}{\colwidth-22pt}
-    \newcommand\hangpar{\hangindent=1em \hangafter=1 \par}
+\node[columnbox,anchor=north east] (motivation) at (splash.east |- hpbackground.north)
+   {\nodepart{label}DESCRIPTION \&\ PERSONALITY
+    \nodepart{text}%
+    \newcommand\hangpar{\hangindent=1em \hangafter=1 \par}%
     \smallskip
     Motivation:\\
     \getDND*{MOTIVATION}
@@ -275,9 +310,10 @@
        \bigskip
     }{}
     \hbox{}
-   \end{minipage}
    }
 ;
+
+\draw [fill=red] (motivation.label) circle [radius=4pt];
 
 
 \newenvironment{itemize spells}
@@ -289,37 +325,71 @@
 
 \path (motivation.south west) ++(0mm, -3mm) coordinate (features upper fit);
 
+\setdeltay\sectionheight{motivation.south}{bottom right}
 
-\ifDNDdefined{FEATURES}{
-  \begin{features}[fit=(bottom right)(features upper fit),dndlabel=FEATURES \&\ TRAITS]{}
-  \raggedright
-  \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
-  \getDND{FEATURES}
+\ifDNDdefined{FEATURES}{%
+  \node (features) [columnbox,height=\sectionheight,fill=features,below=of motivation]  {
+    \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
+    \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
+    \getDND{FEATURES}
 
-  \ifDNDnonempty{MAGIC}{%
-    \smallskip
-    \footnotesize
-    \newcommand\spellslevellabel[2]{%
-      \ifnum#1=0
-         Cantrips: You can cast these spells as often as you like using 1~action.
-      \else
-         \end{itemize spells}
-         Level~#1 spells: Cast these spells in any combination%
-         \ifnum#2>0\relax
-            \ #2~times per long rest.
-         \else
-            .
-         \fi
-        Casting is 1~action unless noted.
-      \fi
-      \begin{itemize spells}
-    }
-    \def\described#1#2{\item #1: #2}%
-    \getDND{MAGIC}
-    \end{itemize spells}
-  }{}%
-  \end{features}
+    \ifDNDnonempty{MAGIC}{%
+      \smallskip
+      \footnotesize
+      \newcommand\spellslevellabel[2]{%
+        \ifnum#1=0
+           Cantrips: You can cast these spells as often as you like using 1~action.
+        \else
+           \end{itemize spells}
+           Level~#1 spells: Cast these spells in any combination%
+           \ifnum#2>0\relax
+              \ #2~times per long rest.
+           \else
+              .
+           \fi
+          Casting is 1~action unless noted.
+        \fi
+        \begin{itemize spells}
+      }
+      \def\described#1#2{\item #1: #2}%
+      \getDND{MAGIC}
+      \end{itemize spells}
+    }{}
+  }
+  ;
 }{}
+
+
+%%  \ifDNDdefined{FEATURES}{
+%%    \begin{features}[fit=(bottom right)(features upper fit),dndlabel=FEATURES \&\ TRAITS]{}
+%%    \raggedright
+%%    \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
+%%    \getDND{FEATURES}
+%%  
+%%    \ifDNDnonempty{MAGIC}{%
+%%      \smallskip
+%%      \footnotesize
+%%      \newcommand\spellslevellabel[2]{%
+%%        \ifnum#1=0
+%%           Cantrips: You can cast these spells as often as you like using 1~action.
+%%        \else
+%%           \end{itemize spells}
+%%           Level~#1 spells: Cast these spells in any combination%
+%%           \ifnum#2>0\relax
+%%              \ #2~times per long rest.
+%%           \else
+%%              .
+%%           \fi
+%%          Casting is 1~action unless noted.
+%%        \fi
+%%        \begin{itemize spells}
+%%      }
+%%      \def\described#1#2{\item #1: #2}%
+%%      \getDND{MAGIC}
+%%      \end{itemize spells}
+%%    }{}%
+%%    \end{features}
+%%  }{}
 
 \node (stats background) 
       [fill=stats,width=24mm,height=163mm,anchor=north west]
@@ -347,18 +417,19 @@
        at ($(inspiration.west)+(-2mm,0mm)$)
       {};
 
-\node[columnbox,width=38.002mm,dndlabel=SAVING THROWS,
-      fill=white,below=4mm of inspiration,
+\node[narrowcolumnbox,% width=38.002mm,
+      fill=white,below=4mm of inspiration,align=center,
       height=35mm,
     ]
     (saving throws)
-    {\begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
-      \(\circ\)&Strength\\
-      \(\circ\)&Dexterity\\
-      \(\circ\)&Constitution\\
-      \(\circ\)&Intelligence\\
-      \(\circ\)&Wisdom\\
-      \(\circ\)&Charisma\\
+    {\nodepart{label}SAVING THROWS\nodepart{text}%
+     \begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
+      \savemark{STR}&Strength\\
+      \savemark{DEX}&Dexterity\\
+      \savemark{CON}&Constitution\\
+      \savemark{INT}&Intelligence\\
+      \savemark{WIS}&Wisdom\\
+      \savemark{CHA}&Charisma\\
     \end{tabular}}
   ;
 \node (proficiency bonus)
@@ -374,53 +445,27 @@
 \path (inspiration.south |- stats background.south) coordinate (prof bot fit);
 \path (proficiency bonus.south) ++ (0,-5mm) coordinate (prof top fit);
 
-\iffalse
-   % Proficiencies section (middle top)
-   \begin{proficiencies}[width=38.002mm,height=2in,inner sep=0pt,
-                         fit=(prof bot fit)(prof top fit -| saving throws.west)(prof top fit -| saving throws.east)]
-     \small
-   \ifDNDdefined{PROFICIENCIES}{%
-   {%\tracingmacros=1
-     \long\def\split#1\profskip#2\nil{%
-       \def\profbefore{#1}% before part
-       \def\profafter{#2}%  after part (empty if no \profskip in input)
-     }
-     \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\split\rawgetDND{PROFICIENCIES}\profskip\nil
-     \profbefore
-     \expandafter\gdef\expandafter\otherproficiencies\expandafter{\profafter}%
-   %  \expandafter\def\expandafter\theprofs\expandafter{\rawgetDND{PROFICIENCIES}}%
-   %  \expandafter\profskipCar\expandafter{\theprofs}%
-   }%
-   }{%
-     (None specified)
-   }
-   \end{proficiencies}
-\else
-  \newdimen\profheight
-  \setdeltay\profheight{prof top fit}{prof bot fit}
-  \node (proficiencies) [proficiencies,decorated labeled stub rectangle,draw,width=38.002mm,height=\profheight,
+  \setdeltay\sectionheight{prof top fit}{prof bot fit}
+  \node (proficiencies) [narrowcolumnbox,fill=proficiencies,height=\sectionheight,
         anchor=north east,at=(prof top fit -| saving throws.east),
-inner sep=10pt,
                         ] % at (prof bot fit -| saving throws.west)
-   {\ifDNDdefined{PROFICIENCIES}{%
-     \begin{minipage}[t]{38mm-20pt}
+   {\nodepart{label}PROFICIENCIES\nodepart{text}%
+    \ifDNDdefined{PROFICIENCIES}{%
      \long\def\split#1\profskip#2\nil{%
        \def\profbefore{#1}% before part
        \def\profafter{#2}%  after part (empty if no \profskip in input)
-     }
+     }%
 \begin{proflist}
      \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\split\rawgetDND{PROFICIENCIES}\profskip\nil
      \profbefore
      \expandafter\gdef\expandafter\otherproficiencies\expandafter{\profafter}%
+%\item Long proficiency that really will not fit on one line
 \end{proflist}
-     \end{minipage}%
    }{%
      (None specified)
    }%
-  \nodepart{label}\textsc{Proficiencies}
    }
    ;
-\fi
 
 %\draw [red,fill=green] (proficiencies.north east) circle [radius=3.5pt];
 %\draw [red,fill=blue!10!white] (proficiencies.south west) circle [radius=3.5pt];
@@ -437,15 +482,26 @@ inner sep=10pt,
 \path (hpbackground.south |- features.south) coordinate (bottom center);
 
 \ifDNDdefined{EQUIPMENT}{%
-%  \typeout{equipment, not magic}%
-  {%
-%  \begin{equipment}[fit=(equipment upper left fit)(equipment upper
-%  right fit)(current bounding box.south)]
-  \begin{equipment}[height=124pt,width=\colwidth,anchor=south,at=(bottom center)]
+
+  \node (equipment) [columnbox,decorated labeled clipped rectangle,fill=equipment,
+                     height=124pt,
+                     anchor=south,at=(bottom center)]
+   {%
+     \medskip
+     \noindent
+     \hspace*{21mm}%
+     \begin{minipage}{\hsize-21mm}
+     \small
+      \begin{eqlist}%
+     \ifDNDnonempty{EQUIPMENT}{}{%
+       \item \noindent\vrule width 0pt height 0pt depth 8\baselineskip (Placeholder: Equipment will go here.)
+     }%
      \useDNDfont{EQUIPMENT}%
      \getDND{EQUIPMENT}
-  \end{equipment}
-  }
+    \end{eqlist}%
+     \end{minipage}%
+   }
+  ;
 }
 {\node (equipment) [left of lower corner=of features] {};
 }
@@ -477,7 +533,12 @@ inner sep=10pt,
 \path (hpbackground.south west) ++(\dndStubRadius, -4mm) coordinate (attacks upper left fit);
 \path (equipment.north east) ++(-\dndStubRadius, 4mm) coordinate (attacks lower right fit);
 
-\begin{attacks}[fit=(attacks upper left fit)(attacks lower right fit)]{}
+\setdeltay\sectionheight{attacks upper left fit}{attacks lower right fit}
+
+  \node (attacks) [columnbox,fill=attacks,height=\sectionheight,
+                   anchor=north west,at=(attacks upper left fit)]
+   {
+    \nodepart{label}ATTACKS\nodepart{text}%
     \centering
     \begin{attackstab*}
     \getDND{ATTACKS}
@@ -489,7 +550,8 @@ inner sep=10pt,
     \DNDranges
     \end{minipage}
     \vfill
-\end{attacks}
+   }
+;
 
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
   {\Large\textit{\getDND*{MOTIVATION}}}
