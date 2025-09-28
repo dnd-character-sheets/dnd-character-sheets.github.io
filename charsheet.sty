@@ -39,6 +39,10 @@
   label footer height/.initial=0pt,
 }
 
+% Define minimum label separation key for labeled rectangle shape
+\pgfkeys{/pgf/minimum label sep/.initial=\baselineskip}
+\tikzset{minimum label sep/.code=\pgfkeys{/pgf/minimum label sep={#1}}}
+
 
 \tikzset{
   dndbox/.style={ 
@@ -2078,6 +2082,263 @@
 
   }
 }
+
+%-----------------------------------------------------------------------
+% Labeled rectangle shape: rectangle with two text parts (text and label)
+%-----------------------------------------------------------------------
+
+\newbox\pgfnodepartlabelbox
+
+\pgfdeclareshape{labeled rectangle}
+{%
+  % Declare node parts - PGF will auto-create \pgfnodeparttextbox and \pgfnodepartlabelbox
+  \nodeparts{text,label}%
+  % Saved anchor: northeast corner
+  \savedanchor\northeast{%
+    % Calculate width
+    % Take maximum width of the two parts
+    \pgf@x=\wd\pgfnodeparttextbox%
+    \ifdim\pgf@x<\wd\pgfnodepartlabelbox%
+      \pgf@x=\wd\pgfnodepartlabelbox%
+    \fi%
+    % Add twice inner xsep
+    \pgfmathsetlength\pgf@xc{\pgfkeysvalueof{/pgf/inner xsep}}%
+    \advance\pgf@x by 2\pgf@xc%
+    % Check minimum width
+    \pgfmathsetlength\pgf@xb{\pgfkeysvalueof{/pgf/minimum width}}%
+    \ifdim\pgf@x<\pgf@xb%
+      \pgf@x=\pgf@xb%
+    \fi%
+    % Now calculate right border: 0.5 * max(text_width, label_width) + 0.5 * total_width + outer sep
+    \pgf@x=.5\pgf@x%  half the width of the shape
+    \advance\pgf@x by.5\wd\pgfnodeparttextbox%
+    \pgfmathsetlength\pgf@xa{\pgfkeysvalueof{/pgf/outer xsep}}%
+    \advance\pgf@x by\pgf@xa%
+    %
+    % No need to calculate height
+    \pgf@y=\ht\pgfnodeparttextbox%
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@y by \pgf@ya
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}%
+    \advance\pgf@y by \pgf@ya
+    % Calculate height
+    % Add heights and depths of both parts plus minimum label sep plus twice inner ysep
+%    \pgf@y=\ht\pgfnodeparttextbox%
+%    \advance\pgf@y by\dp\pgfnodeparttextbox%
+%    \advance\pgf@y by\ht\pgfnodepartlabelbox%
+%    \advance\pgf@y by\dp\pgfnodepartlabelbox%
+%    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/minimum label sep}}%
+%    \advance\pgf@y by\pgf@yc%
+%    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/inner ysep}}%
+%    \advance\pgf@y by 2\pgf@yc%
+%    % Check minimum height
+%    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/minimum height}}%
+%    \ifdim\pgf@y<\pgf@yb%
+%      \pgf@y=\pgf@yb%
+%    \fi%
+%    % Calculate upper border: text positioned at inner ysep from north
+%    \pgf@y=.5\pgf@y%
+%    \advance\pgf@y by.5\ht\pgfnodeparttextbox%
+%    \advance\pgf@y by-.5\dp\pgfnodeparttextbox%
+%    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}%
+%    \advance\pgf@y by\pgf@ya%
+  }%
+  % Saved anchor: southwest corner
+  \savedanchor\southwest{%
+    % Calculate width (same as northeast)
+    \pgf@x=\wd\pgfnodeparttextbox%
+    \ifdim\pgf@x<\wd\pgfnodepartlabelbox%
+      \pgf@x=\wd\pgfnodepartlabelbox%
+    \fi%
+    \pgfmathsetlength\pgf@xc{\pgfkeysvalueof{/pgf/inner xsep}}%
+    \advance\pgf@x by 2\pgf@xc%
+    \pgfmathsetlength\pgf@xb{\pgfkeysvalueof{/pgf/minimum width}}%
+    \ifdim\pgf@x<\pgf@xb%
+      \pgf@x=\pgf@xb%
+    \fi%
+    % Calculate left border
+    \pgf@x=-.5\pgf@x%
+    \pgf@xa=\wd\pgfnodeparttextbox%
+    \advance\pgf@x by 0.5\pgf@xa
+    \pgfmathsetlength\pgf@xa{\pgfkeysvalueof{/pgf/outer xsep}}%
+    \advance\pgf@x by-\pgf@xa%
+    % Calculate height (same as northeast)
+    \pgf@y=\ht\pgfnodeparttextbox%
+    \advance\pgf@y by\dp\pgfnodeparttextbox%
+    \advance\pgf@y by\ht\pgfnodepartlabelbox%
+    \advance\pgf@y by\dp\pgfnodepartlabelbox%
+    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/minimum label sep}}%
+    \advance\pgf@y by\pgf@yc%
+    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@y by 2\pgf@yc%
+    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/minimum height}}%
+    \ifdim\pgf@y<\pgf@yb%
+      \pgf@y=\pgf@yb%
+    \fi%
+    % Calculate lower border: label positioned at inner ysep from south
+    \pgf@y=-\pgf@y%
+    \advance\pgf@y by\ht\pgfnodeparttextbox%
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@y by \pgf@ya%
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}%
+    \advance\pgf@y by \pgf@ya%
+  }%
+  %
+  % Anchors
+  %
+  % Center anchor: geometric center of entire shape
+  \anchor{center}{
+    \pgf@process{\northeast}%
+    \pgf@xa=.5\pgf@x%
+    \pgf@ya=.5\pgf@y%
+    \pgf@process{\southwest}%
+    \pgf@x=.5\pgf@x%
+    \pgf@y=.5\pgf@y%
+    \advance\pgf@x by \pgf@xa%
+    \advance\pgf@y by \pgf@ya%
+  }%
+  % Text anchor: reference point of main text (baseline at left edge)
+  \anchor{text}{%
+    \pgf@x=0pt%
+    \pgf@y=0pt%
+  }%
+  % Label anchor: reference point of label text (baseline at left edge)
+  \anchor{label}{%
+    % Position label at inner ysep from south edge
+    \pgf@process\northeast
+    \pgf@xa=\pgf@x
+    \pgf@process{\southwest}%
+    \pgf@x=0.5\pgf@x
+    \advance\pgf@x by 0.5\pgf@xa
+    \advance\pgf@x by -0.5\wd\pgfnodepartlabelbox
+    %
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@y by\pgf@ya%
+    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}% maybe???
+    \advance\pgf@y by\pgf@ya%
+    \advance\pgf@y by\dp\pgfnodepartlabelbox%
+  }%
+  % Standard rectangle anchors
+  \anchor{north}{
+    \pgf@process{\southwest}%
+    \pgf@xa=.5\pgf@x%
+    \pgf@process{\northeast}%
+    \pgf@x=.5\pgf@x%
+    \advance\pgf@x by \pgf@xa%
+  }%
+  \anchor{south}{
+    \pgf@process{\northeast}%
+    \pgf@xa=.5\pgf@x%
+    \pgf@process{\southwest}%
+    \pgf@x=.5\pgf@x%
+    \advance\pgf@x by \pgf@xa%
+  }%
+  \anchor{east}{
+    \pgf@process{\southwest}%
+    \pgf@ya=.5\pgf@y%
+    \pgf@process{\northeast}%
+    \pgf@y=.5\pgf@y%
+    \advance\pgf@y by \pgf@ya%
+  }%
+  \anchor{west}{
+    \pgf@process{\northeast}%
+    \pgf@ya=.5\pgf@y%
+    \pgf@process{\southwest}%
+    \pgf@y=.5\pgf@y%
+    \advance\pgf@y by \pgf@ya%
+  }%
+  \anchor{north east}{\northeast}%
+  \anchor{north west}{
+    \pgf@process{\northeast}%
+    \pgf@ya=\pgf@y%
+    \pgf@process{\southwest}%
+    \pgf@y=\pgf@ya%
+  }%
+  \anchor{south east}{
+    \pgf@process{\southwest}%
+    \pgf@ya=\pgf@y%
+    \pgf@process{\northeast}%
+    \pgf@y=\pgf@ya%
+  }%
+  \anchor{south west}{\southwest}%
+  \anchor{mid}{
+    \pgf@process{\pgf@anchor@labeled@rectangle@center}%
+    \pgfmathsetlength\pgf@y{.5ex}%
+  }%
+  \anchor{base}{
+    \pgf@process{\pgf@anchor@labeled@rectangle@center}%
+    \pgf@y=0pt%
+  }%
+  % Background path (simple rectangle)
+  \backgroundpath{%
+    \pgfpathrectanglecorners{\southwest}{\northeast}%
+  }%
+}
+
+\pgfdeclareshape{labeled stub rectangle}{%
+  % Inherit anchors from rectangle
+  \inheritsavedanchors[from=labeled rectangle]
+  \inheritanchor[from=labeled rectangle]{center}
+  \inheritanchor[from=labeled rectangle]{north}
+  \inheritanchor[from=labeled rectangle]{south}
+  \inheritanchor[from=labeled rectangle]{east}
+  \inheritanchor[from=labeled rectangle]{west}
+  \inheritanchor[from=labeled rectangle]{north east}
+  \inheritanchor[from=labeled rectangle]{north west}
+  \inheritanchor[from=labeled rectangle]{south east}
+  \inheritanchor[from=labeled rectangle]{south west}
+  \inheritanchor[from=labeled rectangle]{text}
+  \inheritanchor[from=labeled rectangle]{label}
+  
+%  \anchor{text}{%
+%    \pgf@x=0pt
+%    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+%  }
+
+  % Background path
+  \backgroundpath{%
+    % Get NESW coordinates
+    \setmy@NEWSC
+    \setmy@halves
+    % Get stub radius
+    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
+    % Check if stub radius is too large
+    \ifdim\my@stubradius>\my@halfwidth
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the width (\the\my@halfwidth)}%
+    \fi
+    \ifdim\my@stubradius>\my@halfheight
+      \pgferror{stub radius (\the\my@stubradius) is larger than half the height (\the\my@halfheight)}%
+    \fi
+    % Draw the path with cut corners
+    % Start at bottom edge, after SW corner bite
+    \pgfpathmoveto{\pgfpoint{\my@W+\my@stubradius}{\my@S}}%
+    % Line to SE corner bite start
+    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
+    % SE corner arc: we're west of corner, need to go north
+    % Arc goes counterclockwise from current position
+    \pgfpatharc{180}{90}{\my@stubradius}%
+    % Now at radius north of SE corner
+    % Line to NE corner bite start
+    \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
+    % NE corner arc: we're south of corner, need to go west
+    \pgfpatharc{270}{180}{\my@stubradius}%
+    % Now at radius west of NE corner
+    % Line to NW corner bite start
+    \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
+    % NW corner arc: we're east of corner, need to go south
+    \pgfpatharc{0}{-90}{\my@stubradius}%
+    % Now at radius south of NW corner
+    % Line to SW corner bite start
+    \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
+    % SW corner arc: we're north of corner, need to go east
+    \pgfpatharc{90}{0}{\my@stubradius}%
+    % Now back at starting point
+    \pgfpathclose%
+  }
+}
+
+
+
 
 \pgfkeys{
   /runwidth/.cd,
