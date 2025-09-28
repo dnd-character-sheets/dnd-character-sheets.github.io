@@ -72,7 +72,7 @@
   {\end{minipage}}
 \newsectionenv[width=\colwidth]{attacks}{ATTACKS}{}{}
 \newsectionenv[width=\colwidth]{features}{FEATURES}{}{}
-\newsectionenv[width=\colwidth,decorated clipped rectangle]{equipment}{EQUIPMENT}
+\newsectionenv[width=\colwidth,decorated labeled clipped rectangle]{equipment}{EQUIPMENT}
    {%
      \medskip
      \noindent
@@ -398,12 +398,12 @@
 \else
   \newdimen\profheight
   \setdeltay\profheight{prof top fit}{prof bot fit}
-  \node (proficiencies) [labeled stub rectangle,draw,width=38.002mm,height=\profheight,
+  \node (proficiencies) [proficiencies,decorated labeled stub rectangle,draw,width=38.002mm,height=\profheight,
         anchor=north east,at=(prof top fit -| saving throws.east),
+inner sep=10pt,
                         ] % at (prof bot fit -| saving throws.west)
    {\ifDNDdefined{PROFICIENCIES}{%
-     \begin{minipage}[t]{20mm}
-     {\color{blue}\hrule}%
+     \begin{minipage}[t]{38mm-20pt}
      \long\def\split#1\profskip#2\nil{%
        \def\profbefore{#1}% before part
        \def\profafter{#2}%  after part (empty if no \profskip in input)
@@ -417,18 +417,18 @@
    }{%
      (None specified)
    }%
-  \nodepart{label}\vrule height 30pt width 1pt depth 0pt X: \textsc{Proficiencies}
+  \nodepart{label}\textsc{Proficiencies}
    }
    ;
 \fi
 
-\draw [red,fill=green] (proficiencies.north east) circle [radius=3.5pt];
-\draw [red,fill=blue!10!white] (proficiencies.south west) circle [radius=3.5pt];
-\draw [red,fill=yellow] (proficiencies.text) circle [radius=3.5pt];
-\draw [red,fill=red!20!white] (proficiencies.label) circle [radius=3.5pt];
-
-\draw [fill=red] (prof bot fit) circle [radius=5pt];
-\draw [fill=red] (prof top fit) rectangle ++(5pt,5pt);
+%\draw [red,fill=green] (proficiencies.north east) circle [radius=3.5pt];
+%\draw [red,fill=blue!10!white] (proficiencies.south west) circle [radius=3.5pt];
+%\draw [red,fill=yellow] (proficiencies.text) circle [radius=3.5pt];
+%\draw [red,fill=red!20!white] (proficiencies.label) circle [radius=3.5pt];
+%
+%\draw [fill=red] (prof bot fit) circle [radius=5pt];
+%\draw [fill=red] (prof top fit) rectangle ++(5pt,5pt);
 
 %\node (motivation) [below=of proficiencies] 
 %  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
