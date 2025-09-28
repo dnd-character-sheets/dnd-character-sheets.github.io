@@ -1255,12 +1255,7 @@
 \newdimen\my@halfheight
 \newdimen\my@offset
 
-\def\setmy@NS{%
-  \southwest
-  \my@S=\pgf@y%
-  \northeast
-  \my@N=\pgf@y%
-}
+
 
 
 
@@ -1788,8 +1783,7 @@
 
 
 
-%%  I'd like you to use \pgfdeclareshape to define a shape for me.  I want
-%%  something called "stub rectangle".  It is a rectangle except each
+%%  A "stub rectangle" is a rectangle except each
 %%  corner is replaced with a corner circle, as if a circular bite had
 %%  been taken out of each corner.  Get the radius from a tikz key `stub
 %%  radius`, and let it default to 5pt.
@@ -1814,7 +1808,7 @@
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
   
-  \anchor{text}{%
+  \anchor{text}{% XXX BOGUS TODO
     \pgf@x=0pt
     \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
   }
