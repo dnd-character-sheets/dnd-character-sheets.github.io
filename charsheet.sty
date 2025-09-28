@@ -1266,11 +1266,13 @@
 
 
 % Macro to set NESW coordinates from southwest/northeast
+%   (moves corners inward according to outer sep)
 \def\setmy@NEWSC{%
-  \southwest
+  \pgfpointadd{\southwest}{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}
+                                    {\pgfkeysvalueof{/pgf/outer ysep}}}%
   \my@W=\pgf@x%
   \my@S=\pgf@y%
-  \northeast
+  \pgfpointadd{\northeast}{\pgfpointscale{-1}{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}{\pgfkeysvalueof{/pgf/outer ysep}}}}%
   \my@E=\pgf@x%
   \my@N=\pgf@y%
   % Calculate center
@@ -2271,8 +2273,10 @@
     \pgf@y=0pt%
   }%
   % Background path (simple rectangle)
-  \backgroundpath{%
-    \pgfpathrectanglecorners{\southwest}{\northeast}%
+  \backgroundpath{
+    \pgfpathrectanglecorners
+    {\pgfpointadd{\southwest}{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}{\pgfkeysvalueof{/pgf/outer ysep}}}}
+    {\pgfpointadd{\northeast}{\pgfpointscale{-1}{\pgfpoint{\pgfkeysvalueof{/pgf/outer xsep}}{\pgfkeysvalueof{/pgf/outer ysep}}}}}
   }%
 }
 
