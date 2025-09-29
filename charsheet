@@ -1370,6 +1370,7 @@ local main = function(arg)
     
     -- Validate document before processing
     validate_document(doc)
+    extend(doc)
     if #global_validation_errors > 0 then
       if fields.strict then
         eprintf("Validation failed in strict mode. Exiting.\n")
@@ -1380,8 +1381,6 @@ local main = function(arg)
         doc['VALIDATION ERRORS'] = global_validation_errors
       end
     end
-    
-    extend(doc)
     if type(doc)=="table" then
       emit(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout)
     end
