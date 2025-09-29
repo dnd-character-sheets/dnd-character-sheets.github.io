@@ -1173,14 +1173,16 @@ local function extend(doc)
     end
   end
 
+  local level = tonumber(doc.LEVEL) or 1
+  local prof_bonus = 2 + math.floor((level - 1) / 4)
+
+
   -- Handle SPELL DC calculation and validation
   if not empty(doc.MAGIC) then
     local modifier = casting_modifier[class]
     if modifier and not empty(doc[modifier]) then
       -- Calculate spell DC: 8 + proficiency bonus + ability modifier
       local ability_score = tonumber(doc[modifier])
-      local level = tonumber(doc.LEVEL) or 1
-      local prof_bonus = 2 + math.floor((level - 1) / 4)
       local ability_modifier = math.floor((ability_score - 10) / 2)
       
       update('SPELL DC', 8 + prof_bonus + ability_modifier)
@@ -1203,14 +1205,22 @@ local function extend(doc)
       end
     end
     
-    local level = tonumber(doc.LEVEL) or 1
-    local prof_bonus = 2 + math.floor((level - 1) / 4)
+    local proficient_perceiver = false
+    if can_be 'table'(doc.PROFICIENCIES) then
+      for _, p in ipairs(doc.PROFICIENCIES) do
+        if type(p) == 'string' and p:lower():find 'perception' then
+          proficient_perceiver = true
+          break
+        end
+      end
+    end
 
     if not has_expertise then
       -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
       local wis_score = tonumber(doc.WIS)
       local wis_modifier = math.floor((wis_score - 10) / 2)
-      local calculated_pp = 10 + wis_modifier + prof_bonus
+      local calculated_pp =
+        10 + wis_modifier + (proficient_perceiver and prof_bonus or 0)
       
       if not empty(doc['PASSIVE PERCEPTION']) then
         -- Validate existing PASSIVE PERCEPTION
