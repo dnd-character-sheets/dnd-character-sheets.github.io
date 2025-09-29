@@ -2091,11 +2091,12 @@
 %-----------------------------------------------------------------------
 
 \newbox\pgfnodepartlabelbox
+\newbox\pgfnodepartctextbox
 
 \pgfdeclareshape{labeled rectangle}
 {%
   % Declare node parts - PGF will auto-create \pgfnodeparttextbox and \pgfnodepartlabelbox
-  \nodeparts{text,label}%
+  \nodeparts{text,label,ctext}%
   % Saved anchor: northeast corner
   \savedanchor\northeast{%
     % Calculate width
@@ -2124,27 +2125,6 @@
     \advance\pgf@y by \pgf@ya
     \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}%
     \advance\pgf@y by \pgf@ya
-    % Calculate height
-    % Add heights and depths of both parts plus minimum label sep plus twice inner ysep
-%    \pgf@y=\ht\pgfnodeparttextbox%
-%    \advance\pgf@y by\dp\pgfnodeparttextbox%
-%    \advance\pgf@y by\ht\pgfnodepartlabelbox%
-%    \advance\pgf@y by\dp\pgfnodepartlabelbox%
-%    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/minimum label sep}}%
-%    \advance\pgf@y by\pgf@yc%
-%    \pgfmathsetlength\pgf@yc{\pgfkeysvalueof{/pgf/inner ysep}}%
-%    \advance\pgf@y by 2\pgf@yc%
-%    % Check minimum height
-%    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/minimum height}}%
-%    \ifdim\pgf@y<\pgf@yb%
-%      \pgf@y=\pgf@yb%
-%    \fi%
-%    % Calculate upper border: text positioned at inner ysep from north
-%    \pgf@y=.5\pgf@y%
-%    \advance\pgf@y by.5\ht\pgfnodeparttextbox%
-%    \advance\pgf@y by-.5\dp\pgfnodeparttextbox%
-%    \pgfmathsetlength\pgf@ya{\pgfkeysvalueof{/pgf/outer ysep}}%
-%    \advance\pgf@y by\pgf@ya%
   }%
   % Saved anchor: southwest corner
   \savedanchor\southwest{%
@@ -2206,11 +2186,58 @@
     \pgf@y=0pt%
   }%
   % Label anchor: reference point of label text (baseline at left edge)
+  \saveddimen\labeldy{%
+     \pgf@x=\ht\pgfnodepartlabelbox
+     \advance\pgf@x by \dp\pgfnodepartlabelbox
+  }
+  \saveddimen\ctextdy{%
+     \pgf@x=\ht\pgfnodepartctextbox
+     \advance\pgf@x by \dp\pgfnodepartctextbox
+  }
+  \anchor{ctext}{%
+    \setmy@NEWSC
+    \pgf@ya=\my@N
+    \advance\pgf@ya by -\my@S  % total height
+    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@ya by -\pgf@yb
+    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/outer ysep}}%
+    \advance\pgf@ya by -\pgf@yb
+    \advance\pgf@ya by -\ctextdy
+    \advance\pgf@ya by -\labeldy
+    % need some label sep also?
+    % \pgf@ya is twice surrounding space
+%    \showthe\pgf@ya
+    \pgf@x=0.5\my@W
+    \advance\pgf@x by 0.5\my@E
+    \advance\pgf@x by -0.5\wd\pgfnodepartctextbox
+    \pgf@y=\my@N
+    \advance\pgf@y by -0.5\pgf@ya
+    \advance\pgf@y by -\ht\pgfnodepartctextbox
+    % at this point it *is* vertically centered, but it doesn't *look*
+    % vertically centered
+    \pgf@ya=\labeldy
+    \advance\pgf@y by -0.20\pgf@ya % tweak it
+  }
+  \anchor{labeltop}{%
+    \setmy@NEWSC
+    \pgf@y=\my@S
+    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/inner ysep}}%
+    \advance\pgf@y by \pgf@yb
+    \pgfmathsetlength\pgf@yb{\pgfkeysvalueof{/pgf/outer ysep}}%
+    \advance\pgf@y by \pgf@yb
+    \advance\pgf@y by \labeldy
+    % need some label sep also?
+    % \pgf@ya is twice surrounding space
+%    \showthe\pgf@ya
+    \pgf@x=0.5\my@W
+    \advance\pgf@x by 0.5\my@E
+    \advance\pgf@x by -0.5\wd\pgfnodepartctextbox
+  }
   \anchor{label}{%
     % Position label at inner ysep from south edge
     \pgf@process\northeast
     \pgf@xa=\pgf@x
-    \pgf@process{\southwest}%
+    \pgf@process\southwest
     \pgf@x=0.5\pgf@x
     \advance\pgf@x by 0.5\pgf@xa
     \advance\pgf@x by -0.5\wd\pgfnodepartlabelbox
@@ -2281,7 +2308,7 @@
 }
 
 \pgfdeclareshape{labeled stub rectangle}{%
-  \nodeparts{text,label}%
+  \nodeparts{text,label,ctext}%
   \inheritsavedanchors[from=labeled rectangle]
   \inheritanchor[from=labeled rectangle]{center}
   \inheritanchor[from=labeled rectangle]{north}
@@ -2293,7 +2320,9 @@
   \inheritanchor[from=labeled rectangle]{south east}
   \inheritanchor[from=labeled rectangle]{south west}
   \inheritanchor[from=labeled rectangle]{text}
+  \inheritanchor[from=labeled rectangle]{ctext}
   \inheritanchor[from=labeled rectangle]{label}
+  \inheritanchor[from=labeled rectangle]{labeltop}
   
 %  \anchor{text}{%
 %    \pgf@x=0pt
@@ -2344,7 +2373,7 @@
 
 
 \pgfdeclareshape{decorated labeled stub rectangle}{%
-  \nodeparts{text,label}%
+  \nodeparts{text,label,ctext}%
   % Inherit everything from labeled stub rectangle
   \inheritsavedanchors[from=labeled stub rectangle]
   \inheritanchor[from=labeled stub rectangle]{center}
@@ -2357,7 +2386,9 @@
   \inheritanchor[from=labeled stub rectangle]{south east}
   \inheritanchor[from=labeled stub rectangle]{south west}
   \inheritanchor[from=labeled stub rectangle]{text}
+  \inheritanchor[from=labeled stub rectangle]{ctext}
   \inheritanchor[from=labeled stub rectangle]{label}
+  \inheritanchor[from=labeled stub rectangle]{labeltop}
   \inheritbackgroundpath[from=labeled stub rectangle]
   
   % Add decorations before the background
@@ -2410,7 +2441,7 @@
 }
 
 \pgfdeclareshape{labeled clipped rectangle}{%
-  \nodeparts{text,label}%
+  \nodeparts{text,label,ctext}%
   \inheritsavedanchors[from=labeled rectangle]
   \inheritanchor[from=labeled rectangle]{center}
   \inheritanchor[from=labeled rectangle]{north}
@@ -2422,7 +2453,9 @@
   \inheritanchor[from=labeled rectangle]{south east}
   \inheritanchor[from=labeled rectangle]{south west}
   \inheritanchor[from=labeled rectangle]{text}
+  \inheritanchor[from=labeled rectangle]{ctext}
   \inheritanchor[from=labeled rectangle]{label}
+  \inheritanchor[from=labeled rectangle]{labeltop}
   
   \anchor{text}{%
     \pgf@x=0pt
@@ -2459,7 +2492,7 @@
 }
 
 \pgfdeclareshape{decorated labeled clipped rectangle}{%
-  \nodeparts{text,label}
+  \nodeparts{text,label,ctext}
   \inheritsavedanchors[from=labeled clipped rectangle]
   \inheritanchor[from=labeled clipped rectangle]{center}
   \inheritanchor[from=labeled clipped rectangle]{north}
@@ -2471,7 +2504,9 @@
   \inheritanchor[from=labeled clipped rectangle]{south east}
   \inheritanchor[from=labeled clipped rectangle]{south west}
   \inheritanchor[from=labeled clipped rectangle]{text}
+  \inheritanchor[from=labeled clipped rectangle]{ctext}
   \inheritanchor[from=labeled clipped rectangle]{label}
+  \inheritanchor[from=labeled clipped rectangle]{labeltop}
   \inheritbackgroundpath[from=labeled clipped rectangle]
   
   % Add decorations before the background
@@ -2657,13 +2692,20 @@
   \fi
 }
 
+\newif\ifdndstatshield
+\dndstatshieldtrue
+
+\DeclareOption{nostatshield}{\dndstatshieldfalse}
+
 \newcommand\fullstatbox[5][]{% location name number modifier saving-throw
   \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
 %  \dnddecorate[stats]{#2}
   \dndtoplabel{#2}{\tiny#2}
   \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
-  \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
-            at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+  \ifdndstatshield
+    \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
+              at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+  \fi
 }
 
 \newcommand\blankstatbox[3][]{% location name saving-throw
@@ -3145,3 +3187,14 @@
   \pgfpointtikz{#3}%
   \advance#1 by -\pgf@x
 }
+
+
+
+
+% Provide defaults or handle unknown options if you want
+\DeclareOption*{%
+  \PackageWarning{mystuff}{Unknown option `\CurrentOption'}%
+}
+
+% Actually process all options
+\ProcessOptions\relax
