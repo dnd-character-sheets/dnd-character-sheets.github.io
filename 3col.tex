@@ -44,7 +44,7 @@
   },
   every label node part/.style={
      text width=,
-     font=\sffamily\small,
+     font=\sffamily\footnotesize,
   },
   columnbox/.style={
     labeled decorated stub rectangle,
@@ -72,8 +72,13 @@
     minimum height=17mm,
     label footer height=8pt,
   },
-  dndhits/.style={
+  dndmaxhp2/.style={
     dndmaxhp,
+    labeled decorated clipped rectangle,
+    minimum height=20mm,
+  },
+  dndhits/.style={
+    dndmaxhp2,
     yseparated,
     minimum width=\hpwidth/2-5pt,
     minimum height=18mm,
@@ -177,10 +182,9 @@
 
 %      \draw [thick,black,fill=yellow] (speed.labeltop) circle [radius=5pt];
 
-      \node [dndmaxhp,below=of initiative,dndlabel=CURRENT HIT
-             POINTS,minimum height=20mm,width=\hpwidth] 
+      \node [dndmaxhp2,below=of initiative,width=\hpwidth] 
          (maxhp)
-         {}
+         {\nodepart{label}CURRENT HIT POINTS}
          ;
       \node [below=of maxhp.north,font=\scriptsize] {%
          \hbox to \hpwidth{%
@@ -188,18 +192,17 @@
                \hrulefill~~~}}
        ;
 
-      \node[dndmaxhp,below=of maxhp,minimum height=20mm,width=\hpwidth,dndlabel=TEMPORARY HIT POINTS]
+      \node[dndmaxhp2,below=of maxhp,minimum height=20mm,width=\hpwidth]
         (temphp)
-        {}
+        {\nodepart{label}TEMPORARY HIT POINTS}
         ;
 
 
 
       \node (hitdice)
-             [dndhits,below left corner=of temphp,
-             dndlabel=HIT DICE,label footer height=-2pt,
-             font=\Large] 
-         {\getDND*{HIT DICE}}
+             [dndhits,below left corner=of temphp] 
+         {\nodepart{label}HIT DICE\nodepart{ctext}
+            \vrule height 8mm width 0pt\Large\getDND*{HIT DICE}}
          ;
 
      \ifDNDdefined{LEVEL}{
@@ -208,11 +211,11 @@
      }{}
 
       \node (death saves)
-            [dndhits,fill=white,below right corner=of temphp,
-             dnd/label={DEATH SAVES},font=\small] 
-         { \tiny\begin{tabular}{@{}r@{\hskip1pt}l@{}}
+            [dndhits,below right corner=of temphp,font=\small] 
+         { \nodepart{label}DEATH SAVES\nodepart{ctext}
+            \tiny\begin{tabular}{@{}r@{\hskip1pt}l@{}}
             \raisebox{1pt}{SUCCESSES}&\slotsliteral3\\[2pt]
-            \raisebox{1pt}{FAILURES}&\slotsliteral3\\
+            \vrule width 0pt depth 5pt\raisebox{1pt}{FAILURES}&\slotsliteral3\\
             \end{tabular}
           }
          ;
@@ -312,38 +315,6 @@
   }
   ;
 }{}
-
-
-%%  \ifDNDdefined{FEATURES}{
-%%    \begin{features}[fit=(bottom right)(features upper fit),dndlabel=FEATURES \&\ TRAITS]{}
-%%    \raggedright
-%%    \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
-%%    \getDND{FEATURES}
-%%  
-%%    \ifDNDnonempty{MAGIC}{%
-%%      \smallskip
-%%      \footnotesize
-%%      \newcommand\spellslevellabel[2]{%
-%%        \ifnum#1=0
-%%           Cantrips: You can cast these spells as often as you like using 1~action.
-%%        \else
-%%           \end{itemize spells}
-%%           Level~#1 spells: Cast these spells in any combination%
-%%           \ifnum#2>0\relax
-%%              \ #2~times per long rest.
-%%           \else
-%%              .
-%%           \fi
-%%          Casting is 1~action unless noted.
-%%        \fi
-%%        \begin{itemize spells}
-%%      }
-%%      \def\described#1#2{\item #1: #2}%
-%%      \getDND{MAGIC}
-%%      \end{itemize spells}
-%%    }{}%
-%%    \end{features}
-%%  }{}
 
 \setnodewidth\sectionwidth[statbox]
 \node (stats background) 
@@ -586,88 +557,6 @@ upper corner=of stats background] {\scriptsize xxx};
   }
   ;
 
-
-%\node [draw,below=of initiative] % {\slotsliteral7};
-%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
-
-
-\firsttwoDNDnonempty{\upperdndlabel}{\upperdndcontents}{\lowerdndlabel}{\lowerdndcontents}{SORCERY POINTS,SENSES,SPELL DC,PASSIVE PERCEPTION}
-
-%\typeout{upper is \upperdndlabel; lower is \lowerdndlabel}
-
-%{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
-
-%\node [draw,below=of maxhp] % {\slotsliteral7};
-%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-
-% slots not OK here
-
-
-%\ifDNDdefined{SPELL DC}
-%  {
-%      \node (spell dc)
-%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-%         {\Large\textsf{13}}
-%         ;
-%
-%      \dndlabel{spell dc}{SPELL DC}
-%  }
-%  {
-%      \node (passive perception)
-%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-%         {\Large\textsf{\getDND*{PASSIVE PERCEPTION}}}
-%         ;
-%
-%      \dndlabel{passive perception}{\pplabel}
-%  }
-%
-%\node (senses)
-%   [dndmaxhp,left=10mm of curhp,width=24mm] 
-%%   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
-%   {\parbox{20mm}{\centering\itshape\getDND*{SENSES}}}
-%   ;
-%\dndlabel{senses}{\scriptsize SENSES}
-%
-%
-
-\def\sp{SORCERY POINTS}
-\ifx\upperdndlabel\sp
-  \edef\upperdndcontents{\noexpand\stackslots{\rawgetDND{SORCERY POINTS}}}%
-\fi
-
-\def\se{SENSES}
-\ifx\upperdndlabel\se
-  \def\upperdndcontents{\parbox{20mm}{\centering\rmfamily\small\textit{\getDND{SENSES}}}}%
-\fi
-
-%\show\pp
-%%\show\upperdndlabel
-%
-%  \node (upper val)
-%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-%         {\Large\textsf{\upperdndcontents}}
-%         ;
-%
-%      \ifDNDfont{\upperdndlabel}
-%         {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
-%         {\dndlabel{upper val}{\upperdndlabel}}
-%
-%\ifx\lowerdndlabel\empty\else
-%
-%   \node (lower val)
-%      [dndmaxhp,left=10mm of curhp,width=24mm] 
-%      {\Large\textsf{\lowerdndcontents}}
-%      ;
-%      \ifDNDfont{\lowerdndlabel}
-%         {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
-%         {\dndlabel{lower val}{\lowerdndlabel}}
-%
-%\fi
-
-
-%\node [draw,above=of features] {\parbox{4in}{7 slots: minimum \minrows{7} rows\par \stackslots7\par\hbox{\slotsliteral3}}};
-
-
 \end{charsheet}
 
 % Equipment Weight Summary Page
@@ -782,15 +671,20 @@ upper corner=of stats background] {\scriptsize xxx};
 
 % Three capacity boxes centered below top
 \path (slotstitle.north east) ++(20pt,0)
- node (carrying) [dndencumbrance,fill=carrying,anchor=north west,dndlabel=CARRYING CAPACITY]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
+ node (carrying) [dndencumbrance,fill=carrying,anchor=north west]
+  {\nodepart{label}CARRYING CAPACITY\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}
+  };
 
-\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying,dndlabel=ENCUMBERED] 
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
+\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying] 
+  {\nodepart{label}ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
   STR?}};
 
-\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
+\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered]
+  {\nodepart{label}HEAVILY ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}
+  };
 
 
 \node (e warning) [below=of encumbered] {\small(Speed drops by 10~ft)};
