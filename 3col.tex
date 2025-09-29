@@ -1,5 +1,5 @@
 \documentclass[10pt]{article}
-\usepackage{charsheet}
+\usepackage[nostatshield]{charsheet}
 \usepackage{multicol}
 \usepackage{enumitem}
 \usetikzlibrary{fit}
@@ -18,6 +18,9 @@
 
 \newdimen\sectionheight
 \newdimen\sectionwidth
+
+\newdimen\tmpheight
+\newdimen\tmpwidth
 
 \newcommand\savemark[1]{{\Large\ifDNDfalse{#1 SAVING}{\(\circ\)}{\(\bullet\)}}}
 
@@ -63,7 +66,7 @@
     text width=36mm-16pt,
   },
   initiative/.style={
-    decorated clipped rectangle,
+    labeled decorated clipped rectangle,
     minimum width=\hpwidth/3-10pt,
     draw, line width=1.2pt,
     fill=white,
@@ -143,6 +146,8 @@
     }
     {}
 
+  \path (splash.south |- bottom right) coordinate (bottom center);
+
   %%% central column: hit-point thing, equipment, attacks fill
 
 \Large
@@ -154,22 +159,24 @@
 \begin{scope}[node distance=7pt]
 
       \node (initiative)
-            [initiative,below=of hpbackground.north,dndlabel=\noexpand\footnotesize INITIATIVE] 
-         {\getDND*{INITIATIVE}}
+            [initiative,below=of hpbackground.north] 
+         {\nodepart{label}\footnotesize INITIATIVE\nodepart{ctext}\Large\getDND*{INITIATIVE}}
          ;
 
-       \node (ac) [initiative,shield,innershield,draw,ultra thick,left=of initiative,width=15mm,
-                   dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
+       \node (ac) [initiative,shield,innershield,draw,ultra thick,left=of initiative,width=12mm,
                    font=\Large,
                    label footer height=12pt,
             ]
       {\getDND*{ARMOR CLASS}}
       ;
 
-      \node (speed)
-            [initiative,right=of initiative,dndlabel=SPEED] 
-         {\getDND*{SPEED}}
+      \node [above=1pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}};
+
+      \node (speed) [initiative,right=of initiative]
+         {\nodepart{ctext}\getDND*{SPEED}\nodepart{label}SPEED}
          ;
+
+%      \draw [thick,black,fill=yellow] (speed.labeltop) circle [radius=5pt];
 
       \node [dndmaxhp,below=of initiative,dndlabel=CURRENT HIT
              POINTS,minimum height=20mm,width=\hpwidth] 
@@ -261,7 +268,6 @@
    }
 ;
 
-\draw [fill=red] (motivation.label) circle [radius=4pt];
 
 
 \newenvironment{itemize spells}
@@ -339,13 +345,15 @@
 %%    \end{features}
 %%  }{}
 
+\node [statbox,draw=none,fill=none] (sample statbox) {};
+\setdeltax\sectionwidth{sample statbox.east}{sample statbox.west}
 \node (stats background) 
-      [fill=stats,width=25.3mm,height=166mm,anchor=north west]
+      [fill=stats,width=\sectionwidth+4mm,height=163mm,anchor=north west]
       at (splash.west |- hpbackground.north)
  { };
 
-\path (stats background.north west) ++(-0.3mm,-2mm) coordinate (first stat);
-\renewcommand\nextstatloc{inside north west corner=of first stat}
+\path (stats background.north west) ++(2mm,-2.2mm) coordinate (first stat);
+\renewcommand\nextstatloc{anchor=north west,at=(first stat)}
 
 
 
@@ -356,13 +364,27 @@
 \dndstat{WISDOM}{WIS}
 \dndstat{CHARISMA}{CHA}
 
+\node (dummy left column) [columnbox,shape=rectangle,draw=none,anchor=west] 
+   at (stats background.west)
+   {}
+   ;
 
+\node (point) [right=of stats background] { };
+
+\setdeltax\tmpwidth{dummy left column.east}{point}
 
 % slots OK here
 
+\node (inspo right) [rectangle,red,thick,draw=none,width=\tmpwidth,right of
+upper corner=of stats background] {\scriptsize xxx};
+
 \node (inspiration)
-      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=38.001mm,height=8mm,
-       right of upper corner=3.3mm of stats background]
+      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=\tmpwidth-2mm,
+      height=8mm,
+      anchor=north east, at=(inspo right.east),
+%      anchor=north west,at=(stats background.north east),
+%       right of upper corner=4mm of stats background
+      ]
    {\hbox to 0pt{\hss\hspace*{6mm}\small\textsf{INSPIRATION}\hss}}
    ;
 \node [anchor=west,proficiencies,fill=white,decorated stub rectangle,
@@ -370,12 +392,13 @@
        at ($(inspiration.west)+(-2mm,0mm)$)
       {};
 
-\node[narrowcolumnbox,% width=38.002mm,
-      fill=white,below=2mm of inspiration,align=center,
+\node[columnbox,text width=,width=\tmpwidth,% width=38.002mm,
+      fill=white,below=3.5mm of inspiration,align=center,
       height=35mm,
     ]
     (saving throws)
     {\nodepart{label}SAVING THROWS\nodepart{text}%
+     \vspace*{3pt}
      \begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
       \savemark{STR}&Strength\\
       \savemark{DEX}&Dexterity\\
@@ -386,20 +409,23 @@
     \end{tabular}}
   ;
 \node (proficiency bonus)
-      [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
-       below=6mm of saving throws]
-   {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
+      [proficiencies,decorated stub rectangle,width=\tmpwidth-2mm,height=8mm,
+       below right corner=4mm of saving throws]
+   {\hbox to 0pt{\hss\hspace*{6.2mm}\scriptsize\textsf{PROFICIENCY BONUS}\hss}}
    ;
-\node [anchor=west,proficiencies,circle,
+\node (proficiency circle) [anchor=west,proficiencies,circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
        at ($(proficiency bonus.west)+(-2mm,0mm)$)
       {\large\textsf{+\arabic{proficiency bonus}}};
+
+\draw [line width=0.7pt] (proficiency circle.center) circle [radius=4mm];
+
 
 \path (proficiency bonus.south) ++ (0,-3mm) coordinate (prof top fit);
 \path (inspiration.south |- stats background.south) coordinate (prof bot fit);
 
   \setdeltay\sectionheight{prof top fit}{prof bot fit}
-  \node (proficiencies) [narrowcolumnbox,fill=proficiencies,height=\sectionheight,
+  \node (proficiencies) [columnbox,text width=\tmpwidth-16pt,fill=proficiencies,height=\sectionheight,
         anchor=north east,at=(prof top fit -| saving throws.east),
 %below=3mm of proficiency bonus,
                         ] % at (prof bot fit -| saving throws.west)
@@ -433,7 +459,6 @@
 %  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
 %  ;
 
-\path (hpbackground.south |- features.south) coordinate (bottom center);
 
 \ifDNDdefined{EQUIPMENT}{%
 
@@ -441,6 +466,7 @@
                      minimum height=124pt, % make enough room for coins
                      anchor=south,at=(bottom center)]
    {%
+     \nodepart{label}EQUIPMENT\nodepart{text}
      \medskip
      \noindent
      \hspace*{21mm}%
@@ -550,18 +576,18 @@
 \setdeltay\sectionheight{other proficiencies top}{bottom left}
 
 \node [anchor=south west,columnbox,minimum height=\sectionheight,
-       dndlabel={Weapon, Armor, \&\ Language Proficiencies},
       ]
    (other proficiencies)
-   at (bottom left |- equipment.south)
-  {\begin{minipage}[t]{\colwidth-10pt}
+   at (stats background.west |- bottom center)
+  {\nodepart{label}\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES
+   \nodepart{text}%
+   \multicolsep=0pt
     \begin{multicols}{2}
     \begin{proflist}
     \itemsep=1pt
     \otherproficiencies
     \end{proflist}
     \end{multicols}
-  \end{minipage}
   }
   ;
 
