@@ -327,6 +327,16 @@ local validate_attacks = listof(validate_attack_entry)
 local validate_features = listof(validate_feature_entry)
 local validate_magic = listof(validate_magic_entry)
 
+local function table_as_colon_string(entry)
+  if type(entry) == 'table' then
+    local key, value = next(entry)
+    if next(entry, key) == nil and can_be 'string'(key) and can_be 'string'(value)
+    then
+      return stringf('%s: %s', tostring(key), tostring(value))
+    end
+  end
+end
+
 -- Validate proficiencies structure (custom logic)
 local function validate_proficiency_entry(entry)
   if entry == lyaml.null then
@@ -342,8 +352,8 @@ local function validate_proficiency_entry(entry)
       if not can_be 'boolean'(entry.proficiencies_skip) then 
         return false, "proficiencies_skip must be boolean"
       end
-    else
-      return false, "unknown table entry (expected proficiencies_skip)"
+    elseif not table_as_colon_string(entry) then
+      return false, "unknown table entry"
     end
   else
     return false, "proficiency is neither string nor empty"
@@ -653,6 +663,8 @@ local function render(v)
       return string.format('%s Armor', v.Armor)
     elseif v.Weapons then
       return string.format('%s Weapons', v.Weapons)
+    elseif table_as_colon_string(v) then
+      return table_as_colon_string(v)
     else
       return 'whut?: ' .. (require 'inspect'.image(v))
     end
