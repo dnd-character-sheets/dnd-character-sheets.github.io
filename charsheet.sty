@@ -10,6 +10,7 @@
 \RequirePackage{ifthen}
 \RequirePackage{suffix}
 \RequirePackage{xstring}
+\RequirePackage{ifmtarg}
 \usetikzlibrary{calc}
 \usetikzlibrary{positioning}
 \usetikzlibrary{shapes}
@@ -3215,6 +3216,13 @@
 \newcommand\@setnodewidth[2]{\setdeltax#1{#2.east}{#2.west}}
 \newcommand\setnodewidth{\@setproperty\@setnodewidth}
 
+\newdimen\@proptmp
+\newcommand\@settextwidth[2]{%
+   \@setnodewidth{#1}{#2}%
+   \setdeltax\@proptmp{#2.text}{#2.west}%
+   \advance#1 by -2\@proptmp
+}
+\newcommand\settextwidth{\@setproperty\@settextwidth}
 
 
 
