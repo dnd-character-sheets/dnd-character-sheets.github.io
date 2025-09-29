@@ -41,6 +41,9 @@
 \newlength\hpwidth
 \setlength\hpwidth{\colwidth-12pt}
 
+\newdimen\textmargin % amount subtracted from each side to get `text width`
+\textmargin=8pt
+
 \tikzset{%
   yseparated/.style={
 %     outer ysep=2.5pt,
@@ -51,7 +54,7 @@
   },
   columnbox/.style={
     labeled decorated stub rectangle,
-    text width=\colwidth-16pt,
+    text width=\colwidth-2\textmargin,
     inner xsep=8pt,
     align=justify,
     font={\rightskip=0pt plus 2em},
@@ -63,7 +66,7 @@
   },
   narrowcolumnbox/.style={
     columnbox,
-    text width=36mm-16pt,
+    text width=36mm-2\textmargin,
   },
   initiative/.style={
     labeled decorated clipped rectangle,
@@ -99,9 +102,11 @@
 
 \input{stats}
 
+\def\mynodedistance{7pt}
+
 \noindent
 \begin{charsheet}
-  \tikzset{node distance=7pt}
+  \tikzset{node distance=\mynodedistance}
 
   %%%%% banner at top
 
@@ -156,7 +161,7 @@
         [stub rectangle,yseparated,fill=hpetc,below=of splash,width=\colwidth, minimum height=87mm] 
        { };
 
-\begin{scope}[node distance=7pt]
+\begin{scope}[node distance=\mynodedistance]
 
       \node (initiative)
             [initiative,below=of hpbackground.north] 
@@ -345,8 +350,7 @@
 %%    \end{features}
 %%  }{}
 
-\node [statbox,draw=none,fill=none] (sample statbox) {};
-\setdeltax\sectionwidth{sample statbox.east}{sample statbox.west}
+\setnodewidth\sectionwidth[statbox]
 \node (stats background) 
       [fill=stats,width=\sectionwidth+4mm,height=163mm,anchor=north west]
       at (splash.west |- hpbackground.north)
@@ -421,14 +425,10 @@ upper corner=of stats background] {\scriptsize xxx};
 \draw [line width=0.7pt] (proficiency circle.center) circle [radius=4mm];
 
 
-\path (proficiency bonus.south) ++ (0,-3mm) coordinate (prof top fit);
-\path (inspiration.south |- stats background.south) coordinate (prof bot fit);
-
-  \setdeltay\sectionheight{prof top fit}{prof bot fit}
-  \node (proficiencies) [columnbox,text width=\tmpwidth-16pt,fill=proficiencies,height=\sectionheight,
-        anchor=north east,at=(prof top fit -| saving throws.east),
-%below=3mm of proficiency bonus,
-                        ] % at (prof bot fit -| saving throws.west)
+  \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
+  \advance\sectionheight by -3mm
+  \node (proficiencies) [columnbox,text width=\tmpwidth-2\textmargin,fill=proficiencies,height=\sectionheight,
+        anchor=south east,at=(stats background.south -| saving throws.east)]
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
     \ifDNDdefined{PROFICIENCIES}{%
      \long\def\split#1\profskip#2\nil{%
@@ -846,7 +846,7 @@ upper corner=of stats background] {\scriptsize xxx};
 \foreach \deltay in {1,2,...,\numexpr\value{greenLines}+\value{yellowLines}+\value{redLines}\relax} {
   \draw (slotstitle.south west)
     ++(8pt,-\deltay*2*\tenthstoneheight)
-    -- ++(\slotblockwidth-16pt,0)
+    -- ++(\slotblockwidth-2\textmargin,0)
    ;
 }
 
