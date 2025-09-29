@@ -414,27 +414,27 @@ local field_specs = {
   -- Each entry has: p (predicate), fs (field list), m (message), required (boolean)
   
   -- Required ability scores (1-20)
-  { p = inrange(1, 20), m = '%s must be a number in the range 1..20', required = true,
+  { p = inrange(1, 20), m = '%s must be a number in the range 1..20',
     fs = {'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'} },
   
   -- Required basic character info
-  { p = nonempty_string, m = '%s is required and must be a non-empty string', required = true,
+  { p = optional(nonempty_string), m = '%s must be a non-empty string',
     fs = {'CHARACTER NAME', 'PLAYER NAME', 'RACE', 'BACKGROUND'} },
   
   -- Required numeric stats
-  { p = positive, m = '%s is required and must be a positive number', required = true,
+  { p = positive, m = '%s is required and must be a positive number',
     fs = {'MAX HP', 'ARMOR CLASS', 'PASSIVE PERCEPTION'} },
   
   -- Required structured data
-  { p = optional(validate_equipment), m = '%s must be a valid equipment structure', required = true,
+  { p = optional(validate_equipment), m = '%s must be a valid equipment structure',
     fs = {'EQUIPMENT'} },
-  { p = optional(validate_attacks), m = '%s must be a valid attacks list', required = true,
+  { p = optional(validate_attacks), m = '%s must be a valid attacks list',
     fs = {'ATTACKS'} },
-  { p = optional(validate_features), m = '%s must be a valid features list', required = true,  
+  { p = optional(validate_features), m = '%s must be a valid features list',  
     fs = {'FEATURES'} },
-  { p = optional(validate_magic), m = '%s must be a valid magic structure', required = true,
+  { p = optional(validate_magic), m = '%s must be a valid magic structure',
     fs = {'MAGIC'} },
-  { p = optional(validate_proficiencies), m = '%s must be a valid proficiencies list', required = true,
+  { p = optional(validate_proficiencies), m = '%s must be a valid proficiencies list',
     fs = {'PROFICIENCIES'} },
     
   -- Optional fields that can be present
