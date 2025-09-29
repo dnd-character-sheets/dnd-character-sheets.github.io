@@ -3189,6 +3189,33 @@
 }
 
 
+%%%% parameter through nodes or dummy nodes
+\newcommand\@getproperty[1]{%
+  \let\@thegetmacro#1%
+  \@applygetmacro
+}
+\newcommand\@applygetmacro[1][]{%
+  \@ifmtarg{#1}%
+    {\@thegetmacro}% node name is coming
+    {\node [#1,draw=none,fill=none] (dummy #1) {}; \@thegetmacro{dummy #1}}%
+}
+
+\newcommand\@setproperty[2]{% {\settingmacro}{\destination dimen}
+  \let\@thesetmacro#1%
+  \let\@thesetdest#2%
+  \@applysetmacro
+}
+\newcommand\@applysetmacro[1][]{%
+  \@ifmtarg{#1}%
+    {\expandafter\@thesetmacro\@thesetdest}% node name is coming
+    {\node [#1,draw=none,fill=none] (dummy #1) {};
+     \expandafter\@thesetmacro\@thesetdest{dummy #1}}%
+}
+
+\newcommand\@setnodewidth[2]{\setdeltax#1{#2.east}{#2.west}}
+\newcommand\setnodewidth{\@setproperty\@setnodewidth}
+
+
 
 
 % Provide defaults or handle unknown options if you want
