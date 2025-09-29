@@ -279,15 +279,27 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: haricot
+        Version: iceberg
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
-        <div>
+        <div style="margin-bottom: 0.5em;">
             <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
             <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
             <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
+        </div>
+        <div style="margin-bottom: 0.5em;">
             <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
+            <div style="display: inline-block; margin-left: 1em; vertical-align: middle;">
+                <label style="margin-right: 1em;">
+                    <input type="radio" name="layout" value="silverpine" checked>
+                    Silverpine Watch style (one narrow column, one wide)
+                </label>
+                <label>
+                    <input type="radio" name="layout" value="3col">
+                    Three narrow columns
+                </label>
+            </div>
         </div>
         <div>
             <label>
@@ -927,6 +939,26 @@
             };
         }
 
+        function radioField(yamlKey, name) {
+            return {
+                populate(data) {
+                    const value = data[yamlKey];
+                    if (value !== undefined && value !== null) {
+                        const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
+                },
+                capture(data) {
+                    const checkedRadio = document.querySelector(`input[name="${name}"]:checked`);
+                    if (checkedRadio) {
+                        data[yamlKey] = checkedRadio.value;
+                    }
+                }
+            };
+        }
+
         // Complex field factories
         function arrayField(yamlKey, selector, itemProcessor = null) {
             return {
@@ -1211,7 +1243,10 @@
             textField('AGE', '#age'),
             textField('DESCRIPTION', '#description'),
             textField('MOTIVATION', '#motivation'),
-            
+
+            // Layout control
+            radioField('LAYOUT', 'layout'),
+
             // Checkbox
             checkboxField('PREGENERATED', '#pregenerated'),
             
