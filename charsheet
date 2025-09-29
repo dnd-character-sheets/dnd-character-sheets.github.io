@@ -35,7 +35,7 @@ end
 local fields = require 'flags'.parser()
   :bool('standalone as s'):help('emit just definitions, not full file')
   :output_file('output as o'):help('where to write if not stdout')
-  :string('type as t', 'silverpine'):help('template for character sheet')
+  :string('layout as t as l'):help('template for character sheet')
   :bool('verbose as v')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
   :bool('strict'):help('halt on field validation errors (default: warn and continue)')
@@ -43,6 +43,8 @@ local fields = require 'flags'.parser()
          :help('directory where character-sheet templates live') 
   :numarg(1)
   :parse(arg)
+
+local default_layout = 'silverpine'
 
 local vprintf = fields.verbose and eprintf or function() end
 
@@ -1259,8 +1261,8 @@ function osquote(s)
   end
 end
 
-local function fill_template(assignments)
-  local pathname = stringf('%s/%s.tex', fields.templates, fields.type)
+local function fill_template(assignments, layout)
+  local pathname = stringf('%s/%s.tex', fields.templates, layout)
   local template, msg = contents(pathname)
   if not template then
     eprintf('%s\n', msg)
@@ -1304,8 +1306,8 @@ if [[ -r "$dir/sheet.pdf" ]]; then
 fi
 ]=]
 
-local function emit(assignments)
-  local output = fields.standalone and assignments or fill_template(assignments)
+local function emit(assignments, layout)
+  local output = fields.standalone and assignments or fill_template(assignments, layout)
 
   if not fields.output then
     io.stdout:write(assignments, '\n')
@@ -1359,7 +1361,7 @@ local main = function(arg)
     
     extend(doc)
     if type(doc)=="table" then
-      emit(convert_mapping(doc))
+      emit(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout)
     end
   end
 end

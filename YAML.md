@@ -524,6 +524,20 @@ FEATURES:
 
 ---
 
+## **LAYOUT** (USER)
+**Usage**: Defines the character sheet layout style
+**Type**: String
+**Template Usage**: Controls which template layout is used for PDF generation
+**Valid Options**:
+- `silverpine` - Silverpine Watch style (one narrow column, one wide)
+- `3col` - Three narrow columns
+**Default**: If omitted, uses default layout (handled by charsheet script)
+**Examples**:
+- `LAYOUT: silverpine`
+- `LAYOUT: 3col`
+
+---
+
 ## **LEVEL** (USER/CALCULATED)
 **Usage**: Character's level
 **Type**: Number
