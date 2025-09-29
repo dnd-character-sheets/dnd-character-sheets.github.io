@@ -285,6 +285,7 @@
 \node (features top) [below=of motivation] {};
 \setdeltay\sectionheight{features top}{bottom right}
 
+
 \ifDNDdefined{FEATURES}{%
   %%% XXX drops below bottom right
   \node (features) [columnbox,height=\sectionheight,fill=features,below=of motivation]  {
@@ -464,7 +465,7 @@ upper corner=of stats background] {\scriptsize xxx};
 
   \node (equipment) [columnbox,decorated labeled clipped rectangle,fill=equipment,
                      minimum height=124pt, % make enough room for coins
-                     anchor=south,at=(bottom center)]
+                     anchor=south,at=(bottom center |- features.south)]
    {%
      \nodepart{label}EQUIPMENT\nodepart{text}
      \medskip
@@ -578,7 +579,7 @@ upper corner=of stats background] {\scriptsize xxx};
 \node [anchor=south west,columnbox,minimum height=\sectionheight,
       ]
    (other proficiencies)
-   at (stats background.west |- bottom center)
+   at (stats background.west |- features.south)
   {\nodepart{label}\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES
    \nodepart{text}%
    \multicolsep=0pt
