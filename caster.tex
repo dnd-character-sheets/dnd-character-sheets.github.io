@@ -15,65 +15,71 @@
 
 
 
-\newcommand\equipcolsstart{%
-  \ifDNDfalse{EQUIPMENT 2UP}{\typeout{no 2up}}{\begin{multicols}{2}}%
-}
-\newcommand\equipcolsend{%
-  \ifDNDfalse{EQUIPMENT 2UP}{}{\end{multicols}}%
-}
-
 \newsectionenv[]{magic}{MAGIC}
   {\begin{minipage}[t]{\hsize}
    \featurespostspace=0pt
    \useDNDfont{MAGIC}
   }
   {\end{minipage}}
-\newsectionenv{attacks}{ATTACKS}{}{}
-\newsectionenv{features}{FEATURES}{}{}
-\newsectionenv[width=70mm,decorated clipped rectangle]{equipment}{EQUIPMENT}
-   {%
-     \medskip
-     \noindent
-     \hspace*{21mm-5pt}%
-     \begin{minipage}{\hsize-21mm-5pt}
-     \ifnum\rawgetDND{EQUIPMENT COLS}=1
-     \else
-        \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
-     \fi
-     \small
-      \begin{eqlist}%
-     \ifDNDnonempty{EQUIPMENT}{}{%
-       \item \noindent\vrule width 0pt height 0pt depth 8\baselineskip (Placeholder: Equipment will go here.)
-     }%
-   }
-   {\end{eqlist}%
-    \ifnum\rawgetDND{EQUIPMENT COLS}=1
-    \else
-       \end{multicols}
-    \fi
-    \end{minipage}%
-   }
 
+\newdimen\textmargin % amount subtracted from each side to get `text width`
+\textmargin=8pt
 
-\newsectionenv[width=38mm]{proficiencies}{PROFICIENCIES}
-   {\medskip
-    \begin{minipage}[t][138mm][t]{\hsize}
-     \begin{proflist}}
-   {\end{proflist}
-    \end{minipage}}
+\newdimen\mynodedistance
+\mynodedistance=7pt
+
+\tikzset{%
+  every label node part/.style={
+     text width=,
+     font=\sffamily\footnotesize,
+  },
+  widecolumn/.style={
+    labeled decorated stub rectangle,
+    text width=134mm-2\textmargin,
+    inner xsep=8pt,
+    align=justify,
+    font={\rightskip=0pt plus 2em},
+    inner ysep=6pt,
+    outer xsep=0pt, % x placement is happening by hand
+    draw, line width=1.2pt,
+    stub radius=2.3mm,
+  },
+  narrowcolumn/.style={
+    widecolumn,
+    text width=36mm-2\textmargin,
+  },
+  initiative/.style={
+    labeled decorated clipped rectangle,
+%    minimum width=\hpwidth/3-10pt,
+    draw, line width=1.2pt,
+    fill=white,
+%    yseparated,
+    outer xsep=3pt,
+    minimum height=17mm,
+    label footer height=8pt,
+  },
+  dndhits/.style={
+    dndmaxhp,
+%    labeled decorated clipped rectangle,
+%    yseparated,
+%    minimum width=\hpwidth/2-5pt,
+    minimum height=18mm,
+    font=\footnotesize,
+  }
+}
 
   
 
 \begin{document}
 
 
-\newcommand\nextstatloc{inside north west corner=of stats background}
 
 
 \input{stats}
 
 \noindent
 \begin{charsheet}
+  \tikzset{node distance=\mynodedistance}
 
   \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
@@ -120,15 +126,24 @@
 
 \Large
 
+    \setnodeheight\sectionheight[dndmaxhp]
+    \setnodeheight\tmpheight[dndhits]
+    \advance\sectionheight by \tmpheight
+    \advance\sectionheight by 3\mynodedistance
+    \def\hdwidth{20mm}
+    \def\chpwidth{72mm}
+    \setlength\sectionwidth{\hdwidth+\chpwidth+3\mynodedistance}
+
       \node (hpbackground) 
-        [outer sep=0pt,fill=hpetc,below right corner=of splash,width=102mm, minimum height=46mm] 
+        [outer sep=0pt,stub rectangle,fill=hpetc,below right corner=of splash,
+         width=\sectionwidth, height=\sectionheight] 
        { };
 
       \node (hitdice)
-             [dndhits,width=20mm,inside south east corner=of hpbackground,
-             dndlabel=HIT DICE,label footer height=-8pt,
+             [dndhits,labeled decorated clipped rectangle,width=\hdwidth,inside south east corner=of hpbackground,
              font=\Large] 
-         {\tracingmacros=1 \getDND*{HIT DICE}}
+         {\nodepart{label}HIT DICE\nodepart{ctext}
+            \vrule height 8mm width 0pt\getDND*{HIT DICE}}
          ;
 
      \ifDNDdefined{LEVEL}{
@@ -137,19 +152,19 @@
      }{}
 
       \node (curhp)
-            [dndhits,fill=white,width=72mm,left=of hitdice,
-             dnd/label={CURRENT HIT POINTS}] 
-         { }
+            [dndhits,labeled decorated clipped rectangle,fill=white,width=\chpwidth,left=of hitdice,
+             ] 
+         { \nodepart{label}CURRENT HIT POINTS }
          ;
 
-      \node [dndmaxhp,above left corner=of curhp,dndlabel=MAX HP] 
+      \node [dndmaxhp,above left corner=of curhp] 
          (maxhp)
-         {\getDND*{MAX HP}}
+         {\nodepart{label}MAX HP\nodepart{ctext}\getDND*{MAX HP}}
          ;
 
       \node (initiative)
-            [dndmaxhp,right=of maxhp,dndlabel=INITIATIVE] 
-         {\getDND*{INITIATIVE}}
+            [dndmaxhp,right=of maxhp] 
+         {\nodepart{label}INITIATIVE\nodepart{ctext}\getDND*{INITIATIVE}}
          ;
 
 %\node [draw,above=of initiative] % {\slotsliteral7};
@@ -157,46 +172,50 @@
 
 
       \node (speed)
-            [dndmaxhp,right=of initiative,dndlabel=SPEED] 
-         {\getDND*{SPEED}}
+            [dndmaxhp,right=of initiative] 
+         {\nodepart{label}SPEED\nodepart{ctext}\getDND*{SPEED}}
          ;
 
 
        \node (ac) [dndmaxhp,shield,innershield,draw,ultra thick,right=of speed,width=15mm,
-                   dndlabel={\noexpand\tinystacklabel{ARMOR}{CLASS}},
                    font=\Large,
                    label footer height=12pt,
             ]
       {\getDND*{ARMOR CLASS}}
       ;
+      \node [above=3pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}}
+      ;
+
 
   \endgroup
 
-
-\begin{attacks}[below right corner=of hpbackground]{}
+ \node (attacks) [widecolumn,fill=attacks,below right corner=of hpbackground]
+    {\nodepart{label}ATTACKS\nodepart{text}
     \centering
     \begin{attackstab}
     \getDND{ATTACKS}
     \end{attackstab}
-\end{attacks}
+    \par
+    }
+  ;
+
 
 
 % \node (attacks) at (hpbackground.south west) {A};
 
 \ifDNDdefined{MAGIC}
 {
-\begin{magic}[below=of attacks]{}
-\centering
-\newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
-\begin{featurestab}
-% Magic section (right side, middle)
-\rawgetDND{MAGIC}
-%  \textsf{CANTRIPS}\\
-%  Friends& Does a thing\\
-%  Ray of Frost& asdf\\
-%  \multicolumn2{l}{\textsf{1st-LEVEL SPELLS \spellslots{3}}}\\
-\end{featurestab}
-\end{magic}
+  \node (magic) [widecolumn,below=of attacks,fill=magic]
+    {\nodepart{label}MAGIC\nodepart{text}
+     \featurespostspace=0pt
+     \centering
+     \useDNDfont{MAGIC}
+     \newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
+     \begin{featurestab}
+     \rawgetDND{MAGIC}
+     \end{featurestab}
+    }
+  ;
 }
 {\path (attacks.south east) coordinate (magic);} % anchor is to east
 
@@ -204,16 +223,31 @@
   \ifDNDdefined{MAGIC}
      {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}}
      {\def\where{below right corner=of attacks}}%
-  \beginExpand{features}[\where]{}
-  \let\described=\feature
-  \begin{featurestab}
-  \getDND{FEATURES}
-  \end{featurestab}
-  \end{features}
+%  \beginExpand{features}[\where]{}
+%  \let\described=\feature
+%  \begin{featurestab}
+%  \getDND{FEATURES}
+%  \end{featurestab}
+%  \end{features}
+   \expandafter\node\expandafter[\where,widecolumn,fill=features] 
+     (features)
+     {\nodepart{label}FEATURES\nodepart{text}
+      \let\described=\feature
+      \begin{featurestab}
+      \getDND{FEATURES}
+      \end{featurestab}
+     };
 }{}
 
+\setnodewidth\sectionwidth[statbox]
+\setnodeheight\sectionheight[statbox]
 \node (stats background) 
-      [fill=stats,width=24mm,height=163mm,below left corner=of splash] { };
+      [fill=stats,width=\sectionwidth+2\mynodedistance+0.5\savingshieldwidth,
+       height=6\sectionheight+7\mynodedistance+24mm+5mm, % % * 4mm, ellipses
+       below left corner=of splash
+      ] { };
+
+\newcommand\nextstatloc{inside north west corner=5mm and \mynodedistance of stats background}
 
 \dndstat{STRENGTH}{STR}
 \dndstat{DEXTERITY}{DEX}
@@ -222,46 +256,116 @@
 \dndstat{WISDOM}{WIS}
 \dndstat{CHARISMA}{CHA}
 
+\path (stats background.north -| attacks.west) ++(-\mynodedistance,0)
+   coordinate (prof ne);
+
+
+% \draw [red,thick] (prof circle west) circle [radius=3pt];
+
+
+
 % slots OK here
 
+\setnodeheight\tmpheight[coin]
+\setlength\sectionheight{4\tmpheight+5\mynodedistance}
+   % make room for four coin boxes
+
 \ifDNDdefined{EQUIPMENT}{%
-%  \typeout{equipment, not magic}%
-  {%
-   \ifDNDdefined{MAGIC}{\def\where{left of lower corner=of features}}
-                       {\def\where{below right corner=of features,width=\dndrightwidth}}%
-
-  \beginExpand{equipment}[\where]
-     \useDNDfont{EQUIPMENT}%
-     \getDND{EQUIPMENT}
-  \end{equipment}
-  }
+   \setnodewidth\sectionwidth[widecolumn]
+   \ifDNDdefined{MAGIC}
+        {\def\where{left of lower corner=of features}
+         \setdeltax\sectionwidth{magic.west}{stats background.west}
+         \advance\sectionwidth by -\mynodedistance
+        }
+        {\def\where{below right corner=of features,width=\dndrightwidth}}
+   \multicolsep=0pt
+   \expandafter\node\expandafter
+       [\where,widecolumn,fill=equipment,decorated labeled clipped rectangle,
+        minimum height=\sectionheight,
+        text width=\sectionwidth-2\textmargin,
+       ]
+       (equipment)
+     {
+       \nodepart{label}EQUIPMENT\nodepart{text}
+%       \medskip
+       \noindent
+       \hspace*{21mm-5pt}%  leave room for coins on left
+       \begin{minipage}{\hsize-21mm-5pt}
+       \ifnum\rawgetDND{EQUIPMENT COLS}=1
+       \else
+          \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
+       \fi
+       \small
+       \useDNDfont{EQUIPMENT}%
+        \begin{eqlist}%
+       \ifDNDnonempty{EQUIPMENT}
+          {\getDND{EQUIPMENT}}
+          {\item (Placeholder: Equipment will go here.)}%
+       \end{eqlist}
+       \ifnum\rawgetDND{EQUIPMENT COLS}=1
+       \else
+         \end{multicols}
+       \fi
+       \end{minipage}%
+     }
+    ;
+}{
+  \node (equipment) [draw=none,fill=none,left of lower corner=of features] {};
 }
-{\node (equipment) [left of lower corner=of features] {};
-}
 
-\path (equipment.north west) +(3mm,-4mm) coordinate (coin top left);
-
+\path (equipment.north west) +(3mm,-\mynodedistance) coordinate (coin top left);
 
 \coin{cp}{Cu}{\color{grayed out}\getDND*{CP}}
 \coin{sp}{Ag}{\color{grayed out}\getDND*{SP}}
 \coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
 \coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
   
+\setdeltax\sectionwidth{attacks.west}{stats background.east}
 \node (proficiency bonus)
-      [proficiencies,decorated stub rectangle,width=38.001mm,height=8mm,
-       right of upper corner=3.5mm of stats background]
-   {\hbox to 0pt{\hss\hspace*{6mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
+      [proficiencies,decorated stub rectangle,
+       width=\sectionwidth-2\mynodedistance-5mm+2mm, % room for circle
+       height=8mm,
+       anchor=north east,
+       at=(prof ne),
+      ]
+   {\hbox to 0pt{\hss\hspace*{3.5mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
    ;
+\path (stats background.east) ++(\mynodedistance,0) ++(-2.5pt,0) coordinate (prof circle west);
 \node [anchor=west,proficiencies,circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
-       at ($(proficiency bonus.west)+(-2mm,0mm)$)
+       at (prof circle west |- proficiency bonus.center)
       {\large\textsf{+\arabic{proficiency bonus}}};
 
-% Proficiencies section (middle top)
-\begin{proficiencies}[below=of proficiency bonus,width=38.002mm,height=3in]
-  \small
-\getDND*{PROFICIENCIES}
-\end{proficiencies}
+% proficiencies bottom should be stats background bottom or equipment
+% top, whatever is higher
+
+
+  \setdeltay\tmpheight{stats background.south}{equipment.north}
+  \ifdim\tmpheight>0pt
+    \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
+    \advance\sectionheight by -\mynodedistance
+  \else
+    \setdeltay\sectionheight{proficiency bonus.south}{equipment.north}
+    \advance\sectionheight by -2\mynodedistance
+  \fi
+
+
+  \node (proficiencies)
+      [widecolumn,fill=proficiencies,
+       text width=\sectionwidth-2\mynodedistance-2\textmargin,
+       height=\sectionheight,
+       below right corner=of proficiency bonus,
+      ]
+   {\nodepart{label}PROFICIENCIES\nodepart{text}
+     \vspace*{-2pt} % too much inner ysep at the top
+     \begin{proflist}
+     \getDND*{PROFICIENCIES}
+     \end{proflist}
+   }
+ ;
+
+
+
 
 %\node (motivation) [below=of proficiencies] 
 %  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
@@ -271,49 +375,8 @@
   {\Large\textit{\getDND*{MOTIVATION}}}
   ;
 
-
-%\node [draw,below=of initiative] % {\slotsliteral7};
-%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+5}};
-
-
+% choose the first two nonempty from this list to display as upper and lower
 \firsttwoDNDnonempty{\upperdndlabel}{\upperdndcontents}{\lowerdndlabel}{\lowerdndcontents}{SORCERY POINTS,SENSES,SPELL DC,PASSIVE PERCEPTION}
-
-%\typeout{upper is \upperdndlabel; lower is \lowerdndlabel}
-
-%{\ifDNDnonempty{SENSES}{\typeout{SENSES IS NOT EMPTY; it is !\rawgetDND{SENSES}!}}{}}
-
-%\node [draw,below=of maxhp] % {\slotsliteral7};
-%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-
-% slots not OK here
-
-
-%\ifDNDdefined{SPELL DC}
-%  {
-%      \node (spell dc)
-%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-%         {\Large\textsf{13}}
-%         ;
-%
-%      \dndlabel{spell dc}{SPELL DC}
-%  }
-%  {
-%      \node (passive perception)
-%         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-%         {\Large\textsf{\getDND*{PASSIVE PERCEPTION}}}
-%         ;
-%
-%      \dndlabel{passive perception}{\pplabel}
-%  }
-%
-%\node (senses)
-%   [dndmaxhp,left=10mm of curhp,width=24mm] 
-%%   {\itshape\begin{tabular}{c}{Darkvision}\\{60~ft}\\[3pt]\end{tabular}}
-%   {\parbox{20mm}{\centering\itshape\getDND*{SENSES}}}
-%   ;
-%\dndlabel{senses}{\scriptsize SENSES}
-%
-%
 
 \def\sp{SORCERY POINTS}
 \ifx\upperdndlabel\sp
@@ -328,24 +391,31 @@
 %\show\pp
 %\show\upperdndlabel
 
-  \node (upper val)
-         [dndmaxhp,left=10mm of maxhp,width=24mm] 
-         {\Large\textsf{\upperdndcontents}}
-         ;
+\setdeltax\tmpwidth{hpbackground.west}{proficiencies.east}
+\path (proficiencies.east) ++(0.5\tmpwidth,0) coordinate (special center);
 
-      \ifDNDfont{\upperdndlabel}
-         {\dndlabel[\upperdndlabel]{upper val}{\upperdndlabel}}
-         {\dndlabel{upper val}{\upperdndlabel}}
+  \node (upper val)
+         [dndmaxhp,width=28mm] 
+      at (special center |- maxhp.center)
+         {\nodepart{label}
+          \ifDNDfont{\upperdndlabel}{\useDNDfont{\upperdndlabel}}{}%
+          \hbox to 0pt{\hss\upperdndlabel\hss}%
+          \nodepart{ctext}
+          \Large\textsf{\upperdndcontents}}
+         ;
 
 \ifx\lowerdndlabel\empty\else
 
    \node (lower val)
-      [dndmaxhp,left=10mm of curhp,width=24mm] 
-      {\Large\textsf{\lowerdndcontents}}
+      [dndmaxhp,width=28mm]
+      at (special center |- curhp.center)
+      {\nodepart{label}
+       \ifDNDfont{\lowerdndlabel}{\useDNDfont{\lowerdndlabel}}{}%
+       \hbox to 0pt{\hss\lowerdndlabel\hss}%
+       \nodepart{ctext}
+       \Large\textsf{\lowerdndcontents}
+      }
       ;
-      \ifDNDfont{\lowerdndlabel}
-         {\dndlabel[\lowerdndlabel]{lower val}{\lowerdndlabel}}
-         {\dndlabel{lower val}{\lowerdndlabel}}
 
 \fi
 
@@ -467,16 +537,20 @@
 
 % Three capacity boxes centered below top
 \path (slotstitle.north east) ++(20pt,0)
- node (carrying) [dndencumbrance,fill=carrying,anchor=north west,dndlabel=CARRYING CAPACITY]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}};
+ node (carrying) [dndencumbrance,fill=carrying,anchor=north west]
+  {\nodepart{label}CARRYING CAPACITY\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}
+  };
 
-\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying,dndlabel=ENCUMBERED] 
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
+\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying] 
+  {\nodepart{label}ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
   STR?}};
 
-\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered,dndlabel=HEAVILY ENCUMBERED]
-  {\Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}};
-
+\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered]
+  {\nodepart{label}HEAVILY ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}
+  };
 
 \node (e warning) [below=of encumbered] {\small(Speed drops by 10~ft)};
 \node (h warning) [below=of heavily,inner sep=2pt] {%

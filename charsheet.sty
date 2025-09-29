@@ -81,7 +81,7 @@
   },
   dndmaxhp/.style={
     dndbox,
-    decorated clipped rectangle,
+    labeled decorated clipped rectangle,
     label footer height=8pt,
     font=\LARGE,
     fill=white,
@@ -139,7 +139,7 @@
 \tikzset{
   proficiencies/.style={
     dndbox,
-    minimum width=37mm,
+    labeled decorated stub rectangle,
     fill=proficiencies,
   },
 }
@@ -999,6 +999,10 @@
 }
 
 
+%
+% \tikz@lib@place@handle@{spec}{anchor}{x multiplier}{y multiplier}{initial point}{0.707106781}%
+%
+
 \tikzset{
     % Inside south east corner
     inside south east corner/.code={%
@@ -1026,11 +1030,7 @@
     },
     % Inside north west corner
     inside north west corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north west,
-            at={($(\tikz@corner@node.north west)+(\tikz@corner@distance,-\tikz@corner@distance)$)}%
-        }%
+        \tikz@lib@place@handle@{#1}{north west}{1}{-1}{north west}{0.707106781}%
     },
     % Below right corner with optional distance
     below right corner/.code={%
@@ -2698,13 +2698,16 @@
 
 \DeclareOption{nostatshield}{\dndstatshieldfalse}
 
+\newdimen\savingshieldwidth
+\savingshieldwidth=6mm
+
 \newcommand\fullstatbox[5][]{% location name number modifier saving-throw
   \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
 %  \dnddecorate[stats]{#2}
   \dndtoplabel{#2}{\tiny#2}
   \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
   \ifdndstatshield
-    \node[draw,shield,anchor=north,ultra thick,width=6mm, height=10mm, fill=stats] 
+    \node[draw,shield,anchor=north,ultra thick,width=\savingshieldwidth, height=10mm, fill=stats] 
               at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
   \fi
 }
@@ -2720,7 +2723,7 @@
 
 \newcommand\dndlabel[3][DEFAULT LABEL]{% [key for font] {node}{label text, which could be a macro}
   \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
-        {\textsf{\useDNDfont{#1}#3}};
+        {\textsf{\useDNDfont{#1}D: #3}};
 }
 \newcommand\dndtoplabel[2]{% {node}{label text}
   \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
@@ -3224,6 +3227,11 @@
     {\node [#1,draw=none,fill=none] (dummy #1) {};
      \expandafter\@thesetmacro\@thesetdest{dummy #1}}%
 }
+
+\newcommand\@setnodeheight[2]{\setdeltay#1{#2.north}{#2.south}}
+\newcommand\setnodeheight{\@setproperty\@setnodeheight}
+
+
 
 \newcommand\@setnodewidth[2]{\setdeltax#1{#2.east}{#2.west}}
 \newcommand\setnodewidth{\@setproperty\@setnodewidth}
