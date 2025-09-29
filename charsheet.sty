@@ -3124,12 +3124,15 @@
    }}
   {\end{list}}
 
+\newif\if@ranged@attack
+\newif\if@has@ranged@attack
+
 % Main macro to display ranged attacks
 \newcommand{\DNDranges}{%
   \ifDNDdefined{ATTACKS}{%
     % Initialize with empty list
     \def\@rangedlist{}%
-    \def\@hasrangedattacks{false}%
+    \@has@ranged@attackfalse
     % Process attacks using edef approach
     \def\collectrangedattack##1{%
       % Reset values for this attack
@@ -3137,20 +3140,20 @@
       \gdef\@attackrange{}%
       % Process attack keys
       \pgfkeys{/attacks/.cd, ##1}%
+      \@ranged@attacktrue
+      \foreach \a in {,5 ft.,5 ft,5 ft,5 ft.,---}%
+         {\ifx\@attackrange\a\global\@ranged@attackfalse \fi}%
       % Check if range qualifies as ranged attack
-      \ifx\@attackrange\empty\else
-        \IfStrEq{\@attackrange}{5 ft.}{}{%
-          \IfStrEq{\@attackrange}{5 ft}{}{%
-            \IfStrEq{\@attackrange}{---}{}{%
-              % This is a ranged attack - add to list
-              \global\def\@hasrangedattacks{true}%
-              \begingroup
-                \edef\x{\endgroup\noexpand\g@addto@macro\noexpand\@rangedlist{\noexpand\item \@attackname\space range: \@attackrange\noexpand\\\@attackname\space ammo:}}%
-              \x
-            }%
-          }%
-        }%
-      \fi
+      \if@ranged@attack
+        \@has@ranged@attacktrue
+        \begingroup % hides x
+        \edef\x{\endgroup\noexpand\g@addto@macro\noexpand\@rangedlist{\noexpand\item
+          \@attackname\space range:
+          \@attackrange\noexpand\\
+          \@attackname\space ammo: \vrule width 3em height 0pt depth 0.2pt
+        }}%
+        \x
+       \fi
     }%
     % Temporarily replace dndkeys to use our collector
     \let\@original@dndkeys\dndkeys
@@ -3160,11 +3163,11 @@
     % Restore original dndkeys
     \let\dndkeys\@original@dndkeys
     % Only emit environment if we have ranged attacks
-    \IfStrEq{\@hasrangedattacks}{true}{%
+    \if@has@ranged@attack
       \begin{ranges}
         \@rangedlist
       \end{ranges}
-    }{}%
+    \fi
   }{}%
 }
 
