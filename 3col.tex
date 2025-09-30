@@ -30,7 +30,6 @@
 \newlength\colgap
 \colgap=10pt
 \setlength\colwidth{(\textwidth-2\colgap)/3}
-\dndrightwidth=\colwidth % XXX ugly
 
 \newlength\hpwidth
 \setlength\hpwidth{\colwidth-12pt}
@@ -56,7 +55,6 @@
     outer xsep=0pt, % x placement is happening by hand
     yseparated,
     draw, line width=1.2pt,
-%    label footer height=8pt,
   },
   narrowcolumnbox/.style={
     columnbox,
@@ -67,10 +65,10 @@
     minimum width=\hpwidth/3-10pt,
     draw, line width=1.2pt,
     fill=white,
+    font=\LARGE,
     yseparated,
     outer xsep=3pt,
     minimum height=17mm,
-    label footer height=8pt,
   },
   dndmaxhp2/.style={
     dndmaxhp,
@@ -109,7 +107,7 @@
 
   %%%%% banner at top
 
-  \node [dndfull,yseparated,height=20mm,fill=playername,below=of top] (splash) 
+  \node [dndbox,yseparated,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
   \colorlet{splashgray}{white!85.765!black}
@@ -164,17 +162,16 @@
 
       \node (initiative)
             [initiative,below=of hpbackground.north] 
-         {\nodepart{label}\footnotesize INITIATIVE\nodepart{ctext}\Large\getDND*{INITIATIVE}}
+         {\nodepart{label}\footnotesize INITIATIVE\nodepart{ctext}\getDND*{INITIATIVE}}
          ;
 
        \node (ac) [initiative,shield,inner shield,draw,ultra thick,left=of initiative,width=12mm,
                    font=\Large,
-                   label footer height=12pt,
             ]
       {\getDND*{ARMOR CLASS}}
       ;
 
-      \node [above=1pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}};
+      \node [above=3pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}};
 
       \node (speed) [initiative,right=of initiative]
          {\nodepart{ctext}\getDND*{SPEED}\nodepart{label}SPEED}

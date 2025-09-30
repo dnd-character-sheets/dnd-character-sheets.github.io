@@ -49,7 +49,6 @@
 %    yseparated,
     outer xsep=3pt,
     minimum height=17mm,
-    label footer height=8pt,
   },
   dndhits/.style={
     dndmaxhp,
@@ -74,7 +73,7 @@
 \begin{charsheet}
   \tikzset{node distance=\mynodedistance}
 
-  \node [dndfull,height=20mm,fill=playername,below=of top] (splash) 
+  \node [dndbox,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{splash.png}};
 
   \colorlet{splashgray}{white!85.765!black}
@@ -172,7 +171,6 @@
 
        \node (ac) [dndmaxhp,shield,inner shield,draw,ultra thick,right=of speed,width=15mm,
                    font=\Large,
-                   label footer height=12pt,
             ]
       {\getDND*{ARMOR CLASS}}
       ;
@@ -272,7 +270,7 @@
          \setdeltax\sectionwidth{magic.west}{stats background.west}
          \advance\sectionwidth by -\mynodedistance
         }
-        {\def\where{below right corner=of features,width=\dndrightwidth}}
+        {\def\where{below right corner=of features}}
    \multicolsep=0pt
    \expandafter\node\expandafter
        [\where,widecolumn,fill=equipment,decorated labeled clipped rectangle,

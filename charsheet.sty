@@ -35,11 +35,6 @@
 \newdimen\slotblockwidth
 \slotblockwidth=60mm
 
-\tikzset{
-  % how much vertical room (height+depth) the bottom label consumes
-  label footer height/.initial=0pt,
-}
-
 % Define minimum label separation key for labeled rectangle shape
 \pgfkeys{/pgf/minimum label sep/.initial=\baselineskip}
 \tikzset{minimum label sep/.code=\pgfkeys{/pgf/minimum label sep={#1}}}
@@ -59,18 +54,6 @@
     line width=1.2pt,
     draw,
   },
-  dndleft/.style={
-    dndbox,
-    minimum width=67mm,
-  },
-  dndright/.style={
-    dndbox,
-    minimum width=128mm,
-  },
-  dndfull/.style={
-    dndbox,
-    minimum width=198mm,
-  },
   dndhits/.style={
     dndmaxhp,
     minimum height=21mm,
@@ -83,7 +66,6 @@
   dndmaxhp/.style={
     dndbox,
     labeled decorated clipped rectangle,
-    label footer height=8pt,
     font=\LARGE,
     fill=white,
     minimum height=18mm,
@@ -120,19 +102,15 @@
 
 \tikzset{
   magic/.style={
-    dndright,
     fill=magic,
   },
   attacks/.style={
-    dndright,
     fill=attacks,
   },
   features/.style={
-    dndright,
     fill=features,
   },
   equipment/.style={
-    dndleft,
     fill=equipment,
   },
 }
@@ -244,14 +222,9 @@
 
 \newlength\dndtextwidth
 
-\newlength\leftwidth
-\newlength\dndrightwidth
-\leftwidth=6.5cm
-\dndrightwidth=128mm
 \newlength\rightx
 \rightx=7.15cm
 
-\let\rightwidth=\dndrightwidth
 
 
 \newenvironment{nobullets}
@@ -335,17 +308,6 @@
 \newcounter{boxcounter}
 
 \newcommand\hpetcll{\rightx + 30mm, 184mm}
-
-\newcommand\hpbackground{
-  \fill[hpetc] (\hpetcll) coordinate (hpbackground) rectangle +(98mm,44.5mm);
-}
-
-%\newcommand\hpbackground{
-%  \node (hpbackground) 
-%   at (splash.south east)
-%   [fill=hpetc,anchor=north east,minimum width=98mm, minimum height=44.5mm] 
-%   { };
-%}
 
 \newcommand\spellslevel[2][0]{%
     \ifnum#2=0
@@ -444,11 +406,14 @@
   \anchor{ac}{
     \southwest \my@W=\pgf@x \my@S=\pgf@y
     \northeast \my@E=\pgf@x \my@N=\pgf@y
-    \pgfpoint{0.5\my@W+0.5\my@E}{0.4\my@S+0.6\my@N}}     
+    \pgfpoint{0.5\my@W+0.5\my@E}{0.4\my@S+0.6\my@N}%
+  }     
 
   \anchor{text}{%
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
+    \southwest \my@W=\pgf@x \my@S=\pgf@y
+    \northeast \my@E=\pgf@x \my@N=\pgf@y
+    \pgfpoint{0.5\my@W+0.5\my@E-0.5\wd\pgfnodeparttextbox}
+             {0.45\my@S+0.55\my@N-\dp\pgfnodeparttextbox}%
   }
 
   % Background path (defines the shape outline)
@@ -1284,12 +1249,8 @@
   \inheritanchor[from=rectangle]{north west}
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{text}
   
-  \anchor{text}{% XXX BOGUS TODO
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-  }
-
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
@@ -1345,12 +1306,8 @@
   \inheritanchor[from=rectangle]{north west}
   \inheritanchor[from=rectangle]{south east}
   \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{text}
   
-  \anchor{text}{%
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-  }
-
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
@@ -1823,11 +1780,6 @@
   \inheritanchor[from=labeled rectangle]{label}
   \inheritanchor[from=labeled rectangle]{labeltop}
   
-%  \anchor{text}{%
-%    \pgf@x=0pt
-%    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-%  }
-
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
@@ -1913,11 +1865,6 @@
   \inheritanchor[from=labeled rectangle]{label}
   \inheritanchor[from=labeled rectangle]{labeltop}
   
-  \anchor{text}{%
-    \pgf@x=0pt
-    \pgfmathsetlength\pgf@y{0.5*\pgfkeysvalueof{/tikz/label footer height}}%
-  }
-
   % Background path
   \backgroundpath{%
     % Get NESW coordinates
