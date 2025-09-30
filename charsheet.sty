@@ -2986,18 +2986,17 @@
 
 % Environment for displaying ranged attack ranges
 \newenvironment{ranges}
-  {\begin{list}{}{%
-      \raggedright
-      \setlength{\leftmargin}{0pt}% no indentation
-      \setlength{\labelwidth}{0pt}%
-      \setlength{\labelsep}{0pt}%
-      \setlength{\itemindent}{0pt}%
-      \setlength{\topsep}{0pt}% space before/after the list
-      \setlength{\partopsep}{0pt}%
-      \setlength{\parsep}{0pt}%
-      \setlength{\itemsep}{3pt}% space between items
-   }}
-  {\end{list}}
+  {\noindent
+   \begin{tabular}{@{}l@{ }r@{: }l@{}}}
+  {\end{tabular}\par}
+
+\def\@addrangeinfo#1\@nil#2\@nil{% name range
+  \g@addto@macro\@rangedlist{#1&range&#2\\
+     & \hidewidth ammo & \vrule width 3em height 0pt depth 0.2pt\\[3pt]
+  }
+}
+
+
 
 \newif\if@ranged@attack
 \newif\if@has@ranged@attack
@@ -3016,18 +3015,12 @@
       % Process attack keys
       \pgfkeys{/attacks/.cd, ##1}%
       \@ranged@attacktrue
-      \foreach \a in {,5 ft.,5 ft,5 ft,5 ft.,---}%
+      \foreach \a in {,5 ft.,5 ft,5 ft,5 ft.,5ft,5ft.,\ditto,---}%
          {\ifx\@attackrange\a\global\@ranged@attackfalse \fi}%
       % Check if range qualifies as ranged attack
       \if@ranged@attack
         \@has@ranged@attacktrue
-        \begingroup % hides x
-        \edef\x{\endgroup\noexpand\g@addto@macro\noexpand\@rangedlist{\noexpand\item
-          \@attackname\space range:
-          \@attackrange\noexpand\\
-          \@attackname\space ammo: \vrule width 3em height 0pt depth 0.2pt
-        }}%
-        \x
+        \expandafter\expandafter\expandafter\@addrangeinfo\expandafter\@attackname\expandafter\@nil\@attackrange\@nil
        \fi
     }%
     % Temporarily replace dndkeys to use our collector
@@ -3115,6 +3108,10 @@
    \advance#1 by -2\@proptmp
 }
 \newcommand\settextwidth{\@setproperty\@settextwidth}
+
+
+\newcommand\ditto{\texttt{"}}
+
 
 
 
