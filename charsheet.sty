@@ -1850,6 +1850,29 @@
     \expandafter\@themodifier\expandafter{\rawgetDND{#1}}%
   }{}%
 }
+\newcommand\@thesavingthrow[2]{%
+  \pgfmathsetcounter{statmod}{floor((#1 - 10) / 2)}%
+  \addtocounter{statmod}{#2}%
+  \expandafter\ifnum\value{statmod}<0
+     \setcounter{statmod}{0-\value{statmod}}%
+     \textminus\arabic{statmod}%
+  \else
+     +\arabic{statmod}%
+  \fi
+}
+
+\newcommand\dndsavingthrow[1]{% 
+  \begingroup
+    \ifDNDdefined{#1}{%
+      \ifDNDnonempty{#1 SAVING}{%
+          \edef\thing{\value{proficiency bonus}}%
+      }{%
+          \def\thing{0}%
+      }%
+      \expandafter\@thesavingthrow\expandafter{\rawgetDND{#1}}{\thing}%
+    }{}%
+  \endgroup
+}
   
 
 \newcommand\statcommon[3]{% name value amount-to-add-to-saving
