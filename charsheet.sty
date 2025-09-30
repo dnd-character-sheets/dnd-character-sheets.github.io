@@ -371,126 +371,64 @@
 }
 
 
-%
-% \tikz@lib@place@handle@{spec}{anchor}{x multiplier}{y multiplier}{initial point}{0.707106781}%
-%
-
 % extensions to positioning library
 
+%
+% \tikz@lib@place@handle@{spec}{new anchor}{x multiplier}{y multiplier}{old anchor}
+%                              {factor}%
+%
+%  place anchor of new node at `(x,y)*node distance` from given anchor of old node
+%
+%  x and y are signed
+%
+%  node distance is multiplied by factor
+%
 \tikzset{
-    % Inside south east corner
-    inside south east corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south east,
-            at={($(\tikz@corner@node.south east)+(-\tikz@corner@distance,\tikz@corner@distance)$)}%
-        }%
-    },
-    % Inside south west corner
-    inside south west corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south west,
-            at={($(\tikz@corner@node.south west)+(\tikz@corner@distance,\tikz@corner@distance)$)}%
-        }%
-    },
-    % Inside north east corner
-    inside north east corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north east,
-            at={($(\tikz@corner@node.north east)+(-\tikz@corner@distance,-\tikz@corner@distance)$)}%
-        }%
-    },
-    % Inside north west corner
-    inside north west corner/.code={%
-        \tikz@lib@place@handle@{#1}{north west}{1}{-1}{north west}{0.707106781}%
-    },
-    % Below right corner with optional distance
-    below right corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north east,
-            at={($(\tikz@corner@node.south east)+(0,-\tikz@corner@distance)$)},%
-        }%
-    },
-    below top/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north,
-            at={($(\tikz@corner@node.north)+(0,-\tikz@corner@distance)$)},%
-        }%
-    },
-    % Above left corner with optional distance
-    above left corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south west,
-            at={($(\tikz@corner@node.north west)+(0,\tikz@corner@distance)$)}%
-        }%
-    },
-    % Below left corner with optional distance
-    below left corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north west,
-            at={($(\tikz@corner@node.south west)+(0,-\tikz@corner@distance)$)}%
-        }%
-    },
-    % Above right corner with optional distance
-    above right corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south east,
-            at={($(\tikz@corner@node.north east)+(0,\tikz@corner@distance)$)}%
-        }%
-    },
-    % Right of upper corner with optional distance
-    right of upper corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north west,
-            at={($(\tikz@corner@node.north east)+(\tikz@corner@distance,0)$)}%
-        }%
-    },
-    % Right of lower corner with optional distance
-    right of lower corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south west,
-            at={($(\tikz@corner@node.south east)+(\tikz@corner@distance,0)$)}%
-        }%
-    },
     right of base/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=base west,
-            at={($(\tikz@corner@node.base east)+(\tikz@corner@distance,0)$)}%
-        }%
+        \tikz@lib@place@handle@{#1}{base west}{1}{0}{base east}{1.0}%
     },
     left of base/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=base east,
-            at={($(\tikz@corner@node.base west)+(\tikz@corner@distance,0)$)}%
-        }%
+        \tikz@lib@place@handle@{#1}{base east}{-1}{0}{base west}{1.0}%
     },
-    % Left of upper corner with optional distance
+    inside south east corner/.code={%
+        \tikz@lib@place@handle@{#1}{south east}{-1}{1}{south east}{1}%
+    },
+    inside south west corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{1}{1}{south west}{1}%
+    },
+    inside north east corner/.code={%
+        \tikz@lib@place@handle@{#1}{north east}{-1}{-1}{north east}{1}%
+    },
+    inside north west corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{1}{-1}{north west}{1}%
+    },
+    below right corner/.code={%
+        \tikz@lib@place@handle@{#1}{north east}{0}{-1}{south east}{1.0}%
+    },
+    below top/.code={%
+      \tikz@lib@place@handle@{#1}{north}{0}{-1}{north}{1.0}%
+    },
+    above left corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{0}{1}{north west}{1.0}%
+    },
+    below left corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{0}{-1}{south west}{1.0}%
+    },
+    above right corner/.code={%
+        \tikz@lib@place@handle@{#1}{south east}{0}{1}{north east}{1.0}%
+    },
+    right of upper corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{1}{0}{north east}{1.0}%
+    },
+    right of lower corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{1}{0}{south east}{1.0}%
+    },
     left of upper corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=north east,
-            at={($(\tikz@corner@node.north west)+(-\tikz@corner@distance,0)$)}%
-        }%
+        \tikz@lib@place@handle@{#1}{north east}{-1}{0}{north west}{1.0}%
     },
-    % Left of lower corner with optional distance
     left of lower corner/.code={%
-        \tikz@corner@parse#1\tikz@stop%
-        \tikzset{%
-            anchor=south east,
-            at={($(\tikz@corner@node.south west)+(-\tikz@corner@distance,0)$)}%
-        }%
-    }
+        \tikz@lib@place@handle@{#1}{south east}{-1}{0}{south west}{1.0}%
+    },
 }
 
 \tikzset{
