@@ -1503,6 +1503,12 @@
   }%
 }
 
+\WithSuffix\newcommand\useDNDfont*[1]{%
+  \@ifundefined{dnd@font@#1}{}{\useDNDfont{#1}}%
+}
+
+
+
 % 3. Equipment category system
 %-----------------------------------------------------------------
 % \newDNDitems{FOO}{N} - declare category FOO with weight N per item
