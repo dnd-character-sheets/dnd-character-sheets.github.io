@@ -343,6 +343,7 @@
 
 
   \setdeltay\tmpheight{stats background.south}{equipment.north}
+  \advance\tmpheight by -\mynodedistance % allows space above equipment.north
   \ifdim\tmpheight>0pt
     \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
     \advance\sectionheight by -\mynodedistance
