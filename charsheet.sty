@@ -48,6 +48,11 @@
 \pgfkeys{/pgf/minimum label sep/.initial=\baselineskip}
 \tikzset{minimum label sep/.code=\pgfkeys{/pgf/minimum label sep={#1}}}
 
+\tikzset{ % convenience
+    height/.style={minimum height=#1},
+    width/.style={minimum width=#1}
+}
+
 \tikzset{
   minimum label sep=8pt,
   labeled decorated stub rectangle/.style={
@@ -117,6 +122,264 @@
     fill=proficiencies,
   },
 }
+
+
+\newenvironment{charsheet}[1][]
+  {\begin{tikzpicture}[x=1cm,y=1cm, node distance=5pt,outer sep=0pt,
+    #1]
+   \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
+   \path (current bounding box.north) coordinate (top)
+         (current bounding box.south east) coordinate (bottom right)
+         (current bounding box.south west) coordinate (bottom left)
+         (current bounding box.north east) coordinate (top right)
+         (current bounding box.north west) coordinate (top left)
+   ;
+  }
+  {\end{tikzpicture}}
+
+% extensions to positioning library
+
+%
+% \tikz@lib@place@handle@{spec}{new anchor}{x multiplier}{y multiplier}{old anchor}
+%                              {factor}%
+%
+%  place anchor of new node at `(x,y)*node distance` from given anchor of old node
+%
+%  x and y are signed
+%
+%  node distance is multiplied by factor
+%
+\tikzset{
+    right of base/.code={%
+        \tikz@lib@place@handle@{#1}{base west}{1}{0}{base east}{1.0}%
+    },
+    left of base/.code={%
+        \tikz@lib@place@handle@{#1}{base east}{-1}{0}{base west}{1.0}%
+    },
+    inside south east corner/.code={%
+        \tikz@lib@place@handle@{#1}{south east}{-1}{1}{south east}{1}%
+    },
+    inside south west corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{1}{1}{south west}{1}%
+    },
+    inside north east corner/.code={%
+        \tikz@lib@place@handle@{#1}{north east}{-1}{-1}{north east}{1}%
+    },
+    inside north west corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{1}{-1}{north west}{1}%
+    },
+    below right corner/.code={%
+        \tikz@lib@place@handle@{#1}{north east}{0}{-1}{south east}{1.0}%
+    },
+    below top/.code={%
+      \tikz@lib@place@handle@{#1}{north}{0}{-1}{north}{1.0}%
+    },
+    above left corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{0}{1}{north west}{1.0}%
+    },
+    below left corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{0}{-1}{south west}{1.0}%
+    },
+    above right corner/.code={%
+        \tikz@lib@place@handle@{#1}{south east}{0}{1}{north east}{1.0}%
+    },
+    right of upper corner/.code={%
+        \tikz@lib@place@handle@{#1}{north west}{1}{0}{north east}{1.0}%
+    },
+    right of lower corner/.code={%
+        \tikz@lib@place@handle@{#1}{south west}{1}{0}{south east}{1.0}%
+    },
+    left of upper corner/.code={%
+        \tikz@lib@place@handle@{#1}{north east}{-1}{0}{north west}{1.0}%
+    },
+    left of lower corner/.code={%
+        \tikz@lib@place@handle@{#1}{south east}{-1}{0}{south west}{1.0}%
+    },
+}
+
+% --- run-later list ----------------------------------------
+
+
+\newcommand{\slotsliteral}[2][1.5mm]{% 
+  % connected dots, use for spell slots, hit dice, etc
+  \hbox{%
+    \begin{tikzpicture}[baseline=(circle-base), thick,inner sep=0pt, outer sep=0pt]
+      \ifnum#2>0
+        % Create first circle node
+        \node[circle, draw, minimum size=3.2mm] (circle-1) at (0,1.6mm) {};
+        \path (circle-1.south) +(0mm,1pt) coordinate (circle-base); % looks better
+        \def\prevnode{circle-1}%
+        \ifnum#2>1
+          % Create remaining circle nodes and connect them
+          \foreach \i in {2,...,#2} {
+            % Create circle node positioned relative to previous node
+            \edef\go{%  avoid speculating about just how tikz expands
+            \noexpand\node (circle-\i)
+                  [circle, draw, minimum size=3.2mm, right=#1 of \prevnode] {};
+            }%
+            \go
+            
+            % Draw double line between consecutive circles
+            \draw[double, double distance=0.6mm] (\prevnode) -- (circle-\i);
+            \xdef\prevnode{circle-\i}%
+          }
+        \fi
+      \fi
+    \end{tikzpicture}%
+  }%
+}
+
+
+\newcounter{slotcounter}
+\newcounter{slotstemp}
+\newcommand{\slots}[1]{%
+  \setcounter{slotstemp}{#1}%
+  \expandafter\slotsliteral\expandafter{\value{slotstemp}}\relax%
+}
+
+%%%%%%%%%%%%
+
+% Vertical spacing between rows of slots
+\newdimen\slotrowsep
+\slotrowsep=2pt
+
+% Helper counters
+\newcount\tempcount
+\newcount\remaining
+\newcount\minrowstempcount
+\newcounter{minrowsresult}
+\newcounter{rowswiththree}
+\newcounter{rowswithfour}
+\newcounter{buildrows}
+
+\newif\iffirstisfour
+
+% Helper function that computes minrows and stores in counter
+\newcommand{\setminrowsresult}[1]{%
+  \ifnum#1<5
+    \setcounter{minrowsresult}{1}%
+  \else
+    % Try with first row = 3
+    \setminrowsresult{\numexpr#1-3\relax}%
+    \setcounter{rowswiththree}{\value{minrowsresult}}%
+    % Try with first row = 4  
+    \setminrowsresult{\numexpr#1-4\relax}%
+    \setcounter{rowswithfour}{\value{minrowsresult}}%
+    % Return the minimum (plus 1 for the current row)
+    \ifthenelse{\value{rowswiththree}>\value{rowswithfour}}{%
+      \setcounter{minrowsresult}{\value{rowswithfour}+1}%
+      \firstisfourtrue
+    }{%
+      \setcounter{minrowsresult}{\value{rowswiththree}+1}%
+      \firstisfourfalse
+    }%
+  \fi
+}
+
+% User-facing function that returns the result as text
+\newcommand{\minrows}[1]{%
+  \setminrowsresult{#1}%
+  \arabic{minrowsresult}%
+}
+
+\newcommand\fourslots{\slotsliteral[1.0mm]{4}} % closer together
+
+
+% Main macro
+\newcommand{\stackslots}[1]{%
+  \noindent
+  \setcounter{slotcounter}{#1}%
+  \ifnum\value{slotcounter}=0
+    \hbox{}%
+  \else
+    \vbox{\buildoptimalrows{\arabic{slotcounter}}}%
+  \fi
+}
+
+
+
+% Build optimal row composition using same recursive logic
+\newcommand{\buildoptimalrows}[1]{%
+  \setcounter{buildrows}{#1}%
+  \ifthenelse{\value{buildrows}<5}{%
+    % Base case: 1-4 slots in single row
+    \hbox to 0pt{\hss
+      \ifthenelse{\value{buildrows}=4}{\fourslots}{\slots{\arabic{buildrows}}}%
+      \hss}%
+  }{%
+    % Recursive case: decide between first row of 3 or 4
+    % Try with first row = 3
+    \setminrowsresult{\value{buildrows}}%
+    \iffirstisfour
+       \hbox to 0pt{\hss\fourslots\hss}%
+       \buildoptimalrows{\value{buildrows}-4}%
+    \else
+       \hbox to 0pt{\hss\slots{3}\hss}%
+       \buildoptimalrows{\value{buildrows}-3}%
+    \fi
+  }%
+}
+
+
+% \renderstones{<tenths>} - Render weight in stones with fractions
+\newcommand{\renderstones}[1]{%
+  \pgfmathsetmacro{\tenths}{int(#1)}%
+  \pgfmathsetmacro{\remainder}{int(mod(\tenths,10))}%
+  \ifnum\remainder=0\relax
+    % Multiple of 10 - display whole stones
+    \pgfmathparse{int(\tenths/10)}%
+    \edef\stonesrendered{\pgfmathresult}%
+    \ensuremath{\stonesrendered}%
+  \else
+    \pgfmathsetmacro{\remainderfive}{int(mod(\tenths,5))}%
+    \ifnum\remainderfive=0\relax
+      % Multiple of 5 but not 10 - display with halves
+      \pgfmathparse{int(\tenths/10)}%
+      \let\wholestones\pgfmathresult%
+      \ifnum\wholestones=0\relax
+        \ensuremath{\frac{1}{2}}%
+      \else
+        \ensuremath{\wholestones\frac{1}{2}}%
+      \fi
+    \else
+      \pgfmathsetmacro{\remaindertwo}{int(mod(\tenths,2))}%
+      \ifnum\remaindertwo=0\relax
+        % Multiple of 2 but not 10 - display with fifths
+        \pgfmathparse{int(\tenths/10)}%
+        \let\wholestones\pgfmathresult%
+        \pgfmathparse{int(mod(\tenths,10)/2)}%
+        \let\fifths\pgfmathresult%
+        \ifnum\wholestones=0\relax
+          \ensuremath{\frac{\fifths}{5}}%
+        \else
+          \ensuremath{\wholestones\frac{\fifths}{5}}%
+        \fi
+      \else
+        % Resort to tenths
+        \pgfmathparse{int(\tenths/10)}%
+        \let\wholestones\pgfmathresult%
+        \pgfmathparse{int(mod(\tenths,10))}%
+        \let\tenthspart\pgfmathresult%
+        \ifnum\wholestones=0\relax
+          \ensuremath{\frac{\tenthspart}{10}}%
+        \else
+          \ensuremath{\wholestones\frac{\tenthspart}{10}}%
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+% Macro to return "stone" or "stones" based on weight in tenths
+\newcommand{\stonesplural}[1]{%
+  \ifnum#1>10\relax
+    stones%
+  \else
+    stone%
+  \fi
+}
+
+
 
 \newenvironment{proflist}
   {\begin{list}{}{%
@@ -197,18 +460,27 @@
   {\end{tabular*}}
 
 
-%-------------------------------------------------------------
-%  Shield shape: top made of two quadratic curves, tapered
-%  sides meeting at a point.  Works with minimum width/height,
-%  inner sep, anchors, etc.
-%-------------------------------------------------------------
+% Declare meaningful coordinate registers
+\newdimen\my@N  % North (top) y coordinate
+\newdimen\my@E  % East (right) x coordinate
+\newdimen\my@W  % West (left) x coordinate
+\newdimen\my@S  % South (bottom) y coordinate
+\newdimen\my@Cx % Center x coordinate
+\newdimen\my@Cy % Center y coordinate
 
-\newdimen\my@xa
+% Other useful registers
+\newdimen\my@halfwidth
+\newdimen\my@halfheight
+\newdimen\my@offset
+
+\newdimen\my@xa  % temps don't conflict with pgf
 \newdimen\my@ya
 \newdimen\my@xb
 \newdimen\my@yb
 \newdimen\my@xc
 \newdimen\my@yc
+
+%%%%%%%%%%%% shapes
 
 
 \def\shieldTopScale{0.15}
@@ -312,150 +584,8 @@
   }
 }
 
-\newcommand{\slotsliteral}[2][1.5mm]{% 
-  % connected dots, use for spell slots, hit dice, etc
-  \hbox{%
-    \begin{tikzpicture}[baseline=(circle-base), thick,inner sep=0pt, outer sep=0pt]
-      \ifnum#2>0
-        % Create first circle node
-        \node[circle, draw, minimum size=3.2mm] (circle-1) at (0,1.6mm) {};
-        \path (circle-1.south) +(0mm,1pt) coordinate (circle-base); % looks better
-        \def\prevnode{circle-1}%
-        \ifnum#2>1
-          % Create remaining circle nodes and connect them
-          \foreach \i in {2,...,#2} {
-            % Create circle node positioned relative to previous node
-            \edef\go{%  avoid speculating about just how tikz expands
-            \noexpand\node (circle-\i)
-                  [circle, draw, minimum size=3.2mm, right=#1 of \prevnode] {};
-            }%
-            \go
-            
-            % Draw double line between consecutive circles
-            \draw[double, double distance=0.6mm] (\prevnode) -- (circle-\i);
-            \xdef\prevnode{circle-\i}%
-          }
-        \fi
-      \fi
-    \end{tikzpicture}%
-  }%
-}
-
-
-\newcounter{slotcounter}
-\newcounter{slotstemp}
-\newcommand{\slots}[1]{%
-  \setcounter{slotstemp}{#1}%
-  \expandafter\slotsliteral\expandafter{\value{slotstemp}}\relax%
-}
-
-
-
-
-
-
-
-
-
-
-% Helper to parse optional distance
-\def\tikz@corner@parse#1of #2\tikz@stop{%
-    \def\tikz@corner@node{#2}%
-    \ifx\\#1\\%
-        % No distance specified, use default
-        \let\tikz@corner@distance\tikz@node@distance%
-    \else
-        % Distance specified
-        \def\tikz@corner@distance{#1}%
-    \fi
-}
-
-
-% extensions to positioning library
-
-%
-% \tikz@lib@place@handle@{spec}{new anchor}{x multiplier}{y multiplier}{old anchor}
-%                              {factor}%
-%
-%  place anchor of new node at `(x,y)*node distance` from given anchor of old node
-%
-%  x and y are signed
-%
-%  node distance is multiplied by factor
-%
-\tikzset{
-    right of base/.code={%
-        \tikz@lib@place@handle@{#1}{base west}{1}{0}{base east}{1.0}%
-    },
-    left of base/.code={%
-        \tikz@lib@place@handle@{#1}{base east}{-1}{0}{base west}{1.0}%
-    },
-    inside south east corner/.code={%
-        \tikz@lib@place@handle@{#1}{south east}{-1}{1}{south east}{1}%
-    },
-    inside south west corner/.code={%
-        \tikz@lib@place@handle@{#1}{south west}{1}{1}{south west}{1}%
-    },
-    inside north east corner/.code={%
-        \tikz@lib@place@handle@{#1}{north east}{-1}{-1}{north east}{1}%
-    },
-    inside north west corner/.code={%
-        \tikz@lib@place@handle@{#1}{north west}{1}{-1}{north west}{1}%
-    },
-    below right corner/.code={%
-        \tikz@lib@place@handle@{#1}{north east}{0}{-1}{south east}{1.0}%
-    },
-    below top/.code={%
-      \tikz@lib@place@handle@{#1}{north}{0}{-1}{north}{1.0}%
-    },
-    above left corner/.code={%
-        \tikz@lib@place@handle@{#1}{south west}{0}{1}{north west}{1.0}%
-    },
-    below left corner/.code={%
-        \tikz@lib@place@handle@{#1}{north west}{0}{-1}{south west}{1.0}%
-    },
-    above right corner/.code={%
-        \tikz@lib@place@handle@{#1}{south east}{0}{1}{north east}{1.0}%
-    },
-    right of upper corner/.code={%
-        \tikz@lib@place@handle@{#1}{north west}{1}{0}{north east}{1.0}%
-    },
-    right of lower corner/.code={%
-        \tikz@lib@place@handle@{#1}{south west}{1}{0}{south east}{1.0}%
-    },
-    left of upper corner/.code={%
-        \tikz@lib@place@handle@{#1}{north east}{-1}{0}{north west}{1.0}%
-    },
-    left of lower corner/.code={%
-        \tikz@lib@place@handle@{#1}{south east}{-1}{0}{south west}{1.0}%
-    },
-}
-
-\tikzset{
-    height/.style={minimum height=#1},
-    width/.style={minimum width=#1}
-}
-
-% --- run-later list ----------------------------------------
-
-
-
-\newenvironment{charsheet}[1][]
-  {\begin{tikzpicture}[x=1cm,y=1cm, node distance=5pt,outer sep=0pt,
-    #1]
-   \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
-   \path (current bounding box.north) coordinate (top)
-         (current bounding box.south east) coordinate (bottom right)
-         (current bounding box.south west) coordinate (bottom left)
-         (current bounding box.north east) coordinate (top right)
-         (current bounding box.north west) coordinate (top left)
-   ;
-  }
-  {\end{tikzpicture}}
-
-
-\tikzset{
-  inner shield/.style={
+\tikzset{ 
+  inner shield/.style={  % puts a second line inside a shield
     append after command={
         \pgfextra{%
         \pgfpointdiff{\pgfpointanchor{\tikzlastnode}{south west}}{\pgfpointanchor{\tikzlastnode}{north east}}%
@@ -464,10 +594,7 @@
        (\tikzlastnode) node [shield,minimum width=\@shieldwidth,minimum height=\@shieldheight,draw,thin,scale=0.88,fill=none] {}
     }
   },
-}
-
-\tikzset{
-  inner circle/.style={
+  inner circle/.style={  % and inside a circle
     append after command={
         \pgfextra{%
         \typeout{circle last node is \tikzlastnode}%
@@ -488,20 +615,6 @@
   /tikz/long hexagon angle/.initial=30,
   /tikz/long hexagon angle/.default=30
 }
-
-% Declare meaningful coordinate registers
-\newdimen\my@N  % North (top) y coordinate
-\newdimen\my@E  % East (right) x coordinate
-\newdimen\my@W  % West (left) x coordinate
-\newdimen\my@S  % South (bottom) y coordinate
-\newdimen\my@Cx % Center x coordinate
-\newdimen\my@Cy % Center y coordinate
-
-% Other useful registers
-\newdimen\my@halfwidth
-\newdimen\my@halfheight
-\newdimen\my@offset
-
 
 
 
@@ -700,6 +813,10 @@
 }
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%    VARIABLES
+%
 
 %-----------------------------------------------------------------
 % 1. \newDND{<name>}   – declare a key (no value yet)
@@ -841,64 +958,6 @@
 \newDNDitems{SLOTTED ITEMS}{2}
 \newDNDitems{SMALL ITEMS}{0}
 \newDNDitems{STORED ITEMS}{0}
-
-% \renderstones{<tenths>} - Render weight in stones with fractions
-\newcommand{\renderstones}[1]{%
-  \pgfmathsetmacro{\tenths}{int(#1)}%
-  \pgfmathsetmacro{\remainder}{int(mod(\tenths,10))}%
-  \ifnum\remainder=0\relax
-    % Multiple of 10 - display whole stones
-    \pgfmathparse{int(\tenths/10)}%
-    \edef\stonesrendered{\pgfmathresult}%
-    \ensuremath{\stonesrendered}%
-  \else
-    \pgfmathsetmacro{\remainderfive}{int(mod(\tenths,5))}%
-    \ifnum\remainderfive=0\relax
-      % Multiple of 5 but not 10 - display with halves
-      \pgfmathparse{int(\tenths/10)}%
-      \let\wholestones\pgfmathresult%
-      \ifnum\wholestones=0\relax
-        \ensuremath{\frac{1}{2}}%
-      \else
-        \ensuremath{\wholestones\frac{1}{2}}%
-      \fi
-    \else
-      \pgfmathsetmacro{\remaindertwo}{int(mod(\tenths,2))}%
-      \ifnum\remaindertwo=0\relax
-        % Multiple of 2 but not 10 - display with fifths
-        \pgfmathparse{int(\tenths/10)}%
-        \let\wholestones\pgfmathresult%
-        \pgfmathparse{int(mod(\tenths,10)/2)}%
-        \let\fifths\pgfmathresult%
-        \ifnum\wholestones=0\relax
-          \ensuremath{\frac{\fifths}{5}}%
-        \else
-          \ensuremath{\wholestones\frac{\fifths}{5}}%
-        \fi
-      \else
-        % Resort to tenths
-        \pgfmathparse{int(\tenths/10)}%
-        \let\wholestones\pgfmathresult%
-        \pgfmathparse{int(mod(\tenths,10))}%
-        \let\tenthspart\pgfmathresult%
-        \ifnum\wholestones=0\relax
-          \ensuremath{\frac{\tenthspart}{10}}%
-        \else
-          \ensuremath{\wholestones\frac{\tenthspart}{10}}%
-        \fi
-      \fi
-    \fi
-  \fi
-}
-
-% Macro to return "stone" or "stones" based on weight in tenths
-\newcommand{\stonesplural}[1]{%
-  \ifnum#1>10\relax
-    stones%
-  \else
-    stone%
-  \fi
-}
 
 \newcommand{\setDNDfont}[2]{%
   \@ifundefined{dnd@font@#1}{%
@@ -2029,96 +2088,6 @@
    }%
 }
 
-
-%%%%%%%%%%%%
-
-% Vertical spacing between rows of slots
-\newdimen\slotrowsep
-\slotrowsep=2pt
-
-% Helper counters
-\newcount\tempcount
-\newcount\remaining
-\newcount\minrowstempcount
-\newcounter{minrowsresult}
-\newcounter{rowswiththree}
-\newcounter{rowswithfour}
-\newcounter{buildrows}
-
-\newif\iffirstisfour
-
-% Helper function that computes minrows and stores in counter
-\newcommand{\setminrowsresult}[1]{%
-  \ifnum#1<5
-    \setcounter{minrowsresult}{1}%
-  \else
-    % Try with first row = 3
-    \setminrowsresult{\numexpr#1-3\relax}%
-    \setcounter{rowswiththree}{\value{minrowsresult}}%
-    % Try with first row = 4  
-    \setminrowsresult{\numexpr#1-4\relax}%
-    \setcounter{rowswithfour}{\value{minrowsresult}}%
-    % Return the minimum (plus 1 for the current row)
-    \ifthenelse{\value{rowswiththree}>\value{rowswithfour}}{%
-      \setcounter{minrowsresult}{\value{rowswithfour}+1}%
-      \firstisfourtrue
-    }{%
-      \setcounter{minrowsresult}{\value{rowswiththree}+1}%
-      \firstisfourfalse
-    }%
-  \fi
-}
-
-% User-facing function that returns the result as text
-\newcommand{\minrows}[1]{%
-  \setminrowsresult{#1}%
-  \arabic{minrowsresult}%
-}
-
-\newcommand\fourslots{\slotsliteral[1.0mm]{4}} % closer together
-
-
-% Main macro
-\newcommand{\stackslots}[1]{%
-  \noindent
-  \setcounter{slotcounter}{#1}%
-  \ifnum\value{slotcounter}=0
-    \hbox{}%
-  \else
-    \vbox{\buildoptimalrows{\arabic{slotcounter}}}%
-  \fi
-}
-
-
-
-% Build optimal row composition using same recursive logic
-\newcommand{\buildoptimalrows}[1]{%
-  \setcounter{buildrows}{#1}%
-  \ifthenelse{\value{buildrows}<5}{%
-    % Base case: 1-4 slots in single row
-    \hbox to 0pt{\hss
-      \ifthenelse{\value{buildrows}=4}{\fourslots}{\slots{\arabic{buildrows}}}%
-      \hss}%
-  }{%
-    % Recursive case: decide between first row of 3 or 4
-    % Try with first row = 3
-    \setminrowsresult{\value{buildrows}}%
-    \iffirstisfour
-       \hbox to 0pt{\hss\fourslots\hss}%
-       \buildoptimalrows{\value{buildrows}-4}%
-    \else
-       \hbox to 0pt{\hss\slots{3}\hss}%
-       \buildoptimalrows{\value{buildrows}-3}%
-    \fi
-  }%
-}
-
-\newcommand\beginExpand{}%
-\def\beginExpand#1[#2]{%
-  \edef\begin@optional{\noexpand\begin{#1}[#2]}%
-  \begin@optional
-}
-  
 
 
 \long\def\SplitAtProfskip#1{%

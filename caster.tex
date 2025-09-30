@@ -217,12 +217,6 @@
   \ifDNDdefined{MAGIC}
      {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}}
      {\def\where{below right corner=of attacks}}%
-%  \beginExpand{features}[\where]{}
-%  \let\described=\feature
-%  \begin{featurestab}
-%  \getDND{FEATURES}
-%  \end{featurestab}
-%  \end{features}
    \expandafter\node\expandafter[\where,widecolumn,fill=features] 
      (features)
      {\nodepart{label}FEATURES\nodepart{text}
