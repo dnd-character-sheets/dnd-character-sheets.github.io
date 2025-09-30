@@ -183,6 +183,17 @@ ATTACKS:
 
 ---
 
+## **COLOR** (USER)
+**Usage**: Controls whether to use colored backgrounds in the character sheet
+**Type**: Boolean
+**Template Usage**: Determines if background colors are applied to various sections
+**Default**: If omitted, defaults to true (colored backgrounds enabled)
+**Examples**:
+- `COLOR: true`
+- `COLOR: false`
+
+---
+
 ## **CHARACTER NAME** (USER)
 **Usage**: Character's name
 **Type**: String
@@ -727,6 +738,17 @@ PROFICIENCIES:
 - `"SENSES": "Darkvision 60 ft."`
 - `"SENSES": ""`
 - `SENSES: Darkvision 60 ft.`
+
+---
+
+## **SHEET ORIGIN** (USER)
+**Usage**: Metadata indicating where the character sheet originated from
+**Type**: String
+**Template Usage**: Informational metadata, may be used for tracking or attribution
+**Examples**:
+- `"SHEET ORIGIN": "Character Builder Web Form"`
+- `"SHEET ORIGIN": "Manual YAML Creation"`
+- `"SHEET ORIGIN": "D&D Beyond Import"`
 
 ---
 
