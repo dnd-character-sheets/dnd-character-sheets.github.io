@@ -192,6 +192,7 @@
  \node (attacks) [widecolumn,fill=attacks,below right corner=of hpbackground]
     {\nodepart{label}ATTACKS\nodepart{text}
     \centering
+    \useDNDfont*{ATTACKS}
     \begin{attackstab}
     \getDND{ATTACKS}
     \end{attackstab}
@@ -233,6 +234,7 @@
      (features)
      {\nodepart{label}FEATURES\nodepart{text}
       \let\described=\feature
+      \useDNDfont*{FEATURES}
       \begin{featurestab}
       \getDND{FEATURES}
       \end{featurestab}
@@ -358,6 +360,7 @@
       ]
    {\nodepart{label}PROFICIENCIES\nodepart{text}
      \vspace*{-2pt} % too much inner ysep at the top
+     \useDNDfont*{PROFICIENCIES}
      \begin{proflist}
      \getDND*{PROFICIENCIES}
      \end{proflist}
