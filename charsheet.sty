@@ -183,18 +183,6 @@
 \newcommand\dndfill[4]{%
   \fill[#4] (#1) +(1mm,1mm) rectangle +(#2-1mm,#3-1mm);
 }
-\def\south{south}
-\newcommand\dndlabeledbox[6][south]{% anchor, add color and label
-  \dndfill{#2}{#3}{#4}{#5}
-  \dndbox{#2}{#3}{#4}
-  \def\anchor{#1}
-  \ifx\anchor\south
-    \path (#2) ++(#3/2,0mm) node [inner sep=6pt,anchor=#1] {\textsf{#6}};
-  \else
-    \path (#2) node [inner sep=6pt,anchor=#1] {\textsf{#6}};
-  \fi
-}
-  
 
 \newcommand{\dndboxhere}[2]{%
   % draw a decorative box with the lower left corner at node dndboxll
@@ -1157,7 +1145,6 @@
        \temp
     \endgroup
   },
-  label/.style={dnd/label}, % short alias
     #1]
    \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
    \path (current bounding box.north) coordinate (top)
@@ -1190,20 +1177,6 @@
   dnd/decorate/.default=white,
   decorate/.style={dnd/decorate={#1}}, % short alias
   decorate/.default=white,
-%
-  dnd/label/.style={
-    append after command={
-      \pgfextra{%
-        \begingroup
-          % expand \tikzlastnode but keep \dndlabel untouched
-          \edef\temp{\the\DND@decorations \noexpand\dndlabel{\tikzlastnode}{#1}}%
-          \global\DND@decorations=\expandafter{\temp}%
-        \endgroup
-      }%
-    }
-  },
-%  label/.style={dnd/label={#1}}, % short alias
-  dndlabel/.style={dnd/label={#1}}, % short alias
 %
 }
 
@@ -2492,64 +2465,9 @@
         {\textsf{\footnotesize #6}}
 }
 
-\newdimen\mytemp
 
-\newcommand\newsectionenv[5][]{%
-   % [width=...,...]{name}{label}{pre-code}{post-code}
-  \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
-  \expandafter\newdimen\csname#2width\endcsname
-  \runwidth{\setsectionenvwidth{#2}}{width=\dndrightwidth,#1}%
-  \NewEnviron{#2}[1][]{
-    % [...] name 
-    \runwidth{\setsectionenvwidth{#2}}{##1}%
-    \setlength{\my@xa}{\csname#2width\endcsname-7mm}%
-%    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
-    \typeout{\string\node{}  [#2,#1,##1] (#2) ...}%
-    \node [%inner sep=0pt,
-           decorated labeled stub rectangle,
-           width=\dndrightwidth,#2,#1,##1] (#2) {\begin{minipage}[t]{\my@xa}
-         #4%
-         \csname#2body\endcsname
-         #5%
-         \par\medskip
-         \typeout{{\string\hsize} inside #2 is \the\hsize}%
-         \hbox to \hsize{\hss\scriptsize Old: \textsf{\strut#3}\hss}%
-         \end{minipage}\nodepart{label}New: #3};
-%    \dnddecorate{#2};
-  }
-}
-
-
-
-\newcommand\typewidth[1]{\typeout{width is #1}}
-\newcommand\setsectionenvwidth[2]{% section-env-name annotations
-%  \typeout{setting #1width to #2}%
-%  \expandafter\show\csname#1width\endcsname
-  \expandafter\setlength\csname#1width\endcsname{#2}%
-%  \expandafter\show\csname l@#1width\endcsname
-}
-
-%%%%    \newcommand\newsectionenvx[5][\dndrightwidth]{%
-%%%%       % [annotations]{name}{label}{pre-code}{post-code}
-%%%%      \expandafter\environbodyname\expandafter{\csname#2body\endcsname}
-%%%%      \expandafter\newdimen\csname#2width\endcsname
-%%%%      \NewEnviron{#2}[1][]{
-%%%%        % [...] name 
-%%%%        %    \expandafter\setlength\csname#2width\endcsname{#1-3mm}
-%%%%    %    \expandafter\setlength\csname#2width\endcsname{40mm}%
-%%%%    %    \runwidth{\typewidth}{#1}%
-%%%%    %    \def\@runwidth@macro###1{\setlength{\csname#2width\endcsname}{zorch}}%
-%%%%    %    \show\@runwidth@macro
-%%%%    %    \pgfkeys{/runwidth/.cd, ##1}%
-%%%%        \runwidth{\setsectionenvwidth{#2}}{##1}%
-%%%%        \expandafter\advance\csname#2width\endcsname by -6mm
-%%%%        \node [#2,#1,##1] (#2) {{\begin{minipage}[t]{\csname#2width\endcsname}#4\csname#2body\endcsname#5\par\medskip\hbox to \hsize{\hss\scriptsize\textsf{\strut#3}\hss}%
-%%%%    \end{minipage}}};
-%%%%    %    \dnddecorate{#2};
-%%%%      }
-%%%%    }
-
-\newcommand\tinystacklabel[2]{\raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
+\newcommand\tinystacklabel[2]{%
+   \raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
 
 
 
@@ -2594,10 +2512,6 @@
 }
 
 
-\newcommand\dndlabel[3][DEFAULT LABEL]{% [key for font] {node}{label text, which could be a macro}
-  \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
-        {\textsf{\useDNDfont{#1}D: #3}};
-}
 \newcommand\dndtoplabel[2]{% {node}{label text}
   \node [outer sep=0pt, inner sep=0pt, below=of #1.north]
         {\textsf{\footnotesize #2}};
