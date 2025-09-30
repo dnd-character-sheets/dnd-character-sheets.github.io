@@ -50,8 +50,8 @@
     outer xsep=3pt,
     minimum height=17mm,
   },
-  dndhits/.style={
-    dndmaxhp,
+  dnd hit dice/.style={
+    dnd max hp,
 %    labeled decorated clipped rectangle,
 %    yseparated,
 %    minimum width=\hpwidth/2-5pt,
@@ -118,8 +118,8 @@
 
 \Large
 
-    \setnodeheight\sectionheight[dndmaxhp]
-    \setnodeheight\tmpheight[dndhits]
+    \setnodeheight\sectionheight[dnd max hp]
+    \setnodeheight\tmpheight[dnd hit dice]
     \advance\sectionheight by \tmpheight
     \advance\sectionheight by 3\mynodedistance
     \def\hdwidth{20mm}
@@ -132,7 +132,7 @@
        { };
 
       \node (hitdice)
-             [dndhits,labeled decorated clipped rectangle,width=\hdwidth,inside south east corner=of hpbackground,
+             [dnd hit dice,labeled decorated clipped rectangle,width=\hdwidth,inside south east corner=of hpbackground,
              font=\Large] 
          {\nodepart{label}HIT DICE\nodepart{ctext}
             \vrule height 8mm width 0pt\getDND*{HIT DICE}}
@@ -144,18 +144,18 @@
      }{}
 
       \node (curhp)
-            [dndhits,labeled decorated clipped rectangle,fill=white,width=\chpwidth,left=of hitdice,
+            [dnd hit dice,labeled decorated clipped rectangle,fill=white,width=\chpwidth,left=of hitdice,
              ] 
          { \nodepart{label}CURRENT HIT POINTS }
          ;
 
-      \node [dndmaxhp,above left corner=of curhp] 
+      \node [dnd max hp,above left corner=of curhp] 
          (maxhp)
          {\nodepart{label}MAX HP\nodepart{ctext}\getDND*{MAX HP}}
          ;
 
       \node (initiative)
-            [dndmaxhp,right=of maxhp] 
+            [dnd max hp,right=of maxhp] 
          {\nodepart{label}INITIATIVE\nodepart{ctext}\getDND*{INITIATIVE}}
          ;
 
@@ -164,12 +164,12 @@
 
 
       \node (speed)
-            [dndmaxhp,right=of initiative] 
+            [dnd max hp,right=of initiative] 
          {\nodepart{label}SPEED\nodepart{ctext}\getDND*{SPEED}}
          ;
 
 
-       \node (ac) [dndmaxhp,shield,inner shield,draw,ultra thick,right=of speed,width=15mm,
+       \node (ac) [dnd max hp,shield,inner shield,draw,ultra thick,right=of speed,width=15mm,
                    font=\Large,
             ]
       {\getDND*{ARMOR CLASS}}
@@ -392,7 +392,7 @@
 \path (proficiencies.east) ++(0.5\tmpwidth,0) coordinate (special center);
 
   \node (upper val)
-         [dndmaxhp,width=28mm] 
+         [dnd max hp,width=28mm] 
       at (special center |- maxhp.center)
          {\nodepart{label}
           \ifDNDfont{\upperdndlabel}{\useDNDfont{\upperdndlabel}}{}%
@@ -404,7 +404,7 @@
 \ifx\lowerdndlabel\empty\else
 
    \node (lower val)
-      [dndmaxhp,width=28mm]
+      [dnd max hp,width=28mm]
       at (special center |- curhp.center)
       {\nodepart{label}
        \ifDNDfont{\lowerdndlabel}{\useDNDfont{\lowerdndlabel}}{}%

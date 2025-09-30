@@ -39,6 +39,10 @@
 \pgfkeys{/pgf/minimum label sep/.initial=\baselineskip}
 \tikzset{minimum label sep/.code=\pgfkeys{/pgf/minimum label sep={#1}}}
 
+\pgfkeys{
+  /tikz/shield text fraction/.initial=0.67, % where to put center text
+  /tikz/shield text fraction/.default=0.67,
+}
 
 \tikzset{
   minimum label sep=8pt,
@@ -48,22 +52,13 @@
   labeled decorated clipped rectangle/.style={
     shape=decorated labeled clipped rectangle,
   },
-  dndbox/.style={ 
+  dndbox/.style={ % box intended for sections and such
     decorated stub rectangle,
     stub radius=2.3mm,
     line width=1.2pt,
     draw,
   },
-  dndhits/.style={
-    dndmaxhp,
-    minimum height=21mm,
-  },
-  dndencumbrance/.style={
-    dndmaxhp,
-    minimum width=40mm,
-    font={\large\boldmath\bfseries\sffamily},
-  },
-  dndmaxhp/.style={
+  dnd max hp/.style={ % hold max NP, initiative, speed, and so on
     dndbox,
     labeled decorated clipped rectangle,
     font=\LARGE,
@@ -71,13 +66,12 @@
     minimum height=18mm,
     minimum width=24mm,
   },
-  old/dndmaxhp/.style={
-    dndbox,
-    fill=white,
-    minimum height=18mm,
-    minimum width=24mm,
+  dndencumbrance/.style={
+    dnd max hp,
+    minimum width=40mm,
+    font={\large\boldmath\bfseries\sffamily},
   },
-  statbox/.style={
+  statbox/.style={ % 
     dndbox,
     stub rectangle,
     stub radius=1.5mm,
@@ -412,8 +406,11 @@
   \anchor{text}{%
     \southwest \my@W=\pgf@x \my@S=\pgf@y
     \northeast \my@E=\pgf@x \my@N=\pgf@y
+    \pgfkeysgetvalue{/tikz/shield text fraction}{\@fraction}%
+    \expandafter\pgf@ya\@fraction\my@S
+    \expandafter\pgf@yb\@fraction\my@N
     \pgfpoint{0.5\my@W+0.5\my@E-0.5\wd\pgfnodeparttextbox}
-             {0.45\my@S+0.55\my@N-\dp\pgfnodeparttextbox}%
+             {\my@S-\pgf@ya+\pgf@yb+0.5\dp\pgfnodeparttextbox-0.5\ht\pgfnodeparttextbox}%
   }
 
   % Background path (defines the shape outline)
@@ -1970,8 +1967,10 @@
   \dndtoplabel{#2}{\tiny#2}
   \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
   \ifdndstatshield
-    \node[draw,shield,anchor=north,ultra thick,width=\savingshieldwidth, height=10mm, fill=stats] 
-              at ($(#2.north east)+(0.1mm,3mm)$) {\raisebox{4pt}{\small\signed{#5}}};
+    \node[draw,shield,shield text fraction=0.55,
+          anchor=north,ultra thick,width=\savingshieldwidth, height=10mm, fill=stats,
+         ] 
+              at ($(#2.north east)+(0.1mm,3mm)$) {\small\textsf{\signed{#5}}};
   \fi
 }
 

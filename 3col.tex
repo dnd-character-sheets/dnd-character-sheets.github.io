@@ -70,13 +70,13 @@
     outer xsep=3pt,
     minimum height=17mm,
   },
-  dndmaxhp2/.style={
-    dndmaxhp,
+  dnd max hp2/.style={
+    dnd max hp,
     labeled decorated clipped rectangle,
     minimum height=20mm,
   },
-  dndhits/.style={
-    dndmaxhp2,
+  dnd hit dice/.style={
+    dnd max hp2,
     yseparated,
     minimum width=\hpwidth/2-5pt,
     minimum height=18mm,
@@ -179,7 +179,7 @@
 
 %      \draw [thick,black,fill=yellow] (speed.labeltop) circle [radius=5pt];
 
-      \node [dndmaxhp2,below=of initiative,width=\hpwidth] 
+      \node [dnd max hp2,below=of initiative,width=\hpwidth] 
          (maxhp)
          {\nodepart{label}CURRENT HIT POINTS}
          ;
@@ -189,7 +189,7 @@
                \hrulefill~~~}}
        ;
 
-      \node[dndmaxhp2,below=of maxhp,minimum height=20mm,width=\hpwidth]
+      \node[dnd max hp2,below=of maxhp,minimum height=20mm,width=\hpwidth]
         (temphp)
         {\nodepart{label}TEMPORARY HIT POINTS}
         ;
@@ -197,7 +197,7 @@
 
 
       \node (hitdice)
-             [dndhits,below left corner=of temphp] 
+             [dnd hit dice,below left corner=of temphp] 
          {\nodepart{label}HIT DICE\nodepart{ctext}
             \vrule height 8mm width 0pt\Large\getDND*{HIT DICE}}
          ;
@@ -208,7 +208,7 @@
      }{}
 
       \node (death saves)
-            [dndhits,below right corner=of temphp,font=\small] 
+            [dnd hit dice,below right corner=of temphp,font=\small] 
          { \nodepart{label}DEATH SAVES\nodepart{ctext}
             \tiny\begin{tabular}{@{}r@{\hskip1pt}l@{}}
             \raisebox{1pt}{SUCCESSES}&\slotsliteral3\\[2pt]
