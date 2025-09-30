@@ -111,133 +111,12 @@
   equipment/.style={
     fill=equipment,
   },
-}
-
-\tikzset{
   proficiencies/.style={
     dndbox,
     labeled decorated stub rectangle,
     fill=proficiencies,
   },
 }
-
-% dndbox should create a node
-
-%%  % inside a tikzpicture
-%%  \node[minimum width=60mm,   % desired width
-%%        minimum height=35mm,  % desired height
-%%        inner sep=0pt,        % no extra padding
-%%        outer sep=0pt]        % (optional) no extra margin
-%%        (MyBox) at (10mm,5mm) {};
-
-\newcommand\dndnode[4]{%
-   % name, origin, w, h
-  \node[
-      anchor=south west,
-      rectangle,
-      minimum width=#3,   % desired width
-      minimum height=#4,  % desired height
-      inner sep=0pt,        % no extra padding
-      outer sep=0pt]        % (optional) no extra margin
-      (#1) at (#2) {};
-}
-
-% Decorative box macro for D&D character sheets
-% Usage: \dndbox{origin}{width}{height}
-% where origin may be `x,y` or a coordinate name
-\newcommand{\dndbox}[3]{%
-  % Parameters: #1 = x,y, #2 = width, #3 = height
-  \path (#1) coordinate (dndboxll);
-  \dndboxhere{#2}{#3}
-}
-\newcommand\dndfill[4]{%
-  \fill[#4] (#1) +(1mm,1mm) rectangle +(#2-1mm,#3-1mm);
-}
-
-\newcommand{\dndboxhere}[2]{%
-  % draw a decorative box with the lower left corner at node dndboxll
-  % and with a width and height given by parameters #1 and #2
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Define coordinates
-  \path (dndboxll)     coordinate (ll)
-             +(#1, 0)  coordinate (lr)
-             +(#1, #2) coordinate (ur)
-             +(0, #2)  coordinate (ul);
-  
- % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
-% dndsection environment - stores parameters for use inside tikzpicture
-
-\newlength\dndtextwidth
-
-\newlength\rightx
-\rightx=7.15cm
-
-
-
-\newenvironment{nobullets}
-  {\begin{list}{}{%
-      \setlength{\leftmargin}{0pt}% no indentation
-      \setlength{\labelwidth}{0pt}%
-      \setlength{\labelsep}{0pt}%
-      \setlength{\itemindent}{0pt}%
-      \setlength{\topsep}{0pt}% space before/after the list
-      \setlength{\partopsep}{0pt}%
-      \setlength{\parsep}{0pt}%
-      \setlength{\itemsep}{0.5\smallskipamount}% space between items
-      \renewcommand*{\makelabel}[1]{}% suppress the bullet
-  }}%
-  {\end{list}}
 
 \newenvironment{proflist}
   {\begin{list}{}{%
@@ -283,24 +162,13 @@
 \featurespostdepth=5pt
 \newcommand\described[2]{#1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]}
 
-\newdimen\featuresnamewidth
+\newdimen\featuresnamewidth % space on left for name of a feature
 \featuresnamewidth=28mm
 
 \newenvironment{featurestab}
   {\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
-%   \par\bigskip
-%   \hrule width \hsize depth 0pt height 2pt
    \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
   {\end{tabular}}
-
-
-\newcommand\cantripsheader{%
-  \multicolumn2{l}{\textsf{CANTRIPS}}%
-}
-
-\newcounter{boxcounter}
-
-\newcommand\hpetcll{\rightx + 30mm, 184mm}
 
 \newcommand\spellslevel[2][0]{%
     \ifnum#2=0
@@ -310,7 +178,6 @@
               LEVEL~#2 SPELLS \ifnum#1>0(\slots{#1} per day)\fi}%
     \fi
 }
-
 
 \newenvironment{attackstab}
   {\renewcommand\arraystretch{1.3}%
@@ -336,36 +203,6 @@
 %  inner sep, anchors, etc.
 %-------------------------------------------------------------
 
-\pgfdeclareshape{kite}{
-  % Inherit anchors from rectangle
-  \inheritsavedanchors[from=rectangle]
-  \inheritanchor[from=rectangle]{center}
-  \inheritanchor[from=rectangle]{north}
-  \inheritanchor[from=rectangle]{south}
-  \inheritanchor[from=rectangle]{east}
-  \inheritanchor[from=rectangle]{west}
-  \inheritanchor[from=rectangle]{north east}
-  \inheritanchor[from=rectangle]{north west}
-  \inheritanchor[from=rectangle]{south east}
-  \inheritanchor[from=rectangle]{south west}
-  
-  % Background path (defines the shape outline)
-  \backgroundpath{
-    % Get the corners
-    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
-    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
-    
-    % Calculate 2/3 up the west edge
-    \pgf@yc=\pgf@ya
-    \advance\pgf@yc by 0.667\pgf@yb
-    \advance\pgf@yc by -0.667\pgf@ya
-    
-    % Draw line from north anchor to 2/3 up west edge
-    \pgfpathmoveto{\pgfpoint{0.5\pgf@xa + 0.5\pgf@xb}{\pgf@yb}}
-    \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yc}}
-  }
-}
-
 \newdimen\my@xa
 \newdimen\my@ya
 \newdimen\my@xb
@@ -379,12 +216,10 @@
 
 % Here is a {\LaTeX} macro that is meant to draw a shield shape.  I
 % started with a kite shape using straight lines to connect
-% north-west-south-east, then replaced the first straight line with a
-% quadratic curve.  Emulating the code that is there, will you please
-% replace the other three straight lines with similar curves?
+% north-west-south-east, then replaced the straight lines with curves.
 
 \pgfkeys{
-  /tikz/shield text fraction/.initial=0.67, % where to put center text
+  /tikz/shield text fraction/.initial=0.67, % where to put center of text top/bottom
   /tikz/shield text fraction/.default=0.67,
 }
 
@@ -477,11 +312,8 @@
   }
 }
 
-
-
-\newcommand\dndinset{0.1}
-
-\newcommand{\slotsliteral}[2][1.5mm]{%
+\newcommand{\slotsliteral}[2][1.5mm]{% 
+  % connected dots, use for spell slots, hit dice, etc
   \hbox{%
     \begin{tikzpicture}[baseline=(circle-base), thick,inner sep=0pt, outer sep=0pt]
       \ifnum#2>0
@@ -542,6 +374,8 @@
 %
 % \tikz@lib@place@handle@{spec}{anchor}{x multiplier}{y multiplier}{initial point}{0.707106781}%
 %
+
+% extensions to positioning library
 
 \tikzset{
     % Inside south east corner
