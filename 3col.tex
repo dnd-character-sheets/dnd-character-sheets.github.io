@@ -167,7 +167,7 @@
          {\nodepart{label}\footnotesize INITIATIVE\nodepart{ctext}\Large\getDND*{INITIATIVE}}
          ;
 
-       \node (ac) [initiative,shield,innershield,draw,ultra thick,left=of initiative,width=12mm,
+       \node (ac) [initiative,shield,inner shield,draw,ultra thick,left=of initiative,width=12mm,
                    font=\Large,
                    label footer height=12pt,
             ]
@@ -383,12 +383,10 @@ upper corner=of stats background] {\scriptsize xxx};
        below right corner=4mm of saving throws]
    {\hbox to 0pt{\hss\hspace*{6.2mm}\scriptsize\textsf{PROFICIENCY BONUS}\hss}}
    ;
-\node (proficiency circle) [anchor=west,proficiencies,circle,
+\node (proficiency circle) [anchor=west,proficiencies,circle,inner circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
        at ($(proficiency bonus.west)+(-2mm,0mm)$)
       {\large\textsf{+\arabic{proficiency bonus}}};
-
-\draw [line width=0.7pt] (proficiency circle.center) circle [radius=4mm];
 
 
   \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
