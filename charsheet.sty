@@ -2161,12 +2161,19 @@
 % Environment for displaying ranged attack ranges
 \newenvironment{ranges}
   {\noindent
-   \begin{tabular}{@{}l@{ }r@{: }l@{}}}
+   \begin{tabular}{@{}l@{ }r@{: }l@{ }l@{}}}
   {\end{tabular}\par}
 
+\newcommand\@addrangeinfo{}% avoid redef
 \def\@addrangeinfo#1\@nil#2\@nil{% name range
   \g@addto@macro\@rangedlist{#1&range&#2\\
      & \hidewidth ammo & \vrule width 3em height 0pt depth 0.2pt\\[3pt]
+  }
+}
+\def\@addrangeinfo#1\@nil#2\@nil{% name range
+  \g@addto@macro\@rangedlist{#1&range&#2 
+      &(ammo \vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
+%     & \hidewidth ammo & \vrule width 3em height 0pt depth 0.2pt\\[3pt]
   }
 }
 
