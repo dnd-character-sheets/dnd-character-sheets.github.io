@@ -21,13 +21,26 @@
 \colorlet{proficiencies}{yellow!12!white}
 \colorlet{attacks}{orange!25!white}
 \colorlet{magic}{red!12!white}
-\colorlet{mypurple}{red!40!blue}
 \colorlet{features}{magenta!16!white}
 \colorlet{playername}{green!90!yellow!8!white}
 \colorlet{splashfield}{playername!97.5!black}
 \colorlet{teal}{blue!40!green}
 \colorlet{equipment}{playername}
-\colorlet{hpetc}{gray!40!white}
+\colorlet{hit points background}{gray!40!white}
+\colorlet{features background}{white!60!features}
+
+\DeclareOption{nocolor}{\dndnocolor}
+\newcommand\dndnocolor{%
+  \colorlet{stats}{white}%
+  \colorlet{proficiencies}{white}%
+  \colorlet{attacks}{white}%
+  \colorlet{magic}{white}%
+  \colorlet{features}{white}%
+  \colorlet{equipment}{white}%
+  \colorlet{features background}{white}
+}
+
+
 
 \newif\ifcaster
 \casterfalse
@@ -269,8 +282,8 @@
 
 
 \newcommand\feature[2]{%
-  \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
-  \colorbox[gray]{0.9}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
+  \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
+  \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
 }
 
 \newdimen\featurespostspace
@@ -289,11 +302,6 @@
    \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
   {\end{tabular}}
 
-
-%\newenvironment{spellstab}
-% {\renewcommand\arraystretch{1.0}%
-%   \begin{tabular}{>{\raggedright\arraybackslash\itshape}p{26mm}>{\raggedright\arraybackslash}p{93mm}}}
-%  {\end{tabular}}
 
 \newcommand\cantripsheader{%
   \multicolumn2{l}{\textsf{CANTRIPS}}%
