@@ -58,7 +58,7 @@
     stub radius=2.3mm,
     line width=1.2pt,
     draw,
-  },  % make decorations work
+  },
   dndleft/.style={
     dndbox,
     minimum width=67mm,
@@ -166,12 +166,6 @@
       (#1) at (#2) {};
 }
 
-\newcommand\dndnodebox[4]{%
-  \dndnode{#1}{#2}{#3}{#4}
-  \dndbox{#2}{#3}{#4}
-}
-
-
 % Decorative box macro for D&D character sheets
 % Usage: \dndbox{origin}{width}{height}
 % where origin may be `x,y` or a coordinate name
@@ -246,162 +240,9 @@
     ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
 }
 
-\newcommand{\dndboxnodey}[1]{%
-  % Draw a decorative box around the bounding box of node #1
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Get the bounding box of the node
-  \path (#1.south west) coordinate (ll)
-        (#1.south east) coordinate (lr)
-        (#1.north east) coordinate (ur)
-        (#1.north west) coordinate (ul);
-  
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
-\newcommand{\dndboxold}[4]{%
-  % Parameters: #1 = x, #2 = y, #3 = width, #4 = height
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Define coordinates
-  \coordinate (ll) at (#1, #2);
-  \coordinate (lr) at (#1 + #3, #2);
-  \coordinate (ul) at (#1, #2 + #4);
-  \coordinate (ur) at (#1 + #3, #2 + #4);
-  
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
 % dndsection environment - stores parameters for use inside tikzpicture
 
 \newlength\dndtextwidth
-
-\NewEnviron{dndsection}[6]{%
-  \begingroup
-  \newcommand{\dndsectionx}{#1}%
-  \newcommand{\dndsectiony}{#2}%
-  \newcommand{\dndsectionwidth}{#3}%
-  \newcommand{\dndsectionheight}{#4}%
-  \newcommand{\dndsectiontitle}{#5}%
-  \newcommand{\dndsectioncolor}{#6}%
-  % Fill background
-  \fill[\dndsectioncolor] (\dndsectionx + 1mm, \dndsectiony + 1mm) rectangle (\dndsectionx + \dndsectionwidth - 1mm, \dndsectiony + \dndsectionheight - 1mm);
-  
-  % Draw the decorative box
-  \dndbox{\dndsectionx,\dndsectiony}{\dndsectionwidth}{\dndsectionheight}
-  
-  % Place the title at the bottom center
-  \node[font=\footnotesize\scshape, anchor=south] at (\dndsectionx + \dndsectionwidth/2, \dndsectiony + 1mm) {\sffamily {\dndsectiontitle}};
-  
-  % Calculate minipage width
- \setlength{\dndtextwidth}{\dndsectionwidth}
- \addtolength\dndtextwidth{-2\fboxsep}
- \addtolength\dndtextwidth{-2mm}
-
-  % Place content in a minipage
-  \node[anchor=north west, inner sep=0] at (\dndsectionx + \fboxsep + 1mm, \dndsectiony+\dndsectionheight - \fboxsep - 1mm) {%
-   \begin{minipage}{\dndtextwidth}%
-     \BODY%
-   \end{minipage}%
-  };
-  \endgroup
-}
 
 \newlength\leftwidth
 \newlength\dndrightwidth
@@ -411,65 +252,6 @@
 \rightx=7.15cm
 
 \let\rightwidth=\dndrightwidth
-
-
-%%%%    % Specific section environments with fixed positions
-%%%%    % Use different body names to avoid conflicts
-%%%%    \environbodyname\attacksbody
-%%%%    \NewEnviron{attackssection}{%
-%%%%      \ifcaster
-%%%%        \def\y{152mm}%
-%%%%        \def\h{26mm}
-%%%%      \else
-%%%%        \def\y{129mm}%
-%%%%        \def\h{49mm}
-%%%%      \fi  
-%%%%      \begin{dndsection}{\rightx}{\y}{\rightwidth}{\h}{ATTACKS}{attacks}
-%%%%        \attacksbody
-%%%%      \end{dndsection}
-%%%%    }[\ignorespacesafterend]
-%%%%    % y = 128mm for noncasters
-%%%%    
-%%%%    
-%%%%    \environbodyname\featuresbody
-%%%%    
-%%%%    %%\NewEnviron{featuressection}{%  noncaster
-%%%%    %%  \begin{dndsection}{\rightx}{55mm}{\rightwidth}{70mm}{FEATURES}{features}
-%%%%    %%    \featuresbody
-%%%%    %%  \end{dndsection}
-%%%%    %%}[\ignorespacesafterend]
-%%%%    %%
-%%%%    
-%%%%    \NewEnviron{featuressection}{%  caster
-%%%%      \begin{dndsection}{\rightx}{0mm}{\rightwidth}{42mm}{FEATURES}{features}
-%%%%        \featuresbody
-%%%%      \end{dndsection}
-%%%%    }[\ignorespacesafterend]
-%%%%    
-%%%%    
-%%%%    \environbodyname\magicbody  
-%%%%    \NewEnviron{magicsection}{%
-%%%%      \dndnode{magic}{\rightx,44.5mm}{\rightwidth}{105mm};
-%%%%      \begin{dndsection}{\rightx}{44.5mm}{\rightwidth}{105mm}{MAGIC}{magic}
-%%%%        \magicbody
-%%%%      \end{dndsection}
-%%%%    }[\ignorespacesafterend]
-%%%%    
-%%%%    \environbodyname\equipmentbody
-%%%%    \NewEnviron{equipmentsection}{%
-%%%%      \dndnode{equipment}{0mm,0mm}{68mm}{53mm}
-%%%%      \begin{dndsection}{0mm}{0mm}{68mm}{53mm}{EQUIPMENT}{equipment}
-%%%%        \equipmentbody
-%%%%      \end{dndsection}
-%%%%    }[\ignorespacesafterend]
-%%%%    
-%%%%    \environbodyname\proficienciesbody
-%%%%    \NewEnviron{proficienciessection}{%
-%%%%      \begin{dndsection}{30mm}{55mm}{38mm}{160mm}{PROFICIENCIES}{proficiencies}
-%%%%        \proficienciesbody
-%%%%      \end{dndsection}
-%%%%    }[\ignorespacesafterend]
-
 
 
 \newenvironment{nobullets}
@@ -731,204 +513,7 @@
 
 
 
-\newcommand{\dndboxnode}[1]{%
-  % Draw a decorative box around the node #1 using inner separation boundaries
-  \pgfmathsetmacro{\cornersize}{0.15} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{0.05} % Inset for inner lines
-  
-  % Get the node's shape and extract inner dimensions
-  \begingroup
-    \pgfpointanchor{#1}{center}
-    \pgf@xa=\pgf@x
-    \pgf@ya=\pgf@y
-    
-    % Get the text box dimensions (excluding inner sep)
-    \pgfpointanchor{#1}{text}
-    \advance\pgf@x by -\pgf@xa
-    \advance\pgf@y by -\pgf@ya
-    \pgfmathsetmacro{\textwidth}{2*abs(\pgf@x)*0.03514598}
-    \pgfmathsetmacro{\textheight}{2*abs(\pgf@y)*0.03514598}
-    
-    % Use a more direct approach with the node's actual boundaries
-    % Calculate positions based on the node's text area
-    \pgfextractx{\pgf@xa}{\pgfpointanchor{#1}{west}}
-    \pgfextractx{\pgf@xb}{\pgfpointanchor{#1}{east}}
-    \pgfextracty{\pgf@ya}{\pgfpointanchor{#1}{south}}
-    \pgfextracty{\pgf@yb}{\pgfpointanchor{#1}{north}}
-    
-    % Get inner sep values from the node
-    \pgfkeysgetvalue{/pgf/inner xsep}{\innerxsep}
-    \pgfkeysgetvalue{/pgf/inner ysep}{\innerysep}
-    \ifx\innerxsep\pgfkeysnovalue
-      \def\innerxsep{.3333em}
-    \fi
-    \ifx\innerysep\pgfkeysnovalue  
-      \def\innerysep{.3333em}
-    \fi
-    
-    % Convert inner sep to points
-    \pgfmathsetlengthmacro{\innerxseppt}{\innerxsep}
-    \pgfmathsetlengthmacro{\inneryseppt}{\innerysep}
-    
-    % Define coordinates at inner separation boundaries
-    % We need to account for the cornersize to ensure decorations stay within bounds
-    \pgfmathsetlengthmacro{\totalinsetx}{\innerxseppt + \cornersize cm}
-    \pgfmathsetlengthmacro{\totalinsety}{\inneryseppt + \cornersize cm}
-    
-    \coordinate (ll) at ($(#1.south west) + (\totalinsetx, \totalinsety)$);
-    \coordinate (lr) at ($(#1.south east) + (-\totalinsetx, \totalinsety)$);
-    \coordinate (ur) at ($(#1.north east) + (-\totalinsetx, -\totalinsety)$);
-    \coordinate (ul) at ($(#1.north west) + (\totalinsetx, -\totalinsety)$);
-  \endgroup
-  
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize)
-    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize)
-    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize)
-    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-}
-
-
 \newcommand\dndinset{0.1}
-
-\newcommand{\dnddecorate}[2][white]{%
-  % draw a decorative box on the named node
-  \pgfmathsetmacro{\cornersize}{0.30} % Size of corner decorations
-  \pgfmathsetmacro{\inset}{\dndinset} % Inset for inner lines
-
-  % 0.75pt is half of line width
-
-  % Define coordinates
-  \path (#2.south west) +(0.75pt,0.75pt) coordinate (ll)
-        (#2.south east) +(-0.75pt,0.75pt) coordinate (lr)
-        (#2.north west) +(0.75pt,-0.75pt) coordinate (ul)
-         (#2.north east) +(-0.75pt,-0.75pt) coordinate (ur)
-     ;
-  
-%   \draw[ultra thin] (ll) -- (lr) -- (ur) -- (ul) -- cycle;
-
-%  \draw [blue]
-%        (#2.south west) --
-%        (#2.south east) --
-%        (#2.north east) --
-%        (#2.north west) --
-%        cycle
-%     ;
-
-
-
-
-    \fill[#1] (ll) -- +(\cornersize,0) arc (0:90:\cornersize) -- cycle;
-    \fill[#1] (lr) -- +(-\cornersize,0) arc (180:90:\cornersize) -- cycle;
-    \fill[#1] (ul) -- +(\cornersize,0) arc (0:-90:\cornersize) -- cycle;
-    \fill[#1] (ur) -- +(-\cornersize,0) arc (180:270:\cornersize) -- cycle;
-
-
-
-  % Main outer frame (heavy lines)
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) -- ($(lr) + (-\cornersize, 0)$)
-    ($(lr) + (0, \cornersize)$) -- ($(ur) + (0, -\cornersize)$)
-    ($(ur) + (-\cornersize, 0)$) -- ($(ul) + (\cornersize, 0)$)
-    ($(ul) + (0, -\cornersize)$) -- ($(ll) + (0, \cornersize)$);
-  
-  % Corner decorations (ornate corners)
-  % Lower-left corner
-  \draw[line width=1.5pt] 
-    ($(ll) + (\cornersize, 0)$) arc (0:90:\cornersize)
-%%    ($(ll) + (0, \cornersize)$) -- ($(ll) + (0, \cornersize/2)$)
-%%    ($(ll) + (\cornersize, 0)$) -- ($(ll) + (\cornersize/2, 0)$)
-     ;
-  \draw[line width=0.8pt] 
-    ($(ll) + (\cornersize*0.7, \cornersize*0.3)$) arc (0:90:\cornersize*0.3);
-    
-  % Lower-right corner
-  \draw[line width=1.5pt] 
-    ($(lr) + (-\cornersize, 0)$) arc (180:90:\cornersize);
-%    ($(lr) + (0, \cornersize)$) -- ($(lr) + (0, \cornersize/2)$)
-%    ($(lr) + (-\cornersize, 0)$) -- ($(lr) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(lr) + (-\cornersize*0.7, \cornersize*0.3)$) arc (180:90:\cornersize*0.3);
-    
-  % Upper-right corner
-  \draw[line width=1.5pt] 
-    ($(ur) + (-\cornersize, 0)$) arc (180:270:\cornersize);
-%    ($(ur) + (0, -\cornersize)$) -- ($(ur) + (0, -\cornersize/2)$)
-%    ($(ur) + (-\cornersize, 0)$) -- ($(ur) + (-\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ur) + (-\cornersize*0.7, -\cornersize*0.3)$) arc (180:270:\cornersize*0.3);
-    
-  % Upper-left corner
-  \draw[line width=1.5pt] 
-    ($(ul) + (\cornersize, 0)$) arc (0:-90:\cornersize);
-%    ($(ul) + (0, -\cornersize)$) -- ($(ul) + (0, -\cornersize/2)$)
-%    ($(ul) + (\cornersize, 0)$) -- ($(ul) + (\cornersize/2, 0)$);
-  \draw[line width=0.8pt] 
-    ($(ul) + (\cornersize*0.7, -\cornersize*0.3)$) arc (0:-90:\cornersize*0.3);
-  
-  % Inner frame lines (lighter)
-  \draw[line width=0.5pt]
-    ($(ll) + (\inset, \inset)$) rectangle ($(ur) + (-\inset, -\inset)$);
-  
-  % Double line effect on sides
-  \draw[line width=0.3pt]
-    ($(ll) + (\inset*2, \cornersize*1.5)$) -- ($(ul) + (\inset*2, -\cornersize*1.5)$)
-    ($(lr) + (-\inset*2, \cornersize*1.5)$) -- ($(ur) + (-\inset*2, -\cornersize*1.5)$);
-
-%  \foreach \a in {north west, north east, south west, south east} {
-%    \fill[blue] (#2.\a) circle[radius=1pt];
-%  }
-
-
-%  \path (0,0) % expect semicolon after macro
-
-
-
-}
-
 
 \newcommand{\slotsliteral}[2][1.5mm]{%
   \hbox{%
@@ -1117,34 +702,8 @@
 
 
 
-%\newtoks\DND@finalizer   % stores things like \do{A}\do{B}
-%
-%% reset list at the start of every picture
-%\tikzset{
-%  % node option [decorate]: append \do{<lastnode>} to the toks list
-%  dnd/decorate/.style={
-%    append after command={
-%      \pgfextra{%
-%        \begingroup
-%          % expand \tikzlastnode but keep \do untouched
-%          \edef\temp{\the\DND@finalizer \noexpand\dnddecorate{\tikzlastnode}}%
-%          \global\DND@finalizer=\expandafter{\temp}%
-%        \endgroup
-%      }%
-%    }
-%  },
-%  decorate/.style={dnd/decorate}, % short alias
-%}
-
 \newenvironment{charsheet}[1][]
   {\begin{tikzpicture}[x=1cm,y=1cm, node distance=5pt,outer sep=0pt,
-    execute at begin picture={\global\DND@decorations={}},
-   execute at end picture={%
-    \begingroup
-      \edef\temp{\the\DND@decorations}%
-       \temp
-    \endgroup
-  },
     #1]
    \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
    \path (current bounding box.north) coordinate (top)
@@ -1156,29 +715,6 @@
   }
   {\end{tikzpicture}}
 
-
-
-\newtoks\DND@decorations   % stores things like \do{A}\do{B}
-
-
-\tikzset{
-  % node option [decorate]: append \do{<lastnode>} to the toks list
-  dnd/decorate/.style={
-    append after command={
-      \pgfextra{%
-        \begingroup
-          % expand \tikzlastnode but keep \dnddecorate untouched
-          \edef\temp{\the\DND@decorations \noexpand\dnddecorate[#1]{\tikzlastnode}}%
-          \global\DND@decorations=\expandafter{\temp}%
-        \endgroup
-      }%
-    }
-  },
-  dnd/decorate/.default=white,
-  decorate/.style={dnd/decorate={#1}}, % short alias
-  decorate/.default=white,
-%
-}
 
 \tikzset{
   inner shield/.style={
@@ -2456,14 +1992,6 @@
 \newcommand\pplabel{{\tiny PASSIVE PERCEPTION}}
 
 
-\newcommand\mynode[6][white]{% fill name style+location[+fill] at contents label
-  \node (#2) [#3] #4 { \Large \sffamily \mdseries #5 } ;
-  \dnddecorate[#1]{#2};
-  \node [outer sep=0pt, inner sep=0pt, above=of #2.south]
-        {\textsf{\footnotesize #6}}
-}
-
-
 \newcommand\tinystacklabel[2]{%
    \raisebox{3mm}{\tiny\begin{tabular}{c}#1\\#2\end{tabular}}}
 
@@ -2492,7 +2020,6 @@
 
 \newcommand\fullstatbox[5][]{% location name number modifier saving-throw
   \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
-%  \dnddecorate[stats]{#2}
   \dndtoplabel{#2}{\tiny#2}
   \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
   \ifdndstatshield
