@@ -317,15 +317,23 @@
        anchor=north east,
        at=(prof ne),
       ]
-   {\hbox to 0pt{\hss\hspace*{3.5mm}\tiny\textsf{PROFICIENCY BONUS}\hss}}
+   {}
    ;
 \path (stats background.east) ++(\mynodedistance,0) ++(-2.5pt,0) coordinate (prof circle west);
-\node (proficiencies circle) [anchor=west,proficiencies,circle,
+\node (proficiency circle) [anchor=west,proficiencies,circle,
        width=10mm,height=10mm,line width=1.5pt,draw]
        at (prof circle west |- proficiency bonus.center)
       {\large\textsf{+\arabic{proficiency bonus}}};
 
-\draw [line width=0.5pt] (proficiencies circle) circle [radius=4.2mm];
+\draw [line width=0.5pt] (proficiency circle) circle [radius=4.2mm];
+
+% center the text in the visible space
+\setdeltax\tmpwidth{proficiency bonus.east}{proficiency circle.east}
+
+\path (proficiency circle.east) ++(0.5\tmpwidth,0)
+      ++(-1.1mm,0) % for inset
+      node {\tiny\textsf{PROFICIENCY BONUS}}
+      ;
 
 % proficiencies bottom should be stats background bottom or equipment
 % top, whatever is higher

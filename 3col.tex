@@ -26,10 +26,14 @@
 
 \usepackage{pgfkeys}
 
+\def\mynodedistance{7pt}
+
 \newlength\colwidth
 \newlength\colgap
 \colgap=10pt
+\colgap=\mynodedistance
 \setlength\colwidth{(\textwidth-2\colgap)/3}
+
 
 \newlength\hpwidth
 \setlength\hpwidth{\colwidth-12pt}
@@ -101,7 +105,6 @@
 
 \ifDNDfalse{COLOR}{\dndnocolor}{}
 
-\def\mynodedistance{7pt}
 
 \noindent
 \begin{charsheet}
@@ -338,47 +341,60 @@
    {}
    ;
 
-\node (point) [right=of stats background] { };
+\path (dummy left column.east |- stats background.north)
+      ++(0,-1mm) % don't let box stick out too much
+       coordinate (inspo right)
+    ; 
 
-\setdeltax\tmpwidth{dummy left column.east}{point}
-
-% slots OK here
-
-\node (inspo right) [rectangle,red,thick,draw=none,width=\tmpwidth,right of
-upper corner=of stats background] {\scriptsize xxx};
+\setdeltax\sectionwidth{inspo right}{stats background.east}
+\advance\sectionwidth by -\mynodedistance
 
 \node (inspiration)
-      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=\tmpwidth-2mm,
+      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=\sectionwidth-5mm,
       height=8mm,
-      anchor=north east, at=(inspo right.east),
-%      anchor=north west,at=(stats background.north east),
-%       right of upper corner=4mm of stats background
+      anchor=north east, at=(inspo right)
       ]
-   {\hbox to 0pt{\hss\hspace*{6mm}\small\textsf{INSPIRATION}\hss}}
+   {}
    ;
-\node [anchor=west,proficiencies,fill=white,decorated stub rectangle,
+\node [anchor=west,proficiencies,fill=white,stub rectangle,
        width=10mm,height=10mm,line width=1.5pt,draw]
-       at ($(inspiration.west)+(-2mm,0mm)$)
+       at ($(inspiration.west)+(-5mm,0mm)$)
+      (inspo box)
       {};
 
-\node[columnbox,text width=,width=\tmpwidth,% width=38.002mm,
-      fill=white,below=3.5mm of inspiration,align=center,
+\node  [fill=none,stub rectangle,
+       width=10mm,stub radius=2.5mm,height=10mm,line width=0.5pt,scale=0.85,draw]
+       at (inspo box)
+      {};
+
+% center the name in the visible space
+\setdeltax\tmpwidth{inspiration.east}{inspo box.east}
+
+\path (inspo box.east) ++(0.5\tmpwidth,0) node
+      {\small\textsf{INSPIRATION}};
+
+
+\node[columnbox,text width=,width=\sectionwidth,% width=38.002mm,
+      fill=white,below right corner=3.5mm of inspiration,align=center,
       height=35mm,
     ]
     (saving throws)
     {\nodepart{label}SAVING THROWS\nodepart{text}%
      \vspace*{3pt}
-     \begin{tabular}{l@{ \vrule width 20pt height 0pt depth 0.2pt\ }l}
-      \savemark{STR}&Strength\\
-      \savemark{DEX}&Dexterity\\
-      \savemark{CON}&Constitution\\
-      \savemark{INT}&Intelligence\\
-      \savemark{WIS}&Wisdom\\
-      \savemark{CHA}&Charisma\\
+     \renewcommand\arraystretch{1.15}%
+     \tabcolsep=2pt
+     \scshape
+     \begin{tabular}{@{}lll@{}}
+      \dndmodifier{STR}&Strength    &\savemark{STR}\\
+      \dndmodifier{DEX}&Dexterity   &\savemark{DEX}\\
+      \dndmodifier{CON}&Constitution&\savemark{CON}\\
+      \dndmodifier{INT}&Intelligence&\savemark{INT}\\
+      \dndmodifier{WIS}&Wisdom      &\savemark{WIS}\\
+      \dndmodifier{CHA}&Charisma    &\savemark{CHA}\\
     \end{tabular}}
   ;
 \node (proficiency bonus)
-      [proficiencies,decorated stub rectangle,width=\tmpwidth-2mm,height=8mm,
+      [proficiencies,decorated stub rectangle,width=\sectionwidth-2mm,height=8mm,
        below right corner=4mm of saving throws]
    {\hbox to 0pt{\hss\hspace*{6.2mm}\scriptsize\textsf{PROFICIENCY BONUS}\hss}}
    ;
@@ -390,7 +406,7 @@ upper corner=of stats background] {\scriptsize xxx};
 
   \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
   \advance\sectionheight by -3mm
-  \node (proficiencies) [columnbox,text width=\tmpwidth-2\textmargin,fill=proficiencies,height=\sectionheight,
+  \node (proficiencies) [columnbox,text width=\sectionwidth-2\textmargin,fill=proficiencies,height=\sectionheight,
         anchor=south east,at=(stats background.south -| saving throws.east)]
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
     \ifDNDdefined{PROFICIENCIES}{%
@@ -527,7 +543,8 @@ upper corner=of stats background] {\scriptsize xxx};
    {\hbox to 0pt{\hss\footnotesize\textsf{PASSIVE WISDOM (PERCEPTION)}\hss}}
    ;
 
-\node [anchor=east,chamfered rectangle,chamfered rectangle angle=60,fill=white,
+\node (perception box)
+      [anchor=east,chamfered rectangle,chamfered rectangle angle=60,fill=white,
        width=10mm,height=9mm,line width=2.0pt,draw]
        at ($(passive perception.west)+(+4mm,0mm)$)
       {\ifDNDnonempty{PASSIVE PERCEPTION}
@@ -538,6 +555,12 @@ upper corner=of stats background] {\scriptsize xxx};
 % because angles, no way this geometry can look good:
 % need different scales in x and y to get proper inset
 % (hey) node [chamfered rectangle,chamfered rectangle angle=60,width=10mm,height=9mm,line width=0.5pt,blue,scale=0.8,draw,fill=none]  {}
+
+\node [fill=none,draw,line width=0.5pt,chamfered rectangle,
+       chamfered rectangle angle=60,width=9.6mm,height=7.4mm] 
+      at (perception box)
+      {}
+      ;
 
 
 \node (other proficiencies top) [below=of passive perception] { };

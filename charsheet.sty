@@ -522,6 +522,7 @@
     \expandafter\pgf@yb\@fraction\my@N
     \pgfpoint{0.5\my@W+0.5\my@E-0.5\wd\pgfnodeparttextbox}
              {\my@S-\pgf@ya+\pgf@yb+0.5\dp\pgfnodeparttextbox-0.5\ht\pgfnodeparttextbox}%
+% XXX consider \pgfpointlineattime
   }
 
   % Background path (defines the shape outline)
@@ -1834,6 +1835,22 @@
 \newcounter{saving}%
 \newcounter{statnumber}
 \newcommand\setstatnumber[1]{\setcounter{statnumber}{#1}}
+
+\newcommand\@themodifier[1]{%
+  \pgfmathsetcounter{statmod}{floor((#1 - 10) / 2)}%
+  \expandafter\ifnum\value{statmod}<0
+     \setcounter{statmod}{0-\value{statmod}}%
+     \textminus\arabic{statmod}%
+  \else
+     +\arabic{statmod}%
+  \fi
+}
+\newcommand\dndmodifier[1]{% 
+  \ifDNDdefined{#1}{%
+    \expandafter\@themodifier\expandafter{\rawgetDND{#1}}%
+  }{}%
+}
+  
 
 \newcommand\statcommon[3]{% name value amount-to-add-to-saving
 %   \show\nextstatloc
