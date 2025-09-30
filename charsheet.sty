@@ -41,21 +41,12 @@
 }
 
 
-
-\newif\ifcaster
-\casterfalse
-
-\newdimen\slotblockwidth
+\newdimen\slotblockwidth % width of a slot on the equipment page
 \slotblockwidth=60mm
 
 % Define minimum label separation key for labeled rectangle shape
 \pgfkeys{/pgf/minimum label sep/.initial=\baselineskip}
 \tikzset{minimum label sep/.code=\pgfkeys{/pgf/minimum label sep={#1}}}
-
-\pgfkeys{
-  /tikz/shield text fraction/.initial=0.67, % where to put center text
-  /tikz/shield text fraction/.default=0.67,
-}
 
 \tikzset{
   minimum label sep=8pt,
@@ -391,6 +382,11 @@
 % north-west-south-east, then replaced the first straight line with a
 % quadratic curve.  Emulating the code that is there, will you please
 % replace the other three straight lines with similar curves?
+
+\pgfkeys{
+  /tikz/shield text fraction/.initial=0.67, % where to put center text
+  /tikz/shield text fraction/.default=0.67,
+}
 
 \pgfdeclareshape{shield}{
   % Inherit anchors from rectangle
