@@ -289,7 +289,7 @@
   %%% XXX drops below bottom right
   \node (features) [columnbox,height=\sectionheight,fill=features,below=of motivation]  {
     \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
-    \def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
+    \long\def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
     \getDND{FEATURES}
 
     \ifDNDnonempty{MAGIC}{%
@@ -310,7 +310,7 @@
         \fi
         \begin{itemize spells}
       }
-      \def\described#1#2{\item #1: #2}%
+      \long\def\described#1#2{\item #1: #2}%
       \getDND{MAGIC}
       \end{itemize spells}
     }{}
