@@ -36,6 +36,7 @@ local fields = require 'flags'.parser()
   :bool('standalone as s'):help('emit just definitions, not full file')
   :output_file('output as o'):help('where to write if not stdout')
   :string('layout as t as l'):help('template for character sheet')
+  :bool('nocolor'):help('disable color')
   :bool('verbose as v')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
   :bool('strict'):help('halt on field validation errors (default: warn and continue)')
@@ -1131,6 +1132,10 @@ local function same_values(v1, v2)
 end
 
 local function extend(doc)
+
+  if fields.nocolor then
+    doc.COLOR = false
+  end
 
   local function update(field, value) -- checks for consistency
     local v = doc[field]
