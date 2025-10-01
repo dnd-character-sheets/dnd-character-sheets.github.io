@@ -69,18 +69,17 @@
 
 \input{stats}
 
-\ifDNDfalse{COLOR}{\dndnocolor}{}
+\ifDNDfalse{COLOR}{\newcommand\splashfile{splash-nocolor.png}\dndnocolor}
+                  {\newcommand\splashfile{splash}}
 
 \noindent
 \begin{charsheet}
   \tikzset{node distance=\mynodedistance}
 
   \node [dndbox,height=20mm,fill=playername,below=of top] (splash) 
-     {\includegraphics[width=\textwidth]{splash.png}};
+     {\includegraphics[width=\textwidth]{\splashfile}};
 
   \colorlet{splashgray}{white!85.765!black}
-
-
 
   \begingroup\sffamily
 
