@@ -1,4 +1,3 @@
----
 "CHARACTER NAME": ""
 "CLASS & LEVEL": Barbarian 1
 "BACKGROUND": Hermit (Custom)
@@ -6,6 +5,7 @@
 "RACE": Half-Orc
 "ALIGNMENT": ""
 "EXPERIENCE POINTS": ""
+PREGENERATED: true
 
 # ability scores — only the score in the lower oval
 STR: 17
@@ -100,14 +100,10 @@ FEATURES:
        bludgeoning, piercing, and slashing damage. • At 1st level you
        can rage 2 times per long rest.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
+SUGGESTED MOTIVATIONS:
     - Earn glory.
     - Satisfy wanderlust.
     - Prove mettle.
-  suggested_names:
+SUGGESTED NAMES:
     - Kesk
     - Kethra
-...
-PREGENERATED: true
