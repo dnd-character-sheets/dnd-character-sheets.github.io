@@ -290,29 +290,6 @@ ATTACKS:
 
 ---
 
-## **DESCRIPTION & PERSONALITY** (USER)
-**Usage**: Character personality information
-**Type**: Structured object
-**Template Usage**: *Not used by any template at present*
-**Structure**:
-- `motivation`: String (often empty)
-- `suggested_motivations`: List of strings
-- `suggested_names`: List of strings
-
-**Examples**:
-```yaml
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - "Accrue power."
-    - "Gain knowledge."
-  suggested_names:
-    - "Eldarion"
-    - "Eldariel"
-```
-
----
-
 ## **DEX** (USER)
 **Usage**: Dexterity ability score
 **Type**: Number
