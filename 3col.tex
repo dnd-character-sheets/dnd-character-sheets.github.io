@@ -477,7 +477,8 @@
 
 \newenvironment{attackstab*}
   {\renewcommand\arraystretch{1.3}%
-   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \def\notesheader{\multicolumn3{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \renewcommand\attacknote[2]{\small ##1:&\multicolumn2{@{}l@{ }}{\small##2}\\}%
    \tabcolsep=0.5\tabcolsep
    \normalsize
    \let\dndkeys=\attackkeys
@@ -513,6 +514,8 @@
 
     \begin{minipage}{\hsize-2\attacksInnerSep}
     \small
+    \def\notesheader{}
+    \renewcommand\attacknote[2]{}
     \useDNDfont*{ATTACKS}
     \DNDranges
     \end{minipage}
