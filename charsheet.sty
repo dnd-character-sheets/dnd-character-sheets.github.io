@@ -2046,28 +2046,47 @@
   RANGE/.code={%
     \gdef\@attackrange{#1}%
   },
-  AMMO/.code={%
-    \gdef\@attackammo{#1}%
+  AMMO TYPE/.code={%
+    \gdef\@attackammotype{#1}%
+  },
+  AMMO COUNT/.code={%
+    \gdef\@attackammocount{#1}%
   },
   NOTES/.code={%
     \gdef\@attacknotes{#1}%
-  },
-  GRAYAMMO/.code={%
-    \gdef\@attackammo{{\color{attacks!70!black}#1}}%
   },
   .unknown/.code={} % ignore everything else
 }%
 
 
+\newdimen\@ammowidth
+\newcommand\ammofield[2]{% amount type
+  \setbox0\hbox{\large~99~}%
+  \@ammowidth=\wd0
+  (\hskip1pt \hbox to \@ammowidth{\rlap{\vrule width \@ammowidth height -2pt depth 2.2pt}%
+                       \hss {\color{attacks!70!black}\large#1}\hss}
+   #2)%
+}
+
+
+\newcommand\@ammocolumn{%
+  \ifx\@attackammotype\empty
+     ---
+  \else
+     \ammofield\@attackammocount\@attackammotype
+  \fi
+}
 \newcommand\attackkeys[1]{%
   \gdef\@attackname{}%
   \gdef\@attackattack{}%
   \gdef\@attackdamage{}%
   \gdef\@attacktype{}%
   \gdef\@attackrange{}%
-  \gdef\@attackammo{}%
+  \gdef\@attackammotype{}%
+  \gdef\@attackammocount{}%
   \pgfkeys{/attacks/.cd, #1}%
-  \@attackname&\@attackattack&\@attackdamage&\@attacktype&\@attackrange&\@attackammo\\
+  \@attackname&\@attackattack&\@attackdamage&\@attacktype&\@attackrange&
+    \@ammocolumn\\
 }
 
 
@@ -2185,9 +2204,13 @@
    \begin{tabular}{@{}l@{ }r@{: }l@{ }l@{}}}
   {\end{tabular}\par}
 
-\newcommand\@addrangeinfo[3]{%
+\newcommand\@addrangeinfo[4]{% name range ammo-count ammo-type
   \g@addto@macro\@rangedlist{#1&range&#2 
-      &(ammo \rlap{\hbox to 2.5em{\hss\raisebox{3pt}{\normalsize#3}\hss}}\vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
+      &
+  \def\@attackammotype{#4}%
+  \ifx\@attackammotype\empty\else\ammofield{#3}{#4}\fi
+  \\[3pt]
+%     (ammo \rlap{\hbox to 2.5em{\hss\raisebox{3pt}{\normalsize#3}\hss}}\vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
   }%
 }
 
@@ -2209,7 +2232,8 @@
       % Reset values for this attack
       \gdef\@attackname{}%
       \gdef\@attackrange{}%
-      \gdef\@attackammo{}%
+      \gdef\@attackammotype{}%
+      \gdef\@attackammocount{}%
       % Process attack keys
       \pgfkeys{/attacks/.cd, ##1}%
       \@ranged@attacktrue
@@ -2219,7 +2243,7 @@
       \if@ranged@attack
         \@has@ranged@attacktrue
 % old:        \expandafter\expandafter\expandafter\@addrangeinfo\expandafter\@attackname\expandafter\@nil\@attackrange\@nil
-        \@expandArg{\@expandArg{\@expandArg\@addrangeinfo\@attackname}\@attackrange}\@attackammo
+        \@expandArg{\@expandArg{\@expandArg{\@expandArg\@addrangeinfo\@attackname}\@attackrange}\@attackammocount}\@attackammotype
        \fi
     }%
     % Temporarily replace dndkeys to use our collector

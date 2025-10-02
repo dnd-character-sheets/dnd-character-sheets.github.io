@@ -186,13 +186,14 @@ local valid_equipment_categories
 
 -- Attack field specifications - table-driven approach
 local attack_field_specs = {
-  { field = 'NAME',   predicate = can_be 'string', required = true },
-  { field = 'ATTACK', predicate = can_be 'string', required = true },
-  { field = 'DAMAGE', predicate = can_be 'string', required = true },
-  { field = 'TYPE',   predicate = can_be 'string', required = true },
-  { field = 'RANGE',  predicate = can_be 'string', required = true },
-  { field = 'AMMO',   predicate = can_be 'string', required = true },
-  { field = 'NOTES',  predicate = orp(can_be 'string', isnull), }
+  { field = 'NAME',       predicate = can_be 'string', required = true },
+  { field = 'ATTACK',     predicate = can_be 'string', required = true },
+  { field = 'DAMAGE',     predicate = can_be 'string', required = true },
+  { field = 'TYPE',       predicate = can_be 'string', required = true },
+  { field = 'RANGE',      predicate = can_be 'string', required = true },
+  { field = 'AMMO TYPE',  predicate = orp(can_be 'string', isnull), required = false },
+  { field = 'AMMO COUNT', predicate = orp(can_be 'number', isnull), required = false },
+  { field = 'NOTES',      predicate = orp(can_be 'string', isnull), required = false }
 }
 
 -- Structure-specific validators
@@ -226,7 +227,16 @@ local function validate_attack_entry(attack)
       end
     end
   end
-  
+
+  -- Additional validation: AMMO TYPE and AMMO COUNT consistency
+  -- AMMO TYPE can be present without AMMO COUNT, but AMMO COUNT requires AMMO TYPE
+  local ammo_type = attack['AMMO TYPE']
+  local ammo_count = attack['AMMO COUNT']
+
+  if not empty(ammo_count) and empty(ammo_type) then
+    table.insert(optional_errors, "AMMO COUNT requires AMMO TYPE to be specified")
+  end
+
   -- Combine all error messages
   if #missing > 0 or #wrong_type > 0 or #optional_errors > 0 then
     local errors = {}
@@ -716,14 +726,9 @@ local function render_attack_record (rec)
   if type(rec.ATTACK) == 'number' then
     rec.ATTACK = stringf('%+d', rec.ATTACK)
   end
-  for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO", 'NOTES' }
+  for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO TYPE", "AMMO COUNT", 'NOTES' }
   do
-    local tex_key = k
-    if k == 'AMMO' and tonumber(rec[k]) then
-      tex_key = 'GRAYAMMO'
-    end
-    local value = rec[k]
-    outf(parts, "%s={%s}", escape(tex_key), escape(value or ""))
+    outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
   end
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
