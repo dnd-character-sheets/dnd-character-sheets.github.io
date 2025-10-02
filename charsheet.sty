@@ -418,11 +418,13 @@
 
 \newcommand\feature[2]{%
   \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
-  \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}\\
+  \mbox{\vtop{\colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}        \vspace*{\featurespostspace}%
+        }}\\
+%  \mbox{\vtop{\colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}}}\\%
 }
 
 \newdimen\featurespostspace
-\featurespostspace=8pt
+\featurespostspace=3pt
 \newdimen\featurespostdepth
 \featurespostdepth=5pt
 \newcommand\described[2]{#1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]}
@@ -431,7 +433,7 @@
 \featuresnamewidth=28mm
 
 \newenvironment{featurestab}
-  {\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
+  {\def\arraystretch{1.0}\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
    \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
   {\end{tabular}}
 
@@ -446,7 +448,7 @@
 
 \newenvironment{attackstab}
   {\renewcommand\arraystretch{1.3}%
-   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \def\notesheader{\multicolumn6{@{}l}{\vrule width 0pt height 18pt\normalsize\textsf{{NOTES}}}\\}%
    \tabcolsep=0.5\tabcolsep
    \normalsize
    \let\dndkeys=\attackkeys
@@ -1067,7 +1069,9 @@
 
 \pgfkeys{
   /tikz/stub radius/.initial=5pt,
-  /tikz/stub radius/.default=5pt
+  /tikz/stub radius/.default=5pt,
+  /tikz/stub inset fraction/.initial=0.33333,
+  /tikz/stub inset fraction/.default=0.33333,
 }
 
 \newdimen\my@stubradius
@@ -1209,8 +1213,8 @@
       \setmy@NEWSC
       \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
       % Calculate inset (one-third of stub radius)
-      \my@inset=\my@stubradius
-      \divide\my@inset by 3
+      \expandafter\my@inset\pgfkeysvalueof{/tikz/stub inset fraction}\my@stubradius
+%      \divide\my@inset by 3
       % Calculate corner radius for quarter circles
       \my@cornerradius=\my@inset
       
@@ -1803,7 +1807,7 @@
 \newcommand\fullstatbox[5][]{% location name number modifier saving-throw
   \node [statbox,#1] (#2) {\Large \textsf{\signed{#4}}} ;
   \dndtoplabel{#2}{\tiny#2}
-  \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {#3};
+  \node[draw,ellipse,ultra thick,width=12mm, height=8mm, fill=stats] at (#2.south) {\textsf{#3}};
   \ifdndstatshield
     \node[draw,shield,shield text fraction=0.55,
           anchor=north,ultra thick,width=\savingshieldwidth, height=10mm, fill=stats,
@@ -2045,6 +2049,9 @@
   AMMO/.code={%
     \gdef\@attackammo{#1}%
   },
+  NOTES/.code={%
+    \gdef\@attacknotes{#1}%
+  },
   GRAYAMMO/.code={%
     \gdef\@attackammo{{\color{attacks!70!black}#1}}%
   },
@@ -2065,10 +2072,12 @@
 
 
 \newcommand\attacknote[2]{%
-  \multicolumn6{@{}p{\hsize-10mm}}{\textit{#1: #2}}\\
+  \multicolumn6{@{}p{\hsize-10mm}}{#1: \textit{#2}}\\
 }
 
 \newcommand\profskip{\medskip}
+
+\newcommand\weaponname[1]{#1} % styles can override
 
 
 \newcommand\writesplash[3][]{% [annotations] width dndkey
@@ -2155,33 +2164,39 @@
   \prof@tmp
 }
 
+%
+% Genius expansion trick
+%
+% https://tex.stackexchange.com/a/133768/5847
+
+\newcommand\@expandArg[2]{\expandafter\@applyExpanded\expandafter{#2}{#1}}
+\newcommand\@applyExpanded[2]{#2{#1}}
+
+
+
+
 %-----------------------------------------------------------------------
 % Ranges list environment and \DNDranges macro
 %-----------------------------------------------------------------------
 
 % Environment for displaying ranged attack ranges
 \newenvironment{ranges}
-  {\noindent
+  {\par\smallskip\noindent
    \begin{tabular}{@{}l@{ }r@{: }l@{ }l@{}}}
   {\end{tabular}\par}
 
-\newcommand\@addrangeinfo{}% avoid redef
-\def\@addrangeinfo#1\@nil#2\@nil{% name range
-  \g@addto@macro\@rangedlist{#1&range&#2\\
-     & \hidewidth ammo & \vrule width 3em height 0pt depth 0.2pt\\[3pt]
-  }
-}
-\def\@addrangeinfo#1\@nil#2\@nil{% name range
+\newcommand\@addrangeinfo[3]{%
   \g@addto@macro\@rangedlist{#1&range&#2 
-      &(ammo \vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
-%     & \hidewidth ammo & \vrule width 3em height 0pt depth 0.2pt\\[3pt]
-  }
+      &(ammo \rlap{\hbox to 2.5em{\hss\raisebox{3pt}{\normalsize#3}\hss}}\vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
+  }%
 }
-
-
 
 \newif\if@ranged@attack
 \newif\if@has@ranged@attack
+
+\newcommand\@bracket[1]{%
+  \expandafter\def\expandafter#1\expandafter{\expandafter{#1}}%
+}
 
 % Main macro to display ranged attacks
 \newcommand{\DNDranges}{%
@@ -2194,6 +2209,7 @@
       % Reset values for this attack
       \gdef\@attackname{}%
       \gdef\@attackrange{}%
+      \gdef\@attackammo{}%
       % Process attack keys
       \pgfkeys{/attacks/.cd, ##1}%
       \@ranged@attacktrue
@@ -2202,7 +2218,8 @@
       % Check if range qualifies as ranged attack
       \if@ranged@attack
         \@has@ranged@attacktrue
-        \expandafter\expandafter\expandafter\@addrangeinfo\expandafter\@attackname\expandafter\@nil\@attackrange\@nil
+% old:        \expandafter\expandafter\expandafter\@addrangeinfo\expandafter\@attackname\expandafter\@nil\@attackrange\@nil
+        \@expandArg{\@expandArg{\@expandArg\@addrangeinfo\@attackname}\@attackrange}\@attackammo
        \fi
     }%
     % Temporarily replace dndkeys to use our collector
@@ -2215,11 +2232,60 @@
     % Only emit environment if we have ranged attacks
     \if@has@ranged@attack
       \begin{ranges}
-        \@rangedlist
+      \@rangedlist
       \end{ranges}
     \fi
   }{}%
 }
+
+\newif\if@has@noted@attack
+
+\newcommand{\DNDattacknotes}{%
+  \ifDNDdefined{ATTACKS}{%
+    % Initialize with empty list
+    \def\@notedlist{}%
+    \@has@noted@attackfalse
+    % Process attacks using edef approach
+    \def\collectnotedattack##1{%
+      % Reset values for this attack
+      \gdef\@attackname{}%
+      \gdef\@attacknotes{}%
+      % Process attack keys
+      \pgfkeys{/attacks/.cd, ##1}%
+      \ifx\@attacknotes\empty
+      \else
+        \@has@noted@attacktrue
+        \expandafter\expandafter\expandafter\@addattacknotes\expandafter\@attackname\expandafter\@nil\@attacknotes\@nil
+      \fi
+    }%
+    % Temporarily replace dndkeys to use our collector
+    \let\@original@dndkeys\dndkeys
+    \let\dndkeys\collectnotedattack
+    % Process all attacks
+    \valueDND{ATTACKS}%
+    % Restore original dndkeys
+    \let\dndkeys\@original@dndkeys
+    % Only emit environment if we have noted attacks
+    \if@has@noted@attack
+      \begin{attacknotes}
+      \@notedlist
+      \end{attacknotes}
+    \fi
+  }{}%
+}
+
+
+\newenvironment{attacknotes}
+  {\par\smallskip\noindent
+   \tabularx{\hsize}{@{}l@{ }>{\raggedright\arraybackslash\itshape}X@{}}  
+  }
+  {\endtabularx\par}
+
+\newcommand\@addattacknotes{}% avoid redef
+\def\@addattacknotes#1\@nil#2\@nil{% name range
+  \g@addto@macro\@notedlist{\vrule width 0pt height 12pt #1:&#2\\}%
+}
+
 
 
 %%% tikz point delta calculations

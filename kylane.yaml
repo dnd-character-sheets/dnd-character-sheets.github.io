@@ -117,12 +117,11 @@ FEATURES:
 
 
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Accrue Power
-    - Achieve Status
-    - Vanquish Evil
-  suggested_names:
-    - Dominick
-    - Dominara
+"SUGGESTED MOTIVATIONS":
+  - Accrue Power
+  - Achieve Status
+  - Vanquish Evil
+
+"SUGGESTED NAMES":
+  - Dominick
+  - Dominara

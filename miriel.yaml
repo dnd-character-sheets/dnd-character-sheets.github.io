@@ -150,12 +150,11 @@ FEATURES:
   - name: Channel Divinity
     description: Turn Undead; Preserve Life (HP = 5\(\times\)level). 1 per rest until level 6.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Earn recognition.
-    - Do good.
-    - Help others.
-  suggested_names:
-    - Auros
-    - Aurenia
+"SUGGESTED MOTIVATIONS":
+  - Earn recognition.
+  - Do good.
+  - Help others.
+
+"SUGGESTED NAMES":
+  - Auros
+  - Aurenia

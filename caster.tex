@@ -186,6 +186,9 @@
     \centering
     \useDNDfont*{ATTACKS}
     \begin{attackstab}
+    \gdef\notesheader{\cline{2-4}}%
+    \gdef\notesheader{}%
+    \gdef\attacknote#1#2{}%  Just don't
     \getDND{ATTACKS}
     \end{attackstab}
     \par
@@ -214,8 +217,12 @@
 
 \ifDNDdefined{FEATURES}{
   \ifDNDdefined{MAGIC}
-     {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}}
-     {\def\where{below right corner=of attacks}}%
+     {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}
+      \featurespostspace=0pt
+     }
+     {\def\where{below right corner=of attacks}%
+      \advance\featurespostspace by 2pt
+     }%
    \expandafter\node\expandafter[\where,widecolumn,fill=features] 
      (features)
      {\nodepart{label}FEATURES\nodepart{text}

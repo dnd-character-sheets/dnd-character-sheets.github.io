@@ -73,8 +73,6 @@ ATTACKS:
     RANGE: 80/320 ft.
     AMMO: 20 bolts
 
-MAGIC: []
-
 FEATURES:
   - name: Great Weapon Fighting
     description: When you roll a 1 or 2 on a damage die with your greatsword, reroll it and use the new result.

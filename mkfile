@@ -10,7 +10,7 @@ RHOST=/h/nr/www
 CHARSHEET_DIR=/h/nr/www
 HALLIGANNAME=render-charsheet.cgi
 
-KINGS=barbarian cleric fighter monk paladin rogue sorcerer wizard
+KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 
 
 all:V: bundle samples.pdf

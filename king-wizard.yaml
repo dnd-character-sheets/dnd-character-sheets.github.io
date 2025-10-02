@@ -47,16 +47,16 @@ PROFICIENCIES:
   - Languages: Draconic
   - Languages: Dwarvish
   - Languages: Orcish
-  - Armor: None
-  - Weapons: Dagger
-  - Weapons: Dart
-  - Weapons: Sling
-  - Weapons: Quarterstaff
-  - Weapons: Light Crossbow
-  - Weapons: Longsword
-  - Weapons: Shortsword
-  - Weapons: Longbow
-  - Weapons: Shortbow
+  - Dagger
+  - Dart
+  - Sling
+  - Quarterstaff
+  - Light Crossbow
+  - Longsword
+  - Shortsword
+  - Longbow
+  - Shortbow
+  - (No armor proficiency)
 
 EQUIPMENT:
   - Common Clothes
@@ -75,23 +75,40 @@ ATTACKS:
     DAMAGE: 1d8+2
     TYPE: piercing
     RANGE: 150/600 ft.
-    AMMO: 20 arrows
-    NOTES: —
+    AMMO: 20
+  - NAME: Ray of Frost
+    ATTACK: "+5"
+    DAMAGE: 1d8
+    TYPE: cold
+    RANGE: 60 ft.
+    AMMO: ---
+  - NAME: Magic Missile
+    ATTACK: Hits
+    DAMAGE: 1d4+1
+    TYPE: force
+    RANGE: 120 ft.
+    AMMO: ---
+    NOTES: >-
+      When cast creates 3 darts that can target multiple
+      creatures. Damage is for 1 dart.
+      Casting uses a 1st-level spell slot.
 
+FEATURES FONT: \small
+#MAGIC FONT: \scriptsize
 MAGIC:
   - level: 0                                  # CANTRIPS
   - name: Dancing Lights
     description: Create up to 4 glowing lights that move independently within 120 ft; last 1 min while you concentrate.
-  - name: Fire Bolt
-    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
-  - name: Light
-    description: Touch an object to shed bright light for 20 ft and dim for 20 ft for 1 hr.
+#  - name: Fire Bolt
+#    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
+#  - name: Light
+#    description: Touch an object to shed bright light for 20 ft and dim for 20 ft for 1 hr.
   - name: Ray of Frost
     description: Ranged spell attack +5, 60 ft; 1d8 cold and target’s speed −10 ft until your next turn.
   - name: Mage Hand
     description: Spectral hand (30 ft) can manipulate objects up to 10 lbs for 1 min.
-  - name: Shocking Grasp
-    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
+#  - name: Shocking Grasp
+#    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
   - level: 1                                  # 1st LEVEL
   - name: Detect Magic [R]
     description: Sense magic within 30 ft for 10 min; ritual.
@@ -122,13 +139,12 @@ FEATURES:
   - name: Fey Ancestry
     description: Advantage on saves versus charm; magic can’t put you to sleep.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Accrue power.
-    - Gain knowledge.
-    - Discover truth.
-  suggested_names:
-    - Eldarion
-    - Eldariel
+"SUGGESTED MOTIVATIONS":
+  - Accrue power
+  - Gain knowledge
+  - Discover truth
+
+"SUGGESTED NAMES":
+  - Eldarion or Eldariel
+
 PREGENERATED: true

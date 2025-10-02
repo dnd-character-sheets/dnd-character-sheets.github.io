@@ -67,8 +67,6 @@ ATTACKS:
     RANGE: 5 ft. or 20/60 ft.
     AMMO: ""
 
-MAGIC: []
-
 FEATURES:
   - name: Dwarven Resilience
     description: You have advantage to save against poisons and you're resistant to poison damage.

@@ -79,16 +79,14 @@ ATTACKS:
     TYPE: bludgeoning
     RANGE: 5 ft.
     AMMO: ""
-    NOTES: —
-  - NAME: Dart (x10)
+    NOTES:
+  - NAME: Dart
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: piercing
     RANGE: 20/60 ft.
-    AMMO: 10 darts
+    AMMO: 10
     NOTES: Can be thrown.
-
-MAGIC: []
 
 FEATURES:
   - name: Boxer of Legend
@@ -102,13 +100,13 @@ FEATURES:
   - name: Fey Ancestry
     description: Advantage on saving throws against being charmed, and magic can’t put you to sleep.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Perfect Self
-    - Discover Truth
-    - Stave Off Boredom
-  suggested_names:
-    - Syrun
-    - Syralla
+"SUGGESTED MOTIVATIONS":
+  - Perfect Self
+  - Discover Truth
+  - Stave Off Boredom
+
+"SUGGESTED NAMES":
+  - Syrun
+  - Syralla
+
 PREGENERATED: true

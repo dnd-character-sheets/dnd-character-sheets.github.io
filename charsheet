@@ -56,6 +56,7 @@ local pdflatex =
 
 
 local lyaml  = require "lyaml"
+local function isnull(v) return v == lyaml.null end
 
 -- -----------------------------------------------------------------------
 -- 0.  Make sure we have a load_all() helper
@@ -93,10 +94,21 @@ end
 local function optional(p)
   return function (v) 
     -- Handle YAML null, nil, and empty string as valid "empty" values
-    if v == '' or v == nil or v == lyaml.null then
+    if v == '' or v == nil or isnull(v) then
       return true
     else
       return p(v)
+    end
+  end
+end
+
+local function orp(p1, p2)
+  return function(v)
+    local ok, msg = p1(v)
+    if ok then
+      return ok
+    else
+      return p2(v)
     end
   end
 end
@@ -180,7 +192,7 @@ local attack_field_specs = {
   { field = 'TYPE',   predicate = can_be 'string', required = true },
   { field = 'RANGE',  predicate = can_be 'string', required = true },
   { field = 'AMMO',   predicate = can_be 'string', required = true },
-  { field = 'NOTES',  predicate = can_be 'string', }
+  { field = 'NOTES',  predicate = orp(can_be 'string', isnull), }
 }
 
 -- Structure-specific validators
@@ -340,7 +352,7 @@ end
 
 -- Validate proficiencies structure (custom logic)
 local function validate_proficiency_entry(entry)
-  if entry == lyaml.null then
+  if isnull(entry) then
     -- does for blank line
   elseif can_be 'string'(entry) then
     -- Regular proficiency entry - empty strings within list are not allowed
@@ -521,7 +533,7 @@ function value_string(v)
     return stringf('%q', v)
   elseif type(v) == 'table' then
     -- Handle special cases
-    if v == lyaml.null then
+    if isnull(v) then
       return "null"
     end
     
@@ -557,7 +569,7 @@ local function validate_document(doc)
       if spec then
         -- Handle YAML null and nil as empty values
         local test_value = value
-        if value == nil or tostring(value) == 'lyaml.null' then
+        if value == nil or isnull(value) then
           test_value = ""
         end
         
@@ -620,10 +632,14 @@ local tex_escape_map = {
 local minustab = { ['-'] = [[\textminus]] }
 
 local function escape (s)
-  return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
-                     :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
-                     :gsub("−", [[\textminus{}]])
-  )
+  if isnull(s) then
+    return ''
+  else
+    return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
+                       :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
+                       :gsub("−", [[\textminus{}]])
+    )
+  end
 end
 
 local function keyformat(key)
@@ -652,7 +668,7 @@ local function render(v)
   elseif type(v) ~= 'table' then
     return tostring(v)
   else
-    if v == lyaml.null or v.proficiencies_skip then
+    if isnull(v) or v.proficiencies_skip then
       return [[\profskip{}]]
     elseif v.smallskip then
       return [[\smallskip{}]]
@@ -706,7 +722,8 @@ local function render_attack_record (rec)
     if k == 'AMMO' and tonumber(rec[k]) then
       tex_key = 'GRAYAMMO'
     end
-    outf(parts, "%s={%s}", escape(tex_key), escape(rec[k] or ""))
+    local value = rec[k]
+    outf(parts, "%s={%s}", escape(tex_key), escape(value or ""))
   end
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
@@ -721,8 +738,8 @@ local function render_generic_record (rec)
 end
 
 local function note(elem)
-  return elem.NOTE  and elem.NOTE :find '%S' and elem.NOTE or
-         elem.NOTES and elem.NOTES:find '%S' and elem.NOTES
+  return elem.NOTE  and not isnull(elem.NOTE)  and elem.NOTE :find '%S' and elem.NOTE or
+         elem.NOTES and not isnull(elem.NOTES) and elem.NOTES:find '%S' and elem.NOTES
 end
 
 
@@ -825,7 +842,7 @@ local function is_string_list_with_categories(equipment_data)
   end
   -- Check if any item has category syntax
   local has_category_syntax = function(item)
-    return type(item) == "string" and (item:match(":") or item:match("^-"))
+    return type(item) == "string" and (item:find(":%s*$") or item:find("^-"))
   end
   return any(has_category_syntax, equipment_data)
 end
@@ -1372,6 +1389,8 @@ local main = function(arg)
       eprintf("YAML loaded as string %q.\n", doc)
       os.exit(1)
     end
+
+require 'inspect'.show(doc.EQUIPMENT)
     
     -- Validate document before processing
     validate_document(doc)

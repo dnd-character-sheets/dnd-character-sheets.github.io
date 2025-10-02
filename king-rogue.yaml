@@ -86,7 +86,7 @@ ATTACKS:
     TYPE: piercing
     RANGE: 80/320 ft.
     AMMO: 20 arrows
-    NOTES: —
+    NOTES:
   - NAME: Dagger (x2)
     ATTACK: "+5"
     DAMAGE: 1d4+3
@@ -94,8 +94,6 @@ ATTACKS:
     RANGE: 20/60 ft.
     AMMO: ""
     NOTES: Uses Dex; can be thrown.
-
-MAGIC: []
 
 FEATURES:
   - name: Rustic Hospitality
@@ -109,15 +107,15 @@ FEATURES:
   - name: Sneak Attack
     description: Once per turn you may add +1d6 damage to an attack against a target that is unaware of you or whose attention is elsewhere.
   - name: Expertise
-    description: Double your proficiency bonus on Stealth and Investigation checks (already noted on the skill list).
+    description: Double your proficiency bonus on Stealth and Investigation checks (noted on the skill list).
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Amass wealth.
-    - Earn recognition.
-    - Stave off boredom.
-  suggested_names:
-    - Pippin
-    - Piper
+"SUGGESTED MOTIVATIONS":
+  - Amass wealth.
+  - Earn recognition.
+  - Stave off boredom.
+
+"SUGGESTED NAMES":
+  - Pippin
+  - Piper
+
 PREGENERATED: true

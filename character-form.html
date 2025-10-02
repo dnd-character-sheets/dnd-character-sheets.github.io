@@ -295,9 +295,13 @@
                     <input type="radio" name="layout" value="silverpine" checked>
                     Silverpine Watch style (one narrow column, one wide)
                 </label>
-                <label>
+                <label style="margin-right: 1em;">
                     <input type="radio" name="layout" value="3col">
                     Three narrow columns
+                </label>
+                <label>
+                    <input type="checkbox" id="color" checked>
+                    Use colored backgrounds
                 </label>
             </div>
         </div>
@@ -1247,7 +1251,8 @@
             // Layout control
             radioField('LAYOUT', 'layout'),
 
-            // Checkbox
+            // Checkboxes
+            checkboxField('COLOR', '#color'),
             checkboxField('PREGENERATED', '#pregenerated'),
             
             // Class/Level complex logic

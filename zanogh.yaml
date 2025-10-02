@@ -115,13 +115,12 @@ FEATURES:
        • Melee Str attacks deal +2 damage. • You take half damage from
        bludgeoning, piercing, and slashing damage. • At 3rd level, 3 times per long rest.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Earn glory.
-    - Satisfy wanderlust.
-    - Prove mettle.
-  suggested_names:
-    - Kesk
-    - Kethra
+"SUGGESTED MOTIVATIONS":
+  - Earn glory.
+  - Satisfy wanderlust.
+  - Prove mettle.
+
+"SUGGESTED NAMES":
+  - Kesk
+  - Kethra
 ...

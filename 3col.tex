@@ -2,6 +2,7 @@
 \usepackage[nostatshield]{charsheet}
 \usepackage{multicol}
 \usepackage{enumitem}
+\usepackage{tabularx}
 \usetikzlibrary{fit}
 %\usepackage{amsmath}
 \colorlet{grayed out}{white!70!black}
@@ -85,7 +86,16 @@
     minimum width=\hpwidth/2-5pt,
     minimum height=18mm,
     font=\footnotesize,
-  }
+  },
+%  statbox/.style={ % 
+%    dndbox,
+%    decorated stub rectangle,
+%    stub radius=1.5mm,
+%    stub inset fraction=0.6,
+%    minimum width=18mm,
+%    minimum height=20mm,
+%    fill=none,
+%  },
 }
 
 \begingroup
@@ -94,6 +104,8 @@
   \xdef\dndStubRadius{\srtmp}
 \endgroup
 
+
+\renewcommand\weaponname[1]{\leavevmode\parbox[t]{4em}{#1}}
 
 \begin{document}
 
@@ -254,21 +266,26 @@
 \node[columnbox,anchor=north east] (motivation) at (splash.east |- hpbackground.north)
    {\nodepart{label}DESCRIPTION \&\ PERSONALITY
     \nodepart{text}%
+    \large\sffamily
     \newcommand\hangpar{\hangindent=1em \hangafter=1 \par}%
     \smallskip
     Motivation:\\
     \getDND*{MOTIVATION}
     \hangpar
-    \bigskip
+    \medskip
     \ifDNDnonempty{SUGGESTED MOTIVATIONS}{%
-       Suggested Motivations:\\ \getDND{SUGGESTED MOTIVATIONS} \hangpar
-       \bigskip
+       Suggested motivations:
+       \begin{itemize}[nosep,leftmargin=1.5em]\getDND{SUGGESTED MOTIVATIONS}
+       \end{itemize}
+       \medskip
     }{}
     \ifDNDnonempty{SUGGESTED NAMES}{%
-       Suggested Names:\\ \getDND{SUGGESTED NAMES} \hangpar
-       \bigskip
+       Suggested names:
+       \begin{itemize}[nosep,leftmargin=1.5em]\getDND{SUGGESTED NAMES}
+       \end{itemize}
+       \medskip
     }{}
-    \hbox{}
+    \hrule height 0pt depth 0pt % retain skips
    }
 ;
 
@@ -281,20 +298,22 @@
   }%
   {\end{itemize}}
 
-\node (features top) [below=of motivation] {};
-\setdeltay\sectionheight{features top}{bottom right}
+\setdeltay\sectionheight{motivation.south}{bottom right}
 
 
 \ifDNDdefined{FEATURES}{%
   %%% XXX drops below bottom right
-  \node (features) [columnbox,height=\sectionheight,fill=features,below=of motivation]  {
+  \node (features) [columnbox,height=\sectionheight-\mynodedistance,fill=features,below=of motivation]  {
     \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
+    \raggedright
+    \useDNDfont*{FEATURES}%
     \long\def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
     \getDND{FEATURES}
-
+    \ifDNDnonempty{SENSES}{\described{Senses}{\getDND{SENSES}}}{}
     \ifDNDnonempty{MAGIC}{%
       \smallskip
       \footnotesize
+      \useDNDfont*{MAGIC}%
       \newcommand\spellslevellabel[2]{%
         \ifnum#1=0
            Cantrips: You can cast these spells as often as you like using 1~action.
@@ -317,6 +336,9 @@
   }
   ;
 }{}
+
+
+
 
 \setnodewidth\sectionwidth[statbox]
 \node (stats background) 
@@ -443,7 +465,7 @@
 
   \node (equipment) [columnbox,decorated labeled clipped rectangle,fill=equipment,
                      minimum height=124pt, % make enough room for coins
-                     anchor=south,at=(bottom center |- features.south)]
+                     anchor=south,at=(bottom center)]
    {%
      \nodepart{label}EQUIPMENT\nodepart{text}
      \medskip
@@ -479,14 +501,21 @@
   {\renewcommand\arraystretch{1.3}%
    \def\notesheader{\multicolumn3{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
    \renewcommand\attacknote[2]{\small ##1:&\multicolumn2{@{}l@{ }}{\small##2}\\}%
+   \renewcommand\attacknote[2]{}%
+   \renewcommand\notesheader{}%
    \tabcolsep=0.5\tabcolsep
    \normalsize
    \let\dndkeys=\attackkeys
    \noindent
    \hspace*{\attacksInnerSep}%   
-   \begin{tabular*}{\hsize-2\attacksInnerSep}{@{}lll@{}}
+   \begin{tabular*}{\hsize-2\attacksInnerSep}{@{}lcl@{}}
    \textsf{\footnotesize NAME}&
-   \textsf{\scriptsize \llap{ATK BO}NUS}&
+   \hspace*{-0.3em}%
+   \textsf{\scriptsize 
+      {\def\arraystretch{0.9}\begin{tabular}[b]{c}ATTACK\\BONUS\end{tabular}}%
+   }%
+   \hspace*{-0.3em}%
+   &
    \textsf{\scriptsize DAMAGE/TYPE}\\
    \midrule
   }
@@ -518,6 +547,7 @@
     \renewcommand\attacknote[2]{}
     \useDNDfont*{ATTACKS}
     \DNDranges
+    \DNDattacknotes
     \end{minipage}
     \vfill
    }
@@ -573,7 +603,7 @@
 \node [anchor=south west,columnbox,minimum height=\sectionheight,
       ]
    (other proficiencies)
-   at (stats background.west |- features.south)
+   at (stats background.west |- bottom center)
   {\nodepart{label}\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES
    \nodepart{text}%
    \multicolsep=0pt

@@ -81,8 +81,6 @@ ATTACKS:
     AMMO: ""
     NOTES: One-handed melee weapon that can be thrown.
 
-MAGIC: []
-
 FEATURES:
   - name: Military Rank
     description: Advantage on checks in social situations that involve NPCs with military experience.
@@ -95,13 +93,13 @@ FEATURES:
   - name: Second Wind
     description: Once per long rest, use a bonus action to heal yourself for 1d10 + 1 HP.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Obey duty.
-    - Amass wealth.
-    - Prove mettle.
-  suggested_names:
-    - Hovald
-    - Harva
+"SUGGESTED MOTIVATIONS":
+  - Obey duty.
+  - Amass wealth.
+  - Prove mettle.
+
+"SUGGESTED NAMES":
+  - Hovald
+  - Harva
+
 PREGENERATED: true

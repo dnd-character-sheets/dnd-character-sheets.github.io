@@ -88,7 +88,7 @@ MAGIC:
     description: Repair a non-magical object you can touch, restoring it to full working order.
   - name: Minor Blessing
     description: One touched creature gains +2 to attack rolls until the end of your next turn.
-  - level: 1                             # 1st LEVEL
+  - level : { number: 1, slots : 2 }                             # 1st LEVEL
   - name: Bless
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute while you maintain concentration.
   - name: Cure Wounds
@@ -107,18 +107,18 @@ FEATURES:
     description: As long as you are on good terms with your temple, friendly temples will give you and your party free lodging and care.
   - name: Disciple of Life
     description: Your healing spells restore an additional 2 HP + the spell’s level.
-  - name: Channel Divinity Unavailable (1st-level cleric)
-    description: Feature available at 2nd level; not yet gained.
-  - name: Spellcasting
-    description: You can cast cleric spells. You prepare Wisdom mod (+3) + level (1) = 4 spells and recover all slots after a long rest.
+#  - name: Channel Divinity Unavailable (1st-level cleric)
+#    description: Feature available at 2nd level; not yet gained.
+#  - name: Spellcasting
+#    description: You can cast cleric spells. You prepare Wisdom mod (+3) + level (1) = 4 spells and recover all slots after a long rest.
 
-"DESCRIPTION & PERSONALITY":
-  motivation: ""
-  suggested_motivations:
-    - Earn recognition.
-    - Do good.
-    - Help others.
-  suggested_names:
-    - Auros
-    - Aurenia
+"SUGGESTED MOTIVATIONS":
+  - Earn recognition.
+  - Do good.
+  - Help others.
+
+"SUGGESTED NAMES":
+  - Auros
+  - Aurenia
+
 PREGENERATED: true
