@@ -543,10 +543,14 @@
 
     \begin{minipage}{\hsize-2\attacksInnerSep}
     \small
-    \def\notesheader{}
     \renewcommand\attacknote[2]{}
+    \def\notesheader{}
     \useDNDfont*{ATTACKS}
     \DNDranges
+    \renewenvironment{attacknotes}{}{}
+    \renewcommand\attacknote[2]{%
+      {{\raggedright\smallskip\noindent\emph{#1:} {#2}\hangindent=2em \hangafter=1\par}}%
+    }
     \DNDattacknotes
     \end{minipage}
     \vfill

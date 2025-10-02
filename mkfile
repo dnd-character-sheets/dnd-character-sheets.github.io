@@ -14,6 +14,7 @@ KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 
 
 all:V: bundle samples.pdf
+samples: samples.pdf 3samples.pdf
 
 bundle:V:
 	cp -auvL splash.png charsheet charsheet.sty silverpine.tex ~/src/lua/flags.lua $PUBLISH
@@ -55,3 +56,12 @@ samples.pdf: ${KINGS:%=king-%.s.pdf} ${KINGS:%=king-%.3.pdf}
 	set -A pdfs
 	for k in $KINGS; do pdfs+=(king-$k.3.pdf king-$k.s.pdf); done
 	pdftk "${pdfs[@]}" cat output $target
+
+3samples.pdf: ${KINGS:%=king-%.3.pdf}
+	set -A pdfs
+	for k in $KINGS; do pdfs+=(king-$k.3.pdf); done
+	pdf=$(mktemp).pdf
+	pdftk "${pdfs[@]}" cat output $pdf
+        pdftk "$pdf" cat odd output $target
+        rm -f "$pdf"
+

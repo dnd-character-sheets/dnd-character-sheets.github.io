@@ -2282,7 +2282,8 @@
       \ifx\@attacknotes\empty
       \else
         \@has@noted@attacktrue
-        \expandafter\expandafter\expandafter\@addattacknotes\expandafter\@attackname\expandafter\@nil\@attacknotes\@nil
+        \@expandArg{\@expandArg\@addattacknotes\@attackname}\@attacknotes
+%        \show\@notedlist
       \fi
     }%
     % Temporarily replace dndkeys to use our collector
@@ -2308,9 +2309,8 @@
   }
   {\endtabularx\par}
 
-\newcommand\@addattacknotes{}% avoid redef
-\def\@addattacknotes#1\@nil#2\@nil{% name range
-  \g@addto@macro\@notedlist{\vrule width 0pt height 12pt #1:&#2\\}%
+\newcommand\@addattacknotes[2]{%
+  \g@addto@macro\@notedlist{\attacknote{#1}{#2}}%
 }
 
 

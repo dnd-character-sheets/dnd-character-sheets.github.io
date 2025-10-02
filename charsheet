@@ -774,15 +774,6 @@ local function render_struct_list (key, list)
       table.insert(out, render_generic_record(elem))
     end
   end
-  for _,elem in ipairs(list) do
-    if elem.ATTACK and note(elem) then
-      if not notes_header_out then
-        table.insert(out, [[\notesheader]])
-        notes_header_out = true
-      end
-      outf(out, [[\attacknote{%s}{%s}]], elem.NAME, note(elem))
-    end
-  end
 
   return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "%\n"))
 end
