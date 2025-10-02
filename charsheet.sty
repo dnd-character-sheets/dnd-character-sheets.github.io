@@ -42,6 +42,7 @@
   \colorlet{splashfield}{white!96!black}
 }
 
+\newcommand\@fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
 
 \newdimen\slotblockwidth % width of a slot on the equipment page
 \slotblockwidth=60mm
@@ -418,7 +419,9 @@
 
 \newcommand\feature[2]{%
   \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
-  \mbox{\vtop{\colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}        \vspace*{\featurespostspace}%
+  \mbox{\vtop{\colorbox{features background}
+                  {\parbox[t]{\hsize}{\raggedright\upshape#2}}
+        \hrule height 0pt depth 0pt\vspace*{\featurespostspace}%
         }}\\
 %  \mbox{\vtop{\colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}}}\\%
 }
@@ -426,7 +429,7 @@
 \newdimen\featurespostspace
 \featurespostspace=3pt
 \newdimen\featurespostdepth
-\featurespostdepth=5pt
+\featurespostdepth=0pt % likely obsolete
 \newcommand\described[2]{#1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]}
 
 \newdimen\featuresnamewidth % space on left for name of a feature
