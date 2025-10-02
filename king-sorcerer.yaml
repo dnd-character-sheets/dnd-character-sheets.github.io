@@ -66,7 +66,8 @@ ATTACKS:
     DAMAGE: 1d8+2
     TYPE: piercing
     RANGE: 80/320 ft.
-    AMMO: 20
+    AMMO TYPE: "bolts"
+    AMMO COUNT: 20
     NOTES: ""
 
 MAGIC FONT: \normalsize

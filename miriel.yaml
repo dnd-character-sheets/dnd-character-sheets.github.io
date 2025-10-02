@@ -81,21 +81,18 @@ ATTACKS:
     DAMAGE: 1d6+2/1d6
     TYPE: slashing/cold
     RANGE: 5 ft.
-    AMMO: "---"
     NOTES: ""
 #  - NAME: Mace
 #    ATTACK: "+1"
 #    DAMAGE: 1d6-1
 #    TYPE: bludgeoning
 #    RANGE: 5 ft.
-#    AMMO: "---"
 #    NOTES: ""
   - NAME: Light Crossbow
     ATTACK: "+4"
     DAMAGE: 1d8+2
     TYPE: piercing
     RANGE: 80/320 ft.
-    AMMO: ""
     NOTES: ""
 
 SPELLS KNOWN: 5

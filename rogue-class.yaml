@@ -28,19 +28,16 @@ ATTACKS:
     DAMAGE: ""
     TYPE: ""
     RANGE: ""
-    AMMO: ""
   - NAME: "Shortbow or Shortsword"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
     RANGE: ""
-    AMMO: ""
   - NAME: "Dagger"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
     RANGE: ""
-    AMMO: ""
 
 # 1st level features
 FEATURES:

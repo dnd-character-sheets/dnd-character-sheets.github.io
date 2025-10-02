@@ -67,7 +67,6 @@ ATTACKS:
     DAMAGE: 1d6+2
     TYPE: piercing
     RANGE: 5 ft.
-    AMMO: ""
 
 MAGIC:
   - level: 0                        # CANTRIPS

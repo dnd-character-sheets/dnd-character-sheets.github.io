@@ -30,13 +30,11 @@ ATTACKS:
     DAMAGE: ""
     TYPE: ""
     RANGE: ""
-    AMMO: ""
   - NAME: "Longbow"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
     RANGE: ""
-    AMMO: ""
 
 # 1st level features
 FEATURES:

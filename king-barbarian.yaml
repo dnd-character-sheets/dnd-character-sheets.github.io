@@ -71,13 +71,11 @@ ATTACKS:
     DAMAGE: 1d12+3
     TYPE: slashing
     RANGE: 5 ft.
-    AMMO: ""
   - NAME: Hand Axe (x2)
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: slashing
     RANGE: 20/60 ft.
-    AMMO: ""
     NOTES: Can be thrown.
 
 FEATURES:

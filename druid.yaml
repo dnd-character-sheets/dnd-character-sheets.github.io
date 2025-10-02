@@ -87,19 +87,18 @@ ATTACKS:
     DAMAGE: 1d6+2
     TYPE: slashing
     RANGE: 5 ft.
-    AMMO: "---"
   - NAME: Dagger
     ATTACK: "+4"
     DAMAGE: 1d4+2
     TYPE: piercing
     RANGE: 5 ft. or 20/60 ft.
-    AMMO: "---"
   - NAME: Sling
     ATTACK: "+4"
     DAMAGE: 1d4+2
     TYPE: bludgeoning
     RANGE: 30/120 ft.
-    AMMO: 20 stones
+    AMMO TYPE: "stones"
+    AMMO COUNT: 20
 
 MAGIC:
   - level: 0

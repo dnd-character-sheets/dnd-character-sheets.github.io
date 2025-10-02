@@ -75,19 +75,18 @@ ATTACKS:
     DAMAGE: 1d8+2
     TYPE: piercing
     RANGE: 150/600 ft.
-    AMMO: 20
+    AMMO TYPE: "arrows"
+    AMMO COUNT: 20
   - NAME: Ray of Frost
     ATTACK: "+5"
     DAMAGE: 1d8
     TYPE: cold
     RANGE: 60 ft.
-    AMMO: ---
   - NAME: Magic Missile
     ATTACK: Hits
     DAMAGE: 1d4+1
     TYPE: force
     RANGE: 120 ft.
-    AMMO: ---
     NOTES: >-
       When cast creates 3 darts that can target multiple
       creatures. Damage is for 1 dart.

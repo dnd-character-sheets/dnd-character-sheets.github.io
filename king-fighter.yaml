@@ -71,14 +71,12 @@ ATTACKS:
     DAMAGE: 1d8+3
     TYPE: slashing
     RANGE: 5 ft.
-    AMMO: ""
     NOTES: If wielded with two hands you cannot use your shield (–2 AC) but deal +2 damage.
   - NAME: Dwarven Long Axe
     ATTACK: "+5"
     DAMAGE: 1d8+3
     TYPE: slashing
     RANGE: 20/60 ft.
-    AMMO: ""
     NOTES: One-handed melee weapon that can be thrown.
 
 FEATURES:

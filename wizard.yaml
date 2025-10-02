@@ -65,7 +65,6 @@ ATTACKS:
     DAMAGE: 1d6
     TYPE: bludgeoning
     RANGE: 5 ft.
-    AMMO: ""
 
 MAGIC:
   - level: 0                    # CANTRIPS

@@ -69,21 +69,20 @@ ATTACKS:
     DAMAGE: 2d6+3
     TYPE: slashing
     RANGE: 5 ft.
-    AMMO: ""
     NOTES: ""
   - NAME: Javelin
     ATTACK: "+1"
     DAMAGE: 1d6-1
     TYPE: piercing
     RANGE: 30/120 ft.
-    AMMO: 5
+    AMMO TYPE: "javelins"
+    AMMO COUNT: 5
     NOTES: Can be thrown.
   - NAME: \weaponname{Breath Weapon}
     ATTACK: "DC 11 Dex"
     DAMAGE: 2d6
     TYPE: lightning
     RANGE: 30 ft
-    AMMO: ""
     NOTES: Creatures in a 30-foot line take full damage on a failed save or half on a success.
 
 FEATURES:

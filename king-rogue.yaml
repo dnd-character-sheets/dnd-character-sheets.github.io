@@ -78,21 +78,20 @@ ATTACKS:
     DAMAGE: 1d8+3
     TYPE: piercing
     RANGE: 5 ft.
-    AMMO: ""
     NOTES: Uses Dex modifier, not Str.
   - NAME: Shortbow
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: piercing
     RANGE: 80/320 ft.
-    AMMO: 20 arrows
+    AMMO TYPE: "arrows"
+    AMMO COUNT: 20
     NOTES:
   - NAME: Dagger (x2)
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: piercing
     RANGE: 20/60 ft.
-    AMMO: ""
     NOTES: Uses Dex; can be thrown.
 
 FEATURES:

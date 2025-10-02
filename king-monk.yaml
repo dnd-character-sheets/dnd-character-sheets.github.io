@@ -71,21 +71,20 @@ ATTACKS:
     DAMAGE: 1d4+3
     TYPE: bludgeoning
     RANGE: 5 ft.
-    AMMO: ""
     NOTES: Unarmed strike.
   - NAME: Brass Knuckle
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: bludgeoning
     RANGE: 5 ft.
-    AMMO: ""
     NOTES:
   - NAME: Dart
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: piercing
     RANGE: 20/60 ft.
-    AMMO: 10
+    AMMO TYPE: "darts"
+    AMMO COUNT: 10
     NOTES: Can be thrown.
 
 FEATURES:

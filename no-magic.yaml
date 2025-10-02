@@ -41,7 +41,6 @@ ATTACKS:
     DAMAGE: "1d6+2/1d6"
     TYPE: "slashing/cold"
     RANGE: "5 ft."
-    AMMO: "---"
 
 MAGIC FONT: \small
 FEATURES:

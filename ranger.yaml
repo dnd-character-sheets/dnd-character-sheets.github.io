@@ -59,13 +59,11 @@ ATTACKS:
     DAMAGE: 1d6+3
     TYPE: slashing
     RANGE: 5 ft. or 20/60 ft.
-    AMMO: ""
   - NAME: Hand Axe (Off Hand) [B]
     ATTACK: "+5"
     DAMAGE: 1d6
     TYPE: slashing
     RANGE: 5 ft. or 20/60 ft.
-    AMMO: ""
 
 FEATURES:
   - name: Dwarven Resilience

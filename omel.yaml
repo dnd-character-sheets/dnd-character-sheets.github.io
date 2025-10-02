@@ -47,13 +47,11 @@ ATTACKS:
 - DAMAGE: ''
   TYPE: ''
   NAME: Shortswords or Simple Melee Weapons
-  AMMO: ''
   RANGE: ''
   ATTACK: ''
 - DAMAGE: ''
   TYPE: ''
   NAME: Longbow
-  AMMO: ''
   RANGE: ''
   ATTACK: ''
 HIT DICE: d10
