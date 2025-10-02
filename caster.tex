@@ -22,6 +22,7 @@
 \mynodedistance=7pt
 
 \tikzset{%
+  minimum label sep=6pt,
   every label node part/.style={
      text width=,
      font=\sffamily\footnotesize,
@@ -61,6 +62,9 @@
 }
 
   
+
+\newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
+
 
 \begin{document}
 
@@ -185,15 +189,16 @@
     {\nodepart{label}ATTACKS\nodepart{text}
     \centering
     \useDNDfont*{ATTACKS}
+    \noindent
     \begin{attackstab}
     \gdef\notesheader{\cline{2-4}}%
     \gdef\notesheader{}%
     \gdef\attacknote#1#2{}%  Just don't
-    \getDND{ATTACKS}
-    \end{attackstab}
-    \par
-    }
+    \getDND{ATTACKS}%
+    \end{attackstab}%
+}
   ;
+
 
 
 
@@ -218,7 +223,7 @@
 \ifDNDdefined{FEATURES}{
   \ifDNDdefined{MAGIC}
      {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}
-      \featurespostspace=0pt
+      \featurespostspace=3pt
      }
      {\def\where{below right corner=of attacks}%
       \advance\featurespostspace by 2pt

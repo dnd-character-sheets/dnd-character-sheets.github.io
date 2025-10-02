@@ -128,8 +128,11 @@ The system automatically sets saving throw proficiencies:
 - `DAMAGE`: String (damage dice/formula)
 - `TYPE`: String (damage type)
 - `RANGE`: String (range information)
-- `AMMO`: String (ammunition info, can be empty or "---")
+- `AMMO TYPE`: String (type of ammunition, optional)
+- `AMMO COUNT`: Number (amount of ammunition, optional)
 - `NOTES`: String (optional additional notes)
+
+**Ammunition Rules**: AMMO TYPE can be present without AMMO COUNT, but AMMO COUNT requires AMMO TYPE to be specified.
 
 **Examples**:
 ```yaml
@@ -139,14 +142,29 @@ ATTACKS:
     DAMAGE: "1d6+2"
     TYPE: piercing
     RANGE: "5 ft."
-    AMMO: ""
+    # No ammo fields for melee weapons
   - NAME: Light Crossbow
     ATTACK: "+4"
     DAMAGE: "1d8+2"
     TYPE: piercing
     RANGE: "80/320 ft."
-    AMMO: "20 bolts"
+    AMMO TYPE: "bolts"
+    AMMO COUNT: 20
     NOTES: "Loading property"
+  - NAME: Dagger (thrown)
+    ATTACK: "+4"
+    DAMAGE: "1d4+2"
+    TYPE: piercing
+    RANGE: "20/60 ft."
+    AMMO COUNT: 3
+    AMMO TYPE: daggers
+  - NAME: Sling
+    ATTACK: "+4"
+    DAMAGE: "1d4+2"
+    TYPE: bludgeoning
+    RANGE: "30/120 ft."
+    AMMO TYPE: "bullets"
+    # Count omitted when not tracked
 ```
 
 ---

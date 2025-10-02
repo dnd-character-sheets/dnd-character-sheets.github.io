@@ -185,19 +185,27 @@ ATTACKS:
     DAMAGE: "1d12+3"
     TYPE: "slashing"
     RANGE: "5 ft."
-    AMMO: "—"
-  - NAME: "Hand Axe (x2)"
-    ATTACK: "+5" 
+    # No ammo fields for melee weapons
+  - NAME: "Hand Axe"
+    ATTACK: "+5"
     DAMAGE: "1d6+3"
     TYPE: "slashing"
     RANGE: "5ft, 20/60 ft."
-    AMMO: "—"
+    AMMO COUNT: 2
+    AMMO TYPE: axes
+  - NAME: "Light Crossbow"
+    ATTACK: "+4"
+    DAMAGE: "1d8+2"
+    TYPE: "piercing"
+    RANGE: "80/320 ft."
+    AMMO TYPE: "bolts"
+    AMMO COUNT: 20
 ```
 
 **Key Notes:**
-- Each attack needs all six fields: NAME, ATTACK, DAMAGE, TYPE, RANGE, AMMO
+- Each attack needs core fields: NAME, ATTACK, DAMAGE, TYPE, RANGE
 - Attack bonus should include + or - sign
-- Use "—" for AMMO when not applicable
+- AMMO TYPE and AMMO COUNT are optional: either both missing/empty, or type is string and count is number
 - RANGE can include multiple ranges for thrown weapons
 
 </div>
@@ -383,7 +391,7 @@ ATTACKS:
     DAMAGE: "1d8+3"
     TYPE: "slashing"
     RANGE: "5 ft."
-    AMMO: "—"
+    # No ammo fields for melee weapons
 
 MAGIC: []
 
