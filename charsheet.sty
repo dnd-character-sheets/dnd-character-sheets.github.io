@@ -385,7 +385,10 @@
 
 
 \newenvironment{proflist}
-  {\begin{list}{}{%
+  {\clubpenalty=10000
+   \widowpenalty=10000
+   \begin{list}{}{%
+      \advance\@itemdepth\@ne
       \raggedright
       \setlength{\leftmargin}{16pt}% no indentation
       \setlength{\labelwidth}{0pt}%
@@ -396,6 +399,20 @@
       \setlength{\parsep}{0pt}%
       \setlength{\itemsep}{2pt}% space between items
       \renewcommand*{\makelabel}[1]{}% suppress the bullet
+  }}%
+  {\end{list}}
+
+\newenvironment{innerlist}
+  {\begin{list}{}{%
+      \setlength{\leftmargin}{-2pt}%
+      \setlength{\labelwidth}{0pt}%
+      \setlength{\labelsep}{0pt}%
+      \setlength{\itemindent}{0pt}%
+      \setlength{\topsep}{0pt}% space before/after the list
+      \setlength{\partopsep}{0pt}%
+      \setlength{\parsep}{0pt}%
+      \setlength{\itemsep}{1pt}% space between items
+%      \renewcommand*{\makelabel}[1]{\hss\llap{##1\,}}% 
   }}%
   {\end{list}}
 
@@ -1000,14 +1017,20 @@
 \WithSuffix\newcommand\getDND*[1]{%
   \ifDNDdefined{#1}
     {\getDND{#1}}
-    {\strut}
+    {}%
 }
 
 \WithSuffix\newcommand\getDND+[2]{%
   \ifDNDdefined{#1}
     {\getDND{#1}}
-    {#2}
+    {#2}%
 }
+
+\newcommand\ggg{%
+  \@ifnextchar*\@gggstar\@gggnone
+}
+\newcommand\@gggstar[1]{\ifDNDdefined{#1}{\getDND{#1}}{}}
+\let\@gggnone\getDND
 
 \newif\ifvalnonempty
 \newcommand{\ifDNDnonempty}[3]{%
@@ -1026,6 +1049,10 @@
     % Name is not defined
     #3%
   }%
+}
+
+\newcommand\whenbothDNDnonempty[3]{%
+  \ifDNDnonempty{#1}{\ifDNDnonempty{#2}{#3}}{}%
 }
 
 %-----------------------------------------------------------------
@@ -1958,13 +1985,15 @@
 \newDND{LAYOUT}
 \newDND{LEVEL}
 \newDND{MAGIC}
+\newDND{MAIN PROFICIENCIES}
 \newDND{MAX HP}
 \newDND{MOTIVATION}
+\newDND{OTHER PROFICIENCIES}
 \newDND{PASSIVE PERCEPTION}
 \newDND{PLAYER NAME}
 \newDND{PP}
 \newDND{PREGENERATED}
-\newDND{PROFICIENCIES}
+\newDND{PROFICIENCIES} % see also main and other
 \newDND{PROFICIENCY BONUS}
 \newDND{RACE}
 \newDND{SENSES}
@@ -1996,6 +2025,10 @@
   \ifDNDnonempty{SPELL ATTACK MODIFIER}%
     {~\getDND{SPELL ATTACK MODIFIER}}%
     {}%
+}
+
+\newcommand\spelldc{%
+  \ifDNDdefined{SPELL DC}{DC~\getDND*{SPELL DC}}{}%
 }
 
 \newcommand\psam{%  Add to user documentation
@@ -2066,8 +2099,10 @@
 \newcommand\ammofield[2]{% amount type
   \setbox0\hbox{\large~99~}%
   \@ammowidth=\wd0
-  (\hskip1pt \hbox to \@ammowidth{\rlap{\vrule width \@ammowidth height -2pt depth 2.2pt}%
-                       \hss {\color{attacks!70!black}\large#1}\hss}
+  (\hbox to \@ammowidth{\hskip1pt
+                        \rlap{\vrule width \@ammowidth height -2pt depth 2.2pt}%
+                       \hss {\color{attacks!70!black}\large#1}\hss}%
+   ~%
    #2)%
 }
 
@@ -2202,30 +2237,36 @@
 %-----------------------------------------------------------------------
 
 % Environment for displaying ranged attack ranges
-\newenvironment{ranges}
+\newenvironment{rangetable}
   {\par\smallskip\noindent
    \begin{tabular}{@{}l@{ }r@{: }l@{ }l@{}}}
   {\end{tabular}\par}
 
-\newcommand\@addrangeinfo[4]{% name range ammo-count ammo-type
-  \g@addto@macro\@rangedlist{#1&range&#2 
+\newcommand\rangetableline[4]{%
+  #1&range&#2 
       &
   \def\@attackammotype{#4}%
   \ifx\@attackammotype\empty\else\ammofield{#3}{#4}\fi
   \\[3pt]
-%     (ammo \rlap{\hbox to 2.5em{\hss\raisebox{3pt}{\normalsize#3}\hss}}\vrule width 2.5em height 0pt depth 0.2pt)\\[3pt]
-  }%
 }
+\newenvironment{rangeparagraphs}{\raggedright}{}
 
+\newcommand\rangeparagraph[4]{%
+  \smallskip
+  #1 range: #2%
+  \def\@attackammotype{#4}%
+  \ifx\@attackammotype\empty\else\ \ammofield{#3}{#4}\fi
+  \par
+}
 \newif\if@ranged@attack
 \newif\if@has@ranged@attack
 
-\newcommand\@bracket[1]{%
-  \expandafter\def\expandafter#1\expandafter{\expandafter{#1}}%
+\newcommand\@addrangerendering[5]{% macro name range ammo-count ammo-type
+  \g@addto@macro\@rangedlist{#1{#2}{#3}{#4}{#5}}%
 }
 
 % Main macro to display ranged attacks
-\newcommand{\DNDranges}{%
+\newcommand{\DNDranges}[2]{% environment-name line-macro
   \ifDNDdefined{ATTACKS}{%
     % Initialize with empty list
     \def\@rangedlist{}%
@@ -2245,8 +2286,12 @@
       % Check if range qualifies as ranged attack
       \if@ranged@attack
         \@has@ranged@attacktrue
-% old:        \expandafter\expandafter\expandafter\@addrangeinfo\expandafter\@attackname\expandafter\@nil\@attackrange\@nil
-        \@expandArg{\@expandArg{\@expandArg{\@expandArg\@addrangeinfo\@attackname}\@attackrange}\@attackammocount}\@attackammotype
+        \@expandArg
+           {\@expandArg
+              {\@expandArg
+                  {\@expandArg
+                     {\@addrangerendering{#2}}%
+                   \@attackname}\@attackrange}\@attackammocount}\@attackammotype
        \fi
     }%
     % Temporarily replace dndkeys to use our collector
@@ -2258,9 +2303,9 @@
     \let\dndkeys\@original@dndkeys
     % Only emit environment if we have ranged attacks
     \if@has@ranged@attack
-      \begin{ranges}
+      \begin{#1}
       \@rangedlist
-      \end{ranges}
+      \end{#1}
     \fi
   }{}%
 }

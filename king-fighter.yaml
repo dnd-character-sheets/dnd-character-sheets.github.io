@@ -31,25 +31,27 @@ EP: ""
 GP: ""
 PP: ""
 
-PROFICIENCIES:
+MAIN PROFICIENCIES:
   # Skills
-  - Athletics
-  - Intimidation
-  - Perception
-  - Survival
-  - proficiencies_skip: true         # separates skills from tools
-  # Tools & vehicles
-  - Gaming Set (Dice)
-  - Vehicles (Land)
-  - Smith’s Tools
-  - proficiencies_skip: true         # separates tools from languages/arms
+  - Skills:
+      - Athletics
+      - Intimidation
+      - Perception
+#      - Stonecunning (+4) # seems bogus
+      - Survival
+  - 
+  - Tools:   # Tools & vehicles
+    - Gaming Set (Dice)
+    - Vehicles (Land)
+    - Smith’s Tools
+  - 
+  - "Notes: advantage on saves against poison"
+
+OTHER PROFICIENCIES:
   # Languages, armor, weapons
-  - Languages: Common
-  - Languages: Dwarvish
-  - Armor: All
-  - Shield
-  - Weapons: Simple
-  - Weapons: Martial
+  - Languages: Common, Dwarvish
+  - Armor: All, Shield
+  - Weapons: Simple, Martial
 
 EQUIPMENT:
   - Chainmail Armor
@@ -85,7 +87,7 @@ FEATURES:
   - name: Military Rank
     description: Advantage on checks in social situations that involve NPCs with military experience.
   - name: Dwarven Resilience
-    description: Advantage on saving throws against poison and resistance to poison damage (take half damage).
+    description: Advantage on saving throws against poison and resistance to poison damage (\textbf{take half damage}).
   - name: Stonecunning
     description: +1 when examining stonework (History checks related to the origin of stonework).
   - name: Protection Fighting Style

@@ -16,8 +16,11 @@ KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 all:V: bundle samples.pdf
 samples: samples.pdf 3samples.pdf
 
+LUAUTIL=flags inspect osutil tabutil
+LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
+
 bundle:V:
-	cp -auvL splash.png charsheet charsheet.sty silverpine.tex ~/src/lua/flags.lua $PUBLISH
+	cp -auvL splash.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
 	cp -auvL character-form.html $HOME/www/charsheet.html
 	cp -auvL claude-character-form.html $HOME/www/claude.html
 	cp -auvL hof-character-form.html $HOME/www/hof.html
@@ -58,10 +61,8 @@ samples.pdf: ${KINGS:%=king-%.s.pdf} ${KINGS:%=king-%.3.pdf}
 	pdftk "${pdfs[@]}" cat output $target
 
 3samples.pdf: ${KINGS:%=king-%.3.pdf}
-	set -A pdfs
-	for k in $KINGS; do pdfs+=(king-$k.3.pdf); done
-	pdf=$(mktemp).pdf
-	pdftk "${pdfs[@]}" cat output $pdf
-        pdftk "$pdf" cat odd output $target
-        rm -f "$pdf"
+	pdftk $prereq cat output $target
+
+3samples1.pdf: ${KINGS:%=king-%.3.pdf}
+	./catpage1s $target $prereq 
 

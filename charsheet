@@ -75,6 +75,22 @@ else
   end
 end
 
+function scalarvalues(list)
+  return coroutine.wrap(function()
+      local function process(values)
+        for _, value in pairs(values) do
+          if type(value) == "table" then
+            process(value)
+          else
+            coroutine.yield(value)
+          end
+        end
+      end
+      process(list)
+    end)
+end
+
+
 ------------------------------------------------------------------------
 --
 -- Field validation
@@ -468,7 +484,7 @@ local field_specs = {
   { p = optional(validate_magic), m = '%s must be a valid magic structure',
     fs = {'MAGIC'} },
   { p = optional(validate_proficiencies), m = '%s must be a valid proficiencies list',
-    fs = {'PROFICIENCIES'} },
+    fs = {'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES'} },
     
   -- Optional fields that can be present
   { p = optional(inrange(1, 20)), m = '%s must be a number in the range 1..20',
@@ -627,14 +643,14 @@ end
 ---------------------------------------------------------------------------
 local tex_escape_map = {
 --  ["\\"] = [[\textbackslash{}]],
+--  ["{"]  = [[\{]],
+--  ["}"]  = [[\}]],
   [' '] = '~',
   ["&"]  = [[\&]],
   ["%"]  = [[\%]],
   ["$"]  = [[\$]],
   ["#"]  = [[\#]],
   ["_"]  = [[\_]],
---  ["{"]  = [[\{]],
---  ["}"]  = [[\}]],
   ["~"]  = [[\textasciitilde{}]],
   ["^"]  = [[\textasciicircum{}]],
 }
@@ -647,10 +663,12 @@ local function escape (s)
   else
     return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
                        :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
-                       :gsub("−", [[\textminus{}]])
+                       :gsub("−", [[\textminus{}]]) 
     )
   end
 end
+
+local function do_not_escape(s) return tostring(s) end
 
 local function keyformat(key)
   return (key:gsub('%&', '+'))
@@ -662,9 +680,9 @@ end
 local function render_simple_kv (key, val)
   local fontbase = key:match('(.*) FONT$')
   if fontbase then
-    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), escape(val))
+    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), do_not_escape(val))
   else
-    return ([[\setDND{%s}{%s}]]):format(keyformat(key), escape(val))
+    return ([[\setDND{%s}{%s}]]):format(keyformat(key), do_not_escape(val))
   end
 end
 
@@ -672,24 +690,34 @@ local function is_empty_table(v)
   return type(v) == 'table' and next(v) == nil
 end
 
+local function is_list(v)
+  return type(v) == 'table' and (v[1] or next(v) == nil)
+end
+
+local function is_named_list(entry)
+  if type(entry) == 'table' then
+    local k, v = next(entry)
+    return type(k) == 'string' and is_list(v) and next(entry, k) == nil
+  end
+end
+
+local item_list -- forward
+
 local function render(v)
   if type(v) == 'string' then
-    return escape(v)
+    return do_not_escape(v)
   elseif type(v) ~= 'table' then
     return tostring(v)
   else
     if isnull(v) or v.proficiencies_skip then
       return [[\profskip{}]]
+    elseif is_named_list(v) then
+      local name, elements = next(v)
+      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name, item_list(elements))
     elseif v.smallskip then
       return [[\smallskip{}]]
     elseif v.medskip then
       return [[\medskip{}]]
-    elseif v.Languages then
-      return v.Languages
-    elseif v.Armor then
-      return string.format('%s Armor', v.Armor)
-    elseif v.Weapons then
-      return string.format('%s Weapons', v.Weapons)
     elseif table_as_colon_string(v) then
       return table_as_colon_string(v)
     else
@@ -697,6 +725,7 @@ local function render(v)
     end
   end
 end
+
 
 local function render_item(v)
   if is_empty_table(v) then -- blank list entry
@@ -708,17 +737,23 @@ local function render_item(v)
     then
       return s
     else
-      return ([[\item %s]]):format(s)
+if s:find '_' then require 'inspect'.show { evil_string = s } end
+      return ([[\item %s]]):format(do_not_escape(s))
     end
   end
 end
 
-local function render_item_list (key, list)
+item_list = function (list)
   local items = {}
   for _,v in ipairs(list) do
+if type(v) == 'string' and v:find '_' then require 'inspect'.show {item = v} end
     table.insert(items, render_item(v))
   end
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(items, "\n"))
+  return table.concat(items, "\n")
+end
+
+local function render_item_list (key, list)
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), item_list(list))
 end
 
 local function render_attack_record (rec)
@@ -728,7 +763,7 @@ local function render_attack_record (rec)
   end
   for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO TYPE", "AMMO COUNT", 'NOTES' }
   do
-    outf(parts, "%s={%s}", escape(k), escape(rec[k] or ""))
+    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(rec[k] or ""))
   end
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
@@ -736,7 +771,7 @@ end
 local function render_generic_record (rec)
   local parts = {}
   for k,v in pairs(rec) do
-    outf(parts, "%s={%s}", escape(k), escape(v))
+    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
   end
   table.sort(parts)
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
@@ -755,19 +790,19 @@ local function render_struct_list (key, list)
   local notes_header_out = false
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
-      outf(out, [[\item %s]], escape(tostring(elem)))
+      outf(out, [[\item %s]], do_not_escape(tostring(elem)))
     elseif elem.level and not next(elem, 'level') then
       if type(elem.level) == 'table' then
         outf(out, [[\spellslevellabel{%s}{%s}]], elem.level.number, elem.level.slots)
       else
-        outf(out, [[\spellslevellabel{%s}{%s}]], escape(elem.level), 0)
+        outf(out, [[\spellslevellabel{%s}{%s}]], do_not_escape(elem.level), 0)
       end
     elseif elem.name and elem.description and not elem.ATTACK
         or key == 'MAGIC'
     then
       outf(out, [[\described{%s}{%s}]],
-           escape(elem.name or ''), escape(elem.description or ''))
-    elseif elem.ATTACK then
+           do_not_escape(elem.name or ''), do_not_escape(elem.description or ''))
+    elseif false and elem.ATTACK then
       vprintf('rendering an attack\n')
       table.insert(out, render_attack_record(elem))
     else
@@ -775,7 +810,7 @@ local function render_struct_list (key, list)
     end
   end
 
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "%\n"))
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "\n"))
 end
 
 ---------------------------------------------------------------------------
@@ -866,7 +901,7 @@ end
 local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
   local weight_arg = extract_weight_arg(category, equipment_item)
   table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
-    weight_arg, category:gsub('&', '+'), escape(equipment_item)))
+    weight_arg, category:gsub('&', '+'), do_not_escape(equipment_item)))
   table.insert(flattened_equipment, render_item(equipment_item))
 end
 
@@ -1076,22 +1111,23 @@ end
 local function convert_mapping (map)
   local lines = {}
 
-  do -- proficiency
+  do -- set proficiency bonus first
     local level = tonumber(map.LEVEL)
     local prof = level and (2 + math.floor((level - 1) / 4)) or 2
     outf(lines, [[\setcounter{proficiency bonus}{%d}]], prof)
   end
 
-  -- Iterate in original order if lyaml preserved it (omap style)
+  -- emit keys in predictable order
   local keys = {}
-  if map.n and map[1] and type(map[1])=="table" and map[1][1] then
-    for i=1,map.n do table.insert(keys, map[i][1]) end
-  else
-    for k in pairs(map) do table.insert(keys, k) end
-    table.sort(keys)               -- fallback: deterministic but arbitrary
-  end
+  for k in pairs(map) do table.insert(keys, k) end
+  table.sort(keys)
 
-  for _,k in ipairs(keys) do
+  local use_items = { PROFICIENCIES = true,
+                      ['MAIN PROFICIENCIES'] = true,
+                      ['OTHER PROFICIENCIES'] = true,
+  }
+
+  for _, k in ipairs(keys) do
     local v = map[k]
     local t = type(v)
     if k == "EQUIPMENT" and t == "table" then
@@ -1099,7 +1135,9 @@ local function convert_mapping (map)
     elseif t=="string" or t=="number" or t=="boolean" then
       table.insert(lines, render_simple_kv(k, tostring(v)))
     elseif t=="table" then
-      if #v > 0 and (type(v[1])=="string" or type(v[1])=="number") then
+      if use_items[k]
+      or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
+      then
         table.insert(lines, render_item_list(k, v))
       else
         table.insert(lines, render_struct_list(k, v))
@@ -1143,6 +1181,18 @@ local function same_values(v1, v2)
          v1:find '^%d+$' and v2 == '+' .. v1 or
          v2:find '^%d+$' and v1 == '+' .. v2
 end
+
+local function has_perception(t)
+  if type(t) == 'table' then
+    for p in scalarvalues(t) do
+      if type(p) == 'string' and p:lower():find 'perception' then
+        return true
+      end
+    end
+  end
+end
+
+
 
 local function extend(doc)
 
@@ -1223,15 +1273,8 @@ local function extend(doc)
       end
     end
     
-    local proficient_perceiver = false
-    if can_be 'table'(doc.PROFICIENCIES) then
-      for _, p in ipairs(doc.PROFICIENCIES) do
-        if type(p) == 'string' and p:lower():find 'perception' then
-          proficient_perceiver = true
-          break
-        end
-      end
-    end
+    local proficient_perceiver =
+      has_perception(doc.PROFICIENCIES or doc['MAIN PROFICIENCIES'] or doc['OTHER PROFICIENCIES'])
 
     if not has_expertise then
       -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
@@ -1346,11 +1389,14 @@ if [[ -r "$dir/sheet.pdf" ]]; then
 fi
 ]=]
 
-local function emit(assignments, layout)
-  local output = fields.standalone and assignments or fill_template(assignments, layout)
+local function process(assignments, layout)
+  local latex = escape(assignments)
+  local output = fields.standalone and latex or fill_template(latex, layout)
+
+  
 
   if not fields.output then
-    io.stdout:write(assignments, '\n')
+    io.stdout:write(latex, '\n')
   elseif fields.output:find '%.tex$' then
     set_contents(fields.output, output)
   elseif fields.output:find '%.pdf$' then
@@ -1386,7 +1432,7 @@ local main = function(arg)
       os.exit(1)
     end
 
-require 'inspect'.show(doc.EQUIPMENT)
+--require 'inspect'.show(doc.EQUIPMENT)
     
     -- Validate document before processing
     validate_document(doc)
@@ -1402,7 +1448,7 @@ require 'inspect'.show(doc.EQUIPMENT)
       end
     end
     if type(doc)=="table" then
-      emit(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout)
+      process(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout)
     end
   end
 end

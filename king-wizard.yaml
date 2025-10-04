@@ -32,31 +32,20 @@ GP: 10
 PP: ""
 
 PROFICIENCIES:
-  # Skills
-  - Arcana
-  - History
-  - Insight
-  - Nature
-  - Perception
-  - proficiencies_skip: true
-  # (no tool proficiencies listed)
-  - proficiencies_skip: true
-  # Languages / armor / weapons
-  - Languages: Common
-  - Languages: Elvish
-  - Languages: Draconic
-  - Languages: Dwarvish
-  - Languages: Orcish
-  - Dagger
-  - Dart
-  - Sling
-  - Quarterstaff
-  - Light Crossbow
-  - Longsword
-  - Shortsword
-  - Longbow
-  - Shortbow
-  - (No armor proficiency)
+  - Skills:
+    - Arcana
+    - History
+    - Insight
+    - Nature
+    - Perception
+
+  - Notes:
+      - Advantage on saves against charm.
+      - Magic can't put you to sleep.
+OTHER PROFICIENCIES:
+  - Languages: Common, Elvish, Draconic, Dwarvish, Orcish
+  - Armor: None
+  - Weapons: Dagger, Dart, Sling, Quarterstaff, Light Crossbow, Longsword, Shortsword, Longbow, Shortbow
 
 EQUIPMENT:
   - Common Clothes
@@ -89,7 +78,7 @@ ATTACKS:
     RANGE: 120 ft.
     NOTES: >-
       When cast creates 3 darts that can target multiple
-      creatures. Damage is for 1 dart.
+      creatures within 120 ft. Damage is for 1 dart.
       Casting uses a 1st-level spell slot.
 
 FEATURES FONT: \small

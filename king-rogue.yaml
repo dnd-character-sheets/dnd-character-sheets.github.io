@@ -31,29 +31,27 @@ EP: ""
 GP: 10
 PP: ""
 
-PROFICIENCIES:
-  # Skills
-  - Acrobatics
-  - Animal Handling
-  - Deception
-  - Stealth (EXPERT)
-  - Investigation (EXPERT)
-  - proficiencies_skip: true
-  # Tools & vehicles
-  - Alchemist’s Tools
-  - Vehicles (Land)
-  - Thieves’ Tools
-  - proficiencies_skip: true
-  # Languages, armor, weapons
-  - Languages: Common
-  - Languages: Halfling
-  - Languages: Thieves Cant
+MAIN PROFICIENCIES:
+  - Skills:
+    - Acrobatics
+    - Animal Handling
+    - Deception
+    - Stealth (EXPERT)
+    - Investigation (EXPERT)
+
+  - Tools:
+    - Alchemist’s Tools
+    - Vehicles (Land)
+    - Thieves’ Tools
+
+  - Notes:
+    - Advantage on saves against fright.
+    - EXPERT means to double your proficiency bonus for that skill (+4)
+
+OTHER PROFICIENCIES:
+  - Languages: Common, Halfling, Thieves Cant
   - Armor: Light
-  - Weapons: Simple
-  - Weapons: Hand Crossbow
-  - Weapons: Longsword
-  - Weapons: Rapier
-  - Weapons: Shortsword
+  - Weapons: Simple & Hand Crossbow, Longsword, Rapier, Shortsword
 
 EQUIPMENT:
   - Leather Armor
@@ -78,7 +76,7 @@ ATTACKS:
     DAMAGE: 1d8+3
     TYPE: piercing
     RANGE: 5 ft.
-    NOTES: Uses Dex modifier, not Str.
+    NOTES: Uses \textsc{dex} modifier, not \textsc{str}.
   - NAME: Shortbow
     ATTACK: "+5"
     DAMAGE: 1d6+3
@@ -86,13 +84,14 @@ ATTACKS:
     RANGE: 80/320 ft.
     AMMO TYPE: "arrows"
     AMMO COUNT: 20
-    NOTES:
-  - NAME: Dagger (x2)
+  - NAME: Dagger
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: piercing
     RANGE: 20/60 ft.
-    NOTES: Uses Dex; can be thrown.
+    NOTES: Uses \textsc{dex}, not \textsc{str}.  Can be thrown.
+    AMMO COUNT: 2
+    AMMO TYPE: daggers
 
 FEATURES:
   - name: Rustic Hospitality
@@ -114,7 +113,6 @@ FEATURES:
   - Stave off boredom.
 
 "SUGGESTED NAMES":
-  - Pippin
-  - Piper
+  - Pippin or Piper
 
 PREGENERATED: true

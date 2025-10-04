@@ -32,22 +32,15 @@ GP: 10
 PP: ""
 
 PROFICIENCIES:
-  # Skills
-  - Insight
-  - Medicine
-  - Persuasion
-  - Religion
-  - Nature
-  - proficiencies_skip: true
-  # (no tool proficiencies listed)
-  - proficiencies_skip: true
-  # Languages / armor / weapons
-  - Languages: Common
-  - Languages: Celestial
-  - Languages: Abyssal
-  - Languages: Infernal
-  - Armor: All
-  - Shield
+  - Skills:
+    - Insight
+    - Medicine
+    - Persuasion
+    - Religion
+    - Nature
+OTHER PROFICIENCIES:
+  - Languages: Common, Celestial, Abyssal, Infernal
+  - Armor: All, Shields
   - Weapons: Simple
 
 EQUIPMENT:
@@ -71,7 +64,7 @@ ATTACKS:
     TYPE: bludgeoning
     RANGE: 5 ft.
     NOTES: ""
-  - NAME: Light Crossbow
+  - NAME: Light crossbow
     ATTACK: "+4"
     DAMAGE: 1d8+2
     TYPE: piercing
@@ -79,7 +72,16 @@ ATTACKS:
     AMMO TYPE: "bolts"
     AMMO COUNT: 20
     NOTES: ""
+  - NAME: Guiding Bolt
+    ATTACK: "+5"
+    DAMAGE: 4d6
+    TYPE: radiant
+    RANGE: 120 ft
+    NOTES: >-
+      If it hits, the next attack against that target has
+      Advantage. \textbf{Using this attack consumes one of your two daily spell slots}.
 
+MAGIC FONT: \small
 MAGIC:
   - level: 0                             # CANTRIPS
   - name: Light
@@ -92,7 +94,7 @@ MAGIC:
   - name: Bless
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute while you maintain concentration.
   - name: Cure Wounds
-    description: A touched creature regains 1d8+3 HP.
+    description: A touched creature regains 1d8+3 HP.
   - name: Guiding Bolt
     description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage; consumes a spell slot.
   - name: Healing Word
@@ -118,7 +120,6 @@ FEATURES:
   - Help others.
 
 "SUGGESTED NAMES":
-  - Auros
-  - Aurenia
+  - Auros or Aurenia
 
 PREGENERATED: true

@@ -31,27 +31,22 @@ EP: ""
 GP: ""
 PP: ""
 
-PROFICIENCIES:
-  # Skills
-  - Acrobatics
-  - History
-  - Insight
-  - Investigation
-  - Performance
-  - Stealth
-  - proficiencies_skip: true
-  # Tools
-  - Leatherworker’s Tools
-  - Thieves’ Tools
-  - proficiencies_skip: true
-  # Languages, armor, weapons
-  - Languages: Common
-  - Languages: Elf
-  - Languages: Dwarf
-  - Languages: Orc
+MAIN PROFICIENCIES:
+  - Skills:
+    - Acrobatics
+    - History
+    - Insight
+    - Investigation
+    - Performance
+    - Stealth
+
+  - Tools:
+    - Leatherworker’s Tools
+    - Thieves’ Tools
+OTHER PROFICIENCIES:
+  - Languages: Common, Elf, Dwarf, Orc
   - Armor: None
-  - Weapons: Simple
-  - Weapons: Shortsword
+  - Weapons: Simple Weapons, Shortsword
 
 EQUIPMENT:
   - Backpack
@@ -77,7 +72,6 @@ ATTACKS:
     DAMAGE: 1d6+3
     TYPE: bludgeoning
     RANGE: 5 ft.
-    NOTES:
   - NAME: Dart
     ATTACK: "+5"
     DAMAGE: 1d4+3
@@ -85,7 +79,6 @@ ATTACKS:
     RANGE: 20/60 ft.
     AMMO TYPE: "darts"
     AMMO COUNT: 10
-    NOTES: Can be thrown.
 
 FEATURES:
   - name: Boxer of Legend
@@ -95,7 +88,7 @@ FEATURES:
   - name: Unarmored Defense
     description: While wearing no armor, your AC equals 10 + Dex + Wis.
   - name: Martial Arts
-    description: Use fists, shortsword, or any simple weapon (not heavy or two-handed). Must not wear armor or use a shield. • Use Dex for attack and damage • Unarmed damage is d4 • After taking the Attack action, you may make one punch as a bonus action.
+    description: Use fists, shortsword, or any simple weapon (not heavy or two-handed). Must not wear armor or use a shield. • Use \textsc{dex} for attack and damage • Unarmed damage is d4 • After taking the Attack action, you may make one punch as a bonus action.
   - name: Fey Ancestry
     description: Advantage on saving throws against being charmed, and magic can’t put you to sleep.
 
@@ -105,7 +98,6 @@ FEATURES:
   - Stave Off Boredom
 
 "SUGGESTED NAMES":
-  - Syrun
-  - Syralla
+  - Syrun or Syralla
 
 PREGENERATED: true

@@ -32,27 +32,20 @@ EP: ""
 GP: 5
 PP: ""
 
-PROFICIENCIES:
-  # Skills
-  - Animal Handling
-  - Athletics
-  - Perception
-  - Intimidation
-  - Survival
+MAIN PROFICIENCIES:
+  - Skills:
+      - Animal Handling
+      - Athletics
+      - Perception
+      - Intimidation
+      - Survival
   - proficiencies_skip: true
-  # Tools
-  - Herbalism Kit
-  - proficiencies_skip: true
-  # Languages / armor / weapons
-  - Languages: Common
-  - Languages: Orcish
-  - Languages: Dwarvish
-  - Armor: Light
-  - Armor: Medium
-  - Shield
-  - Weapons: Simple
-  - Weapons: Martial
-
+  - Tools: 
+      - Herbalism Kit $
+OTHER PROFICIENCIES:
+  - "Languages: Common, Orcish, Dwarvish"
+  - "Armor: Light, Medium, Shield"
+  - Weapons: Simple, Martial
 EQUIPMENT:
   - Common Clothes
   - Winter Blanket
@@ -71,12 +64,14 @@ ATTACKS:
     DAMAGE: 1d12+3
     TYPE: slashing
     RANGE: 5 ft.
-  - NAME: Hand Axe (x2)
+  - NAME: Hand Axe
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: slashing
     RANGE: 20/60 ft.
     NOTES: Can be thrown.
+    AMMO TYPE: axes
+    AMMO COUNT: 2
 
 FEATURES:
   - name: Hermit Discovery
@@ -104,5 +99,4 @@ FEATURES:
   - Prove mettle.
 
 "SUGGESTED NAMES":
-  - Kesk
-  - Kethra
+  - Kesk or Kethra

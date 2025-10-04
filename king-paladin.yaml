@@ -32,23 +32,23 @@ GP: 10
 PP: ""
 
 PROFICIENCIES:
-  # Skills
-  - Athletics
-  - Intimidation
-  - Persuasion
-  - Religion
-  - proficiencies_skip: true
-  # Tools & vehicles
-  - Gaming Set (Dice)
-  - Vehicles (Land)
-  - proficiencies_skip: true
-  # Languages, armor, weapons
-  - Languages: Common
-  - Languages: Draconic
-  - Armor: All
-  - Shield
-  - Weapons: Simple
-  - Weapons: Martial
+  - Skills:
+      - Athletics
+      - Intimidation
+      - Persuasion
+      - Religion
+  -
+  - Tools:
+    - Gaming Set (Dice)
+    - Vehicles (Land)
+  -
+  - Notes: 
+    - Disadvantage on Stealth while wearing chain-mail armor
+
+OTHER PROFICIENCIES:
+  - Languages: Common, Draconic
+  - Armor: All, Shield
+  - Weapons: Simple, Martial
 
 EQUIPMENT:
   - Common Clothes
@@ -99,10 +99,10 @@ FEATURES:
   - name: Lay on Hands
     description: >-
       You have 5 HP in a healing pool.
-      As an action, heal a touched creature 1 HP (as many points as
-      you like) or spend 5 points to cure a disease or poison
+      As an action, heal a touched creature 1 HP (as many points as
+      you like up to 5) or spend 5 points to cure a disease or poison
       affecting one creature.
-  - name: Noisy Chain Mail
+  - name: Chain Mail
     description: You have disadvantage on Stealth checks while wearing chain-mail armor.
 
 "SUGGESTED MOTIVATIONS":
@@ -111,7 +111,6 @@ FEATURES:
   - Mete out justice.
 
 "SUGGESTED NAMES":
-  - Raihan
-  - Raina
+  - Raihan or Raina
 
 PREGENERATED: true
