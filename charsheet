@@ -50,32 +50,123 @@ local default_layout = 'silverpine'
 local vprintf = fields.verbose and eprintf or function() end
 
 local pdflatex =
-  fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error'
-    or 'pdflatex -interaction=scrollmode -halt-on-error'
+  fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
+    or 'pdflatex -interaction=scrollmode -halt-on-error -no-shell-escape'
 
 
 
 local lyaml  = require "lyaml"
 local function isnull(v) return v == lyaml.null end
-
--- -----------------------------------------------------------------------
--- 0.  Make sure we have a load_all() helper
--- -----------------------------------------------------------------------
-local yaml_load_all
-if lyaml.load_all then
-  yaml_load_all = lyaml.load_all          -- native API present
-else
-  -- Fallback: wrap single-document loader so we still return a list
-  yaml_load_all = function(str)
+local yaml_load_all = lyaml.load_all or
+  function(str)
     local ok, doc = pcall(lyaml.load, str)
     if not ok then
       error("lyaml.load failed: "..tostring(doc))
     end
     return { doc }
   end
+
+assert(lyaml.dump)
+local function image(v)
+  return lyaml.dump({v}):gsub([[\]], [[\textbackslash{}]])
+                        :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]])
 end
 
-function scalarvalues(list)
+---------------------
+
+local bad_control_sequences = { }
+do
+  for cs in ([[
+catcode
+openout
+write
+makeatletter
+\input
+\include
+\openin
+\openout
+\read
+\write
+\immediate
+\pdffilesize
+\pdfmdfivesum
+\pdfshellescape
+\usepackage
+\RequirePackage
+\documentclass
+\LoadClass
+\bibliography
+\bibliographystyle
+\csname
+\endcsname
+\catcode
+\def
+\edef
+\let
+\futurelet
+\loop
+\repeat
+\href
+\url
+\includegraphics
+\input
+\include
+\usepackage
+\RequirePackage
+\openin
+\read
+\newread
+\closein
+\openout
+\write
+\newwrite
+\closeout
+\write18
+\special
+\shipout
+\catcode
+\globaldefs
+\everyjob
+\everypar
+\everycr
+\endlinechar
+\lccode
+\uccode
+\sfcode
+\mathcode
+\delcode
+\scantokens
+
+\pdfobj
+\pdfrefobj
+\pdfannot
+\pdfximage
+\pdfcatalog
+\pdfinfo
+\pdfstartlink
+\pdffilesize
+\pdfmdfivesum
+\pdffilemoddate
+\pdffiledump
+
+]]):gmatch [[%a+]] do
+    bad_control_sequences['\\'..cs] = true
+  end
+end
+
+local function sanitize_control_sequences(s)
+  return (s:gsub([[%\%a+]],
+            function(cs) if bad_control_sequences[cs] then
+                return stringf([[\texttt{\textbackslash %s}]], cs:sub(2))
+            end
+  end))
+end
+
+
+
+--------- generator
+
+local function scalarvalues(list)
   return coroutine.wrap(function()
       local function process(values)
         for _, value in pairs(values) do
@@ -90,16 +181,29 @@ function scalarvalues(list)
     end)
 end
 
+-------------------------------------------------
+---
+-- 
+  
+
 
 ------------------------------------------------------------------------
 --
 -- Field validation
 
-local function inrange(lo, hi)
-  return function (v)
-    return tonumber(v) and tonumber(v) >= lo and tonumber(v) <= hi
+local function wrap(p)
+  return function(v)
+    if p(v) then return true else return false, v end
   end
 end
+
+local inrange = function(lo, hi)
+  return wrap(function (v)
+    return tonumber(v) and tonumber(v) >= lo and tonumber(v) <= hi
+  end)
+end
+
+assert(type(inrange(1,10)) == 'function')
 
 local isnumber = inrange(-math.huge, math.huge)
 
@@ -107,16 +211,18 @@ local function anyvalue(v)
   return true
 end
 
-local function optional(p)
-  return function (v) 
+local optional = function(p)
+  return wrap(function (v) 
     -- Handle YAML null, nil, and empty string as valid "empty" values
     if v == '' or v == nil or isnull(v) then
       return true
     else
       return p(v)
     end
-  end
+  end)
 end
+
+assert(type(optional(positive)) == 'function')
 
 local function orp(p1, p2)
   return function(v)
@@ -143,23 +249,24 @@ local function all(p, list)
 end
 
 local function any(p, list)
+  local ok, msg
   for _, v in ipairs(list) do
-    local ok, msg = p(v)
+    ok, msg = p(v)
     if ok then
       return ok
     end
   end
-  return false
+  return false, msg
 end
 
 local can_be_tab = {
-  string = function(v)
+  string = wrap(function(v)
              return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
-             end,
-  number = function(v) return tonumber(v) end,
+             end),
+  number = wrap(function(v) return tonumber(v) end),
 }
 setmetatable(can_be_tab, { __index = function(_, t)
-                                       return function(v) return type(v) == t end
+                                       return wrap(function(v) return type(v) == t end)
                            end})
 
 local function can_be(...)
@@ -170,31 +277,90 @@ end
 assert(can_be 'string'('hello'))
 assert(can_be 'string'(7))
 
-local function listof(predicate)
-  return function(list)
-    if not can_be 'table'(list) then
-      return false, "must be a list"
-    end
-    local ok, msg = all(predicate, list)
-    if not ok then
-      return false, msg or "contains invalid items"
-    end
-    return true
-  end
-end
-
-local function nonempty_string(v)
-  return can_be 'string'(v) and tostring(v):find('%S')
-end
-
-local function empty(v)
+local empty = wrap(function(v)
   return v == nil
       or type(v) == 'table' and next(v) == nil
       or type(v) == 'string' and not v:find '%S'
       or false
+end)
+
+local is_singleton_table = wrap(function(t)
+  if type(t) == 'table' then
+    local k, v = next(t)
+    return k ~= nil and next(t, k) == nil
+  end
+end)
+
+local islist = wrap(function(t)
+  return type(t) == 'table' and (empty(t) or t[1] ~= nil)
+end)
+
+local function listof(predicate)
+  return function(list)
+    if not islist(list) then
+      return false, list
+    else
+      local ok, msg = all(predicate, list)
+      return ok, msg or "list contains invalid items"
+    end
+  end
 end
 
+local function validate_foreach(name, validator)
+  if validator == nil then
+    name, validator = '?', name
+  end
+  return function(list)
+    if not islist(list) then
+      verrorf('%s: entry %q is not a list', name, list)
+    else
+      for _, v in ipairs(list) do
+        validator(v)
+      end
+    end
+  end
+end
+
+local nonempty_string = wrap(function (v)
+  return can_be 'string'(v) and tostring(v):find('%S')
+end)
+
+
 assert(nonempty_string 'Arborist')
+
+
+local function convert_colon_tables(v)
+  if islist(v) then
+    for i, e in ipairs(v) do
+      v[i] = convert_colon_tables(e)
+    end
+    return v
+  elseif is_singleton_table(v) then
+    local k, e = next(v)
+    if type(k) == 'string' then
+      if isnull(e) then
+        return stringf('%s:', k)
+      elseif can_be 'string'(e) then
+        return stringf('%s: %s', k, tostring(e))
+      elseif listof(can_be 'string')(e) then
+        local items = { }
+        for _, item in ipairs(e) do
+          table.insert(items, tostring(item))
+        end
+        return stringf('%s: %s', k, table.concat(items, ', '))
+      else
+        v[k] = convert_colon_tables(e)
+      end
+    end
+    return v
+  else
+    return v
+  end
+  assert(false)
+end
+  
+
+
 
 -- Extract valid equipment categories from category_map (single point of truth)
 -- This will be updated after category_map is defined
@@ -207,164 +373,141 @@ local attack_field_specs = {
   { field = 'DAMAGE',     predicate = can_be 'string', required = true },
   { field = 'TYPE',       predicate = can_be 'string', required = true },
   { field = 'RANGE',      predicate = can_be 'string', required = true },
-  { field = 'AMMO TYPE',  predicate = orp(can_be 'string', isnull), required = false },
-  { field = 'AMMO COUNT', predicate = orp(can_be 'number', isnull), required = false },
-  { field = 'NOTES',      predicate = orp(can_be 'string', isnull), required = false }
+  { field = 'AMMO TYPE',  predicate = can_be 'string' },
+  { field = 'AMMO COUNT', predicate = can_be 'number', what = 'number' },
+  { field = 'NOTES',      predicate = can_be 'string' }
 }
 
 -- Structure-specific validators
 local function validate_attack_entry(attack)
   if not can_be 'table'(attack) then
-    return false, "must be a table with attack fields"
+    verrorf('Attack %s is not a table with attack fields', image(attack))
+    return
   end
   
   -- Check each field according to its specification
   local missing = {}
-  local wrong_type = {}
-  local optional_errors = {}
+
+  local name = can_be 'string'(attack.name) and tostring(attack.name) or image(attack)
   
   for _, spec in ipairs(attack_field_specs) do
     local field = spec.field
-    local predicate = spec.predicate
-    local required = spec.required
-    
-    if not attack[field] then
-      if required then
+    if not attack[field] or attack[field] == lyaml.null then
+      if spec.required then
         table.insert(missing, field)
       end
     else
-      local valid, msg = predicate(attack[field])
+      local valid, msg = spec.predicate(attack[field])
       if not valid then
-        if required then
-          table.insert(wrong_type, string.format("%s (got %s)", field, type(attack[field])))
-        else
-          table.insert(optional_errors, string.format("%s must be string if present", field))
-        end
+        verrorf('Bad field %s in attack %q: expected a %s; got %s',
+                field, name, spec.what or 'string', image(attack[field]))
       end
     end
   end
 
-  -- Additional validation: AMMO TYPE and AMMO COUNT consistency
-  -- AMMO TYPE can be present without AMMO COUNT, but AMMO COUNT requires AMMO TYPE
-  local ammo_type = attack['AMMO TYPE']
-  local ammo_count = attack['AMMO COUNT']
-
-  if not empty(ammo_count) and empty(ammo_type) then
-    table.insert(optional_errors, "AMMO COUNT requires AMMO TYPE to be specified")
+  if not empty(attack['AMMO COUNT']) and empty(attack['AMMO TYPE']) then
+    verrorf('Attack %s specifies AMMO COUNT without an AMMO TYPE', name)
   end
 
   -- Combine all error messages
-  if #missing > 0 or #wrong_type > 0 or #optional_errors > 0 then
-    local errors = {}
-    if #missing > 0 then
-      table.insert(errors, string.format("missing required field(s): %s", table.concat(missing, ", ")))
-    end
-    if #wrong_type > 0 then
-      table.insert(errors, string.format("wrong type for field(s): %s", table.concat(wrong_type, ", ")))
-    end
-    if #optional_errors > 0 then
-      for _, err in ipairs(optional_errors) do
-        table.insert(errors, err)
-      end
-    end
-    return false, table.concat(errors, "; ")
+  if #missing > 0 then
+    verrorf('Attack %q is missing these fields: %s', name, table.concat(missing, ", "))
   end
-  
-  return true
 end
 
 local function validate_feature_entry(feature)
   local required_fields = {'name', 'description'}
-  
   if not can_be 'table'(feature) then
-    return false, "must be a table with name and description"
-  end
-  
-  local required_check = function(field)
-    return feature[field] and can_be 'string'(feature[field]) and feature[field] ~= ""
-  end
-  if not all(required_check, required_fields) then
-    local missing = {}
-    for _, field in ipairs(required_fields) do
-      if not required_check(field) then
-        table.insert(missing, field)
-      end
+    verrorf('feature %q is not a table with name and description', image(feature))
+  else
+    if not nonempty_string(feature.name) then
+      verrorf('feature%s is missing a name',
+              not empty(feature.description)
+              and stringf(' described as %q', tostring(feature.description):sub(1,12)..'...')
+              or '')
+    elseif not nonempty_string(feature.description) then
+      verrorf('feature %q has no description', tostring(feature.name))
     end
-    return false, string.format("missing required field(s): %s", table.concat(missing, ", "))
   end
-  
-  return true
+end
+
+local function validate_spell_level(level)
+  if not can_be 'number'(level) then
+    verrorf('Spell level %s is not a number', image(level))
+  else
+    level = tonumber(level)
+    if level < 0 or level > 9 then
+      verrorf('spell level %d is out of range 0 to 9', level)
+    end
+  end
+end
+
+local function validate_spell_slots(level, slots)
+  if not can_be 'number'(slots) then
+    verrorf('For level %s, spell-slot count %s is not a number',
+            tostring(level), require 'inspect'.image(slots))
+  else
+    slots = tonumber(slots)
+    if slots <= 0 then
+      verrorf("For level %s, spell-slot count %d isn't big enough",
+              tostring(level), slots)
+    end
+  end
 end
 
 local function validate_magic_entry(entry)
   if not can_be 'table'(entry) then
-    return false, "must be a table"
-  end
-  
-  if entry.level ~= nil then
-    -- Level indicator entry
+    verrorf("MAGIC entry %q is not be a table", image(entry))
+  elseif isnull(entry) then -- skip it
+  elseif is_singleton_table(entry) and entry.level then
+    -- Level entry
     if can_be 'number'(entry.level) then
-      if entry.level < 0 or entry.level > 9 then
-        return false, string.format("level must be 0-9, got %d", entry.level)
-      end
+      validate_spell_level(entry.level)
     elseif can_be 'table'(entry.level) then
-      if not entry.level.number or not can_be 'number'(entry.level.number) 
-         or entry.level.number < 1 or entry.level.number > 9 then
-        return false, string.format("level.number must be 1-9, got %s", tostring(entry.level.number))
+      validate_spell_level(entry.level.number)
+      if entry.level.slots then
+        validate_spell_slots(entry.level.number, entry.level.slots)
       end
-      if entry.level.slots and (not can_be 'number'(entry.level.slots) or entry.level.slots < 0) then
-        return false, "level.slots must be non-negative number if present"
-      end
-    else
-      return false, "level must be number (0-9) or table with number/slots"
     end
-  elseif entry.name then
+  elseif nonempty_string(entry.name) then
     -- Spell entry
-    if not can_be 'string'(entry.name) or entry.name == "" then
-      return false, "spell must have non-empty string name"
+    if not nonempty_string(entry.description) then
+        verrorf('spell %s does not have a description', tostring(entry.name))
     end
-    if entry.description and not can_be 'string'(entry.description) then
-      return false, "description must be string if present"
-    end
+  elseif empty(entry.name) then
+    verrorf('magic entry %q does not have a name', image(entry))
   else
-    return false, "must have either 'level' or 'name' field"
+    verrorf('magic entry name %q is not a string', image(entry.name))
   end
-  
-  return true
 end
 
 local function validate_equipment_structure(equipment)
   if not can_be 'table'(equipment) then
-    return false, "must be a table or list"
-  end
-  
-  -- Empty table is valid
-  if next(equipment) == nil then return true end
-  
-  -- Check if it's a flat list (array-style)
-  if #equipment > 0 then
-    return listof(can_be 'string')(equipment)
+    verrorf('equipment entry %q should be a list of items', image(equipment))
+  elseif listof(can_be 'string')(equipment) then
+    -- flat list; no further validation
   else
     -- Structured format (object-style) 
     for category, items in pairs(equipment) do
-      if not valid_equipment_categories[category:upper()] then
-        return false, string.format("invalid equipment category: %s", category)
+      if not can_be'string'(category)
+      or not valid_equipment_categories[tostring(category):upper()]
+      then
+        verrorf("invalid equipment category %q", category)
       end
-      local ok, err = listof(can_be 'string')(items)
-      if not ok then
-        return false, string.format("category %s: %s", category, err or "all items must be strings")
+      if not listof(can_be 'string')(items) then
+        local _, bad = listof(can_be 'string')(items)
+        verrorf('item %q in category %s is not a string', bad and image(bad) or '?',
+                tostring(category))
       end
     end
   end
-  
-  return true
 end
 
--- Main structure validators using listof
+
 local validate_equipment = validate_equipment_structure
-local validate_attacks = listof(validate_attack_entry)
-local validate_features = listof(validate_feature_entry)
-local validate_magic = listof(validate_magic_entry)
+local validate_attacks = validate_foreach('ATTACKS', validate_attack_entry)
+local validate_features = validate_foreach('FEATURES', validate_feature_entry)
+local validate_magic = validate_foreach('MAGIC', validate_magic_entry)
 
 local function table_as_colon_string(entry)
   if type(entry) == 'table' then
@@ -378,29 +521,28 @@ end
 
 -- Validate proficiencies structure (custom logic)
 local function validate_proficiency_entry(entry)
-  if isnull(entry) then
+  if empty(entry) then
     -- does for blank line
-  elseif can_be 'string'(entry) then
-    -- Regular proficiency entry - empty strings within list are not allowed
-    if entry == "" then 
-      return false, "A proficiency cannot be the empty string"
-    end
-  elseif can_be 'table'(entry) then
+  elseif can_be'string'(entry) then
+    -- all good
+  elseif islist(entry) then
+    validate_foreach('proficiency entry', validate_proficiency_entry)(entry)
+  elseif is_singleton_table(entry) and next(entry) == 'proficiencies_skip' then
     -- Special entry (like proficiencies_skip)
-    if entry.proficiencies_skip ~= nil then
-      if not can_be 'boolean'(entry.proficiencies_skip) then 
-        return false, "proficiencies_skip must be boolean"
-      end
-    elseif not table_as_colon_string(entry) then
-      return false, "unknown table entry"
+    if not empty(entry.proficiencies_skip)
+      and
+      not can_be 'boolean'(entry.proficiencies_skip)
+    then 
+        verrorf("proficiencies_skip entry %s is not boolean",
+                image(entry.proficiencies_skip))
     end
   else
-    return false, "proficiency is neither string nor empty"
+    verrorf("proficiency %q is neither string nor empty nor list of proficiencies: %s", image(entry), require 'inspect'.image(entry))
   end
-  return true
 end
 
-local validate_proficiencies = listof(validate_proficiency_entry)
+local validate_proficiencies =
+  validate_foreach('proficiencies', validate_proficiency_entry)
 
 local casting_modifier = {
   Bard      = 'CHA',
@@ -463,55 +605,59 @@ local field_specs = {
   -- Each entry has: p (predicate), fs (field list), m (message), required (boolean)
   
   -- Required ability scores (1-20)
-  { p = inrange(1, 20), m = '%s must be a number in the range 1..20',
+  { vd = inrange(1, 20),
     fs = {'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'} },
   
   -- Required basic character info
-  { p = optional(nonempty_string), m = '%s must be a non-empty string',
+  { vd = optional(nonempty_string),
     fs = {'CHARACTER NAME', 'PLAYER NAME', 'RACE', 'BACKGROUND'} },
   
   -- Required numeric stats
-  { p = positive, m = '%s is required and must be a positive number',
+  { vd = positive,
     fs = {'MAX HP', 'ARMOR CLASS', 'PASSIVE PERCEPTION'} },
   
   -- Required structured data
-  { p = optional(validate_equipment), m = '%s must be a valid equipment structure',
+  { vd = optional(validate_equipment),
     fs = {'EQUIPMENT'} },
-  { p = optional(validate_attacks), m = '%s must be a valid attacks list',
+  { vd = optional(validate_attacks),
     fs = {'ATTACKS'} },
-  { p = optional(validate_features), m = '%s must be a valid features list',  
+  { vd = optional(validate_features),  
     fs = {'FEATURES'} },
-  { p = optional(validate_magic), m = '%s must be a valid magic structure',
+  { vd = optional(validate_magic),
     fs = {'MAGIC'} },
-  { p = optional(validate_proficiencies), m = '%s must be a valid proficiencies list',
+  { vd = optional(validate_proficiencies),
     fs = {'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES'} },
     
   -- Optional fields that can be present
-  { p = optional(inrange(1, 20)), m = '%s must be a number in the range 1..20',
+  { vd = optional(inrange(1, 20)),
     fs = {'LEVEL'} },
-  { p = optional(positive), m = '%s must be a positive number',  
+  { vd = optional(positive),  
     fs = {'SPELL DC', 'DOMAIN SPELLS', 'SPELLS KNOWN', 'SORCERY POINTS'} },
-  { p = optional(can_be('string', 'number')), m = '%s must be a string or number',
+  { vd = optional(can_be('string', 'number')),
     fs = {'ALIGNMENT', 'HIT DICE', 'INITIATIVE', 'SPEED', 'EXPERIENCE POINTS',
           'CURRENT HIT POINTS', 'SENSES', 'PROFICIENCY BONUS', 'CP', 'SP', 'EP', 'GP', 'PP'} },
-  { p = optional(can_be 'string'), m = '%s must be a string',  
+  { vd = optional(can_be 'string'),  
     fs = {'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES'} },
-  { p = optional(can_be 'boolean'), m = '%s must be a boolean',
+  { vd = optional(can_be 'boolean'),
     fs = {'PREGENERATED', 'MAGIC SEPARATE'} },
-  { p = optional(can_be 'table'), m = '%s must be a table structure',
-    fs = {'DESCRIPTION & PERSONALITY', 'TRAITS'} },
+  { vd = optional(can_be 'table'),
+    fs = {'DESCRIPTION & PERSONALITY'} },
 }
+
+local string_list_fields = {
+  'EQUIPMENT', 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES',
+  'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
+}  
+
 
 local validator = { }
 
 do
   for _, spec in ipairs(field_specs) do
+--require 'inspect'.show(spec)
     for _, field in ipairs(spec.fs) do
-      validator[field] = { 
-        predicate = spec.p, 
-        message = spec.m,
-        required = spec.required or false
-      }
+      assert(type(spec.vd) == 'function')
+      validator[field] = spec.vd
     end
   end
 end
@@ -573,41 +719,38 @@ local function validation_message(message, field, v)
   return message:format(stringf('%s [%s]', field, value_string(v)))
 end
 
+local function validate_font(s)
+  if type(s) ~= 'string' or not s:find [[^\]] then
+    verrorf('%s must be a LaTeX font command', image(s))
+  end
+end
+    
+    
+
 -- Validation function  
 local function validate_document(doc)
   -- Clear global validation errors from previous documents
   for field_name, value in pairs(doc) do
     -- Skip system-generated fields that shouldn't be validated  
     if not field_name:match(' SAVING$') then
-      local spec = validator[field_name]
+      local thevalidator = validator[field_name]
       
       -- Handle font variants dynamically: if "X FONT" and X is valid, treat as optional LaTeX font command
-      if not spec and field_name:match(' FONT$') then
+      if not thevalidator and field_name:match(' FONT$') then
         local base_field = field_name:match('(.*) FONT$')
         if base_field and validator[base_field] then
-          spec = {
-            predicate = optional(function(v) return can_be 'string'(v) and v:match("^\\") end),
-            message = '%s must be a LaTeX font command',
-          }
+          thevalidator = optional(validate_font)
         end
       end
       
-      if spec then
+      if thevalidator then
         -- Handle YAML null and nil as empty values
         local test_value = value
-        if value == nil or isnull(value) then
-          test_value = ""
-        end
+--        if value == nil or isnull(value) then
+--          test_value = ""
+--        end
         
-        local valid, custom_msg = spec.predicate(test_value)
-        if not valid then
-          -- Use custom message if provided, otherwise use spec message
-          if custom_msg then
-            verrorf("%s [%s]: %s", field_name, value_string(value), custom_msg)
-          else
-            verrorf(validation_message(spec.message, field_name, value))
-          end
-        end
+        thevalidator(test_value)
       elseif fields.strict then
         -- In strict mode, unknown fields are errors
         verrorf("Unknown field: %s", field_name)
@@ -1194,6 +1337,13 @@ end
 
 
 
+local function preprocess(doc)
+  for _, f in ipairs(string_list_fields) do
+    doc[f] = convert_colon_tables(doc[f])
+  end
+  return doc
+end
+
 local function extend(doc)
 
   if fields.nocolor then
@@ -1390,7 +1540,7 @@ fi
 ]=]
 
 local function process(assignments, layout)
-  local latex = escape(assignments)
+  local latex = sanitize_control_sequences(escape(assignments))
   local output = fields.standalone and latex or fill_template(latex, layout)
 
   
@@ -1435,6 +1585,7 @@ local main = function(arg)
 --require 'inspect'.show(doc.EQUIPMENT)
     
     -- Validate document before processing
+    preprocess(doc)
     validate_document(doc)
     extend(doc)
     if #global_validation_errors > 0 then

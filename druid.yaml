@@ -124,15 +124,3 @@ FEATURES:
     description: You can cast druid spells with the ritual tag as rituals.
   - name: Age 30
     description: 30 years old, 5'3", 131 lbs.
-
-TRAITS:
-  - name: Trait
-    description: Listens to all sides of argument.
-  - name: Trait
-    description: Cowardly outlook.
-  - name: Ideal
-    description: Logic above all else.
-  - name: Bond
-    description: Former mentor now a lich.
-  - name: Flaw
-    description: Overlooks obvious solutions.
