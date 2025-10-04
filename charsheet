@@ -509,16 +509,6 @@ local validate_attacks = validate_foreach('ATTACKS', validate_attack_entry)
 local validate_features = validate_foreach('FEATURES', validate_feature_entry)
 local validate_magic = validate_foreach('MAGIC', validate_magic_entry)
 
-local function table_as_colon_string(entry)
-  if type(entry) == 'table' then
-    local key, value = next(entry)
-    if next(entry, key) == nil and can_be 'string'(key) and can_be 'string'(value)
-    then
-      return stringf('%s: %s', tostring(key), tostring(value))
-    end
-  end
-end
-
 -- Validate proficiencies structure (custom logic)
 local function validate_proficiency_entry(entry)
   if empty(entry) then
@@ -861,8 +851,6 @@ local function render(v)
       return [[\smallskip{}]]
     elseif v.medskip then
       return [[\medskip{}]]
-    elseif table_as_colon_string(v) then
-      return table_as_colon_string(v)
     else
       return 'whut?: ' .. (require 'inspect'.image(v))
     end
