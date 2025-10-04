@@ -1051,8 +1051,11 @@
   }%
 }
 
+\newcommand\whenDNDnonempty[2]{%
+  \ifDNDnonempty{#1}{#2}{}%
+}
 \newcommand\whenbothDNDnonempty[3]{%
-  \ifDNDnonempty{#1}{\ifDNDnonempty{#2}{#3}}{}%
+  \ifDNDnonempty{#1}{\ifDNDnonempty{#2}{#3}{}}{}%
 }
 
 %-----------------------------------------------------------------

@@ -82,7 +82,7 @@ ATTACKS:
       Casting uses a 1st-level spell slot.
 
 FEATURES FONT: \small
-#MAGIC FONT: \scriptsize
+MAGIC FONT: \footnotesize
 MAGIC:
   - level: 0                                  # CANTRIPS
   - name: Dancing Lights
@@ -97,7 +97,7 @@ MAGIC:
     description: Spectral hand (30 ft) can manipulate objects up to 10 lbs for 1 min.
 #  - name: Shocking Grasp
 #    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
-  - level: 1                                  # 1st LEVEL
+  - level: {number: 1, slots: 2}                                  # 1st LEVEL
   - name: Detect Magic [R]
     description: Sense magic within 30 ft for 10 min; ritual.
   - name: Feather Fall
@@ -107,7 +107,9 @@ MAGIC:
   - name: Magic Missile
     description: Create 3 darts (120 ft) that each deal 1d4+1 force; darts may target different creatures; uses 1st-level slot.
   - name: Shield
-    description: Reaction; +5 AC until start of next turn, including triggering attack.
+    description: >-
+      Reaction; +5 AC until start of next turn, including triggering attack.
+      No damage from \emph{magic missile}.
   - name: Silent Image
     description: Create a visual illusion in a 15-ft cube (120 ft) for 10 min (concentration); Investigation DC 13 reveals.
   - name: Sleep

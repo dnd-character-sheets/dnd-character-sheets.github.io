@@ -370,8 +370,21 @@
    {\nodepart{label}PROFICIENCIES\nodepart{text}
      \vspace*{-2pt} % too much inner ysep at the top
      \useDNDfont*{PROFICIENCIES}
+     \newif\ifprofs
+     \profsfalse
+     \whenDNDnonempty{PROFICIENCIES}\profstrue
+     \whenDNDnonempty{MAIN PROFICIENCIES}\profstrue
+     \whenDNDnonempty{OTHER PROFICIENCIES}\profstrue
      \begin{proflist}
+     \getDND*{MAIN PROFICIENCIES}
+     \whenbothDNDnonempty{MAIN PROFICIENCIES}{PROFICIENCIES}
+                         {\profskip}
      \getDND*{PROFICIENCIES}
+     \whenbothDNDnonempty{PROFICIENCIES}{OTHER PROFICIENCIES}
+                         {\profskip}
+     \getDND*{OTHER PROFICIENCIES}
+     \relax
+     \ifprofs\else \item (No proficiencies listed.)\fi
      \end{proflist}
    }
  ;

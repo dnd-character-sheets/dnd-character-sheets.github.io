@@ -65,4 +65,6 @@ samples.pdf: ${KINGS:%=king-%.s.pdf} ${KINGS:%=king-%.3.pdf}
 
 3samples1.pdf: ${KINGS:%=king-%.3.pdf}
 	./catpage1s $target $prereq 
+3sampless.pdf: ${KINGS:%=king-%.s.pdf}
+	./catpage1s $target $prereq 
 

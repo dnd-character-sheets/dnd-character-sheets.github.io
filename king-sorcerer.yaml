@@ -91,9 +91,11 @@ MAGIC:
     description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
   - name: Light
     description: Touched object shines like a torch for 1 hour.
-  - level: 1                               # 1st LEVEL
+  - level: {number: 1, slots: 2}                               # 1st LEVEL
   - name: Burning Hands
-    description: 15-ft. cone; each creature Dex DC 13 for 3d6 fire (half on success).
+    description: >-
+      Emit 15-ft cone of fire; each affected creature takes 3d6
+      fire damage (half damage on successful \spelldc\ \textsc{dex} save).
   - name: Magic Missile
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
 

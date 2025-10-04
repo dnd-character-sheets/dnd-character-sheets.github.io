@@ -433,17 +433,11 @@
   \node (proficiencies) [columnbox,text width=\sectionwidth-2\textmargin,fill=proficiencies,height=\sectionheight,
         anchor=south east,at=(stats background.south -| saving throws.east)]
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
-%MAIN: \getDND*{MAIN PROFICIENCIES} ENDMAIN\par
 \begin{proflist}
-%\ifDNDnonempty{MAIN PROFICIENCIES}{\getDND{MAIN PROFICIENCIES}}{}
    \getDND*{MAIN PROFICIENCIES}
    \whenbothDNDnonempty{MAIN PROFICIENCIES}{PROFICIENCIES}
      {\profskip}
-%\begingroup
-%\tracingall
    \getDND*{PROFICIENCIES}
-%\endgroup
-%\item last
 \end{proflist}
    }
    ;

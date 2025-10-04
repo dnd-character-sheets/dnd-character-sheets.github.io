@@ -330,30 +330,36 @@ assert(nonempty_string 'Arborist')
 
 
 local function convert_colon_tables(v)
+--require 'inspect'.show { v = v, single = is_singleton_table(v) }
   if islist(v) then
     for i, e in ipairs(v) do
       v[i] = convert_colon_tables(e)
     end
     return v
-  elseif is_singleton_table(v) then
+  elseif not is_singleton_table(v) then
+    return v
+  else
     local k, e = next(v)
-    if type(k) == 'string' then
+    if k == 'proficiencies_skip' and tostring(e) == 'true' then
+      return [[\profskip{}]]
+    elseif type(k) == 'string' then
+--      if k:find 'skip' then require 'inspect'.show({ entry = entry}) end
       if isnull(e) then
         return stringf('%s:', k)
       elseif can_be 'string'(e) then
         return stringf('%s: %s', k, tostring(e))
-      elseif listof(can_be 'string')(e) then
-        local items = { }
-        for _, item in ipairs(e) do
-          table.insert(items, tostring(item))
-        end
-        return stringf('%s: %s', k, table.concat(items, ', '))
+--      elseif listof(can_be 'string')(e) then
+--        -- we want to do this conversion if commas are used but not
+--        -- if newlines and dashes are used.  But yaml can't tell the difference.
+--        local items = { }
+--        for _, item in ipairs(e) do
+--          table.insert(items, tostring(item))
+--        end
+--        return stringf('%s: %s', k, table.concat(items, ', '))
       else
         v[k] = convert_colon_tables(e)
       end
     end
-    return v
-  else
     return v
   end
   assert(false)
@@ -868,7 +874,7 @@ local function render_item(v)
     then
       return s
     else
-if s:find '_' then require 'inspect'.show { evil_string = s } end
+--if s:find '_' then require 'inspect'.show { evil_string = s } end
       return ([[\item %s]]):format(do_not_escape(s))
     end
   end
@@ -877,7 +883,7 @@ end
 item_list = function (list)
   local items = {}
   for _,v in ipairs(list) do
-if type(v) == 'string' and v:find '_' then require 'inspect'.show {item = v} end
+--if type(v) == 'string' and v:find '_' then require 'inspect'.show {item = v} end
     table.insert(items, render_item(v))
   end
   return table.concat(items, "\n")
@@ -1326,9 +1332,11 @@ end
 
 
 local function preprocess(doc)
+  require 'inspect'.show { pre = doc['MAIN PROFICIENCIES'] }
   for _, f in ipairs(string_list_fields) do
     doc[f] = convert_colon_tables(doc[f])
   end
+  require 'inspect'.show { post = doc['MAIN PROFICIENCIES'] }
   return doc
 end
 
