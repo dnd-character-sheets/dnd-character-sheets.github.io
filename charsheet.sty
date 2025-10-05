@@ -1000,6 +1000,9 @@
 
 \expandafter\newcommand\csname dnd@font@DEFAULT LABEL\endcsname{}
 
+% ---- labels
+
+
 %-----------------------------------------------------------------
 % 4. \ifDNDdefined{<name>}{<true>}{<false>}
 %    Succeeds *only* after a value has been set.
@@ -2026,7 +2029,7 @@
 
 \setDNDfont{PASSIVE PERCEPTION}{\tiny}
 \setDNDfont{SORCERY POINTS}{\tiny}
-\setDNDfont{DEFAULT LABEL}{\footnotesize}
+\setDNDfont{DEFAULT LABEL}{\footnotesize} % XXX not used
 \setDND{COLOR}{true}
 
 \newcommand\satk{%  Add to user documentation
@@ -2103,15 +2106,17 @@
 }%
 
 
-\newdimen\@ammowidth
-\newcommand\ammofield[2]{% amount type
+\newcommand\countfield[1]{% count
   \setbox0\hbox{\large~99~}%
   \@ammowidth=\wd0
-  (\hbox to \@ammowidth{\hskip1pt
+  \hbox to \@ammowidth{\hskip0.7pt
                         \rlap{\vrule width \@ammowidth height -2pt depth 2.2pt}%
                        \hss {\color{attacks!70!black}\large#1}\hss}%
-   ~%
-   #2)%
+}
+
+\newdimen\@ammowidth
+\newcommand\ammofield[2]{% amount type
+  (\countfield{#1}~#2)%
 }
 
 
