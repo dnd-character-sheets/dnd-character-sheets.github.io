@@ -20,7 +20,7 @@ LUAUTIL=flags inspect osutil tabutil
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
 
 bundle:V:
-	cp -auvL splash.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
+	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
 	cp -auvL character-form.html $HOME/www/charsheet.html
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi

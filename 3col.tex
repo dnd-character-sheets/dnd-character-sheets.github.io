@@ -439,8 +439,7 @@
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
 \begin{proflist}
    \getDND*{MAIN PROFICIENCIES}
-   \whenbothDNDnonempty{MAIN PROFICIENCIES}{PROFICIENCIES}
-     {\profskip}
+   \whenDNDnonempty{MAIN PROFICIENCIES}{\whenDNDnonempty{PROFICIENCIES}{\profskip}}
    \getDND*{PROFICIENCIES}
 \end{proflist}
    }
@@ -565,9 +564,6 @@
 %\path [fill=white] (attacks.south) circle [radius=0.5pt];
 
 
-\node (motivations) [above=4.45mm of BACKGROUND.north] 
-  {\Large\textit{\getDND*{MOTIVATION}}}
-  ;
 
 
 %%% left-hand column
@@ -625,6 +621,9 @@
   ;
 
 \end{charsheet}
+
+\whenDNDtrue{STONES}
+{
 
 % Equipment Weight Summary Page
 \clearpage
@@ -925,8 +924,9 @@
 
   
 \end{charsheet}
+}
 
-\ifDNDfalse{VALIDATION ERRORS}{}
+\whenDNDtrue{VALIDATION ERRORS}
 {
 \section{Validation errors}
 \begin{itemize}

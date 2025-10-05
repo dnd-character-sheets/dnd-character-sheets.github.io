@@ -382,11 +382,11 @@
      \whenDNDnonempty{OTHER PROFICIENCIES}\profstrue
      \begin{proflist}
      \getDND*{MAIN PROFICIENCIES}
-     \whenbothDNDnonempty{MAIN PROFICIENCIES}{PROFICIENCIES}
-                         {\profskip}
+     \whenDNDnonempty{MAIN PROFICIENCIES}{%
+         \whenDNDnonempty{PROFICIENCIES}{\profskip}}
      \getDND*{PROFICIENCIES}
-     \whenbothDNDnonempty{PROFICIENCIES}{OTHER PROFICIENCIES}
-                         {\profskip}
+     \whenDNDnonempty{PROFICIENCIES}{%
+         \whenDNDnonempty{OTHER PROFICIENCIES}{\profskip}}
      \getDND*{OTHER PROFICIENCIES}
      \relax
      \ifprofs\else \item (No proficiencies listed.)\fi
@@ -402,7 +402,7 @@
 %  ;
 
 \node (motivations) [above=4.45mm of BACKGROUND.north] 
-  {\Large\textit{\getDND*{MOTIVATION}}}
+  {\whenDNDnonempty{MOTIVATION}{\Large\textit{Motivation: \getDND*{MOTIVATION}}}}
   ;
 
 % choose the first two nonempty from this list to display as upper and lower
@@ -457,6 +457,8 @@
 
 % Equipment Weight Summary Page
 \clearpage
+
+\whenDNDtrue{STONES}{
 
 \begin{charsheet}
 
@@ -774,8 +776,9 @@
 
   
 \end{charsheet}
+}
 
-\ifDNDfalse{VALIDATION ERRORS}{}
+\whenDNDtrue{VALIDATION ERRORS}
 {
 \section{Validation errors}
 \begin{itemize}

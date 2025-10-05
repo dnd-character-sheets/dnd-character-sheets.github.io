@@ -1063,8 +1063,11 @@
 \newcommand\whenDNDnonempty[2]{%
   \ifDNDnonempty{#1}{#2}{}%
 }
-\newcommand\whenbothDNDnonempty[3]{%
-  \ifDNDnonempty{#1}{\ifDNDnonempty{#2}{#3}{}}{}%
+\newcommand\whenDNDtrue[2]{%
+  \ifDNDfalse{#1}{}{#2}%
+}
+\newcommand\whenDNDfalse[2]{%
+  \ifDNDfalse{#1}{#2}{}%
 }
 
 %-----------------------------------------------------------------
@@ -2018,6 +2021,7 @@
 \newDND{SPELL ATTACK MODIFIER}
 \newDND{SPELLCASTING ABILITY MODIFIER}
 \newDND{SPELLS KNOWN}
+\newDND{STONES} % include page of stuff by stones 
 \newDND{SUGGESTED MOTIVATIONS}
 \newDND{SUGGESTED NAMES}
 \newDND{DOMAIN SPELLS}
