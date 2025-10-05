@@ -122,8 +122,10 @@ FEATURES:
     description: See in dim light as if bright and in darkness as if dim (disadvantage on Perception in darkness).
   - name: Trance
     description: Elves don’t sleep; meditate 4 hr to gain a long-rest benefit.
-  - name: Arcane Recovery 1/day
-    description: After a short rest, regain one expended 1st-level spell slot.
+  - name: Arcane Recovery
+    description: >-
+      After a short rest, regain one expended 1st-level
+      spell slot (1/day).
   - name: Scribe Spell
     description: Copying a spell into your spellbook costs 2 hours & 50 gp per spell level.
   - name: Fey Ancestry
