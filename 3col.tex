@@ -113,6 +113,10 @@
 \newcommand\nextstatloc{inside north west corner=of stats background}
 
 
+\setDNDlabel{OTHER PROFICIENCIES}{\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES}
+\setDNDlabel{MAIN PROFICIENCIES}{PROFICIENCIES}
+
+
 \input{stats}
 
 \ifDNDfalse{COLOR}{\dndnocolor}{}
@@ -603,7 +607,7 @@
       ]
    (other proficiencies)
    at (stats background.west |- bottom center)
-  {\nodepart{label}\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES
+  {\nodepart{label}\getDNDlabel{OTHER PROFICIENCES}
    \nodepart{text}%
    \ifDNDnonempty{OTHER PROFICIENCIES}{%
        \multicolsep=0pt

@@ -845,6 +845,8 @@
 
 %-----------------------------------------------------------------
 % 1. \newDND{<name>}   – declare a key (no value yet)
+% 2. \setDND{<name>}{<value>}   – assign a value (must be declared)
+% 3. \valueDND{<name>}   – retrieve value (must be set)
 %-----------------------------------------------------------------
 \newcommand{\newDND}[1]{%
   \@ifundefined{dnd@decl@#1}{%
@@ -856,7 +858,6 @@
 }
 
 %-----------------------------------------------------------------
-% 2. \setDND{<name>}{<value>}   – assign a value (must be declared)
 %-----------------------------------------------------------------
 \newcommand{\setDND}[2]{%
   \@ifundefined{dnd@decl@#1}{%
@@ -868,7 +869,6 @@
 }
 
 %-----------------------------------------------------------------
-% 3. \valueDND{<name>}   – retrieve value (must be set)
 %-----------------------------------------------------------------
 \newcommand{\valueDND}[1]{%
   \@ifundefined{dnd@decl@#1}{%
@@ -895,6 +895,12 @@
   \@ifundefined{dnd@font@#1}{}{\useDNDfont{#1}}%
 }
 
+\newcommand\setDNDlabel[1]{%
+  \expandafter\def\csname dnd@label@#1\endcsname{#2}%
+}
+\newcommand\getDNDlabel[1]{%
+  \@ifundefined{dnd@label@#1}{#1}{\csname dnd@label@#1\endcsname}%
+}
 
 
 % 3. Equipment category system
