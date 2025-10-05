@@ -2098,11 +2098,11 @@
     \gdef\@attackname{#1}%
   },
   ATTACK/.code={%
-    \typeout{attack #1}%
+%    {\def\statdc{\protect\statdc}\typeout{attack #1}}%
     \gdef\@attackattack{#1}%
   },
   DAMAGE/.code={%
-   \typeout{attack damage #1}%
+%   \typeout{attack damage #1}%
     \gdef\@attackdamage{#1}%
   },
   TYPE/.code={%
@@ -2153,6 +2153,7 @@
   \gdef\@attackrange{}%
   \gdef\@attackammotype{}%
   \gdef\@attackammocount{}%
+%  {\def\statdc{\protect\statdc}\typeout{attack keys: #1}}%
   \pgfkeys{/attacks/.cd, #1}%
   \@attackname&\@attackattack&\@attackdamage&\@attacktype&\@attackrange&
     \@ammocolumn\\
