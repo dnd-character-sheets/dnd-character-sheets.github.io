@@ -22,8 +22,6 @@ LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
 bundle:V:
 	cp -auvL splash.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
 	cp -auvL character-form.html $HOME/www/charsheet.html
-	cp -auvL claude-character-form.html $HOME/www/claude.html
-	cp -auvL hof-character-form.html $HOME/www/hof.html
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR

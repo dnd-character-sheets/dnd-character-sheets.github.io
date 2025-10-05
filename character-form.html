@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: iceberg
+        Version: jalapeño
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -293,11 +293,11 @@
             <div style="display: inline-block; margin-left: 1em; vertical-align: middle;">
                 <label style="margin-right: 1em;">
                     <input type="radio" name="layout" value="silverpine" checked>
-                    Silverpine Watch style (one narrow column, one wide)
+                    Two unequal columns (Silverpine Watch style)
                 </label>
                 <label style="margin-right: 1em;">
                     <input type="radio" name="layout" value="3col">
-                    Three narrow columns
+                    Three equal columns
                 </label>
                 <label>
                     <input type="checkbox" id="color" checked>
@@ -1235,6 +1235,90 @@
             };
         }
 
+        // Helper function to format proficiency items for display
+        function stringOfProficienciesEntry(item) {
+            if (typeof item === 'string') return item;
+            if (typeof item === 'object' && item === null) return '';
+            if (item && item.proficiencies_skip) return '';
+            if (item && typeof item === 'object') {
+                const keys = Object.keys(item);
+                if (keys.length === 1) {
+                    const key = keys[0];
+                    const value = item[key];
+                    if (key === 'Languages') return value;
+                    if (key === 'Armor') return `${value} Armor`;
+                    if (key === 'Weapons') return `${value} Weapons`;
+                    return `${key}: ${value}`;
+                }
+            }
+            return item?.toString() || '';
+        }
+
+        // Helper function to build combined proficiencies text for form display
+        function buildProficienciesText(data) {
+            let lines = [];
+
+            function addToLines(dataField) {
+                if (Array.isArray(dataField)) {
+                    lines = lines.concat(dataField);
+                }
+            }
+
+            addToLines(data['MAIN PROFICIENCIES']?.map(stringOfProficienciesEntry));
+            addToLines(data['PROFICIENCIES']?.map(stringOfProficienciesEntry));
+
+            // Add horizontal line if OTHER PROFICIENCIES exists and is non-empty
+            if (data['OTHER PROFICIENCIES'] && Array.isArray(data['OTHER PROFICIENCIES']) && data['OTHER PROFICIENCIES'].length > 0) {
+                addToLines(['----']);
+                addToLines(data['OTHER PROFICIENCIES'].map(stringOfProficienciesEntry));
+            }
+
+            return lines.join('\n');
+        }
+
+        // Helper function to parse proficiencies text and split by horizontal lines
+        function parseProficienciesText(text) {
+            const data = {};
+            if (!text.trim()) {
+                data['PROFICIENCIES'] = [];
+                return data;
+            }
+
+            const allLines = text.split('\n').map(line => line.trim()).filter(line => line);
+            const horizontalLineIndex = allLines.findIndex(line => /^-{4,}[ \t]*$/.test(line));
+
+            if (horizontalLineIndex >= 0) {
+                // Split by horizontal line
+                const mainLines = allLines.slice(0, horizontalLineIndex);
+                const otherLines = allLines.slice(horizontalLineIndex + 1);
+
+                if (mainLines.length > 0) data['MAIN PROFICIENCIES'] = mainLines;
+                if (otherLines.length > 0) data['OTHER PROFICIENCIES'] = otherLines;
+            } else {
+                // No horizontal line, use legacy PROFICIENCIES field
+                data['PROFICIENCIES'] = allLines;
+            }
+
+            return data;
+        }
+
+        // Create the proficiencies field handler
+        const proficiencies_fields = {
+                populate(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector('#proficiencies-text');
+                    if (el) {
+                        el.value = buildProficienciesText(data);
+                    }
+                },
+                capture(data) {
+                    const form = document.getElementById('character-form');
+                    const el = form.querySelector('#proficiencies-text');
+                    const text = el?.value || '';
+                    Object.assign(data, parseProficienciesText(text));
+                }
+            };
+
         // Field registry
         const FIELDS = [
             // Character info fields
@@ -1284,23 +1368,8 @@
             textField('PP', '#pp'),
             
             // Array fields
-            arrayField('PROFICIENCIES', '#proficiencies-text', item => {
-                if (typeof item === 'string') return item;
-                if (typeof item === 'object' && item === null) return '';
-                if (item && item.proficiencies_skip) return '';
-                if (item && typeof item === 'object') {
-                    const keys = Object.keys(item);
-                    if (keys.length === 1) {
-                        const key = keys[0];
-                        const value = item[key];
-                        if (key === 'Languages') return value;
-                        if (key === 'Armor') return `${value} Armor`;
-                        if (key === 'Weapons') return `${value} Weapons`;
-                        return `${key}: ${value}`;
-                    }
-                }
-                return item?.toString() || '';
-            }),
+            // Proficiencies with horizontal line splitting
+            proficiencies_fields,
             
             // Equipment field factory
             {
@@ -1498,9 +1567,9 @@
             "heavy item": "HEAVY ITEMS",
             "slotted item": "SLOTTED ITEMS",
             "free item": "SMALL ITEMS",
-            "small item": "SMALL ITEMS"
-            "stored": "STORED ITEMS"
-            "stored item": "STORED ITEMS"
+            "small item": "SMALL ITEMS",
+            "stored": "STORED ITEMS",
+            "stored item": "STORED ITEMS",
         };
 
         function stripS(s) {
