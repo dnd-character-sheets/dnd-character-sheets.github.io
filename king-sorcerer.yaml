@@ -48,8 +48,8 @@ EQUIPMENT:
   - Bedroll
   - Mess Kit
   - Tinderbox
-  - Torches (10)
-  - Rations (10)
+  - 'Torches (10)'
+  - 'Rations (10)'
   - Waterskin
   - 50 ft Rope
 
@@ -65,20 +65,29 @@ ATTACKS:
     ATTACK: \textsc{dex}, {\small\spelldc}
     DAMAGE: 3d6
     TYPE: fire
-    RANGE: 15 ft
+#    RANGE: 15 ft
     NOTES: >-
-      Damages all creatures in a 15 ft cone.
-      Half damage on a successful \textsc{dex} save (\spelldc).
-      A hit target's speed is slowed by 10 ft until the start of
-      your next turn.
+      Hits all creatures in a 15 ft cone.
+      Half damage on a \spelldc\ \textsc{dex} save.
+      A hit target is 10 ft slower for 1 turn.
+# until      your next turn starts.
   - NAME: Shocking Grasp
-    ATTACK: +5
+    ATTACK: "+5"
     DAMAGE: 1d8
     TYPE: lightning
     RANGE: touching distance
     NOTES: >-
-      Advantage against creatures wearing metal armor.
-      A hit target can't take reactions until the start of its next turn.
+      Advantage vs creatures wearing metal armor.
+      A hit target can't take reactions until its next turn.
+  - NAME: Magic Missile
+    ATTACK: Hits
+    DAMAGE: 1d4+1
+    TYPE: force
+#    RANGE: 120 ft.
+    NOTES: >-
+      Creates 3 darts targeting up to 3 creatures within
+      120 ft. 1d4\psam\ per dart.
+      Casting uses a 1st-level spell slot.
 
 MAGIC FONT: \normalsize
 MAGIC:
@@ -104,8 +113,10 @@ FEATURES:
     description: While you are on watch your passive perception is 18.
   - name: Sorcerous Origin – Draconic (Silver, Cold)
     description: Add double proficiency bonus on Charisma checks vs. dragons. Gain +1 HP per sorcerer level. Unarmored AC = 13 + Dex mod.
-  - name: Unarmored Defense (Draconic Resilience)
-    description: Your AC while not wearing armor equals 13 + your Dexterity modifier (already included above).
+  - name: Unarmored Defense
+    description: >-
+      Your AC while not wearing armor equals 13 + your Dexterity modifier
+      (Draconic Resilience).
 
 "SUGGESTED MOTIVATIONS":
   - Accrue Power
@@ -116,3 +127,5 @@ FEATURES:
   - Dominick or Dominara
 
 PREGENERATED: true
+
+DOCUMENT FONT: 10pt
