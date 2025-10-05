@@ -79,7 +79,7 @@ ATTACKS:
     AMMO COUNT: 5
     NOTES: Can be thrown.
   - NAME: \weaponname{Breath Weapon}
-    ATTACK: "DC 11 Dex"
+    ATTACK: '{\small\statdc{CON}} \textsc{dex}'
     DAMAGE: 2d6
     TYPE: lightning
     RANGE: 30 ft
@@ -93,7 +93,7 @@ FEATURES:
   - name: Breath Weapon
     description: >-
       All targets in a line 30 ft long take 2d6 lightning damage,
-      or half damage on a DC 11 \textsc{dex} save.
+      or half damage on a \statdc{CON} \textsc{dex} save.
   - name: Divine Sense
     description: As an action, you know the location of any consecrated or desecrated object or place or any celestial, fiend, or undead within 60 ft. (4 uses per long rest).
   - name: Lay on Hands
