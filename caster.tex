@@ -196,6 +196,11 @@
     \gdef\attacknote#1#2{}%  Just don't
     \getDND{ATTACKS}%
     \end{attackstab}%
+    \renewenvironment{attacknotes}{\small\begin{multicols}{2}}{\end{multicols}}%
+    \renewcommand\attacknote[2]{%
+      {{\raggedright\smallskip\noindent\emph{#1:} {#2}\hangindent=1.5em \hangafter=1\par}}%
+    }%
+    \DNDattacknotes
 }
   ;
 
