@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: quince
+        Version: tangerine
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -880,14 +880,15 @@
             const container = document.getElementById('features-list');
             const item = document.createElement('div');
             item.className = 'feature-item';
+            item.style.textAlign = 'left'; // Force left alignment
             item.innerHTML = `
-                <div class="field-group">
-                    <label>Name</label>
-                    <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" />
+                <div style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.5em;">
+                    <label style="white-space: nowrap;">Name</label>
+                    <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" style="flex: 1;" />
                 </div>
-                <div class="field-group">
-                    <label>Description</label>
-                    <textarea placeholder="Feature description..." data-field="description" rows="2"></textarea>
+                <div style="margin-bottom: 0.5em;">
+                    <label style="display: block; margin-bottom: 0.2em;">Description</label>
+                    <textarea placeholder="Feature description..." data-field="description" rows="2" style="width: 100%; box-sizing: border-box;"></textarea>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()">Remove Feature</button>
             `;
@@ -1079,16 +1080,26 @@
                     // Handle "CLASS & LEVEL" format
                     if (data['CLASS & LEVEL']) {
                         const classLevel = data['CLASS & LEVEL'].toString();
-                        const match = classLevel.match(/^([A-Za-z]+)(?:\s+\(([^)]+)\))?\s+(\d+)$/) || 
-                                     classLevel.match(/^([A-Za-z]+)\s+(\d+)$/) || 
-                                     classLevel.match(/^([A-Za-z]+)/);
+
+                        // Try patterns in order: specialty format first, then simple format
+                        let match = classLevel.match(/^([A-Za-z]+)\s*\(([^)]+)\)\s+(\d+)$/);
                         if (match) {
+                            // Format: "Cleric (Life Domain) 1"
                             setFormValue('#class', match[1]);
-                            if (match.length === 4 && match[2]) {
-                                setFormValue('#specialty', match[2]);
-                                setFormValue('#level', match[3]);
-                            } else if (match[2]) {
+                            setFormValue('#specialty', match[2]);
+                            setFormValue('#level', match[3]);
+                        } else {
+                            match = classLevel.match(/^([A-Za-z]+)\s+(\d+)$/);
+                            if (match) {
+                                // Format: "Fighter 1"
+                                setFormValue('#class', match[1]);
                                 setFormValue('#level', match[2]);
+                            } else {
+                                match = classLevel.match(/^([A-Za-z]+)/);
+                                if (match) {
+                                    // Format: just class name
+                                    setFormValue('#class', match[1]);
+                                }
                             }
                         }
                     }
