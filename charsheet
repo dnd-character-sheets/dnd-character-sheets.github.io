@@ -1428,10 +1428,10 @@ local function extend(doc)
 
   -- Handle SPELL DC calculation and validation
   if not empty(doc.MAGIC) then
-    local modifier = casting_modifier[class]
-    if modifier and not empty(doc[modifier]) then
+    local cm = casting_modifier[class]
+    if not empty(cm) and not empty(doc[cm]) then
       -- Calculate spell DC: 8 + proficiency bonus + ability modifier
-      local ability_score = tonumber(doc[modifier])
+      local ability_score = tonumber(doc[cm])
       local ability_modifier = math.floor((ability_score - 10) / 2)
       
       update('SPELL DC', 8 + prof_bonus + ability_modifier)

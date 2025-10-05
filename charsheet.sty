@@ -2051,6 +2051,24 @@
     {+?}%
 }
 
+\newcounter{dcresult}
+
+\newcommand\@statdc[1]{% ability-score
+    \setcounter{statnumber}{#1}%
+    \pgfmathsetcounter{statmod}{floor((\value{statnumber} - 10) / 2)}%
+    % Calculate DC: 8 + proficiency bonus + ability modifier
+    \setcounter{dcresult}{8 + \value{proficiency bonus} + \value{statmod}}%
+    DC~\arabic{dcresult}%
+}
+
+\newcommand\statdc[1]{%
+  \ifDNDdefined{#1}{%
+   \@expandArg\@statdc{\rawgetDND{#1}}%
+   % Get the ability score value and calculate modifier
+  }{%
+    DC~?%
+  }%
+}
 
 
 \newcommand\odndstat[2]{% label, short name
