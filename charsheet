@@ -57,14 +57,6 @@ local pdflatex =
 
 local lyaml  = require "lyaml"
 local function isnull(v) return v == lyaml.null end
-local yaml_load_all = lyaml.load_all or
-  function(str)
-    local ok, doc = pcall(lyaml.load, str)
-    if not ok then
-      error("lyaml.load failed: "..tostring(doc))
-    end
-    return { doc }
-  end
 
 assert(lyaml.dump)
 local function image(v)
@@ -1622,13 +1614,14 @@ end
 
 local main = function(arg)
   local yaml_text = slurp(arg[1])
-  for _,doc in ipairs(yaml_load_all(yaml_text)) do
-    if type(doc) == 'string' then
-      eprintf("YAML loaded as string %q.\n", doc)
-      os.exit(1)
-    end
-    assert(type(doc) == 'table')
+  local ok, doc, msg = pcall(lyaml.load, yaml_text)
+  if not ok or type(doc) ~= 'table' then
+    eprintf('charsheet load failed %s\n', (not ok and doc) or msg or 'YAML loaded as string')
+    os.exit(1)
+  end
+  assert(type(doc) == 'table')
 
+  do -- look for unbalanced braces (security risk)
     local bad = unbalanced_yaml_string(doc)
     if bad then
       local replace =
@@ -1637,29 +1630,27 @@ local main = function(arg)
       process(bad_input_tex:gsub("%$BAD", display))
       return
     end
-
---require 'inspect'.show(doc.EQUIPMENT)
-    
-    local font = doc['DOCUMENT FONT']
-    doc['DOCUMENT FONT'] = nil
-
-    -- Validate document before processing
-    preprocess(doc)
-    validate_document(doc)
-    extend(doc)
-    if #global_validation_errors > 0 then
-      if fields.strict then
-        eprintf("Validation failed in strict mode. Exiting.\n")
-        os.exit(1)
-      else
-        eprintf("Validation warnings encountered. Continuing...\n")
-        -- In non-strict mode, accumulate validation errors in the document
-        doc['VALIDATION ERRORS'] = global_validation_errors
-      end
-    end
-    local layout = fields.layout or doc.LAYOUT or default_layout
-    process(wrap_latex(convert_mapping(doc), layout, font))
   end
+    
+  local font = doc['DOCUMENT FONT']
+  doc['DOCUMENT FONT'] = nil
+
+  -- Validate document before processing
+  preprocess(doc)
+  validate_document(doc)
+  extend(doc)
+  if #global_validation_errors > 0 then
+    if fields.strict then
+      eprintf("Validation failed in strict mode. Exiting.\n")
+      os.exit(1)
+    else
+      eprintf("Validation warnings encountered. Continuing...\n")
+      -- In non-strict mode, accumulate validation errors in the document
+      doc['VALIDATION ERRORS'] = global_validation_errors
+    end
+  end
+  local layout = fields.layout or doc.LAYOUT or default_layout
+  process(wrap_latex(convert_mapping(doc), layout, font))
 end
 
 
