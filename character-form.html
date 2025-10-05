@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: lettuce
+        Version: mango
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1296,8 +1296,9 @@
                 return data;
             }
 
-            const allLines = text.split('\n').map(line => line.trim()).filter(line => line);
-            const horizontalLineIndex = allLines.findIndex(line => /^-{4,}[ \t]*$/.test(line));
+            // Preserve blank lines - only trim whitespace from right side
+            const allLines = text.split('\n').map(line => line.trimEnd());
+            const horizontalLineIndex = allLines.findIndex(line => /^-{4,}[ \t]*$/.test(line.trim()));
 
             if (horizontalLineIndex >= 0) {
                 // Split by horizontal line

@@ -1372,6 +1372,20 @@ local function preprocess(doc)
     doc[f] = convert_colon_tables(doc[f])
   end
 --  require 'inspect'.show { post = doc['MAIN PROFICIENCIES'] }
+
+  -- work around parsing in javascript 
+  for _, f in ipairs {'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES'}
+  do
+    local t = doc[f]
+    if islist(t) then
+      for i, l in ipairs (t) do
+        if l == '' then
+          t[i] = lyaml.null
+        end
+      end
+    end
+  end
+
   return doc
 end
 
