@@ -1,0 +1,145 @@
+#!/usr/bin/env lua
+
+local lyaml = require 'lyaml'
+
+-- Parse YAML content and generate/extract SHEET ORIGIN field
+local function process_yaml_file(filename)
+    local file = io.open(filename, 'r')
+    if not file then
+        io.stderr:write("Error: Could not open file " .. filename .. "\n")
+        os.exit(1)
+    end
+
+    local yaml_content = file:read('*all')
+    file:close()
+
+    -- Parse YAML to check/add SHEET ORIGIN
+    local data = lyaml.load(yaml_content)
+    if not data then
+        io.stderr:write("Error: Could not parse YAML in " .. filename .. "\n")
+        os.exit(1)
+    end
+
+    -- Extract or generate SHEET ORIGIN
+    local sheet_origin = data["SHEET ORIGIN"]
+    if not sheet_origin then
+        sheet_origin = "file " .. filename
+        -- Add SHEET ORIGIN to the YAML content
+        yaml_content = 'SHEET ORIGIN: "' .. sheet_origin .. '"\n' .. yaml_content
+    end
+
+    -- Escape YAML content as JavaScript string literal
+    local escaped_yaml = yaml_content:gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n'):gsub('\r', '\\r')
+
+    return {
+        origin = sheet_origin,
+        content = escaped_yaml,
+        filename = filename
+    }
+end
+
+-- Parse command line arguments
+local function parse_args(args)
+    local html_file = nil
+    local output_file = nil
+    local yaml_files = {}
+    local i = 1
+
+    while i <= #args do
+        if args[i] == '-html' then
+            i = i + 1
+            if i <= #args then
+                html_file = args[i]
+            else
+                io.stderr:write("Error: -html option requires a filename\n")
+                os.exit(1)
+            end
+        elseif args[i] == '-o' then
+            i = i + 1
+            if i <= #args then
+                output_file = args[i]
+            else
+                io.stderr:write("Error: -o option requires a filename\n")
+                os.exit(1)
+            end
+        else
+            table.insert(yaml_files, args[i])
+        end
+        i = i + 1
+    end
+
+    if not html_file then
+        io.stderr:write("Error: -html option is required\n")
+        io.stderr:write("Usage: " .. arg[0] .. " -html template.html [-o output.html] file1.yaml file2.yaml ...\n")
+        os.exit(1)
+    end
+
+    if #yaml_files == 0 then
+        io.stderr:write("Error: At least one YAML file is required\n")
+        os.exit(1)
+    end
+
+    return html_file, output_file, yaml_files
+end
+
+-- Main execution
+local html_file, output_file, yaml_files = parse_args(arg)
+
+-- Read HTML template
+local file = io.open(html_file, 'r')
+if not file then
+    io.stderr:write("Error: Could not open HTML template file " .. html_file .. "\n")
+    os.exit(1)
+end
+local html_content = file:read('*all')
+file:close()
+
+-- Process YAML files
+local yaml_data = {}
+for _, filename in ipairs(yaml_files) do
+    table.insert(yaml_data, process_yaml_file(filename))
+end
+
+-- Build JavaScript array
+local js_array = "const EMBEDDED_YAMLS = [\n"
+for i, data in ipairs(yaml_data) do
+    js_array = js_array .. "    {\n"
+    js_array = js_array .. "        origin: \"" .. data.origin:gsub('"', '\\"') .. "\",\n"
+    js_array = js_array .. "        content: \"" .. data.content .. "\"\n"
+    js_array = js_array .. "    }"
+    if i < #yaml_data then
+        js_array = js_array .. ","
+    end
+    js_array = js_array .. "\n"
+end
+js_array = js_array .. "];\n"
+
+-- Insert JavaScript array into HTML
+-- Look for placeholder comment or insert before closing </script> tag
+local placeholder = "// EMBEDDED_YAMLS_PLACEHOLDER"
+local insertion_point = html_content:find(placeholder)
+if insertion_point then
+    html_content = html_content:gsub(placeholder, js_array)
+else
+    -- Fallback: insert before last </script> tag
+    local script_end = html_content:find("</script>%s*$")
+    if script_end then
+        html_content = html_content:sub(1, script_end - 1) .. "\n        " .. js_array .. "\n    </script>"
+    else
+        io.stderr:write("Error: Could not find insertion point in HTML template\n")
+        os.exit(1)
+    end
+end
+
+-- Output result
+if output_file then
+    local out_file = io.open(output_file, 'w')
+    if not out_file then
+        io.stderr:write("Error: Could not create output file " .. output_file .. "\n")
+        os.exit(1)
+    end
+    out_file:write(html_content)
+    out_file:close()
+else
+    io.write(html_content)
+end
