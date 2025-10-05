@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: jalapeño
+        Version: kale
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -290,26 +290,32 @@
         </div>
         <div style="margin-bottom: 0.5em;">
             <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
-            <div style="display: inline-block; margin-left: 1em; vertical-align: middle;">
-                <label style="margin-right: 1em;">
-                    <input type="radio" name="layout" value="silverpine" checked>
-                    Two unequal columns (Silverpine Watch style)
-                </label>
-                <label style="margin-right: 1em;">
-                    <input type="radio" name="layout" value="3col">
-                    Three equal columns
-                </label>
-                <label>
-                    <input type="checkbox" id="color" checked>
-                    Use colored backgrounds
-                </label>
+            <div style="display: inline-block; margin-left: 1em; vertical-align: top; text-align: left;">
+                <div style="margin-bottom: 0.3em;">
+                    <label>
+                        <input type="radio" name="layout" value="silverpine" checked>
+                        Two unequal columns (Silverpine Watch style)
+                    </label>
+                </div>
+                <div style="margin-bottom: 0.3em;">
+                    <label>
+                        <input type="radio" name="layout" value="3col">
+                        Three equal columns
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input type="checkbox" id="color" checked>
+                        Use colored backgrounds
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input type="checkbox" id="pregenerated" name="pregenerated">
+                        Label as pregenerated character
+                    </label>
+                </div>  
             </div>
-        </div>
-        <div>
-            <label>
-                <input type="checkbox" id="pregenerated" name="pregenerated">
-                Pregenerated character
-            </label>
         </div>
     </div>
     
@@ -921,14 +927,15 @@
             };
         }
 
-        function checkboxField(yamlKey, selector) {
+        function checkboxField(yamlKey, selector, defaultState = false) {
             return {
                 populate(data) {
                     const el = document.querySelector(selector);
                     if (el) {
                         const value = data[yamlKey];
                         console.log(`${yamlKey} value:`, value, 'type:', typeof value);
-                        const shouldCheck = !ifDNDfalse(value);
+                        // Use default state if yamlKey is not present in data
+                        const shouldCheck = value !== undefined ? !ifDNDfalse(value) : defaultState;
                         console.log('Should check:', shouldCheck);
                         el.checked = shouldCheck;
                     }
@@ -1336,7 +1343,7 @@
             radioField('LAYOUT', 'layout'),
 
             // Checkboxes
-            checkboxField('COLOR', '#color'),
+            checkboxField('COLOR', '#color', true),
             checkboxField('PREGENERATED', '#pregenerated'),
             
             // Class/Level complex logic
