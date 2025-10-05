@@ -1,0 +1,238 @@
+#!/usr/bin/env lua5.1
+--------------------------------------------------------------------------
+-- remove charsheet elements that are good only in 3col format
+--------------------------------------------------------------------------
+
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function printf(...) return io.stdout:write(stringf(...)) end
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function fprintf(fd, ...) return fd:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function luaerrorf(...) return error(stringf(...)) end
+local function runf(...) return os.execute(stringf(...)) end
+local function warnf(...)
+  io.stderr:write 'Warning: '; eprintf(...); io.stderr:write '\n'
+end
+local function outf(out, ...)
+  table.insert(out, stringf(...))
+  return out
+end
+
+-- Global validation errors list
+local global_validation_errors = {}
+
+local function verrorf(...)
+  local msg = stringf(...)
+  table.insert(global_validation_errors, msg)
+  eprintf('Validation error: %s\n', msg)
+end
+
+----------------------------------------------------------------
+
+local fields = require 'flags'.parser()
+  :numarg(1)
+  :parse(arg)
+
+
+local lyaml  = require "lyaml"
+local function isnull(v) return v == lyaml.null end
+
+
+-------------------------
+local function slurp(filename)
+  if filename == '-' or filename == '.' or not filename then
+    return io.stdin:read("*a")
+  else
+    local f = assert(io.open(filename, "r"))
+    local txt = f:read("*a"); f:close(); return txt
+  end
+end
+---------------------------
+
+local empty = function(v)
+  return v == nil
+      or type(v) == 'table' and next(v) == nil
+      or type(v) == 'string' and not v:find '%S'
+      or false
+end
+
+local is_singleton_table = function(t)
+  if type(t) == 'table' then
+    local k, v = next(t)
+    return k ~= nil and next(t, k) == nil
+  end
+end
+
+local function is_skip(prof_entry)
+  return isnull(prof_entry) or type(prof_entry) == 'string' and prof_entry:find 'skip'
+    or is_singleton_table(prof_entry) and next(prof_entry):find 'skip'
+end
+
+
+
+local islist = function(t)
+  return type(t) == 'table' and (empty(t) or t[1] ~= nil)
+end
+
+local function can_be_string(v)
+  return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
+end
+
+local nothing = {}
+
+local function string_split(self, pat) -- generator
+  pat = pat or '%s+'
+  local st, g = 1, self:gmatch("()("..pat..")")
+  local function getter(segs, seps, sep, cap1, ...)
+    st = sep and seps + #sep
+    return self:sub(segs, (seps or 0) - 1), cap1 or sep, ...
+  end
+  return function() if st then return getter(st, g()) end end
+end
+
+
+local function unnest(proficiencies)
+  if not islist(proficiencies) then
+    return proficiencies
+  else
+    local new = { }
+    for i, p in ipairs(proficiencies) do
+--require 'inspect'.show {p = p}
+      nextp = proficiencies[i+1]
+      local extra = nil
+      if nextp and not is_skip(nextp) then
+        extra = lyaml.null
+      end
+      if type(p) == 'string' then
+        local category, elements = p:match '^(%a+):%s+(.*)$'
+        if not category then
+          table.insert(new, p)
+        elseif category == 'Notes' then
+          -- drop this
+        elseif category == 'Weapons' then
+          for pp in string_split(elements, ',%s+') do
+            if pp == 'Simple' or pp == 'Martial' then
+              table.insert(new, pp .. ' weapons')
+            else
+              table.insert(new, pp)
+            end
+          end
+          table.insert(new, extra)
+        elseif category == 'Armor' then
+--require 'inspect'.show {armor = pp}
+          for pp in string_split(elements, ',%s+') do
+            if pp == 'Light' or pp == 'Medium' or pp == 'Heavy' or pp == 'All' then
+              table.insert(new, pp .. ' armor')
+            elseif pp == 'None' then
+              table.insert(new, '(No armor)')
+            else
+              table.insert(new, pp)
+            end
+          end
+          table.insert(new, extra)
+        elseif category == 'Languages' then
+          for pp in string_split(elements, ',%s+') do
+            table.insert(new, pp)
+          end
+          table.insert(new, extra)
+        else
+          table.insert(new, p)
+        end
+      elseif not is_singleton_table(p) then
+--require 'inspect'. show {not_singleton = p }
+        table.insert(new, p)
+      else -- p is a singleton table
+        local k, v = next(p)
+--require 'inspect'. show {k = k, v = v , p = p}
+        if type(k) == 'string' and k:lower() == 'notes' then
+          -- skip it
+        elseif type(k) == 'string' and islist(v) then
+          for _, pp in ipairs(v) do
+            table.insert(new, pp)
+          end
+          table.insert(new, extra)
+        else
+          table.insert(new, p)
+        end
+      end
+    end
+    return new
+  end
+end
+      
+local string_list_fields = {
+  'EQUIPMENT', 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES',
+  'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
+}  
+
+local function convert_colon_tables(v)
+  if islist(v) then
+    for i, e in ipairs(v) do
+      v[i] = convert_colon_tables(e)
+    end
+    return v
+  elseif not is_singleton_table(v) then
+    return v
+  else
+    local k, e = next(v)
+    if k == 'proficiencies_skip' and tostring(e) == 'true' then
+      return [[\profskip{}]]
+    elseif type(k) == 'string' then
+      if isnull(e) then
+        return stringf('%s:', k)
+      elseif can_be_string(e) then
+        return stringf('%s: %s', k, tostring(e))
+      else
+        v[k] = convert_colon_tables(e)
+      end
+    end
+    return v
+  end
+  assert(false)
+end
+
+local function preprocess(doc)
+  for _, f in ipairs(string_list_fields) do
+    doc[f] = convert_colon_tables(doc[f])
+  end
+  return doc
+end
+  
+
+local function un3ify(doc)
+
+  doc['DOCUMENT FONT'] = nil
+
+  for _, a in ipairs(doc.ATTACKS or nothing) do
+    if type(a) == 'table' then
+      a.NOTES = nil
+    end
+  end
+
+  for _, f in ipairs { 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES' }
+  do
+    doc[f] = unnest(doc[f])
+  end
+
+  return doc
+end
+
+--require 'inspect'.show({null = lyaml.dump({lyaml.null})}); os.exit(1)
+
+
+local main = function(arg)
+  local yaml_text = slurp(arg[1])
+  local ok, doc, msg = pcall(lyaml.load, yaml_text)
+  if not ok or type(doc) ~= 'table' then
+    eprintf('charsheet load failed %s\n', (not ok and doc) or msg or 'YAML loaded as string')
+    os.exit(1)
+  end
+  assert(type(doc) == 'table')
+
+  preprocess(doc)
+  un3ify(doc)
+  io.stdout:write(lyaml.dump {doc}, '\n')
+end
+
+main(arg)

@@ -49,8 +49,11 @@ homework/render.cgi: halligan-prefix.sh /usr/lib/cgi-bin/render.cgi
         chmod 755 $target 
 
 
-%.s.pdf: %.yaml charsheet caster.tex charsheet.sty
-	charsheet -t silverpine -o $target $stem.yaml
+silver-king-%.yaml:D: king-%.yaml un3ify
+	un3ify king-$stem.yaml > $target
+
+king-%.s.pdf: silver-king-%.yaml charsheet caster.tex charsheet.sty
+	charsheet -t silverpine -o $target silver-king-$stem.yaml
 
 %.3.pdf: %.yaml charsheet 3col.tex charsheet.sty
 	charsheet -t 3col -o $target $stem.yaml
