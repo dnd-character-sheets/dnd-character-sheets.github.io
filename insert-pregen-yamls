@@ -2,8 +2,32 @@
 
 local lyaml = require 'lyaml'
 
+-- Command line argument parsing using flags module
+local fields = require 'flags'.parser()
+  :string('html'):help('HTML template file'):mandated()
+  :output_file('output as o'):help('output file (default: stdout)')
+  :parse(arg)
+
+-- Collect remaining arguments as YAML files
+local yaml_files = {}
+local i = 1
+while arg[i] do
+    table.insert(yaml_files, arg[i])
+    i = i + 1
+end
+
+if #yaml_files == 0 then
+    io.stderr:write("Error: At least one YAML file is required\n")
+    os.exit(1)
+end
+
 -- Parse YAML content and generate/extract SHEET ORIGIN field
 local function process_yaml_file(filename)
+    -- Check if file has a reasonable YAML extension
+    if not filename:match('%.ya?ml$') then
+        io.stderr:write("Warning: " .. filename .. " does not appear to be a YAML file (expected .yaml or .yml extension)\n")
+    end
+
     local file = io.open(filename, 'r')
     if not file then
         io.stderr:write("Error: Could not open file " .. filename .. "\n")
@@ -14,9 +38,13 @@ local function process_yaml_file(filename)
     file:close()
 
     -- Parse YAML to check/add SHEET ORIGIN
-    local data = lyaml.load(yaml_content)
-    if not data then
-        io.stderr:write("Error: Could not parse YAML in " .. filename .. "\n")
+    local ok, data = pcall(lyaml.load, yaml_content)
+    if not ok then
+        io.stderr:write("Error: Could not parse YAML in " .. filename .. ": " .. data .. "\n")
+        os.exit(1)
+    end
+    if not data or type(data) ~= 'table' then
+        io.stderr:write("Error: " .. filename .. " does not contain valid YAML data\n")
         os.exit(1)
     end
 
@@ -38,57 +66,10 @@ local function process_yaml_file(filename)
     }
 end
 
--- Parse command line arguments
-local function parse_args(args)
-    local html_file = nil
-    local output_file = nil
-    local yaml_files = {}
-    local i = 1
-
-    while i <= #args do
-        if args[i] == '-html' then
-            i = i + 1
-            if i <= #args then
-                html_file = args[i]
-            else
-                io.stderr:write("Error: -html option requires a filename\n")
-                os.exit(1)
-            end
-        elseif args[i] == '-o' then
-            i = i + 1
-            if i <= #args then
-                output_file = args[i]
-            else
-                io.stderr:write("Error: -o option requires a filename\n")
-                os.exit(1)
-            end
-        else
-            table.insert(yaml_files, args[i])
-        end
-        i = i + 1
-    end
-
-    if not html_file then
-        io.stderr:write("Error: -html option is required\n")
-        io.stderr:write("Usage: " .. arg[0] .. " -html template.html [-o output.html] file1.yaml file2.yaml ...\n")
-        os.exit(1)
-    end
-
-    if #yaml_files == 0 then
-        io.stderr:write("Error: At least one YAML file is required\n")
-        os.exit(1)
-    end
-
-    return html_file, output_file, yaml_files
-end
-
--- Main execution
-local html_file, output_file, yaml_files = parse_args(arg)
-
 -- Read HTML template
-local file = io.open(html_file, 'r')
+local file = io.open(fields.html, 'r')
 if not file then
-    io.stderr:write("Error: Could not open HTML template file " .. html_file .. "\n")
+    io.stderr:write("Error: Could not open HTML template file " .. fields.html .. "\n")
     os.exit(1)
 end
 local html_content = file:read('*all')
@@ -131,15 +112,15 @@ else
     end
 end
 
--- Output result
-if output_file then
-    local out_file = io.open(output_file, 'w')
+-- Output result using flags module output handling
+if not fields.output then
+    io.write(html_content)
+else
+    local out_file = io.open(fields.output, 'w')
     if not out_file then
-        io.stderr:write("Error: Could not create output file " .. output_file .. "\n")
+        io.stderr:write("Error: Could not create output file " .. fields.output .. "\n")
         os.exit(1)
     end
     out_file:write(html_content)
     out_file:close()
-else
-    io.write(html_content)
 end

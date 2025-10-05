@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: mango
+        Version: nutmeg
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -325,8 +325,16 @@
 
             </div>
         </div>
+
+        <!-- Sample YAML Section -->
+        <div style="margin-bottom: 0.5em;">
+            <select id="sample-yaml-dropdown" style="margin-right: 0.5em; padding: 0.3em;">
+                <option value="">Choose a character</option>
+            </select>
+            <button type="button" class="add-button" onclick="loadSampleYAML()">Populate with sample YAML file</button>
+        </div>
     </div>
-    
+
     <div id="status-bar" style="text-align: center; margin: 0.5em 0; font-size: 0.9em; color: #666; min-height: 1.2em;">
         <strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections
     </div>
@@ -596,12 +604,65 @@
 
 
     <script>
+        // Embedded YAML data - will be populated by insert-pregen-yamls script
+        // EMBEDDED_YAMLS_PLACEHOLDER
+
+        // Sample YAML loading functions
+        function populateSampleDropdown() {
+            const dropdown = document.getElementById('sample-yaml-dropdown');
+            if (!dropdown || typeof EMBEDDED_YAMLS === 'undefined') return;
+
+            // Clear existing options except the first one
+            while (dropdown.children.length > 1) {
+                dropdown.removeChild(dropdown.lastChild);
+            }
+
+            // Add options for each embedded YAML
+            EMBEDDED_YAMLS.forEach((yamlData, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = yamlData.origin;
+                dropdown.appendChild(option);
+            });
+        }
+
+        function loadSampleYAML() {
+            const dropdown = document.getElementById('sample-yaml-dropdown');
+            const selectedIndex = dropdown.value;
+
+            if (selectedIndex === '' || typeof EMBEDDED_YAMLS === 'undefined') {
+                updateStatusBar('Please select a character from the dropdown.', true);
+                return;
+            }
+
+            const yamlData = EMBEDDED_YAMLS[selectedIndex];
+            if (!yamlData) {
+                updateStatusBar('Error: Selected character data not found.', true);
+                return;
+            }
+
+            try {
+                // Use the existing parseYAMLIntoForm function
+                parseYAMLIntoForm(yamlData.content);
+                loadedFileName = yamlData.origin + '.yaml';
+                isDirty = false;
+                updateStatusBar('Loaded sample character: ' + yamlData.origin);
+                updateDownloadButtonText();
+                setupChangeTracking();
+            } catch (error) {
+                updateStatusBar('Error loading sample character: ' + error.message, true);
+            }
+        }
+
         // Initialize with some default entries
         document.addEventListener('DOMContentLoaded', function() {
             addAttack();
             addFeature();
             setupChangeTracking();
-            
+
+            // Populate sample YAML dropdown
+            populateSampleDropdown();
+
             // Initialize and update download button text
             updateDownloadButtonText();
             const characterNameField = document.getElementById('character-name');
