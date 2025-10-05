@@ -27,7 +27,7 @@ xform.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
 bundle:V: xform.html
 	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
 	cp -auvL character-form.html $HOME/www/charsheet.html
-	cp -auvL character-form.html $HOME/www/xform.html
+	cp -auvL xform.html $HOME/www/xform.html
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
