@@ -378,7 +378,7 @@ local attack_field_specs = {
   { field = 'ATTACK',     predicate = can_be 'string', required = true },
   { field = 'DAMAGE',     predicate = can_be 'string', required = true },
   { field = 'TYPE',       predicate = can_be 'string', required = true },
-  { field = 'RANGE',      predicate = can_be 'string', required = true },
+  { field = 'RANGE',      predicate = can_be 'string', },
   { field = 'AMMO TYPE',  predicate = can_be 'string' },
   { field = 'AMMO COUNT', predicate = can_be 'number', what = 'number' },
   { field = 'NOTES',      predicate = can_be 'string' }
@@ -531,6 +531,13 @@ local function validate_proficiency_entry(entry)
     then 
         verrorf("proficiencies_skip entry %s is not boolean",
                 image(entry.proficiencies_skip))
+    end
+  elseif is_singleton_table(entry) then -- inner table
+    local v, k = next(entry)
+    if can_be'string'(v) and islist(k) then
+      validate_proficiency_entry(k)
+    else
+      verrorf("proficiency %q is neither string nor empty nor list of proficiencies: %s", image(entry))
     end
   else
     verrorf("proficiency %q is neither string nor empty nor list of proficiencies: %s", image(entry), require 'inspect'.image(entry))
@@ -1332,11 +1339,11 @@ end
 
 
 local function preprocess(doc)
-  require 'inspect'.show { pre = doc['MAIN PROFICIENCIES'] }
+--  require 'inspect'.show { pre = doc['MAIN PROFICIENCIES'] }
   for _, f in ipairs(string_list_fields) do
     doc[f] = convert_colon_tables(doc[f])
   end
-  require 'inspect'.show { post = doc['MAIN PROFICIENCIES'] }
+--  require 'inspect'.show { post = doc['MAIN PROFICIENCIES'] }
   return doc
 end
 
