@@ -1542,9 +1542,15 @@ if [[ -r "$dir/sheet.pdf" ]]; then
 fi
 ]=]
 
-local function process(assignments, layout)
+local function process(assignments, layout, font)
   local latex = sanitize_control_sequences(escape(assignments))
   local output = fields.standalone and latex or fill_template(latex, layout)
+  if font then
+    output = output:gsub([[\documentclass.-%d+pt.-article]],
+      function(line1)
+        return (line1:gsub('%d+pt', font))
+      end)
+  end
 
   
 
@@ -1587,6 +1593,9 @@ local main = function(arg)
 
 --require 'inspect'.show(doc.EQUIPMENT)
     
+    local font = doc['DOCUMENT FONT']
+    doc['DOCUMENT FONT'] = nil
+
     -- Validate document before processing
     preprocess(doc)
     validate_document(doc)
@@ -1602,7 +1611,7 @@ local main = function(arg)
       end
     end
     if type(doc)=="table" then
-      process(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout)
+      process(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout, font)
     end
   end
 end
