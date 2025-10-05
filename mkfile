@@ -46,8 +46,9 @@ dreamhost/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
 	sed "s@/home/corylea@$BPCHOME@g" $prereq > $target
 	chmod +x $target
 
-homework/index.html: character-form.html mkfile
-	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" character-form.html > $target
+homework/index.html: xform.html mkfile
+	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" xform.html > $target
+
 homework/render.cgi: halligan-prefix.sh /usr/lib/cgi-bin/render.cgi
 	cat $prereq > $target
         chmod 755 $target 
