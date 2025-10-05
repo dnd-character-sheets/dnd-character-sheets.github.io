@@ -895,7 +895,7 @@
   \@ifundefined{dnd@font@#1}{}{\useDNDfont{#1}}%
 }
 
-\newcommand\setDNDlabel[1]{%
+\newcommand\setDNDlabel[2]{%
   \expandafter\def\csname dnd@label@#1\endcsname{#2}%
 }
 \newcommand\getDNDlabel[1]{%
