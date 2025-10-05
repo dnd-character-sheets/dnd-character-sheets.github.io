@@ -1426,7 +1426,7 @@
 \newbox\pgfnodepartlabelbox
 \newbox\pgfnodepartctextbox
 
-\pgfdeclareshape{labeled rectangle}
+\pgfdeclareshape{labeled rectangle} % basis for all other labeled shapes
 {%
   % Declare node parts - PGF will auto-create \pgfnodeparttextbox and \pgfnodepartlabelbox
   \nodeparts{text,label,ctext}%
@@ -1640,121 +1640,33 @@
   }%
 }
 
-\pgfdeclareshape{labeled stub rectangle}{%
-  \nodeparts{text,label,ctext}%
-  \inheritsavedanchors[from=labeled rectangle]
-  \inheritanchor[from=labeled rectangle]{center}
-  \inheritanchor[from=labeled rectangle]{north}
-  \inheritanchor[from=labeled rectangle]{south}
-  \inheritanchor[from=labeled rectangle]{east}
-  \inheritanchor[from=labeled rectangle]{west}
-  \inheritanchor[from=labeled rectangle]{north east}
-  \inheritanchor[from=labeled rectangle]{north west}
-  \inheritanchor[from=labeled rectangle]{south east}
-  \inheritanchor[from=labeled rectangle]{south west}
-  \inheritanchor[from=labeled rectangle]{text}
-  \inheritanchor[from=labeled rectangle]{ctext}
-  \inheritanchor[from=labeled rectangle]{label}
-  \inheritanchor[from=labeled rectangle]{labeltop}
-  
-  % Background path
-  \backgroundpath{%
-    % Get NESW coordinates
-    \setmy@NEWSC
-    \setmy@halves
-    % Get stub radius
-    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
-    % Check if stub radius is too large
-    \ifdim\my@stubradius>\my@halfwidth
-      \pgferror{stub radius (\the\my@stubradius) is larger than half the width (\the\my@halfwidth)}%
-    \fi
-    \ifdim\my@stubradius>\my@halfheight
-      \pgferror{stub radius (\the\my@stubradius) is larger than half the height (\the\my@halfheight)}%
-    \fi
-    % Draw the path with cut corners
-    % Start at bottom edge, after SW corner bite
-    \pgfpathmoveto{\pgfpoint{\my@W+\my@stubradius}{\my@S}}%
-    % Line to SE corner bite start
-    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
-    % SE corner arc: we're west of corner, need to go north
-    % Arc goes counterclockwise from current position
-    \pgfpatharc{180}{90}{\my@stubradius}%
-    % Now at radius north of SE corner
-    % Line to NE corner bite start
-    \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
-    % NE corner arc: we're south of corner, need to go west
-    \pgfpatharc{270}{180}{\my@stubradius}%
-    % Now at radius west of NE corner
-    % Line to NW corner bite start
-    \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
-    % NW corner arc: we're east of corner, need to go south
-    \pgfpatharc{0}{-90}{\my@stubradius}%
-    % Now at radius south of NW corner
-    % Line to SW corner bite start
-    \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
-    % SW corner arc: we're north of corner, need to go east
-    \pgfpatharc{90}{0}{\my@stubradius}%
-    % Now back at starting point
-    \pgfpathclose%
+\newcommand\pgfdeclarelabeled[1]{% name
+  \pgfdeclareshape{labeled #1}{%
+    \nodeparts{text,label,ctext}%
+    \inheritsavedanchors[from=labeled rectangle]
+    \inheritanchor[from=labeled rectangle]{center}
+    \inheritanchor[from=labeled rectangle]{north}
+    \inheritanchor[from=labeled rectangle]{south}
+    \inheritanchor[from=labeled rectangle]{east}
+    \inheritanchor[from=labeled rectangle]{west}
+    \inheritanchor[from=labeled rectangle]{north east}
+    \inheritanchor[from=labeled rectangle]{north west}
+    \inheritanchor[from=labeled rectangle]{south east}
+    \inheritanchor[from=labeled rectangle]{south west}
+    \inheritanchor[from=labeled rectangle]{text}
+    \inheritanchor[from=labeled rectangle]{ctext}
+    \inheritanchor[from=labeled rectangle]{label}
+    \inheritanchor[from=labeled rectangle]{labeltop}
+    \inheritbackgroundpath[from=#1]
   }
 }
 
 
+\pgfdeclarelabeled{stub rectangle}
 \pgfdecorate[label,text,ctext]{labeled stub rectangle}{\@decorate@stub@rectangle}
 
-
-\pgfdeclareshape{labeled clipped rectangle}{%
-  \nodeparts{text,label,ctext}%
-  \inheritsavedanchors[from=labeled rectangle]
-  \inheritanchor[from=labeled rectangle]{center}
-  \inheritanchor[from=labeled rectangle]{north}
-  \inheritanchor[from=labeled rectangle]{south}
-  \inheritanchor[from=labeled rectangle]{east}
-  \inheritanchor[from=labeled rectangle]{west}
-  \inheritanchor[from=labeled rectangle]{north east}
-  \inheritanchor[from=labeled rectangle]{north west}
-  \inheritanchor[from=labeled rectangle]{south east}
-  \inheritanchor[from=labeled rectangle]{south west}
-  \inheritanchor[from=labeled rectangle]{text}
-  \inheritanchor[from=labeled rectangle]{ctext}
-  \inheritanchor[from=labeled rectangle]{label}
-  \inheritanchor[from=labeled rectangle]{labeltop}
-  
-  % Background path
-  \backgroundpath{%
-    % Get NESW coordinates
-    \setmy@NEWSC
-    \setmy@halves
-    % Get stub radius
-    \pgfmathsetlength\my@stubradius{\pgfkeysvalueof{/tikz/stub radius}}%
-    % Check if stub radius is too large
-    \ifdim\my@stubradius>\my@halfwidth
-      \pgferror{stub radius (\the\my@stubradius) is larger than half the width (\the\my@halfwidth)}%
-    \fi
-    \ifdim\my@stubradius>\my@halfheight
-      \pgferror{stub radius (\the\my@stubradius) is larger than half the height (\the\my@halfheight)}%
-    \fi
-    % Draw the path with cut corners
-    % Start at bottom edge, after SW corner bite
-    \pgfpathmoveto{\pgfpoint{\my@W+\my@stubradius}{\my@S}}%
-    % Line to SE corner bite start
-    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@S}}%
-    \pgfpathlineto{\pgfpoint{\my@E}{\my@S+\my@stubradius}}%
-    \pgfpathlineto{\pgfpoint{\my@E}{\my@N-\my@stubradius}}%
-    \pgfpathlineto{\pgfpoint{\my@E-\my@stubradius}{\my@N}}%
-    \pgfpathlineto{\pgfpoint{\my@W+\my@stubradius}{\my@N}}%
-    \pgfpathlineto{\pgfpoint{\my@W}{\my@N-\my@stubradius}}%
-    \pgfpathlineto{\pgfpoint{\my@W}{\my@S+\my@stubradius}}%
-    \pgfpathclose%
-  }
-}
-
-\pgfdecorate[text,ctext,label]{labeled clipped rectangle}{%
-  \@decorate@clipped@rectangle
-}
-
-
-
+\pgfdeclarelabeled{clipped rectangle}
+\pgfdecorate[label,text,ctext]{labeled clipped rectangle}{\@decorate@clipped@rectangle}
 
 \pgfdeclareshape{downward rectangle A}{%
   % Inherit anchors from rectangle
@@ -1771,7 +1683,10 @@
   \inheritanchor[from=rectangle]{text}
   
   % Background path
-  \backgroundpath{%
+  \backgroundpath{\@downward@A@background}
+}
+
+\newcommand\@downward@A@background{%
     % Get NESW coordinates
     \setmy@NEWSC
     \setmy@halves
@@ -1803,8 +1718,10 @@
     \pgfpatharc{0}{-90}{\my@stubradius}%
     \pgfpathlineto{\pgfpoint{\my@W}{\my@S}}%
     \pgfpathclose%
-  }
 }
+
+\pgfdeclarelabeled{downward rectangle A}
+\pgfdecorate[label,text,ctext]{labeled downward rectangle A}
 
 \pgfdeclareshape{upward rectangle A}{%
   % Inherit anchors from rectangle
@@ -1853,9 +1770,24 @@
 }
 
 
+%\pgfdeclareshape{labeled downward rectangle A}{%
+%  % Inherit anchors from rectangle
+%  \inheritsavedanchors[from=rectangle]
+%  \inheritanchor[from=rectangle]{center}
+%  \inheritanchor[from=rectangle]{north}
+%  \inheritanchor[from=rectangle]{south}
+%  \inheritanchor[from=rectangle]{east}
+%  \inheritanchor[from=rectangle]{west}
+%  \inheritanchor[from=rectangle]{north east}
+%  \inheritanchor[from=rectangle]{north west}
+%  \inheritanchor[from=rectangle]{south east}
+%  \inheritanchor[from=rectangle]{south west}
+%  \inheritanchor[from=rectangle]{text}
+%  
+%  % Background path
+%  \backgroundpath{\@downward@A@background}
+%}
 
-\pgfdecorate{upward rectangle A}{\@decorate@upward@A}
-\pgfdecorate{downward rectangle A}{\@decorate@downward@A}
 
 \newcommand\@decorate@upward@A{%
       % Get coordinates and stub radius
@@ -1908,6 +1840,15 @@
       \pgflineto{\pgfpoint{\my@E-0.3\my@stubradius}{0.9\my@N+0.1\my@S}}
       \pgfusepath{stroke}
 }
+
+
+\pgfdeclarelabeled{upward rectangle A}
+\pgfdecorate[label,text,ctext]{labeled upward rectangle A}{\@decorate@upward@A}
+\pgfdecorate{upward rectangle A}{\@decorate@upward@A}
+
+\pgfdeclarelabeled{downward rectangle A}
+\pgfdecorate[label,text,ctext]{labeled downward rectangle A}{\@decorate@downward@A}
+\pgfdecorate{downward rectangle A}{\@decorate@downward@A}
 
 
 

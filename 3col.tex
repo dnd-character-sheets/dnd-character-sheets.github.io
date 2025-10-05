@@ -200,7 +200,7 @@
 
 %      \draw [thick,black,fill=yellow] (speed.labeltop) circle [radius=5pt];
 
-      \node [dnd max hp2,below=of initiative,width=\hpwidth] 
+      \node [dnd max hp2,decorated labeled downward rectangle A,below=of initiative,width=\hpwidth] 
          (maxhp)
          {\nodepart{label}CURRENT HIT POINTS}
          ;
@@ -210,7 +210,7 @@
                \hrulefill~~~}}
        ;
 
-      \node[dnd max hp2,below=of maxhp,minimum height=20mm,width=\hpwidth]
+      \node[dnd max hp2,decorated labeled upward rectangle A,below=of maxhp,minimum height=20mm,width=\hpwidth]
         (temphp)
         {\nodepart{label}TEMPORARY HIT POINTS}
         ;
