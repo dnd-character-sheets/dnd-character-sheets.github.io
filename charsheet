@@ -72,6 +72,42 @@ local function image(v)
                         :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]])
 end
 
+
+local function unbalanced_yaml_string(doc)
+  if type(doc) == 'string' then
+    local d = doc:gsub('%b{}', '')
+    if d:find '[{}]' then return doc end
+  elseif type(doc) == 'table' then
+    for _, v in pairs(doc) do
+      local d = unbalanced_yaml_string(v)
+      if d then return d end
+    end
+  end
+end
+
+assert(unbalanced_yaml_string([[\documentclass[10pt]{article}]]) == nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]article}]]) ~= nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]{article]]) ~= nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]}article{]]) ~= nil)
+
+assert(unbalanced_yaml_string { FOOT = "} ASDF {" } == "} ASDF {")
+
+local bad_input_tex = [[
+\documentclass[12pt]{article}
+\def\lbrace{\char`\{}
+\def\rbrace{\char`\}}
+\begin{document}
+A YAML file was rejected because some part of it contained
+unbalanced braces, which is a security risk.  The offending
+string was as follows:
+\begin{quote}
+\ttfamily
+$BAD
+\end{quote}
+\end{document}
+]]
+
+
 ---------------------
 
 local bad_control_sequences = { }
@@ -1542,7 +1578,7 @@ if [[ -r "$dir/sheet.pdf" ]]; then
 fi
 ]=]
 
-local function process(assignments, layout, font)
+local function wrap_latex(assignments, layout, font)
   local latex = sanitize_control_sequences(escape(assignments))
   local output = fields.standalone and latex or fill_template(latex, layout)
   if font then
@@ -1551,11 +1587,12 @@ local function process(assignments, layout, font)
         return (line1:gsub('%d+pt', font))
       end)
   end
+  return output
+end
 
-  
-
+local function process(output)
   if not fields.output then
-    io.stdout:write(latex, '\n')
+    io.stdout:write(output, '\n')
   elseif fields.output:find '%.tex$' then
     set_contents(fields.output, output)
   elseif fields.output:find '%.pdf$' then
@@ -1590,6 +1627,16 @@ local main = function(arg)
       eprintf("YAML loaded as string %q.\n", doc)
       os.exit(1)
     end
+    assert(type(doc) == 'table')
+
+    local bad = unbalanced_yaml_string(doc)
+    if bad then
+      local replace =
+        { ['{'] = [[\lbrace{}]], ['}'] = [[\rbrace{}]], ['\\'] = [[\textbackslash{}]] }
+      local display = bad:gsub([=[[{}\]]=], replace)
+      process(bad_input_tex:gsub("%$BAD", display))
+      return
+    end
 
 --require 'inspect'.show(doc.EQUIPMENT)
     
@@ -1610,9 +1657,8 @@ local main = function(arg)
         doc['VALIDATION ERRORS'] = global_validation_errors
       end
     end
-    if type(doc)=="table" then
-      process(convert_mapping(doc), fields.layout or doc.LAYOUT or default_layout, font)
-    end
+    local layout = fields.layout or doc.LAYOUT or default_layout
+    process(wrap_latex(convert_mapping(doc), layout, font))
   end
 end
 
