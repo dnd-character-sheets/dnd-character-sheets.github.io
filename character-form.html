@@ -146,9 +146,9 @@
         .attack-fields {
             display: flex;
             flex-wrap: wrap;
+            justify-content: start;
             gap: 0.5em;
             margin-bottom: 0.3em;
-            padding-left: 4em;
         }
         
         .attack-fields > * {
@@ -159,7 +159,6 @@
         .attack-fields > *:first-child {
             flex: 2;
             min-width: 12em;
-            margin-left: -4em;
         }
         
         .attack-fields .range-field {
@@ -174,8 +173,8 @@
         }
         
         .attack-fields::after {
-            content: '';
-            flex: 1;
+            content: ' ';
+            flex: auto;
         }
         
         .spell-level {
@@ -279,7 +278,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: tangerine
+        Version: ugli
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -557,7 +556,7 @@
         <div class="section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
-                <p>Enter one equipment item per line. You can use the <strong>new categorized format</strong>:</p>
+                <p>Enter one equipment item per line. Or you scan specify categories:</p>
                 <ul style="font-size: 0.9em; margin: 0.5em 0; color: #666;">
                     <li><code>Heavy weapon: Greatsword</code> (single item)</li>
                     <li><code>Slotted items:</code> followed by <code>- Backpack</code>, <code>- Rations</code> (multiple items)</li>
@@ -587,7 +586,7 @@
                     <label for="sp">Silver (SP)</label>
                     <input type="text" id="sp" name="sp">
                 </div>
-                <div class="field">
+                <div class="field" style="display: none;">
                     <label for="ep">Electrum (EP)</label>
                     <input type="text" id="ep" name="ep">
                 </div>
@@ -804,6 +803,7 @@
         function addAttack() {
             const container = document.getElementById('attacks-list');
             const item = document.createElement('div');
+            item.style.textAlign = 'left'; // Force left alignment
             item.className = 'attack-item';
             item.innerHTML = `
                 <div class="attack-fields">
