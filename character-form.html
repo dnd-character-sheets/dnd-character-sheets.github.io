@@ -279,7 +279,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: nutmeg
+        Version: papaya
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1318,6 +1318,14 @@
                 if (keys.length === 1) {
                     const key = keys[0];
                     const value = item[key];
+
+                    // Handle array values as markdown lists
+                    if (Array.isArray(value)) {
+                        const listItems = value.map(v => `- ${v}`).join('\n');
+                        return `${key}:\n${listItems}`;
+                    }
+
+                    // Handle special cases for backwards compatibility
                     if (key === 'Languages') return value;
                     if (key === 'Armor') return `${value} Armor`;
                     if (key === 'Weapons') return `${value} Weapons`;
@@ -1349,6 +1357,55 @@
             return lines.join('\n');
         }
 
+        // Helper function to convert markdown lists back to objects
+        function processMarkdownLists(lines) {
+            const processed = [];
+            let i = 0;
+
+            while (i < lines.length) {
+                const line = lines[i];
+
+                // Check if this line ends with a colon (possibly followed by spaces)
+                if (line.match(/:\s*$/)) {
+                    const key = line.replace(/:\s*$/, '');
+                    const listItems = [];
+                    i++; // Move to next line
+
+                    // Collect markdown list items
+                    while (i < lines.length) {
+                        const nextLine = lines[i];
+                        // Markdown list item: 0-3 spaces, then - or *, then at least one space
+                        if (nextLine.match(/^ {0,3}[-*] /)) {
+                            // Extract the item text after the markdown prefix
+                            const item = nextLine.replace(/^ {0,3}[-*] /, '');
+                            listItems.push(item);
+                            i++;
+                        } else {
+                            // Not a list item, break out of list processing
+                            break;
+                        }
+                    }
+
+                    // Create object with key and array value if we found list items
+                    if (listItems.length > 0) {
+                        const obj = {};
+                        obj[key] = listItems;
+                        processed.push(obj);
+                    } else {
+                        // No list items found, treat as regular line
+                        processed.push(line);
+                        i++;
+                    }
+                } else {
+                    // Regular line, keep as-is
+                    processed.push(line);
+                    i++;
+                }
+            }
+
+            return processed;
+        }
+
         // Helper function to parse proficiencies text and split by horizontal lines
         function parseProficienciesText(text) {
             const data = {};
@@ -1366,11 +1423,11 @@
                 const mainLines = allLines.slice(0, horizontalLineIndex);
                 const otherLines = allLines.slice(horizontalLineIndex + 1);
 
-                if (mainLines.length > 0) data['MAIN PROFICIENCIES'] = mainLines;
-                if (otherLines.length > 0) data['OTHER PROFICIENCIES'] = otherLines;
+                if (mainLines.length > 0) data['MAIN PROFICIENCIES'] = processMarkdownLists(mainLines);
+                if (otherLines.length > 0) data['OTHER PROFICIENCIES'] = processMarkdownLists(otherLines);
             } else {
                 // No horizontal line, use legacy PROFICIENCIES field
-                data['PROFICIENCIES'] = allLines;
+                data['PROFICIENCIES'] = processMarkdownLists(allLines);
             }
 
             return data;
