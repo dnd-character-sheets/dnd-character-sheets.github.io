@@ -11,6 +11,8 @@ CHARSHEET_DIR=/h/nr/www
 HALLIGANNAME=render-charsheet.cgi
 
 KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
+KINGYAMLS=${KINGS:%=king-%.yaml}
+
 
 
 all:V: bundle samples.pdf
@@ -19,9 +21,13 @@ samples: samples.pdf
 LUAUTIL=flags inspect osutil tabutil
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
 
-bundle:V:
+xform.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
+	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS
+
+bundle:V: xform.html
 	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
 	cp -auvL character-form.html $HOME/www/charsheet.html
+	cp -auvL character-form.html $HOME/www/xform.html
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
