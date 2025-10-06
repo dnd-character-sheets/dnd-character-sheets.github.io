@@ -21,6 +21,11 @@ samples: samples.pdf
 LUAUTIL=flags inspect osutil tabutil
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
 
+local-cgi:V: /usr/lib/cgi-bin/render.cgi
+
+/usr/lib/cgi-bin/render.cgi: render.cgi
+	sudo cp $prereq $target
+
 xform.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
 	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS
 
@@ -48,8 +53,9 @@ dreamhost/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
 
 homework/index.html: xform.html mkfile
 	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" xform.html > $target
+	cat xform.html > $target
 
-homework/render.cgi: halligan-prefix.sh /usr/lib/cgi-bin/render.cgi
+homework/render.cgi: halligan-prefix.sh render.cgi
 	cat $prereq > $target
         chmod 755 $target 
 

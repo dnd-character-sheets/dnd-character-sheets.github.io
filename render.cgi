@@ -9,15 +9,32 @@ OUTPUT="$TMPDIR/output.pdf"
 STDERR="$TMPDIR/stderr.txt"
 STDOUT="$TMPDIR/stdout.txt"
 
+ORIGIN="*"
+
 MAX_YAML_BYTES="${MAX_YAML_BYTES:-2097152}"   # 2 MiB default
 RENDER_TIMEOUT_SECS="${RENDER_TIMEOUT_SECS:-30}"
 CHARSHEET_CMD="${CHARSHEET_CMD:-charsheet}"   # override with absolute path
+
+if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
+  echo -e "Status: 200 OK\r"
+  echo -e "Allow: POST, OPTIONS\r"
+  echo -e "Content-Type: text/plain\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
+  echo -e "Access-Control-Allow-Methods: POST, OPTIONS\r"
+  echo -e "Access-Control-Allow-Headers: Content-Type\r"
+  echo -e "Content-Length: 0\r"
+  echo -e "\r"
+  exit 0
+fi
+
+
 
 # Validate & read request body (CGI provides Content-Length)
 CL="${CONTENT_LENGTH:-}"
 if [[ -z "$CL" || ! "$CL" =~ ^[0-9]+$ ]]; then
   echo -e "Status: 411 Length Required\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   echo -e "\r"
   echo "Missing or invalid Content-Length."
   exit 0
@@ -26,6 +43,7 @@ fi
 if (( CL > MAX_YAML_BYTES )); then
   echo -e "Status: 413 Payload Too Large\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   echo -e "\r"
   echo "YAML too large (> $MAX_YAML_BYTES bytes)."
   exit 0
@@ -37,6 +55,7 @@ ACTUAL="$(wc -c < "$INPUT")"
 if (( ACTUAL != CL )); then
   echo -e "Status: 400 Bad Request\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   echo -e "\r"
   echo "Failed to read request body."
   exit 0
@@ -45,6 +64,7 @@ fi
 if false; then
   echo -e "Status: 200 OK\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   echo -e "\r"
   cat "$INPUT"
   exit 0
@@ -64,6 +84,7 @@ set -e
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   echo -e "Status: 400 Bad Request\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
+  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   echo -e "X-Charsheet-Exit: $rc\r"
   echo -e "\r"
   echo "PDF rendering failed (rc==$rc)."
@@ -86,5 +107,6 @@ fi
 echo -e "Status: 200 OK\r"
 echo -e "Content-Type: application/pdf\r"
 echo -e 'Content-Disposition: inline; filename="output.pdf"\r'
+echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
 echo -e "\r"
 cat "$OUTPUT"
