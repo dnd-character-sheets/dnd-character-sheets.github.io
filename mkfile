@@ -40,6 +40,8 @@ publish:V: $REMOTE/index.html $REMOTE/render.cgi docs/index.html
 	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE:$RHOST/charsheet/
 	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
 	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
+
+github:V: docs/index.html
 	git commit -m 'updated web page' -- docs/index.html
 	git push
 
