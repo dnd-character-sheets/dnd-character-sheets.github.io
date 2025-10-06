@@ -1696,7 +1696,7 @@
                 const yamlContent = createYAMLContent();
                 
                 // Send YAML directly to server (not as parameter)
-                const response = await fetch('/charsheet/render.cgi', {
+                const response = await fetch('https://nr.chickenkiller.com/charsheet/render.cgi', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/yaml; charset=utf-8',
