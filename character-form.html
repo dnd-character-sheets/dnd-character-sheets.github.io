@@ -274,13 +274,27 @@
             font-size: 0.9em;
         }
 
-        /* Force left alignment for Equipment section */
+        /* Force left alignment for Equipment and Magic sections */
         .equipment,
         .equipment *,
         .equipment p,
         .equipment ul,
         .equipment li,
-        .equipment textarea {
+        .equipment textarea,
+        .magic,
+        .magic *,
+        .magic p,
+        .magic ul,
+        .magic li,
+        .magic textarea,
+        .spell-item,
+        .spell-item * {
+            text-align: left !important;
+        }
+
+        /* Fix label alignment for Info and Combat sections */
+        .playername label,
+        .hpetc label {
             text-align: left !important;
         }
     </style>
@@ -288,7 +302,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: vanilla
+        Version: watermelon4
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
