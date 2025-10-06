@@ -15,17 +15,18 @@ MAX_YAML_BYTES="${MAX_YAML_BYTES:-2097152}"   # 2 MiB default
 RENDER_TIMEOUT_SECS="${RENDER_TIMEOUT_SECS:-30}"
 CHARSHEET_CMD="${CHARSHEET_CMD:-charsheet}"   # override with absolute path
 
-if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
-  echo -e "Status: 200 OK\r"
-  echo -e "Allow: POST, OPTIONS\r"
-  echo -e "Content-Type: text/plain\r"
-  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
-  echo -e "Access-Control-Allow-Methods: POST, OPTIONS\r"
-  echo -e "Access-Control-Allow-Headers: Content-Type\r"
-  echo -e "Content-Length: 0\r"
-  echo -e "\r"
-  exit 0
-fi
+#if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
+#  echo -e "Status: 200 OK\r"
+#  echo -e "Allow: POST, OPTIONS\r"
+#  echo -e "Content-Type: text/plain\r"
+#  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
+#  echo -e "Access-Control-Allow-Methods: POST, OPTIONS\r"
+#  echo -e "Access-Control-Allow-Headers: Content-Type\r"
+#  echo -e "X-Request-Origin: ${HTTP_ORIGIN:-(unset)}\r"
+#  echo -e "\r"
+#  echo -e "Origin is '$HTTP_ORIGIN'"
+#  exit 0
+#fi
 
 
 

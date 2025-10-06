@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
+if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
+
+  ORIGIN="${HTTP_ORIGIN:-}"
+
+  echo -e "Status: 200 OK\r"
+  if [[ -z "$ORIGIN" ]]; then
+    echo -e "Access-Control-Allow-Origin: *\r"
+  else
+    case "$ORIGIN" in
+      https://www.cs.tufts.edu|https://www.cs.tufts.edu/*|\
+      https://nr.chickenkiller.com*|http://nr.chickenkiller.com*\
+      )
+        echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
+        ;;
+    esac
+  fi
+  echo -e "Content-Type: text/plain\r"
+#  echo -e "X-Request-Origin: ${HTTP_ORIGIN:-(unset)}\r"
+  echo -e "\r"
+
+  exit 0
+
+fi
+
+
 export CHARSHEET_CMD=/h/nr/www/charsheet/charsheet
 export CHARSHEETS=/h/nr/www/charsheet/
 export TEXINPUTS=.:/h/nr/www/charsheet/:

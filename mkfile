@@ -22,6 +22,7 @@ LUAUTIL=flags inspect osutil tabutil
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
 
 local-cgi:V: /usr/lib/cgi-bin/render.cgi
+	sudo systemctl reload apache2
 
 /usr/lib/cgi-bin/render.cgi: render.cgi
 	sudo cp $prereq $target
@@ -37,6 +38,7 @@ bundle:V: xform.html
 publish:V: $REMOTE/index.html $REMOTE/render.cgi
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
 	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE:$RHOST/charsheet/
+	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
 	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
 
 corylea/index.html: character-form.html
