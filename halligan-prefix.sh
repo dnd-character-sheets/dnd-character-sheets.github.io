@@ -12,12 +12,14 @@ if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
   else
     case "$ORIGIN" in
       https://www.cs.tufts.edu|https://www.cs.tufts.edu/*|\
+      https://dnd-character-sheets.github.io|\
       https://nr.chickenkiller.com*|http://nr.chickenkiller.com*\
       )
         echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
         ;;
     esac
   fi
+  echo -e "Access-Control-Allow-Headers: Content-Type\r"
   echo -e "Content-Type: text/plain\r"
 #  echo -e "X-Request-Origin: ${HTTP_ORIGIN:-(unset)}\r"
   echo -e "\r"
