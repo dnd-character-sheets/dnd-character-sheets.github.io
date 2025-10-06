@@ -35,11 +35,13 @@ bundle:V: xform.html
 	cp -auvL character-form.html $HOME/www/charsheet.html
 	cp -auvL xform.html $HOME/www/xform.html
 
-publish:V: $REMOTE/index.html $REMOTE/render.cgi
+publish:V: $REMOTE/index.html $REMOTE/render.cgi docs/index.html
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
 	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE:$RHOST/charsheet/
 	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
 	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
+	git commit -m 'updated web page' -- docs/index.html
+	git push
 
 corylea/index.html: character-form.html
 	cat $prereq > $target
@@ -54,13 +56,15 @@ dreamhost/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
 	chmod +x $target
 
 homework/index.html: xform.html mkfile
-	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" xform.html > $target
+#	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" xform.html > $target
 	cat xform.html > $target
 
 homework/render.cgi: halligan-prefix.sh render.cgi
 	cat $prereq > $target
         chmod 755 $target 
 
+docs/index.html:D: xform.html mkfile
+	cat xform.html > $target
 
 silver-king-%.yaml:D: king-%.yaml un3ify
 	un3ify king-$stem.yaml > $target
