@@ -297,12 +297,21 @@
         .hpetc label {
             text-align: left !important;
         }
+
+        /* Style disabled buttons properly */
+        button:disabled,
+        .add-button:disabled {
+            background-color: #ccc !important;
+            color: #666 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+        }
     </style>
 </head>
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: watermelon4
+        Version: yuzu
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -353,7 +362,7 @@
     <!-- Sample YAML Section -->
     <div style="text-align: left; margin: 1.5em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
         <div style="margin-bottom: 0.5em;">
-            <button type="button" class="add-button" onclick="loadSampleYAML()" style="margin-right: 0.5em;">Start with a pregenerated character</button>
+            <button type="button" id="load-sample-button" class="add-button" onclick="loadSampleYAML()" style="margin-right: 0.5em;" disabled>Start with a pregenerated character</button>
             <select id="sample-yaml-dropdown" style="padding: 0.3em;">
                 <option value="">Choose a character</option>
             </select>
@@ -635,6 +644,7 @@
         // Sample YAML loading functions
         function populateSampleDropdown() {
             const dropdown = document.getElementById('sample-yaml-dropdown');
+            const button = document.getElementById('load-sample-button');
             if (!dropdown || typeof EMBEDDED_YAMLS === 'undefined') return;
 
             // Clear existing options except the first one
@@ -649,6 +659,19 @@
                 option.textContent = yamlData.origin;
                 dropdown.appendChild(option);
             });
+
+            // Add event listener to enable/disable button based on selection
+            dropdown.addEventListener('change', function() {
+                if (button) {
+                    button.disabled = (this.value === '');
+                    console.log('Dropdown changed. Value:', this.value, 'Button disabled:', button.disabled);
+                }
+            });
+
+            // Ensure button starts disabled
+            if (button) {
+                button.disabled = true;
+            }
         }
 
         function loadSampleYAML() {
