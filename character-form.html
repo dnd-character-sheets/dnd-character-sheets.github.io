@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: broccoli
+        Version: carrot
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -256,10 +256,10 @@
                     <span>Render:</span>
                     <div style="margin-top: 0.5em;">
                         <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
-                            <input type="radio" name="magic-render" value="normalsize" checked> at normal size
+                            <input type="radio" name="magic-render" value="normalsize"> at normal size
                         </label>
                         <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
-                            <input type="radio" name="magic-render" value="small"> in a smaller font
+                            <input type="radio" name="magic-render" value="small" checked> in a smaller font
                         </label>
                         <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
                             <input type="radio" name="magic-render" value="footnotesize"> in an even smaller font
@@ -1064,14 +1064,6 @@
                     
                     if (hasMagic) {
                         data['MAGIC'] = magic;
-                        
-                        // Magic rendering options
-                        const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
-                        if (magicRenderOption === 'separate') {
-                            data['MAGIC SEPARATE'] = true;
-                        } else {
-                            data['MAGIC FONT'] = '\\' + magicRenderOption;
-                        } 
                     }
                 }
             };
@@ -1219,6 +1211,33 @@
                 }
             };
 
+        // Magic font field handler
+        function magicFontField() {
+            return {
+                populate(data) {
+                    const magicFont = data['MAGIC FONT'];
+                    let fontValue = 'small'; // Default to small
+
+                    if (magicFont && typeof magicFont === 'string') {
+                        // Strip leading backslash if present
+                        fontValue = magicFont.replace(/^\\/, '');
+                    }
+
+                    // Set the radio button
+                    const radio = document.querySelector(`input[name="magic-render"][value="${fontValue}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                    }
+                },
+                capture(data) {
+                    const magicRenderOption = document.querySelector('input[name="magic-render"]:checked')?.value;
+                    if (magicRenderOption && magicRenderOption !== 'separate') {
+                        data['MAGIC FONT'] = '\\' + magicRenderOption;
+                    }
+                }
+            };
+        }
+
         // Field registry
         const FIELDS = [
             // Character info fields
@@ -1319,6 +1338,7 @@
             // Dynamic list field factories
             attacksField(),
             nameDescPairs('FEATURES', '.feature-item', addFeature),
+            magicFontField(),
             magicField()
         ];
 
