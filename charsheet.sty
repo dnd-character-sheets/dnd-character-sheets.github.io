@@ -20,14 +20,14 @@
 \colorlet{stats}{blue!10!white}
 \colorlet{proficiencies}{yellow!12!white}
 \colorlet{attacks}{orange!25!white}
-\colorlet{magic}{red!12!white}
-\colorlet{features}{magenta!16!white}
+\colorlet{features}{red!14!white}
+\colorlet{features background}{white!60!features}
+\colorlet{magic}{magenta!16!white}
 \colorlet{playername}{green!90!yellow!8!white}
 \colorlet{splashfield}{playername!97.5!black}
 \colorlet{teal}{blue!40!green}
 \colorlet{equipment}{playername}
 \colorlet{hit points background}{gray!40!white}
-\colorlet{features background}{white!60!features}
 
 \DeclareOption{nocolor}{\dndnocolor}
 \newcommand\dndnocolor{%
@@ -434,20 +434,43 @@
   {\end{list}}
 
 
-\newcommand\feature[2]{%
-  \colorbox{features background}{\parbox[t]{\hsize}{\raggedright\itshape#1}}&
+\newcommand\colorparbox[2]{%
+  \colorbox{#1}{\parbox[t]{\hsize}{#2}}%
+}
+
+\newcommand\featureColored[3]{%
+  \leavevmode\hspace*{-\fboxsep}%
+  \colorbox{#1}{\parbox[t]{\hsize}{\raggedright\itshape#2}}&
   \mbox{\vtop{\colorbox{features background}
-                  {\parbox[t]{\hsize}{\raggedright\upshape#2}}
+                  {\parbox[t]{\hsize}{\raggedright\upshape#3}}
         \hrule height 0pt depth 0pt\vspace*{\featurespostspace}%
         }}\\
 %  \mbox{\vtop{\colorbox{features background}{\parbox[t]{\hsize}{\raggedright\upshape#2}}}}\\%
 }
 
+\newcommand\feature[2]{%
+  \featureColored{features background}{#1}{#2}%
+}
+
+
+
+
 \newdimen\featurespostspace
 \featurespostspace=3pt
 \newdimen\featurespostdepth
 \featurespostdepth=0pt % likely obsolete
-\newcommand\described[2]{#1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]}
+\newcommand\describedColored{}
+\long\def\describedColored#1#2#3{%
+  \leavevmode\hspace*{-\fboxsep}%
+  \colorparbox{#1}{\raggedright#2}%
+  &
+  #3\vrule width 0pt height 0pt depth \featurespostdepth\relax
+  \\[\featurespostspace]%
+}
+\newcommand\described{}
+\long\def\described#1#2{%
+ #1&#2\vrule width 0pt height 0pt depth \featurespostdepth\relax\\[\featurespostspace]%
+}
 
 \newdimen\featuresnamewidth % space on left for name of a feature
 \featuresnamewidth=28mm

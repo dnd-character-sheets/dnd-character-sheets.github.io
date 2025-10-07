@@ -312,6 +312,7 @@
     \raggedright
     \useDNDfont*{FEATURES}%
     \long\def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
+    \long\def\describedColored#1#2#3{\described{#1}{#2}}%
     \getDND{FEATURES}
     \ifDNDnonempty{SENSES}{\described{Senses}{\getDND{SENSES}}}{}
     \ifDNDnonempty{MAGIC}{%
