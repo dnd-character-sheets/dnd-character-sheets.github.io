@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: carrot
+        Version: daikon
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -659,6 +659,7 @@
 
         let isDirty = false;
         let loadedFileName = '';
+        let originalYamlData = null;  // Stores complete parsed YAML for passthrough of unknown fields
 
         function loadYAMLFile(event) {
             const file = event.target.files[0];
@@ -1347,7 +1348,10 @@
                 // Use js-yaml to parse the YAML
                 const data = jsyaml.load(yamlText);
                 if (!data) return;
-                
+
+                // Store original data for passthrough of unknown fields
+                originalYamlData = structuredClone(data);
+
                 // Populate all fields using message-passing
                 FIELDS.forEach(field => field.populate(data));
                 
@@ -1368,7 +1372,8 @@
 
         function createYAMLContent() {
             const form = document.getElementById('character-form');
-            const data = {};
+            // Start with original data to preserve unknown fields, or empty object if none
+            const data = originalYamlData ? structuredClone(originalYamlData) : {};
             FIELDS.forEach(field => field.capture(data));
 
             // Use js-yaml to serialize the data structure
