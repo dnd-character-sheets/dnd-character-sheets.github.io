@@ -266,6 +266,17 @@ kbd {
     font-size: 0.9em;
 }
 
+/* Render options radio button groups */
+.render-options {
+    text-align: left;
+}
+
+.render-options label {
+    display: block;
+    margin-bottom: 0.3em;
+    font-weight: normal;
+}
+
 /* Force left alignment for Equipment and Magic sections */
 .equipment,
 .equipment *,
@@ -279,6 +290,12 @@ kbd {
 .magic ul,
 .magic li,
 .magic textarea,
+.features,
+.features *,
+.features p,
+.features ul,
+.features li,
+.features textarea,
 .spell-item,
 .spell-item * {
     text-align: left !important;
