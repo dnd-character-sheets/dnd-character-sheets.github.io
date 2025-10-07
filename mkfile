@@ -27,17 +27,17 @@ local-cgi:V: /usr/lib/cgi-bin/render.cgi
 /usr/lib/cgi-bin/render.cgi: render.cgi
 	sudo cp $prereq $target
 
-xform.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
+docs/index.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
 	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS
 
-bundle:V: xform.html
+bundle:V: docs/index.html docs/charsheet.css
 	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
-	cp -auvL character-form.html $HOME/www/charsheet.html
-	cp -auvL xform.html $HOME/www/xform.html
+	cp -auvL docs/index.html $HOME/www/charsheet.html
+	cp -auvL docs/charsheet.css $HOME/www/
 
-publish:V: $REMOTE/index.html $REMOTE/render.cgi docs/index.html
+publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
-	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE:$RHOST/charsheet/
+	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $REMOTE:$RHOST/charsheet/
 	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
 	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
 
@@ -57,16 +57,12 @@ dreamhost/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
 	sed "s@/home/corylea@$BPCHOME@g" $prereq > $target
 	chmod +x $target
 
-homework/index.html: xform.html mkfile
-#	sed "s@/charsheet/render.cgi@/~nr/cgi-bin/$HALLIGANNAME@g" xform.html > $target
-	cat xform.html > $target
+homework/index.html: docs/index.html mkfile
+	cat docs/index.html > $target
 
 homework/render.cgi: halligan-prefix.sh render.cgi
 	cat $prereq > $target
         chmod 755 $target 
-
-docs/index.html:D: xform.html mkfile
-	cat xform.html > $target
 
 silver-king-%.yaml:D: king-%.yaml un3ify
 	un3ify king-$stem.yaml > $target

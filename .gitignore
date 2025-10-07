@@ -1,6 +1,10 @@
+*~
 ?.tex
 ?.pdf
 *-test.pdf
 *-test.tex
 kylane*.tex
 miriel*.tex
+*.aux
+*.out
+
