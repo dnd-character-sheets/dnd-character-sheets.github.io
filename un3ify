@@ -214,10 +214,23 @@ local function un3ify(doc)
 
   doc['DOCUMENT FONT'] = nil
 
-  for _, a in ipairs(doc.ATTACKS or nothing) do
-    if type(a) == 'table' then
-      a.NOTES = nil
+  do
+    local attacks = { }
+    for i, a in ipairs(doc.ATTACKS or nothing) do
+      if type(a) == 'table' then
+        a.NOTES = nil
+        local spell = false
+        if a.NAME then
+          for name in a.NAME:gmatch '%a+' do
+            if offensive[name] then
+              spell = true
+            end
+          end
+        end
+        if not spell then table.insert(attacks, a) end
+      end
     end
+    doc.ATTACKS = attacks
   end
 
   for _, f in ipairs { 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES' }
