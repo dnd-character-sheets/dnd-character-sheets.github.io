@@ -61,20 +61,20 @@ EQUIPMENT:
   - Torches (10)
   - Rations (10)
   - Waterskin
-  - 50 ft. Rope
+  - 50 ft. Rope
 
 ATTACKS:
   - NAME: Greatsword
     ATTACK: "+5"
     DAMAGE: 2d6+3
     TYPE: slashing
-    RANGE: 5 ft.
+    RANGE: 5 ft.
     NOTES: ""
   - NAME: Javelin
     ATTACK: "+1"
     DAMAGE: 1d6-1
     TYPE: piercing
-    RANGE: 30/120 ft.
+    RANGE: 30/120 ft.
     AMMO TYPE: "javelins"
     AMMO COUNT: 5
     NOTES: Can be thrown.
@@ -95,7 +95,7 @@ FEATURES:
       All targets in a line 30 ft long take 2d6 lightning damage,
       or half damage on a \statdc{CON} \textsc{dex} save.
   - name: Divine Sense
-    description: As an action, you know the location of any consecrated or desecrated object or place or any celestial, fiend, or undead within 60 ft. (4 uses per long rest).
+    description: As an action, you know the location of any consecrated or desecrated object or place or any celestial, fiend, or undead within 60 ft. (4 uses per long rest).
   - name: Lay on Hands
     description: >-
       You have 5 HP in a healing pool.

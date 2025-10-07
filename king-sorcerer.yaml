@@ -19,7 +19,7 @@ CHA: 16
 "MAX HP": 14
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
-"SPEED": 30 ft
+"SPEED": 30 ft
 "ARMOR CLASS": 15
 "SENSES": ""
 "HIT DICE": d6
@@ -51,7 +51,7 @@ EQUIPMENT:
   - 'Torches (10)'
   - 'Rations (10)'
   - Waterskin
-  - 50 ft Rope
+  - 50 ft Rope
 
 ATTACKS:
   - NAME: Light crossbow
@@ -83,7 +83,7 @@ ATTACKS:
     ATTACK: Hits
     DAMAGE: 1d4+1
     TYPE: force
-#    RANGE: 120 ft.
+#    RANGE: 120 ft.
     NOTES: >-
       Creates 3 darts targeting up to 3 creatures within
       120 ft. 1d4\psam\ per dart.
@@ -93,9 +93,9 @@ MAGIC FONT: \normalsize
 MAGIC:
   - level: 0                               # CANTRIPS
   - name: Fire Bolt
-    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
+    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
   - name: Ray of Frost
-    description: Ranged spell attack +5, 60 ft; 1d8 cold damage and target’s speed −10 ft. until your next turn.
+    description: Ranged spell attack +5, 60 ft; 1d8 cold damage and target’s speed −10 ft. until your next turn.
   - name: Shocking Grasp
     description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
   - name: Light

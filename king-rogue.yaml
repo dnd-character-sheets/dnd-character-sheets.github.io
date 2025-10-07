@@ -67,7 +67,7 @@ EQUIPMENT:
   - Flask of Oil (2)
   - Rations (10)
   - Waterskin
-  - 50 ft. Rope
+  - 50 ft. Rope
   - Grappling Hook
 
 ATTACKS:
@@ -75,20 +75,20 @@ ATTACKS:
     ATTACK: "+5"
     DAMAGE: 1d8+3
     TYPE: piercing
-    RANGE: 5 ft.
+    RANGE: 5 ft.
     NOTES: Uses \textsc{dex} modifier, not \textsc{str}.
   - NAME: Shortbow
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: piercing
-    RANGE: 80/320 ft.
+    RANGE: 80/320 ft.
     AMMO TYPE: "arrows"
     AMMO COUNT: 20
   - NAME: Dagger
     ATTACK: "+5"
     DAMAGE: 1d4+3
     TYPE: piercing
-    RANGE: 20/60 ft.
+    RANGE: 20/60 ft.
     NOTES: Uses \textsc{dex}, not \textsc{str}.  Can be thrown.
     AMMO COUNT: 2
     AMMO TYPE: daggers

@@ -22,7 +22,7 @@ CHA: 10
 "INITIATIVE": "+2"
 "SPEED": 30
 "ARMOR CLASS": 14
-"SENSES": Darkvision 60 ft.
+"SENSES": Darkvision 60 ft.
 "HIT DICE": d12
 
 # coin totals
@@ -68,7 +68,7 @@ ATTACKS:
     ATTACK: "+5"
     DAMAGE: 1d6+3
     TYPE: slashing
-    RANGE: 20/60 ft.
+    RANGE: 20/60 ft.
     NOTES: Can be thrown.
     AMMO TYPE: axes
     AMMO COUNT: 2
@@ -76,7 +76,7 @@ ATTACKS:
 FEATURES:
   - name: Hermit Discovery
     description: With an action you can use an Herbalism Kit, destroying it in the process, to stabilize one target.
-  - name: Darkvision 60 ft.
+  - name: Darkvision 60 ft.
     description: You can see in dim light as if it were bright and in darkness as if it were dim (disadvantage on Perception in darkness).
   - name: Relentless Endurance
     description: Once per long rest, when you are reduced to 0 HP, you instead stay at 1 HP.
