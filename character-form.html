@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: garlic
+        Version: horseradish
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1222,6 +1222,13 @@
                     const form = document.getElementById('character-form');
                     const el = form.querySelector('#proficiencies-text');
                     const text = el?.value || '';
+
+                    // Delete all proficiency-related fields before setting new ones
+                    // This prevents conflicts with passthrough preservation
+                    delete data['PROFICIENCIES'];
+                    delete data['MAIN PROFICIENCIES'];
+                    delete data['OTHER PROFICIENCIES'];
+
                     Object.assign(data, parseProficienciesText(text));
                 }
             };

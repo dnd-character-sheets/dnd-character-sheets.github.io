@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: fennel
+        Version: horseradish
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -252,16 +252,16 @@
         <div class="section magic" id="magic-section">
             <h2 id="magic-header" onclick="toggleMagic()" style="cursor: pointer;">Magic (click to open)</h2>
             <div id="magic-content" style="display: none;">
-                <div class="field-group" style="margin-bottom: 1em;">
+                <div class="field-group render-options" style="margin-bottom: 1em;">
                     <span>Render:</span>
                     <div style="margin-top: 0.5em;">
-                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                        <label>
                             <input type="radio" name="magic-render" value="normalsize"> at normal size
                         </label>
-                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                        <label>
                             <input type="radio" name="magic-render" value="small" checked> in a smaller font
                         </label>
-                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                        <label>
                             <input type="radio" name="magic-render" value="footnotesize"> in an even smaller font
                         </label>
 <!--
@@ -283,16 +283,16 @@
         <!-- Features Section -->
         <div class="section features">
             <h2>Features</h2>
-            <div class="field-group" style="margin-bottom: 1em;">
+            <div class="field-group render-options" style="margin-bottom: 1em;">
                 <span>Render:</span>
                 <div style="margin-top: 0.5em;">
-                    <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                    <label>
                         <input type="radio" name="features-render" value="normalsize"> at normal size
                     </label>
-                    <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                    <label>
                         <input type="radio" name="features-render" value="small" checked> in a smaller font
                     </label>
-                    <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
+                    <label>
                         <input type="radio" name="features-render" value="footnotesize"> in an even smaller font
                     </label>
                 </div>
@@ -1256,6 +1256,13 @@
                     const form = document.getElementById('character-form');
                     const el = form.querySelector('#proficiencies-text');
                     const text = el?.value || '';
+
+                    // Delete all proficiency-related fields before setting new ones
+                    // This prevents conflicts with passthrough preservation
+                    delete data['PROFICIENCIES'];
+                    delete data['MAIN PROFICIENCIES'];
+                    delete data['OTHER PROFICIENCIES'];
+
                     Object.assign(data, parseProficienciesText(text));
                 }
             };
