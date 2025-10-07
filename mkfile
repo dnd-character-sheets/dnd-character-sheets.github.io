@@ -16,7 +16,11 @@ KINGYAMLS=${KINGS:%=king-%.yaml}
 
 
 all:V: bundle samples.pdf
-samples: samples.pdf
+samples:V: samples.pdf
+demo:V: wizard.pdf
+
+wizard.pdf: king-wizard.3.pdf king-wizard.s.pdf
+	pdftk $prereq cat output $target
 
 LUAUTIL=flags inspect osutil tabutil
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
