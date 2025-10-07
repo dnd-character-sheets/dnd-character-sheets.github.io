@@ -7,8 +7,10 @@ kylane*.tex
 miriel*.tex
 *.aux
 *.out
+*.log
 /homework/index.html
 /homework/charsheet.css
 /homework/render.cgi
-
-
+/silver-king-*.yaml
+*.?.pdf
+*sample*.pdf
