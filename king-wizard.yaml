@@ -114,6 +114,7 @@ MAGIC:
     description: Create a visual illusion in a 15-ft cube (120 ft) for 10 min (concentration); Investigation DC 13 reveals.
   - name: Sleep
     description: Roll 5d8; up to that total HP of creatures within 90 ft fall asleep for 1 min (ending on shake/damage).
+    offensive: true
 
 FEATURES:
   - name: Researcher
