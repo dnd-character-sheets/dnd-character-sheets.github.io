@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: horseradish
+        Version: iceberg-lettuce
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1376,8 +1376,13 @@
 
                 // Populate all fields using message-passing
                 FIELDS.forEach(field => field.populate(data));
-                
-                
+
+                // Reset pregens dropdown and disable button when YAML is loaded
+                const dropdown = document.getElementById('sample-yaml-dropdown');
+                const button = document.getElementById('load-sample-button');
+                if (dropdown) dropdown.value = '';
+                if (button) button.disabled = true;
+
             } catch (error) {
                 throw new Error('YAML parsing failed: ' + error.message);
             }
