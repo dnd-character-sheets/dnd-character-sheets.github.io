@@ -1,0 +1,13 @@
+#!/bin/ksh
+
+target="$1"
+shift
+
+set -A pdfs
+for k in "$@"; do
+  tmp=$(mktemp --suffix=.pdf)
+  pdfs+=("$tmp")
+  pdftk "$k" cat 1 output "$tmp"
+done
+pdftk "${pdfs[@]}" cat output $target
+rm -f "${pdfs[@]}"
