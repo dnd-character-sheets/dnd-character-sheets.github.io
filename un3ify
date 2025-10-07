@@ -199,6 +199,16 @@ local function preprocess(doc)
   return doc
 end
   
+local offensive_spell_names = {
+ 'Burning', 'Grasp', 'Missile', 'Bolt', 'Ray'
+}
+local offensive = { }
+do
+  for _, n in ipairs(offensive_spell_names) do
+    offensive[n] = true
+  end
+end
+
 
 local function un3ify(doc)
 
@@ -214,6 +224,24 @@ local function un3ify(doc)
   do
     doc[f] = unnest(doc[f])
   end
+
+  do -- mark offensive spells
+    for _, spell in ipairs(doc.MAGIC or nothing) do
+      if spell.name then
+        for name in spell.name:gmatch '%a+' do
+          if offensive[name] then
+            spell.offensive = true
+          end
+        end
+      end
+    end
+  end
+    
+  if doc.CLASS == 'Wizard' or doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:find 'Wizard'
+  then
+    doc['MAGIC FONT'] = [[\small]]
+  end
+
 
   return doc
 end
