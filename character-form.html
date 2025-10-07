@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: artichoke5
+        Version: broccoli
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -624,6 +624,11 @@
         
         // Legacy function for compatibility
         function addSpell() {
+            // Bug fix: addSpell should never be called with arguments; use addSpellToLevel instead
+            if (arguments.length > 0) {
+                console.error('BUG: addSpell() called with arguments. Use addSpellToLevel() instead.');
+                throw new Error('addSpell() should not be called with arguments');
+            }
             addSpellToLevel(0); // Default to cantrips
         }
 
@@ -1004,7 +1009,7 @@
                                 }
                             } else if (item.name && currentLevel !== null) {
                                 // This is a spell
-                                addSpell(currentLevel);
+                                addSpellToLevel(currentLevel);
                                 const levelDiv = document.querySelector(`[data-level="${currentLevel}"]`);
                                 const spellItems = levelDiv?.querySelectorAll('.spell-item');
                                 const lastItem = spellItems?.[spellItems.length - 1];
