@@ -7,4 +7,8 @@ kylane*.tex
 miriel*.tex
 *.aux
 *.out
+/homework/index.html
+/homework/charsheet.css
+/homework/render.cgi
+
 
