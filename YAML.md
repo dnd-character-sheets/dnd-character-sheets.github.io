@@ -578,9 +578,10 @@ In addition, each feature may be labeled with any or all of the following keys:
 - `reaction`: true (the spell may be cast as a reaction)
 - `attack`: true (casting the spell requires an attack roll)
 - `save`: true (casting the spell requires an enemy to make a saving throw)
-- `enemy`: true (the spell targets an enemy)
+- `enemy`: true (the spell targets an enemy [implied by `attack` or `save`])
 - `ritual`: true (the spell may be cast as a ritual)
 - `duration`: String (how long the spell lasts, if more than one action)
+- `concentration`: true (the spell requires concentration)
 
 **Examples**:
 ```yaml
