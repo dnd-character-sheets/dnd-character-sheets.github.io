@@ -16,6 +16,10 @@
 \usetikzlibrary{shapes}
 \usepgflibrary{intersections}
 
+\newcommand\@expandArg[2]{\expandafter\@applyExpanded\expandafter{#2}{#1}}
+\newcommand\@applyExpanded[2]{#2{#1}}
+
+
 % Define colors for different sections
 \colorlet{stats}{blue!10!white}
 \colorlet{proficiencies}{yellow!12!white}
@@ -1032,6 +1036,13 @@
 
 % ---- labels
 
+\newcommand\@ifshortcuts[1]{%
+  \@expandArg{\expandafter\newcommand\csname when#1\endcsname[2]}%
+             {\csname if#1\endcsname{##1}{##2}{}}%
+  \@expandArg{\expandafter\newcommand\csname unless#1\endcsname[2]}%
+             {\csname if#1\endcsname{##1}{}{##2}}%
+}
+
 
 %-----------------------------------------------------------------
 % 4. \ifDNDdefined{<name>}{<true>}{<false>}
@@ -1048,6 +1059,10 @@
 \newcommand{\ifDNDfont}[3]{%
   \@ifundefined{dnd@font@#1}{#3}{#2}%
 }
+\@ifshortcuts{DNDdefined}
+\@ifshortcuts{DNDdeclared}
+\@ifshortcuts{DNDfont}
+
 
 \let\getDND\valueDND
 \newcommand{\rawgetDND}[1]{\csname dnd@val@#1\endcsname}
@@ -1090,15 +1105,6 @@
   }%
 }
 
-\newcommand\whenDNDnonempty[2]{%
-  \ifDNDnonempty{#1}{#2}{}%
-}
-\newcommand\whenDNDtrue[2]{%
-  \ifDNDfalse{#1}{}{#2}%
-}
-\newcommand\whenDNDfalse[2]{%
-  \ifDNDfalse{#1}{#2}{}%
-}
 
 %-----------------------------------------------------------------
 % 5. \ifDNDfalse{<name>}{<true>}{<false>}
@@ -1135,6 +1141,12 @@
   }%
 }
 
+
+\@ifshortcuts{DNDnonempty}
+\@ifshortcuts{DNDfalse}
+\newcommand\whenDNDtrue{%
+  \unlessDNDfalse
+}
 
 
 %%  A "stub rectangle" is a rectangle except each
@@ -2317,8 +2329,6 @@
 %
 % https://tex.stackexchange.com/a/133768/5847
 
-\newcommand\@expandArg[2]{\expandafter\@applyExpanded\expandafter{#2}{#1}}
-\newcommand\@applyExpanded[2]{#2{#1}}
 
 
 
