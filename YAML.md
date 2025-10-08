@@ -429,10 +429,10 @@ You can freely mix both styles in the same equipment list. Category names are ca
 **Type**: Number
 **Template Usage**: Controls equipment section layout
 **Examples**:
-- `EQUIPMENT COLS: 2` (default value)
+- `EQUIPMENT COLS: 2`
 - `EQUIPMENT COLS: 3`
 
-**Note**: The default value is 2 columns if not specified
+**Note**: Depending on layout the default value is one or two columns.
 
 ---
 
@@ -453,6 +453,15 @@ You can freely mix both styles in the same equipment list. Category names are ca
 **Structure**: Each feature contains:
 - `name`: String (feature name)
 - `description`: String (feature description)
+In addition, each feature may be labeled with any or all of the following keys:
+- `bonus`: true (the feature involves a bonus action)
+- `reaction`: true (the feature involves a reaction)
+- `attack`: true (the feature involves an attack roll)
+- `save`: true (the feature requires an enemy's to make a saving throw)
+- `enemy`: true (the feature targets an enemy)
+- `duration`: String (when the feature causes an effect that lasts for more than one action action)
+
+
 
 **Examples**:
 ```yaml
@@ -564,6 +573,14 @@ FEATURES:
 **Structure**: Can contain:
 - Level indicators: `level: 0` (cantrips) or `level: {number: 1, slots: 4}`
 - Spell entries with `name` and `description`
+In addition, each feature may be labeled with any or all of the following keys:
+- `bonus`: true (the spell may be cast as a bonus action)
+- `reaction`: true (the spell may be cast as a reaction)
+- `attack`: true (casting the spell requires an attack roll)
+- `save`: true (casting the spell requires an enemy to make a saving throw)
+- `enemy`: true (the spell targets an enemy)
+- `ritual`: true (the spell may be cast as a ritual)
+- `duration`: String (how long the spell lasts, if more than one action)
 
 **Examples**:
 ```yaml
