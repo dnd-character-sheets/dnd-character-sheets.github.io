@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Quick-Start Guide to YAML Character Sheets</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="charsheet.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Quick-Start Guide to YAML Character Sheets</h1>
+</header>
+<article>
+<p>This guide walks you through creating a D&amp;D character sheet using YAML, following the visual order and colored sections of the generated character sheet. Use examples from <code>zanogh.pdf</code> (Barbarian) and <code>miriel.pdf</code> (Cleric) as reference.</p>
+<h2 id="character-info-section">Character Info Section</h2>
+<div class="playername">
+<p>This banner section at the top contains the core character identity information.</p>
+<h3 id="character-name-and-identity">Character Name and Identity</h3>
+<p>Start with your character’s basic identity:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">&quot;CHARACTER NAME&quot;:</span><span class="at"> </span><span class="st">&quot;Zanogh Greyfist&quot;</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="fu">&quot;PLAYER NAME&quot;:</span><span class="at"> </span><span class="st">&quot;Amelia&quot;</span></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="fu">AGE:</span><span class="at"> </span><span class="st">&quot;young adult&quot;</span>  <span class="co"># Optional: age category or life stage</span></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="fu">DESCRIPTION:</span><span class="at"> </span><span class="st">&quot;Tall half-orc with gray skin and fierce amber eyes&quot;</span>  <span class="co"># Optional: physical description</span></a>
+<a class="sourceLine" id="cb1-5" title="5"><span class="fu">CLASS:</span><span class="at"> </span><span class="st">&quot;Barbarian&quot;</span></a>
+<a class="sourceLine" id="cb1-6" title="6"><span class="fu">LEVEL:</span><span class="at"> </span><span class="dv">3</span></a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="fu">SPECIALTY:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Optional: subclass, domain, archetype, etc.</span></a>
+<a class="sourceLine" id="cb1-8" title="8"><span class="fu">&quot;RACE&quot;:</span><span class="at"> </span><span class="st">&quot;Half-Orc&quot;</span></a>
+<a class="sourceLine" id="cb1-9" title="9"><span class="fu">&quot;BACKGROUND&quot;:</span><span class="at"> </span><span class="st">&quot;Hermit&quot;</span></a>
+<a class="sourceLine" id="cb1-10" title="10"><span class="fu">&quot;ALIGNMENT&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb1-11" title="11"><span class="fu">&quot;EXPERIENCE POINTS&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - <code>&quot;CHARACTER NAME&quot;</code> appears prominently in large italic text - <code>CLASS</code> and <code>LEVEL</code> are separate fields for better form usability - <code>SPECIALTY</code> is optional - use for subclass, domain, archetype (e.g., “Life Domain”, “Champion”) - All keys with spaces must be quoted - Leave <code>&quot;ALIGNMENT&quot;</code> and <code>&quot;EXPERIENCE POINTS&quot;</code> empty if not yet determined</p>
+<h3 id="character-motivation">Character Motivation</h3>
+<p>Optionally add a personal motivation that appears in italics:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb2-1" title="1"><span class="fu">MOTIVATION:</span><span class="at"> </span><span class="st">&quot;Zanogh wants to get in touch with her orcish side&quot;</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="fu">GM NOTES:</span><span class="at"> </span><span class="st">&quot;Player is new to D&amp;D - help with tactical decisions&quot;</span>  <span class="co"># Optional: GM-only notes</span></a></code></pre></div>
+</div>
+<h2 id="stats-section">Stats Section</h2>
+<div class="stats">
+<p>The ability scores appear in the left column with blue background. These are the foundation of your character.</p>
+<h3 id="the-six-ability-scores">The Six Ability Scores</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb3-1" title="1"><span class="fu">STR:</span><span class="at"> </span><span class="dv">17</span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="fu">DEX:</span><span class="at"> </span><span class="dv">14</span><span class="at">  </span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="fu">CON:</span><span class="at"> </span><span class="dv">14</span></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="fu">INT:</span><span class="at"> </span><span class="dv">8</span></a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="fu">WIS:</span><span class="at"> </span><span class="dv">12</span></a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="fu">CHA:</span><span class="at"> </span><span class="dv">10</span></a></code></pre></div>
+<h3 id="proficiency-bonus">Proficiency Bonus</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">&quot;PROFICIENCY BONUS&quot;:</span><span class="at"> </span><span class="st">&quot;+2&quot;</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Ability scores are just the raw numbers (8-20 typically) - The system automatically calculates modifiers and saving throw proficiencies - Proficiency bonus should include the + sign - Based on your class, saving throw proficiencies are auto-generated</p>
+</div>
+<h2 id="combat-stats-section">Combat Stats Section</h2>
+<div class="hpetc">
+<p>This section contains hit points, initiative, speed, and armor class.</p>
+<h3 id="hit-points-and-combat-info">Hit Points and Combat Info</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">&quot;MAX HP&quot;:</span><span class="at"> </span><span class="dv">32</span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="fu">&quot;CURRENT HIT POINTS&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="fu">&quot;HIT DICE&quot;:</span><span class="at"> </span><span class="st">&quot;d12&quot;</span></a>
+<a class="sourceLine" id="cb5-4" title="4"><span class="fu">&quot;INITIATIVE&quot;:</span><span class="at"> </span><span class="st">&quot;+2&quot;</span></a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="fu">&quot;SPEED&quot;:</span><span class="at"> </span><span class="st">&quot;30&quot;</span></a>
+<a class="sourceLine" id="cb5-6" title="6"><span class="fu">&quot;ARMOR CLASS&quot;:</span><span class="at"> </span><span class="dv">14</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - <code>&quot;CURRENT HIT POINTS&quot;</code> is typically left empty for filling during play - <code>&quot;HIT DICE&quot;</code> should match your class (d6, d8, d10, d12) - Initiative should include the + or - sign - Speed can include “ft.” but it’s not required</p>
+<h3 id="senses-and-spell-information">Senses and Spell Information</h3>
+<p>Additional combat-relevant info may appear in this area:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">&quot;SENSES&quot;:</span><span class="at"> </span><span class="st">&quot;Darkvision 60 ft.&quot;</span></a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="fu">&quot;PASSIVE PERCEPTION&quot;:</span><span class="at"> </span><span class="dv">13</span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="fu">SPELL DC:</span><span class="at"> </span><span class="dv">13</span><span class="at">  </span><span class="co"># For spellcasters only</span></a></code></pre></div>
+</div>
+<h2 id="proficiencies-section">Proficiencies Section</h2>
+<div class="proficiencies">
+<p>Lists all your character’s proficiencies, organized by type.</p>
+<h3 id="skills-languages-and-equipment-proficiencies">Skills, Languages, and Equipment Proficiencies</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">PROFICIENCIES:</span></a>
+<a class="sourceLine" id="cb7-2" title="2">  <span class="kw">-</span> <span class="st">&quot;Animal Handling&quot;</span></a>
+<a class="sourceLine" id="cb7-3" title="3">  <span class="kw">-</span> <span class="st">&quot;Athletics&quot;</span> </a>
+<a class="sourceLine" id="cb7-4" title="4">  <span class="kw">-</span> <span class="st">&quot;Perception&quot;</span></a>
+<a class="sourceLine" id="cb7-5" title="5">  <span class="kw">-</span> <span class="st">&quot;Intimidation&quot;</span></a>
+<a class="sourceLine" id="cb7-6" title="6">  <span class="kw">-</span> <span class="st">&quot;Survival&quot;</span></a>
+<a class="sourceLine" id="cb7-7" title="7">  <span class="kw">-</span>   <span class="co"># Blank entry creates visual separator</span></a>
+<a class="sourceLine" id="cb7-8" title="8">  <span class="kw">-</span> <span class="st">&quot;Herbalism Kit&quot;</span></a>
+<a class="sourceLine" id="cb7-9" title="9">  <span class="kw">-</span> <span class="fu">proficiencies_skip:</span><span class="at"> </span><span class="ch">true</span><span class="at">  </span><span class="co"># Alternative separator syntax</span></a>
+<a class="sourceLine" id="cb7-10" title="10">  <span class="kw">-</span> <span class="st">&quot;Common&quot;</span></a>
+<a class="sourceLine" id="cb7-11" title="11">  <span class="kw">-</span> <span class="st">&quot;Orcish&quot;</span></a>
+<a class="sourceLine" id="cb7-12" title="12">  <span class="kw">-</span> <span class="st">&quot;Dwarvish&quot;</span></a>
+<a class="sourceLine" id="cb7-13" title="13">  <span class="kw">-</span> <span class="st">&quot;Light Armor&quot;</span></a>
+<a class="sourceLine" id="cb7-14" title="14">  <span class="kw">-</span> <span class="st">&quot;Medium Armor&quot;</span></a>
+<a class="sourceLine" id="cb7-15" title="15">  <span class="kw">-</span> <span class="st">&quot;Shield&quot;</span></a>
+<a class="sourceLine" id="cb7-16" title="16">  <span class="kw">-</span> <span class="st">&quot;Simple Weapons&quot;</span></a>
+<a class="sourceLine" id="cb7-17" title="17">  <span class="kw">-</span> <span class="st">&quot;Martial Weapons&quot;</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Use <code>-</code> (blank list entry) or <code>proficiencies_skip: true</code> to create visual separators between sections - Languages can be formatted as just the name (e.g., “Common”) - Armor and weapon proficiencies follow D&amp;D categorizations</p>
+</div>
+<h2 id="attacks-section">Attacks Section</h2>
+<div class="attacks">
+<p>Your character’s weapon attacks and combat options.</p>
+<h3 id="attack-entries">Attack Entries</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">ATTACKS:</span></a>
+<a class="sourceLine" id="cb8-2" title="2">  <span class="kw">-</span> <span class="fu">NAME:</span><span class="at"> </span><span class="st">&quot;Greataxe&quot;</span></a>
+<a class="sourceLine" id="cb8-3" title="3">    <span class="fu">ATTACK:</span><span class="at"> </span><span class="st">&quot;+5&quot;</span></a>
+<a class="sourceLine" id="cb8-4" title="4">    <span class="fu">DAMAGE:</span><span class="at"> </span><span class="st">&quot;1d12+3&quot;</span></a>
+<a class="sourceLine" id="cb8-5" title="5">    <span class="fu">TYPE:</span><span class="at"> </span><span class="st">&quot;slashing&quot;</span></a>
+<a class="sourceLine" id="cb8-6" title="6">    <span class="fu">RANGE:</span><span class="at"> </span><span class="st">&quot;5 ft.&quot;</span></a>
+<a class="sourceLine" id="cb8-7" title="7">    <span class="co"># No ammo fields for melee weapons</span></a>
+<a class="sourceLine" id="cb8-8" title="8">  <span class="kw">-</span> <span class="fu">NAME:</span><span class="at"> </span><span class="st">&quot;Hand Axe&quot;</span></a>
+<a class="sourceLine" id="cb8-9" title="9">    <span class="fu">ATTACK:</span><span class="at"> </span><span class="st">&quot;+5&quot;</span></a>
+<a class="sourceLine" id="cb8-10" title="10">    <span class="fu">DAMAGE:</span><span class="at"> </span><span class="st">&quot;1d6+3&quot;</span></a>
+<a class="sourceLine" id="cb8-11" title="11">    <span class="fu">TYPE:</span><span class="at"> </span><span class="st">&quot;slashing&quot;</span></a>
+<a class="sourceLine" id="cb8-12" title="12">    <span class="fu">RANGE:</span><span class="at"> </span><span class="st">&quot;5ft, 20/60 ft.&quot;</span></a>
+<a class="sourceLine" id="cb8-13" title="13">    <span class="fu">AMMO COUNT:</span><span class="at"> </span><span class="dv">2</span></a>
+<a class="sourceLine" id="cb8-14" title="14">    <span class="fu">AMMO TYPE:</span><span class="at"> axes</span></a>
+<a class="sourceLine" id="cb8-15" title="15">  <span class="kw">-</span> <span class="fu">NAME:</span><span class="at"> </span><span class="st">&quot;Light Crossbow&quot;</span></a>
+<a class="sourceLine" id="cb8-16" title="16">    <span class="fu">ATTACK:</span><span class="at"> </span><span class="st">&quot;+4&quot;</span></a>
+<a class="sourceLine" id="cb8-17" title="17">    <span class="fu">DAMAGE:</span><span class="at"> </span><span class="st">&quot;1d8+2&quot;</span></a>
+<a class="sourceLine" id="cb8-18" title="18">    <span class="fu">TYPE:</span><span class="at"> </span><span class="st">&quot;piercing&quot;</span></a>
+<a class="sourceLine" id="cb8-19" title="19">    <span class="fu">RANGE:</span><span class="at"> </span><span class="st">&quot;80/320 ft.&quot;</span></a>
+<a class="sourceLine" id="cb8-20" title="20">    <span class="fu">AMMO TYPE:</span><span class="at"> </span><span class="st">&quot;bolts&quot;</span></a>
+<a class="sourceLine" id="cb8-21" title="21">    <span class="fu">AMMO COUNT:</span><span class="at"> </span><span class="dv">20</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Each attack needs core fields: NAME, ATTACK, DAMAGE, TYPE, RANGE - Attack bonus should include + or - sign - AMMO TYPE and AMMO COUNT are optional: either both missing/empty, or type is string and count is number - RANGE can include multiple ranges for thrown weapons</p>
+</div>
+<h2 id="magic-section">Magic Section</h2>
+<div class="magic">
+<p>Spells and magical abilities. This section only appears for spellcasters.</p>
+<h3 id="spell-structure">Spell Structure</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">MAGIC:</span></a>
+<a class="sourceLine" id="cb9-2" title="2">  <span class="kw">-</span> <span class="fu">level:</span><span class="at"> </span><span class="dv">0</span><span class="at">  </span><span class="co"># Cantrips</span></a>
+<a class="sourceLine" id="cb9-3" title="3">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Sacred Flame&quot;</span></a>
+<a class="sourceLine" id="cb9-4" title="4">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Target one creature; DEX save or 1d8 radiant damage.&quot;</span></a>
+<a class="sourceLine" id="cb9-5" title="5">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Spare the Dying&quot;</span></a>
+<a class="sourceLine" id="cb9-6" title="6">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;One unconscious creature you touch is stabilized.&quot;</span></a>
+<a class="sourceLine" id="cb9-7" title="7">  <span class="kw">-</span> <span class="fu">level:</span><span class="at"> </span><span class="dv">1</span><span class="at">  </span><span class="co"># 1st level spells</span></a>
+<a class="sourceLine" id="cb9-8" title="8">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Cure Wounds&quot;</span></a>
+<a class="sourceLine" id="cb9-9" title="9">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;A touched creature regains 1d8+3 HP, +3 more (DoL).&quot;</span></a>
+<a class="sourceLine" id="cb9-10" title="10">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Bless [C]&quot;</span></a>
+<a class="sourceLine" id="cb9-11" title="11">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute [Life domain].&quot;</span></a></code></pre></div>
+<h3 id="advanced-spell-slot-tracking">Advanced Spell Slot Tracking</h3>
+<p>For classes with spell slots:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb10-1" title="1"><span class="fu">MAGIC:</span></a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="kw">-</span> <span class="fu">level:</span><span class="at"> </span><span class="kw">{</span><span class="fu">number:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span> <span class="fu">slots:</span><span class="at"> </span><span class="dv">4</span><span class="kw">}</span><span class="at">  </span><span class="co"># 1st level with 4 slots</span></a>
+<a class="sourceLine" id="cb10-3" title="3">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Magic Missile&quot;</span></a>
+<a class="sourceLine" id="cb10-4" title="4">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Create 3 darts that each deal 1d4+1 force damage&quot;</span></a>
+<a class="sourceLine" id="cb10-5" title="5">  <span class="kw">-</span> <span class="fu">level:</span><span class="at"> </span><span class="kw">{</span><span class="fu">number:</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span> <span class="fu">slots:</span><span class="at"> </span><span class="dv">2</span><span class="kw">}</span><span class="at">  </span><span class="co"># 2nd level with 2 slots</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Use <code>level: 0</code> for cantrips - Spell descriptions can include formatting markers like [C] for concentration, [B] for bonus action - For non-casters, use <code>MAGIC: []</code> (empty list)</p>
+<h3 id="magic-rendering-options">Magic Rendering Options</h3>
+<p><strong>Font Size Control:</strong> For dense spell lists, control font size:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb11-1" title="1"><span class="fu">MAGIC FONT:</span><span class="at"> \small      </span><span class="co"># Render magic section in smaller font</span></a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="fu">MAGIC FONT:</span><span class="at"> \normalsize </span><span class="co"># Explicit normal size (default behavior)  </span></a></code></pre></div>
+<p><strong>Separate Page:</strong> For characters with extensive spell lists, move magic to its own page:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb12-1" title="1"><span class="fu">MAGIC SEPARATE:</span><span class="at"> </span><span class="ch">true</span><span class="at">    </span><span class="co"># Magic section appears on separate page</span></a></code></pre></div>
+<p>These options can be combined with any magic content and help manage space on the character sheet.</p>
+</div>
+<h2 id="features-section">Features Section</h2>
+<div class="features">
+<p>Class features, racial traits, and special abilities.</p>
+<h3 id="feature-structure">Feature Structure</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb13-1" title="1"><span class="fu">FEATURES:</span></a>
+<a class="sourceLine" id="cb13-2" title="2">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Rage&quot;</span></a>
+<a class="sourceLine" id="cb13-3" title="3">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Start/stop as a bonus action. Lasts 1 minute or until you are unconscious or fail to attack or take damage for 1 turn. Can&#39;t concentrate. While raging: • Advantage on Str checks &amp; saves. • Melee Str attacks deal +2 damage. • You take half damage from bludgeoning, piercing, and slashing damage. • At 3rd level, 3 times per long rest.&quot;</span></a>
+<a class="sourceLine" id="cb13-4" title="4">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Unarmored Defense&quot;</span>  </a>
+<a class="sourceLine" id="cb13-5" title="5">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;If you wear no armor, your AC = 10 + Dex + Con.&quot;</span></a>
+<a class="sourceLine" id="cb13-6" title="6">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Savage Attacks&quot;</span></a>
+<a class="sourceLine" id="cb13-7" title="7">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;When you score a critical hit with a melee attack, add one extra weapon damage die to the total.&quot;</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Each feature needs a <code>name</code> and <code>description</code> - Descriptions can be quite long and include formatting - Include both class and racial features</p>
+</div>
+<h2 id="equipment-section">Equipment Section</h2>
+<div class="equipment">
+<p>Character’s gear, items, and currency.</p>
+<h3 id="equipment-list">Equipment List</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb14-1" title="1"><span class="fu">EQUIPMENT:</span></a>
+<a class="sourceLine" id="cb14-2" title="2">  <span class="kw">-</span> <span class="st">&quot;Scale Mail Armor&quot;</span></a>
+<a class="sourceLine" id="cb14-3" title="3">  <span class="kw">-</span> <span class="st">&quot;Shield (+2 AC)&quot;</span></a>
+<a class="sourceLine" id="cb14-4" title="4">  <span class="kw">-</span> <span class="st">&quot;Backpack&quot;</span></a>
+<a class="sourceLine" id="cb14-5" title="5">  <span class="kw">-</span> <span class="st">&quot;Bedroll&quot;</span> </a>
+<a class="sourceLine" id="cb14-6" title="6">  <span class="kw">-</span> <span class="st">&quot;Mess Kit&quot;</span></a>
+<a class="sourceLine" id="cb14-7" title="7">  <span class="kw">-</span> <span class="st">&quot;Tinderbox&quot;</span></a>
+<a class="sourceLine" id="cb14-8" title="8">  <span class="kw">-</span> <span class="st">&quot;Torches (10)&quot;</span></a>
+<a class="sourceLine" id="cb14-9" title="9">  <span class="kw">-</span> <span class="st">&quot;Rations (10)&quot;</span></a>
+<a class="sourceLine" id="cb14-10" title="10">  <span class="kw">-</span> <span class="st">&quot;Waterskin&quot;</span></a></code></pre></div>
+<h3 id="currency">Currency</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">CP:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Copper pieces</span></a>
+<a class="sourceLine" id="cb15-2" title="2"><span class="fu">SP:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Silver pieces  </span></a>
+<a class="sourceLine" id="cb15-3" title="3"><span class="fu">EP:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Electrum pieces</span></a>
+<a class="sourceLine" id="cb15-4" title="4"><span class="fu">GP:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Gold pieces</span></a>
+<a class="sourceLine" id="cb15-5" title="5"><span class="fu">PP:</span><span class="at"> </span><span class="st">&quot;&quot;</span>  <span class="co"># Platinum pieces</span></a></code></pre></div>
+<p><strong>Key Notes:</strong> - Equipment is a simple list of strings - Include important details like “+2 AC” for shields - Currency can be numbers or empty strings - Equipment section may display in multiple columns for non-casters</p>
+</div>
+<h2 id="class-specific-keys">Class-Specific Keys</h2>
+<p>Some keys are specific to certain classes or character types:</p>
+<h3 id="clerics">Clerics</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">DOMAIN SPELLS:</span><span class="at"> </span><span class="dv">2</span><span class="at">  </span><span class="co"># Number of domain spells</span></a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="fu">SPELLS KNOWN:</span><span class="at"> </span><span class="dv">5</span><span class="at">   </span><span class="co"># Total spells known</span></a></code></pre></div>
+<h3 id="sorcerers">Sorcerers</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1"><span class="fu">SORCERY POINTS:</span><span class="at"> </span><span class="dv">3</span><span class="at">  </span><span class="co"># Sorcery points available</span></a></code></pre></div>
+<h3 id="pregenerated-characters">Pregenerated Characters</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb18-1" title="1"><span class="fu">PREGENERATED:</span><span class="at"> </span><span class="ch">true</span><span class="at">  </span><span class="co"># Marks template characters</span></a></code></pre></div>
+<h2 id="complete-example-basic-fighter">Complete Example: Basic Fighter</h2>
+<p>Here’s a minimal example for a 1st-level Fighter:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb19-1" title="1"><span class="fu">&quot;CHARACTER NAME&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-2" title="2"><span class="fu">&quot;PLAYER NAME&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-3" title="3"><span class="fu">&quot;CLASS &amp; LEVEL&quot;:</span><span class="at"> </span><span class="st">&quot;Fighter 1&quot;</span></a>
+<a class="sourceLine" id="cb19-4" title="4"><span class="fu">&quot;RACE&quot;:</span><span class="at"> </span><span class="st">&quot;Human&quot;</span></a>
+<a class="sourceLine" id="cb19-5" title="5"><span class="fu">&quot;BACKGROUND&quot;:</span><span class="at"> </span><span class="st">&quot;Soldier&quot;</span></a>
+<a class="sourceLine" id="cb19-6" title="6"><span class="fu">&quot;ALIGNMENT&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-7" title="7"><span class="fu">&quot;EXPERIENCE POINTS&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-8" title="8"></a>
+<a class="sourceLine" id="cb19-9" title="9"><span class="fu">STR:</span><span class="at"> </span><span class="dv">16</span></a>
+<a class="sourceLine" id="cb19-10" title="10"><span class="fu">DEX:</span><span class="at"> </span><span class="dv">13</span></a>
+<a class="sourceLine" id="cb19-11" title="11"><span class="fu">CON:</span><span class="at"> </span><span class="dv">14</span></a>
+<a class="sourceLine" id="cb19-12" title="12"><span class="fu">INT:</span><span class="at"> </span><span class="dv">10</span></a>
+<a class="sourceLine" id="cb19-13" title="13"><span class="fu">WIS:</span><span class="at"> </span><span class="dv">12</span></a>
+<a class="sourceLine" id="cb19-14" title="14"><span class="fu">CHA:</span><span class="at"> </span><span class="dv">8</span></a>
+<a class="sourceLine" id="cb19-15" title="15"></a>
+<a class="sourceLine" id="cb19-16" title="16"><span class="fu">&quot;PROFICIENCY BONUS&quot;:</span><span class="at"> </span><span class="st">&quot;+2&quot;</span></a>
+<a class="sourceLine" id="cb19-17" title="17"><span class="fu">&quot;MAX HP&quot;:</span><span class="at"> </span><span class="dv">12</span></a>
+<a class="sourceLine" id="cb19-18" title="18"><span class="fu">&quot;CURRENT HIT POINTS&quot;:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-19" title="19"><span class="fu">&quot;HIT DICE&quot;:</span><span class="at"> </span><span class="st">&quot;d10&quot;</span></a>
+<a class="sourceLine" id="cb19-20" title="20"><span class="fu">&quot;INITIATIVE&quot;:</span><span class="at"> </span><span class="st">&quot;+1&quot;</span></a>
+<a class="sourceLine" id="cb19-21" title="21"><span class="fu">&quot;SPEED&quot;:</span><span class="at"> </span><span class="st">&quot;30&quot;</span></a>
+<a class="sourceLine" id="cb19-22" title="22"><span class="fu">&quot;ARMOR CLASS&quot;:</span><span class="at"> </span><span class="dv">16</span></a>
+<a class="sourceLine" id="cb19-23" title="23"><span class="fu">&quot;PASSIVE PERCEPTION&quot;:</span><span class="at"> </span><span class="dv">11</span></a>
+<a class="sourceLine" id="cb19-24" title="24"></a>
+<a class="sourceLine" id="cb19-25" title="25"><span class="fu">PROFICIENCIES:</span></a>
+<a class="sourceLine" id="cb19-26" title="26">  <span class="kw">-</span> <span class="st">&quot;Athletics&quot;</span></a>
+<a class="sourceLine" id="cb19-27" title="27">  <span class="kw">-</span> <span class="st">&quot;Intimidation&quot;</span></a>
+<a class="sourceLine" id="cb19-28" title="28">  <span class="kw">-</span>   <span class="co"># Separator</span></a>
+<a class="sourceLine" id="cb19-29" title="29">  <span class="kw">-</span> <span class="st">&quot;Common&quot;</span></a>
+<a class="sourceLine" id="cb19-30" title="30">  <span class="kw">-</span> <span class="st">&quot;All Armor&quot;</span></a>
+<a class="sourceLine" id="cb19-31" title="31">  <span class="kw">-</span> <span class="st">&quot;Shield&quot;</span></a>
+<a class="sourceLine" id="cb19-32" title="32">  <span class="kw">-</span> <span class="st">&quot;Simple Weapons&quot;</span></a>
+<a class="sourceLine" id="cb19-33" title="33">  <span class="kw">-</span> <span class="st">&quot;Martial Weapons&quot;</span></a>
+<a class="sourceLine" id="cb19-34" title="34"></a>
+<a class="sourceLine" id="cb19-35" title="35"><span class="fu">ATTACKS:</span></a>
+<a class="sourceLine" id="cb19-36" title="36">  <span class="kw">-</span> <span class="fu">NAME:</span><span class="at"> </span><span class="st">&quot;Longsword&quot;</span></a>
+<a class="sourceLine" id="cb19-37" title="37">    <span class="fu">ATTACK:</span><span class="at"> </span><span class="st">&quot;+5&quot;</span></a>
+<a class="sourceLine" id="cb19-38" title="38">    <span class="fu">DAMAGE:</span><span class="at"> </span><span class="st">&quot;1d8+3&quot;</span></a>
+<a class="sourceLine" id="cb19-39" title="39">    <span class="fu">TYPE:</span><span class="at"> </span><span class="st">&quot;slashing&quot;</span></a>
+<a class="sourceLine" id="cb19-40" title="40">    <span class="fu">RANGE:</span><span class="at"> </span><span class="st">&quot;5 ft.&quot;</span></a>
+<a class="sourceLine" id="cb19-41" title="41">    <span class="co"># No ammo fields for melee weapons</span></a>
+<a class="sourceLine" id="cb19-42" title="42"></a>
+<a class="sourceLine" id="cb19-43" title="43"><span class="fu">MAGIC:</span><span class="at"> </span><span class="kw">[]</span></a>
+<a class="sourceLine" id="cb19-44" title="44"></a>
+<a class="sourceLine" id="cb19-45" title="45"><span class="fu">FEATURES:</span></a>
+<a class="sourceLine" id="cb19-46" title="46">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Fighting Style&quot;</span></a>
+<a class="sourceLine" id="cb19-47" title="47">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Choose a fighting style that grants combat benefits.&quot;</span></a>
+<a class="sourceLine" id="cb19-48" title="48">  <span class="kw">-</span> <span class="fu">name:</span><span class="at"> </span><span class="st">&quot;Second Wind&quot;</span></a>
+<a class="sourceLine" id="cb19-49" title="49">    <span class="fu">description:</span><span class="at"> </span><span class="st">&quot;Regain 1d10+1 hit points as a bonus action. Once per rest.&quot;</span></a>
+<a class="sourceLine" id="cb19-50" title="50"></a>
+<a class="sourceLine" id="cb19-51" title="51"><span class="fu">EQUIPMENT:</span></a>
+<a class="sourceLine" id="cb19-52" title="52">  <span class="kw">-</span> <span class="st">&quot;Chain Mail&quot;</span></a>
+<a class="sourceLine" id="cb19-53" title="53">  <span class="kw">-</span> <span class="st">&quot;Shield&quot;</span></a>
+<a class="sourceLine" id="cb19-54" title="54">  <span class="kw">-</span> <span class="st">&quot;Longsword&quot;</span></a>
+<a class="sourceLine" id="cb19-55" title="55">  <span class="kw">-</span> <span class="st">&quot;Backpack&quot;</span></a>
+<a class="sourceLine" id="cb19-56" title="56">  <span class="kw">-</span> <span class="st">&quot;Bedroll&quot;</span></a>
+<a class="sourceLine" id="cb19-57" title="57">  <span class="kw">-</span> <span class="st">&quot;Rations (10)&quot;</span></a>
+<a class="sourceLine" id="cb19-58" title="58"></a>
+<a class="sourceLine" id="cb19-59" title="59"><span class="fu">CP:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-60" title="60"><span class="fu">SP:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-61" title="61"><span class="fu">EP:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-62" title="62"><span class="fu">GP:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a>
+<a class="sourceLine" id="cb19-63" title="63"><span class="fu">PP:</span><span class="at"> </span><span class="st">&quot;&quot;</span></a></code></pre></div>
+<h2 id="tips-for-success">Tips for Success</h2>
+<ol type="1">
+<li><strong>Start Simple</strong>: Begin with basic required fields, then add details</li>
+<li><strong>Check Examples</strong>: Reference <code>zanogh.yaml</code> and <code>miriel.yaml</code> for complex characters</li>
+<li><strong>Mind the Quotes</strong>: Keys with spaces need quotes, values usually don’t</li>
+<li><strong>Test Early</strong>: Generate a PDF frequently to see how your YAML renders</li>
+<li><strong>Use Separators</strong>: Add <code>-</code> (blank entry) to organize proficiencies visually</li>
+<li><strong>Empty vs Missing</strong>: Use empty strings <code>&quot;&quot;</code> for fields you want to fill in later</li>
+</ol>
+<h2 id="next-steps">Next Steps</h2>
+<p>Once you have a basic character sheet working:</p>
+<ol type="1">
+<li>Generate a PDF: <code>./charsheet -o mycharacter.pdf mycharacter.yaml</code></li>
+<li>Refine the details based on the visual output</li>
+<li>Add class-specific features and spells</li>
+<li>Customize font sizes if needed</li>
+<li>Create additional characters using the same structure</li>
+</ol>
+<p>The character sheet system is flexible—start with the essentials and build up your character’s complexity over time.</p>
+</article>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>D&amp;D Character Sheets using YAML</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="charsheet.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">D&amp;D Character Sheets using YAML</h1>
+</header>
+<h1 id="introduction">Introduction</h1>
+<p>When I play D&amp;D, I love the convenience of a paper character sheet. Everything I need to know is right in front of me; there is no mousing, clicking, tapping, or other fiddling with devices. But when my character levels up or prepares new spells, updating a paper sheet is a nuisance, and so is copying out my character to a new sheet. This project tries to provide the best of both worlds.</p>
+<p>This project works with a “digital character sheet” that is plain text and is meant to be edited and maintained with a simple, ordinary text editor like Emacs, vim, or Notepad. The text of the character sheet is a form of <a href="">YAML</a> (<a href="https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started">decent beginner tutorial</a>), which I consider decently user-friendly while still being machine-readable. A character sheet might start something like this:</p>
+<pre><code>CHARACTER NAME: Mario Greymist
+CLASS: Rogue
+LEVEL: 20
+PLAYER NAME: Steve
+RACE: Dragaeran 
+ALIGNMENT: Chaotic good
+
+STR: 10
+DEX: 20
+CON: 14
+INT: 12
+WIS: 15
+CHA: 16
+
+PROFICIENCIES:
+  - Perception
+  - Sleight of Hand
+  - 
+  - Daggers
+# ... and so on</code></pre>
+<p>The software can then produce <a href="sample-rogue.pdf">a PDF suitable for printing and using at the table</a>.<br />
+Preview:</p>
+<p><a href="sample-rogue.pdf"><img src="sample-rogue.png" alt="not actually Mario’s character sheet" /></a>.</p>
+<p>The software runs on Linux—the Angry GM uses Linux now, you know—but for those who don’t wish to fool around with installing it and getting it to work, I provide <a href="https://dnd-character-sheets.github.io">a web service</a>.</p>
+<h1 id="using-the-web-service">Using the web service</h1>
+<p>Most of the web service is just a big web form that you fill in with the values that describe your character. The service does a little calculation (modifiers from your stats, proficiency bonus from your level), but most of the grunt work is left to you (how many spell slots your character has at each level, for example).</p>
+<p>The key bits are at the top. When you are first getting started you might try something like this:</p>
+<ol type="1">
+<li><p>Go to the web service and select a pregenerated character from one of the dropdowns. Then click “Load this character.”</p></li>
+<li><p>Fill in missing fields, edit what’s there, and otherwise make the character your own.</p></li>
+<li><p>Click the “Generate PDF” button to see what your character sheet will look like.</p></li>
+<li><p>Click the “Download <em>name</em><code>.yaml</code>” button to save your work.</p></li>
+</ol>
+<p>In the long term, you will ideally use the service something like this:</p>
+<ol start="5" type="1">
+<li><p>Edit your YAML character sheet on the comfort of your own machine.</p></li>
+<li><p>Go to the web service and use the “Load YAML file” button to load your character sheet into the web form.</p></li>
+<li><p>Get PDF by clicking “Generate PDF.”</p></li>
+</ol>
+<h1 id="working-with-yaml-on-your-own">Working with YAML on your own</h1>
+<p>AI doco :-(</p>
+<h2 id="quick-start">Quick start</h2>
+<p>quickstart</p>
+<h2 id="what-you-can-write-in-your-yaml-fields">What you can write in your YAML fields</h2>
+<p>LaTeX</p>
+<p>bespoke macros</p>
+<h2 id="all-the-yaml-keys">All the YAML keys</h2>
+<p>YAML.md</p>
+<h2 id="standard-yaml-you-can-use-with-your-own-characters">Standard YAML you can use with your own characters</h2>
+<p>I have yamls.</p>
+<h2 id="getting-yaml-from-other-digital-character-sheets">Getting YAML from other digital character sheets</h2>
+<p>ChatGPT can help.</p>
+<h1 id="deliberate-omissions">Deliberate omissions</h1>
+<p>No traits, bonds, etc. I don’t believe in them. No electrum pieces</p>
+<h1 id="character-sheet-layouts">Character-sheet layouts</h1>
+<p>i am not a graphic designer. Thanks to “Alyssa.”</p>
+<p>3col silverpine</p>
+<p>hoping for more</p>
+</body>
+</html>
