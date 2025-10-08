@@ -45,8 +45,14 @@ publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
 	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
 
-github:V: docs/index.html
-	git commit -m 'updated web page' -- docs/index.html
+GITDOCS=index.html README.html YAML.html QUICKSTART.html
+github:V: ${GITDOCS:%=docs/%}
+
+docs/&.html: &.md
+	pandoc -s -o $target -c charsheet.css $prereq
+
+git-push:V: ${GITDOCS:%=docs/%}
+	git commit -m 'updated web page' -- $prereq
 	git push
 
 corylea/index.html: character-form.html
