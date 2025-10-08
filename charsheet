@@ -977,7 +977,8 @@ local function render_struct_list (key, list)
         or key == 'MAGIC'
     then
       local suffix =
-        (elem.attack or elem.offense or elem.offensive) and 'Colored{attacks}' or ''
+        (elem.attack or elem.offense or elem.offensive or elem.save or elem.enemy)
+        and 'Colored{attacks}' or ''
       outf(out, [[\described%s{%s}{%s}]], suffix,
            do_not_escape(elem.name or ''), do_not_escape(elem.description or ''))
     elseif false and elem.ATTACK then
