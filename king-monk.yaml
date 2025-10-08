@@ -89,6 +89,7 @@ FEATURES:
     description: While wearing no armor, your AC equals 10 + Dex + Wis.
   - name: Martial Arts
     description: Use fists, shortsword, or any simple weapon (not heavy or two-handed). Must not wear armor or use a shield. • Use \textsc{dex} for attack and damage • Unarmed damage is d4 • After taking the Attack action, you may make one punch as a bonus action.
+    bonus: true
   - name: Fey Ancestry
     description: Advantage on saving throws against being charmed, and magic can’t put you to sleep.
 

@@ -94,6 +94,7 @@ FEATURES:
     description: >-
       All targets in a line 30 ft long take 2d6 lightning damage,
       or half damage on a \statdc{CON} \textsc{dex} save.
+    save: true
   - name: Divine Sense
     description: As an action, you know the location of any consecrated or desecrated object or place or any celestial, fiend, or undead within 60 ft. (4 uses per long rest).
   - name: Lay on Hands

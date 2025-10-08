@@ -80,12 +80,16 @@ FEATURES:
     description: You can see in dim light as if it were bright and in darkness as if it were dim (disadvantage on Perception in darkness).
   - name: Relentless Endurance
     description: Once per long rest, when you are reduced to 0 HP, you instead stay at 1 HP.
+    reaction: true
   - name: Savage Attacks
     description: When you score a critical hit with a melee attack, add one extra weapon damage die to the total.
+    attack: true
   - name: Unarmored Defense
     description: If you wear no armor, your AC = 10 + Dex + Con.
   - name: Rage
-    description: |
+    bonus: true
+    duration: 1 min
+    description: >-
        Start/stop as a bonus action. Lasts 1 minute or until you are
        unconscious or fail to attack or take damage for 1 turn. Can’t
        concentrate. \hskip 2em \emph{While raging:} • Advantage on Str checks & saves. 

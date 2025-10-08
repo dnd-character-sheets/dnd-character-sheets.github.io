@@ -94,19 +94,27 @@ MAGIC:
   - level: 0                               # CANTRIPS
   - name: Fire Bolt
     description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
+    attack: true
   - name: Ray of Frost
     description: Ranged spell attack +5, 60 ft; 1d8 cold damage and target’s speed −10 ft. until your next turn.
+    attack: true
+    duration: 1 round
   - name: Shocking Grasp
     description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
+    attack: true
+    duration: part round
   - name: Light
     description: Touched object shines like a torch for 1 hour.
+    duration: 1 hr
   - level: {number: 1, slots: 2}                               # 1st LEVEL
   - name: Burning Hands
     description: >-
       Emit 15-ft cone of fire; each affected creature takes 3d6
       fire damage (half damage on successful \spelldc\ \textsc{dex} save).
+    save: true
   - name: Magic Missile
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
+    enemy: true
 
 FEATURES:
   - name: Stand Watch

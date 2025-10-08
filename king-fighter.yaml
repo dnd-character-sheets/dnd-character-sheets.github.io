@@ -93,8 +93,10 @@ FEATURES:
     description: +1 when examining stonework (History checks related to the origin of stonework).
   - name: Protection Fighting Style
     description: When a creature within 5 ft. of you attacks, you may use your reaction to impose disadvantage on its attack roll if you are wielding a shield.
+    reaction: true
   - name: Second Wind
     description: Once per long rest, use a bonus action to heal yourself for 1d10 + 1 HP.
+    bonus: true
 
 "SUGGESTED MOTIVATIONS":
   - Obey duty.

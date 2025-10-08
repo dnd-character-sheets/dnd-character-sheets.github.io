@@ -104,6 +104,7 @@ FEATURES:
     description: You have advantage on saving throws against being frightened.
   - name: Sneak Attack
     description: Once per turn you may add +1d6 damage to an attack against a target that is unaware of you or whose attention is elsewhere.
+    attack: true
   - name: Expertise
     description: Double your proficiency bonus on Stealth and Investigation checks (noted on the skill list).
 

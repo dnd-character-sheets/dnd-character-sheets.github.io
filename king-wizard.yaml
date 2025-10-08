@@ -87,34 +87,49 @@ MAGIC:
   - level: 0                                  # CANTRIPS
   - name: Dancing Lights
     description: Create up to 4 glowing lights that move independently within 120 ft; last 1 min while you concentrate.
+    concentration: true
+    duration: 1 min
 #  - name: Fire Bolt
 #    description: Ranged spell attack +5, 120 ft; 1d10 fire damage.
 #  - name: Light
 #    description: Touch an object to shed bright light for 20 ft and dim for 20 ft for 1 hr.
   - name: Ray of Frost
     description: Ranged spell attack +5, 60 ft; 1d8 cold and target’s speed −10 ft until your next turn.
+    attack: true
+    duration: 1 round
   - name: Mage Hand
     description: Spectral hand (30 ft) can manipulate objects up to 10 lbs for 1 min.
+    duration: 1 min
 #  - name: Shocking Grasp
 #    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
   - level: {number: 1, slots: 2}                                  # 1st LEVEL
   - name: Detect Magic [R]
     description: Sense magic within 30 ft for 10 min; ritual.
+    ritual: true
+    duration: 10 min
   - name: Feather Fall
     description: Reaction; up to 5 creatures falling within 60 ft fall slowly, take no damage.
+    reaction: true
   - name: Mage Armor
     description: Touch unarmored creature; AC = 13 + Dex mod for 8 hr.
+    duration: 8 hrs
   - name: Magic Missile
     description: Create 3 darts (120 ft) that each deal 1d4+1 force; darts may target different creatures; uses 1st-level slot.
+    enemy: true
   - name: Shield
     description: >-
       Reaction; +5 AC until start of next turn, including triggering attack.
       No damage from \emph{magic missile}.
+    reaction: true
+    duration: 1 round
   - name: Silent Image
     description: Create a visual illusion in a 15-ft cube (120 ft) for 10 min (concentration); Investigation DC 13 reveals.
+    concentration: true
+    duration: 10 min
   - name: Sleep
     description: Roll 5d8; up to that total HP of creatures within 90 ft fall asleep for 1 min (ending on shake/damage).
-    offensive: true
+    enemy: true
+    duration: 1 min
 
 FEATURES:
   - name: Researcher
@@ -131,6 +146,7 @@ FEATURES:
     description: Copying a spell into your spellbook costs 2 hours & 50 gp per spell level.
   - name: Fey Ancestry
     description: Advantage on saves versus charm; magic can’t put you to sleep.
+    save: true
 
 "SUGGESTED MOTIVATIONS":
   - Accrue power

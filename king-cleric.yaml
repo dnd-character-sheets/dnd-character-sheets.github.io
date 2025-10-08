@@ -86,23 +86,36 @@ MAGIC:
   - level: 0                             # CANTRIPS
   - name: Light
     description: An object you touch sheds bright light in a 20-ft radius and dim light for an additional 20 ft for 1 hour.
+    duration: 1 hr
   - name: Mending
     description: Repair a non-magical object you can touch, restoring it to full working order.
   - name: Minor Blessing
     description: One touched creature gains +2 to attack rolls until the end of your next turn.
+    duration: 1+ turn
   - level : { number: 1, slots : 2 }                             # 1st LEVEL
   - name: Bless
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute while you maintain concentration.
+    duration: 1 min
+    concentration: true
   - name: Cure Wounds
     description: A touched creature regains 1d8+3 HP.
   - name: Guiding Bolt
     description: Ranged spell attack (+5), 120 ft, 4d6 radiant damage; next attack against the target has advantage; consumes a spell slot.
+    attack: true
   - name: Healing Word
     description: Bonus action; a creature within 60 ft regains 1d4+3 HP.
+    bonus: true
   - name: Sanctuary
-    description: Bonus action; a creature within 30 ft is warded for 1 minute. Foes must pass a DC 13 Wis save or choose a new target or lose the attack/spell.
+    description: >-
+      Bonus action; a creature within 30 ft is warded for 1
+      minute. Attackers must pass a \spelldc\ \textsc{wis} save or choose a new
+      target or lose the attack/spell.
+    duration: 1 min
   - name: Shield of Faith
     description: Bonus action; a creature within 60 ft gains +2 AC for 10 minutes while you maintain concentration.
+    bonus: true
+    duration: 10 min
+    concentration: true
 
 FEATURES:
   - name: Shelter of the Faithful
