@@ -214,6 +214,11 @@ local function un3ify(doc)
 
   doc['DOCUMENT FONT'] = nil
 
+  doc.LAYOUT = 'silverpine'
+  if doc['SHEET ORIGIN'] then
+    doc['SHEET ORIGIN'] = doc['SHEET ORIGIN']:gsub('3 col', '2 col')
+  end
+
   do
     local attacks = { }
     for i, a in ipairs(doc.ATTACKS or nothing) do

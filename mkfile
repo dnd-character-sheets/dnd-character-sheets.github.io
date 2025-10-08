@@ -12,6 +12,7 @@ HALLIGANNAME=render-charsheet.cgi
 
 KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 KINGYAMLS=${KINGS:%=king-%.yaml}
+SILVERKINGYAMLS=${KINGS:%=silver-king-%.yaml}
 
 
 
@@ -31,8 +32,8 @@ local-cgi:V: /usr/lib/cgi-bin/render.cgi
 /usr/lib/cgi-bin/render.cgi: render.cgi
 	sudo cp $prereq $target
 
-docs/index.html:D: $KINGYAMLS insert-pregen-yamls character-form.html
-	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS
+docs/index.html:D: $KINGYAMLS $SILVERKINGYAMLS insert-pregen-yamls character-form.html
+	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS $SILVERKINGYAMLS
 
 bundle:V: docs/index.html docs/charsheet.css
 	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
