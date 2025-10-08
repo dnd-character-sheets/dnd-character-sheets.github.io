@@ -1,6 +1,6 @@
 "CHARACTER NAME": ""
 "CLASS & LEVEL": Rogue 1
-"BACKGROUND": Alchemist’s Apprentice
+"BACKGROUND": Alchemist's Apprentice
 "PLAYER NAME": ""
 "RACE": Halfling
 "ALIGNMENT": ""
@@ -40,23 +40,23 @@ MAIN PROFICIENCIES:
     - Investigation (EXPERT)
 
   - Tools:
-    - Alchemist’s Tools
+    - Alchemist's Tools
     - Vehicles (Land)
-    - Thieves’ Tools
+    - Thieves' Tools
 
   - Notes:
     - Advantage on saves against fright.
     - EXPERT means to double your proficiency bonus for that skill (+4)
 
 OTHER PROFICIENCIES:
-  - Languages: Common, Halfling, Thieves Cant
+  - Languages: Common, Halfling, Thieves' Cant
   - Armor: Light
   - Weapons: Simple & Hand Crossbow, Longsword, Rapier, Shortsword
 
 EQUIPMENT:
   - Leather Armor
-  - Alchemist’s Tools
-  - Thieves’ Tools
+  - Alchemist's Tools
+  - Thieves' Tools
   - Iron Pot
   - Shovel
   - Backpack
