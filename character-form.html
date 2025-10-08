@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: nori
+        Version: okra
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -20,7 +20,7 @@
             <button type="button" class="add-button" onclick="downloadYAML()">Download <tt>character.yaml</tt></button>
         </div>
         <div style="margin-bottom: 0.5em;">
-            <button type="button" class="generate-button" onclick="generatePDF()">Generate PDF</button>
+            <button type="button" id="generate-pdf-button" class="generate-button" onclick="generatePDF()" disabled>Generate PDF</button>
             <div style="display: inline-block; margin-left: 1em; vertical-align: top; text-align: left;">
                 <div style="margin-bottom: 0.3em;">
                     <label>
@@ -738,6 +738,25 @@
                 isDirty = true;
                 updateStatusBar();
             }
+            updateGeneratePDFButton();
+        }
+
+        function updateGeneratePDFButton() {
+            const button = document.getElementById('generate-pdf-button');
+            if (!button) return;
+
+            // Check if any form field has content
+            const hasContent = Array.from(document.querySelectorAll('#character-form input, #character-form textarea, #character-form select')).some(el => {
+                // Skip hidden fields and radio buttons that aren't checked
+                if (el.type === 'hidden') return false;
+                if (el.type === 'radio' && !el.checked) return false;
+                if (el.type === 'checkbox' && !el.checked) return false;
+
+                // Check if field has a value
+                return el.value && el.value.trim() !== '';
+            });
+
+            button.disabled = !hasContent;
         }
 
         function setupChangeTracking() {
@@ -1402,6 +1421,9 @@
 
                 // Populate all fields using message-passing
                 FIELDS.forEach(field => field.populate(data));
+
+                // Update Generate PDF button state since form now has content
+                updateGeneratePDFButton();
 
                 // Reset pregens dropdowns and disable buttons when YAML is loaded
                 const dropdown3col = document.getElementById('sample-yaml-dropdown-3col');
