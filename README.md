@@ -45,6 +45,11 @@ LaTeX
 
 # Character-sheet layouts
 
+# Where to get YAML
+
+I have yamls.
+
+ChatGPT can help.
 
 
 
