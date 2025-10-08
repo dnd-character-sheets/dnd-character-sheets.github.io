@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: iceberg-lettuce
+        Version: kale
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -229,10 +229,7 @@
         <!-- Proficiencies Section -->
         <div class="section proficiencies">
             <h2>Proficiencies</h2>
-            <div class="field-group" style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 1em;">
-                <span>Proficiency Bonus +</span>
-                <input type="number" id="proficiency-bonus" name="proficiency-bonus" min="2" max="6" style="width: 2em; text-align: center;" placeholder="2">
-            </div>
+            <input type="hidden" id="proficiency-bonus" name="proficiency-bonus">
             <div class="field-group">
                 <p>Enter one proficiency per line. Include skill, language, and equipment proficiencies. Leave a blank line between categories.</p>
                 <textarea id="proficiencies-text" name="proficiencies-text" rows="8" placeholder="Athletics&#10;Medicine&#10;Nature&#10;&#10;Common&#10;Orcish&#10;&#10;Light Armor&#10;Shield&#10;Simple Weapons" style="width: 100%; box-sizing: border-box;"></textarea>
