@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: okra
+        Version: quinoa
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -684,7 +684,6 @@
                         <option value="thunder">
                     </datalist>
                     <input type="text" placeholder="Range" data-field="range" class="range-field" />
-                    <input type="text" placeholder="Ammo" data-field="ammo" class="ammo-field" />
                 </div>
                 <button type="button" onclick="this.parentElement.remove()">Remove Attack</button>
             `;
@@ -709,6 +708,7 @@
             const item = document.createElement('div');
             item.className = 'spell-item';
             item.innerHTML = `
+                <input type="hidden" data-field="original-name" />
                 <div class="field-group">
                     <label>Name</label>
                     <input type="text" placeholder="e.g., Magic Missile" data-field="name" data-level="${level}" />
@@ -744,6 +744,7 @@
             item.className = 'feature-item';
             item.style.textAlign = 'left'; // Force left alignment
             item.innerHTML = `
+                <input type="hidden" data-field="original-name" />
                 <div style="display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.5em;">
                     <label style="white-space: nowrap;">Name</label>
                     <input type="text" placeholder="e.g., Rage, Darkvision" data-field="name" style="flex: 1;" />
@@ -1020,8 +1021,10 @@
                                 if (lastItem) {
                                     const nameEl = lastItem.querySelector('[data-field="name"]');
                                     const descEl = lastItem.querySelector('[data-field="description"]');
+                                    const originalNameEl = lastItem.querySelector('[data-field="original-name"]');
                                     if (nameEl) nameEl.value = item.name || '';
                                     if (descEl) descEl.value = item.description || '';
+                                    if (originalNameEl) originalNameEl.value = item.name || '';
                                 }
                             }
                         });
@@ -1032,9 +1035,19 @@
                     document.querySelectorAll(itemSelector).forEach(itemDiv => {
                         const name = itemDiv.querySelector('[data-field="name"]')?.value || '';
                         const description = itemDiv.querySelector('[data-field="description"]')?.value || '';
+                        const originalName = itemDiv.querySelector('[data-field="original-name"]')?.value || '';
 
                         if (name || description) {
-                            const item = {};
+                            // Try to find original item by original-name to preserve extra tags
+                            let item = {};
+                            if (originalName && originalYamlData && originalYamlData[yamlKey] && Array.isArray(originalYamlData[yamlKey])) {
+                                const originalItem = originalYamlData[yamlKey].find(i => i && i.name === originalName);
+                                if (originalItem) {
+                                    // Start with original item to preserve all extra tags
+                                    item = { ...originalItem };
+                                }
+                            }
+                            // Update name and description (possibly changed from original)
                             if (name) item.name = name;
                             if (description) item.description = description;
                             items.push(item);
@@ -1064,14 +1077,12 @@
                                     const damageEl = lastItem.querySelector('[data-field="damage"]');
                                     const typeEl = lastItem.querySelector('[data-field="type"]');
                                     const rangeEl = lastItem.querySelector('[data-field="range"]');
-                                    const ammoEl = lastItem.querySelector('[data-field="ammo"]');
-                                    
+
                                     if (nameEl) nameEl.value = attack['NAME'] || '';
                                     if (attackEl) attackEl.value = attack['ATTACK'] || '';
                                     if (damageEl) damageEl.value = attack['DAMAGE'] || '';
                                     if (typeEl) typeEl.value = attack['TYPE'] || '';
                                     if (rangeEl) rangeEl.value = attack['RANGE'] || '';
-                                    if (ammoEl) ammoEl.value = attack['AMMO'] || '';
                                 }
                             }
                         });
@@ -1085,16 +1096,14 @@
                         const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
                         const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
                         const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
-                        const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
 
-                        if (name || attack || damage || type || range || ammo) {
+                        if (name || attack || damage || type || range) {
                             attacks.push({
                                 'NAME': name,
                                 'ATTACK': attack,
                                 'DAMAGE': damage,
                                 'TYPE': type,
-                                'RANGE': range,
-                                'AMMO': ammo
+                                'RANGE': range
                             });
                         }
                     });
@@ -1142,8 +1151,10 @@
                                 if (lastItem) {
                                     const nameEl = lastItem.querySelector('[data-field="name"]');
                                     const descEl = lastItem.querySelector('[data-field="description"]');
+                                    const originalNameEl = lastItem.querySelector('[data-field="original-name"]');
                                     if (nameEl) nameEl.value = item.name || '';
                                     if (descEl) descEl.value = item.description || '';
+                                    if (originalNameEl) originalNameEl.value = item.name || '';
                                 }
                             }
                         });
@@ -1164,7 +1175,19 @@
                             if (level === '0') {
                                 magic.push({ level: 0 });
                             } else {
-                                const slots = slotsInput?.value || '';
+                                let slots = slotsInput?.value || '';
+                                // If no slots in form, try to preserve from original data
+                                if (!slots && originalYamlData && originalYamlData['MAGIC'] && Array.isArray(originalYamlData['MAGIC'])) {
+                                    const originalLevelHeader = originalYamlData['MAGIC'].find(i =>
+                                        i && i.level !== undefined &&
+                                        (i.level === parseInt(level) ||
+                                         (typeof i.level === 'object' && i.level.number === parseInt(level)))
+                                    );
+                                    if (originalLevelHeader && typeof originalLevelHeader.level === 'object') {
+                                        slots = originalLevelHeader.level.slots;
+                                    }
+                                }
+
                                 if (slots) {
                                     magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
                                 } else {
@@ -1176,10 +1199,21 @@
                             spellItems.forEach(spellDiv => {
                                 const name = spellDiv.querySelector('[data-field="name"]')?.value || '';
                                 const description = spellDiv.querySelector('[data-field="description"]')?.value || '';
-                                
+                                const originalName = spellDiv.querySelector('[data-field="original-name"]')?.value || '';
+
                                 if (name || description) {
                                     hasMagic = true;
-                                    const spell = {};
+                                    // Try to find original spell by original-name to preserve extra tags
+                                    let spell = {};
+                                    if (originalName && originalYamlData && originalYamlData['MAGIC'] && Array.isArray(originalYamlData['MAGIC'])) {
+                                        // Find spell in original data (skip level headers)
+                                        const originalSpell = originalYamlData['MAGIC'].find(i => i && i.name === originalName && i.level === undefined);
+                                        if (originalSpell) {
+                                            // Start with original spell to preserve all extra tags
+                                            spell = { ...originalSpell };
+                                        }
+                                    }
+                                    // Update name and description (possibly changed from original)
                                     if (name) spell.name = name;
                                     if (description) spell.description = description;
                                     magic.push(spell);
@@ -1727,7 +1761,8 @@
                     }
                     i++;
                 } else {
-                    add('SLOTTED ITEMS', line); // heuristic category
+                    // Heuristic equipment parser disabled per user request
+                    console.warn(`Unknown equipment format in line "${line}"`);
                     i++;
                 }
             }

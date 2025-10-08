@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: parsnip
+        Version: quinoa
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -618,7 +618,6 @@
                         <option value="thunder">
                     </datalist>
                     <input type="text" placeholder="Range" data-field="range" class="range-field" />
-                    <input type="text" placeholder="Ammo" data-field="ammo" class="ammo-field" />
                 </div>
                 <button type="button" onclick="this.parentElement.remove()">Remove Attack</button>
             `;
@@ -1012,14 +1011,12 @@
                                     const damageEl = lastItem.querySelector('[data-field="damage"]');
                                     const typeEl = lastItem.querySelector('[data-field="type"]');
                                     const rangeEl = lastItem.querySelector('[data-field="range"]');
-                                    const ammoEl = lastItem.querySelector('[data-field="ammo"]');
-                                    
+
                                     if (nameEl) nameEl.value = attack['NAME'] || '';
                                     if (attackEl) attackEl.value = attack['ATTACK'] || '';
                                     if (damageEl) damageEl.value = attack['DAMAGE'] || '';
                                     if (typeEl) typeEl.value = attack['TYPE'] || '';
                                     if (rangeEl) rangeEl.value = attack['RANGE'] || '';
-                                    if (ammoEl) ammoEl.value = attack['AMMO'] || '';
                                 }
                             }
                         });
@@ -1033,16 +1030,14 @@
                         const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
                         const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
                         const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
-                        const ammo = attackDiv.querySelector('[data-field="ammo"]')?.value || '';
 
-                        if (name || attack || damage || type || range || ammo) {
+                        if (name || attack || damage || type || range) {
                             attacks.push({
                                 'NAME': name,
                                 'ATTACK': attack,
                                 'DAMAGE': damage,
                                 'TYPE': type,
-                                'RANGE': range,
-                                'AMMO': ammo
+                                'RANGE': range
                             });
                         }
                     });
@@ -1114,7 +1109,19 @@
                             if (level === '0') {
                                 magic.push({ level: 0 });
                             } else {
-                                const slots = slotsInput?.value || '';
+                                let slots = slotsInput?.value || '';
+                                // If no slots in form, try to preserve from original data
+                                if (!slots && originalYamlData && originalYamlData['MAGIC'] && Array.isArray(originalYamlData['MAGIC'])) {
+                                    const originalLevelHeader = originalYamlData['MAGIC'].find(i =>
+                                        i && i.level !== undefined &&
+                                        (i.level === parseInt(level) ||
+                                         (typeof i.level === 'object' && i.level.number === parseInt(level)))
+                                    );
+                                    if (originalLevelHeader && typeof originalLevelHeader.level === 'object') {
+                                        slots = originalLevelHeader.level.slots;
+                                    }
+                                }
+
                                 if (slots) {
                                     magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
                                 } else {
@@ -1688,7 +1695,8 @@
                     }
                     i++;
                 } else {
-                    add('SLOTTED ITEMS', line); // heuristic category
+                    // Heuristic equipment parser disabled per user request
+                    console.warn(`Unknown equipment format in line "${line}"`);
                     i++;
                 }
             }
