@@ -1,34 +1,5 @@
 ---
 title: 'Quick-Start Guide to YAML Character Sheets'
-header-includes: |
-  <style>
-  .playername { background-color: #e8f5d0; }
-  .stats { background-color: #e6f2ff; }
-  .hpetc { background-color: #e6e6e6; }
-  .proficiencies { background-color: #fffae6; }
-  .attacks { background-color: #ffe6cc; }
-  .magic { background-color: #ffe6e6; }
-  .features { background-color: #f0e6f7; }
-  .equipment { background-color: #e8f5d0; }
-  div.playername, div.stats, div.hpetc, div.proficiencies, div.attacks, div.magic, div.features, div.equipment {
-    padding: 1em;
-    margin: 0.5em 0;
-    border-radius: 4px;
-  }
-  body {
-    font-family: tahoma, verdana, arial, sans-serif;
-    font-size: 11pt;
-    max-width: 52em;
-    margin-left: 1em;
-  }
-  a {
-    color: #35A;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-  </style>
 ---
 
 <article>

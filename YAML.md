@@ -1,3 +1,8 @@
+---
+title: YAML Key Reference (D&D Character Sheets)
+---
+
+
 # YAML Key Reference
 
 This document provides a comprehensive alphabetical reference for all YAML keys used in the D&D character sheet system.
