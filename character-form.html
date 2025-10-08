@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: mushroom
+        Version: nori
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -61,10 +61,16 @@
     <!-- Sample YAML Section -->
     <div style="text-align: left; margin: 1.5em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
         <div style="margin-bottom: 0.5em;">
-            <select id="sample-yaml-dropdown" style="padding: 0.3em;">
-                <option value="">Try a pregenerated character</option>
+            <select id="sample-yaml-dropdown-3col" style="padding: 0.3em;">
+                <option value="">Try a pregenerated character (best at 3 cols)</option>
             </select>
-            <button type="button" id="load-sample-button" class="add-button" onclick="loadSampleYAML()" style="margin-right: 0.5em;" disabled>Load this character</button>
+            <button type="button" id="load-sample-button-3col" class="add-button" onclick="loadSampleYAML('3col')" style="margin-right: 0.5em;" disabled>Load this character</button>
+        </div>
+        <div style="margin-bottom: 0.5em;">
+            <select id="sample-yaml-dropdown-2col" style="padding: 0.3em;">
+                <option value="">Try a pregenerated character (best at 2 cols)</option>
+            </select>
+            <button type="button" id="load-sample-button-2col" class="add-button" onclick="loadSampleYAML('2col')" style="margin-right: 0.5em;" disabled>Load this character</button>
         </div>
     </div>
 
@@ -358,39 +364,62 @@
 
         // Sample YAML loading functions
         function populateSampleDropdown() {
-            const dropdown = document.getElementById('sample-yaml-dropdown');
-            const button = document.getElementById('load-sample-button');
-            if (!dropdown || typeof EMBEDDED_YAMLS === 'undefined') return;
+            const dropdown3col = document.getElementById('sample-yaml-dropdown-3col');
+            const dropdown2col = document.getElementById('sample-yaml-dropdown-2col');
+            const button3col = document.getElementById('load-sample-button-3col');
+            const button2col = document.getElementById('load-sample-button-2col');
+
+            if (!dropdown3col || !dropdown2col || typeof EMBEDDED_YAMLS === 'undefined') return;
 
             // Clear existing options except the first one
-            while (dropdown.children.length > 1) {
-                dropdown.removeChild(dropdown.lastChild);
+            while (dropdown3col.children.length > 1) {
+                dropdown3col.removeChild(dropdown3col.lastChild);
+            }
+            while (dropdown2col.children.length > 1) {
+                dropdown2col.removeChild(dropdown2col.lastChild);
             }
 
-            // Add options for each embedded YAML
+            // Parse each YAML to get layout, then add to appropriate dropdown
             EMBEDDED_YAMLS.forEach((yamlData, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = yamlData.origin;
-                dropdown.appendChild(option);
-            });
+                try {
+                    const parsed = jsyaml.load(yamlData.content);
+                    const layout = parsed.LAYOUT;
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = yamlData.origin;
 
-            // Add event listener to enable/disable button based on selection
-            dropdown.addEventListener('change', function() {
-                if (button) {
-                    button.disabled = (this.value === '');
-                    console.log('Dropdown changed. Value:', this.value, 'Button disabled:', button.disabled);
+                    // Filter by layout: 3col goes in first dropdown, silverpine/unspecified in second
+                    if (layout === '3col') {
+                        dropdown3col.appendChild(option);
+                    } else {
+                        dropdown2col.appendChild(option);
+                    }
+                } catch (e) {
+                    console.error('Error parsing YAML for layout:', e);
                 }
             });
 
-            // Ensure button starts disabled
-            if (button) {
-                button.disabled = true;
-            }
+            // Add event listeners to enable/disable buttons based on selection
+            dropdown3col.addEventListener('change', function() {
+                if (button3col) {
+                    button3col.disabled = (this.value === '');
+                }
+            });
+
+            dropdown2col.addEventListener('change', function() {
+                if (button2col) {
+                    button2col.disabled = (this.value === '');
+                }
+            });
+
+            // Ensure buttons start disabled
+            if (button3col) button3col.disabled = true;
+            if (button2col) button2col.disabled = true;
         }
 
-        function loadSampleYAML() {
-            const dropdown = document.getElementById('sample-yaml-dropdown');
+        function loadSampleYAML(layoutType) {
+            const dropdownId = layoutType === '3col' ? 'sample-yaml-dropdown-3col' : 'sample-yaml-dropdown-2col';
+            const dropdown = document.getElementById(dropdownId);
             const selectedIndex = dropdown.value;
 
             if (selectedIndex === '' || typeof EMBEDDED_YAMLS === 'undefined') {
@@ -1374,11 +1403,15 @@
                 // Populate all fields using message-passing
                 FIELDS.forEach(field => field.populate(data));
 
-                // Reset pregens dropdown and disable button when YAML is loaded
-                const dropdown = document.getElementById('sample-yaml-dropdown');
-                const button = document.getElementById('load-sample-button');
-                if (dropdown) dropdown.value = '';
-                if (button) button.disabled = true;
+                // Reset pregens dropdowns and disable buttons when YAML is loaded
+                const dropdown3col = document.getElementById('sample-yaml-dropdown-3col');
+                const dropdown2col = document.getElementById('sample-yaml-dropdown-2col');
+                const button3col = document.getElementById('load-sample-button-3col');
+                const button2col = document.getElementById('load-sample-button-2col');
+                if (dropdown3col) dropdown3col.value = '';
+                if (dropdown2col) dropdown2col.value = '';
+                if (button3col) button3col.disabled = true;
+                if (button2col) button2col.disabled = true;
 
             } catch (error) {
                 throw new Error('YAML parsing failed: ' + error.message);
