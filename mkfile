@@ -75,6 +75,9 @@ homework/render.cgi: halligan-prefix.sh render.cgi
 	cat $prereq > $target
         chmod 755 $target 
 
+homework/charsheet.css:	docs/charsheet.css
+	/bin/cp $prereq $target
+
 silver-king-%.yaml:D: king-%.yaml un3ify
 	un3ify king-$stem.yaml > $target
 
