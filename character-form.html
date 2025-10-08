@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: kale
+        Version: mushroom
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -74,7 +74,7 @@
     
     <form id="character-form">
         <!-- Character Info Section -->
-        <div class="section playername">
+        <div class="section sheet-section playername">
             <h2>Character Info</h2>
             <div class="field-row">
                 <div class="field wide">
@@ -151,7 +151,7 @@
         </div>
 
         <!-- Stats Section -->
-        <div class="section stats">
+        <div class="section sheet-section stats">
             <h2>Ability Scores</h2>
             <div class="ability-scores">
                 <div class="field">
@@ -182,7 +182,7 @@
         </div>
 
         <!-- Combat Stats Section -->
-        <div class="section hpetc">
+        <div class="section sheet-section hpetc">
             <h2>Combat Stats</h2>
             <div class="field-row">
                 <div class="field">
@@ -227,7 +227,7 @@
         </div>
 
         <!-- Proficiencies Section -->
-        <div class="section proficiencies">
+        <div class="section sheet-section proficiencies">
             <h2>Proficiencies</h2>
             <input type="hidden" id="proficiency-bonus" name="proficiency-bonus">
             <div class="field-group">
@@ -237,7 +237,7 @@
         </div>
 
         <!-- Attacks Section -->
-        <div class="section attacks">
+        <div class="section sheet-section attacks">
             <h2>Attacks</h2>
             <div id="attacks-list">
                 <!-- Dynamic attacks will be added here -->
@@ -246,7 +246,7 @@
         </div>
 
         <!-- Magic Section -->
-        <div class="section magic" id="magic-section">
+        <div class="section sheet-section magic" id="magic-section">
             <h2 id="magic-header" onclick="toggleMagic()" style="cursor: pointer;">Magic (click to open)</h2>
             <div id="magic-content" style="display: none;">
                 <div class="field-group render-options" style="margin-bottom: 1em;">
@@ -278,7 +278,7 @@
         </div>
 
         <!-- Features Section -->
-        <div class="section features">
+        <div class="section sheet-section features">
             <h2>Features</h2>
             <div class="field-group render-options" style="margin-bottom: 1em;">
                 <span>Render:</span>
@@ -301,7 +301,7 @@
         </div>
 
         <!-- Equipment Section -->
-        <div class="section equipment">
+        <div class="section sheet-section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
                 <p>Enter one equipment item per line. Or you scan specify categories:</p>
@@ -310,8 +310,8 @@
                     <li><code>Slotted items:</code> followed by <code>- Backpack</code>, <code>- Rations</code> (multiple items)</li>
                 </ul>
                 <textarea id="equipment-text" name="equipment-text" rows="6" placeholder="Scale Mail Armor&#10;Shield (+2 AC)&#10;Backpack&#10;Bedroll&#10;Mess Kit&#10;Torches (10)&#10;Rations (10)&#10;Waterskin" style="width: 100%; box-sizing: border-box;"></textarea>
-                
-                <div style="margin-top: 0.5em; display: flex; gap: 0.5em; flex-wrap: wrap;">
+
+                <div style="margin-top: 0.5em; display: none; gap: 0.5em; flex-wrap: wrap;">
                     <button type="button" class="add-button" onclick="convertStructuredToLines()" title="Convert your equipment list to the new categorized format">
                         📝 Categorize Equipment
                     </button>

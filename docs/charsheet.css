@@ -277,34 +277,15 @@ kbd {
     font-weight: normal;
 }
 
-/* Force left alignment for Equipment and Magic sections */
-.equipment,
-.equipment *,
-.equipment p,
-.equipment ul,
-.equipment li,
-.equipment textarea,
-.magic,
-.magic *,
-.magic p,
-.magic ul,
-.magic li,
-.magic textarea,
-.features,
-.features *,
-.features p,
-.features ul,
-.features li,
-.features textarea,
-.spell-item,
-.spell-item * {
+/* All sections and their contents are left-aligned */
+.sheet-section,
+.sheet-section * {
     text-align: left !important;
 }
 
-/* Fix label alignment for Info and Combat sections */
-.playername label,
-.hpetc label {
-    text-align: left !important;
+/* Exception: ability score labels are centered */
+.ability-scores label {
+    text-align: center !important;
 }
 
 /* Style disabled buttons properly */
