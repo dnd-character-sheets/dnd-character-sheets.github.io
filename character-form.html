@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D Character Sheet Creator</title>
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/yaml@2.4.5/browser/yaml.min.js"></script>
     <link rel="stylesheet" href="charsheet.css">
 </head>
 <body>
@@ -702,6 +703,77 @@
         let isDirty = false;
         let loadedFileName = '';
         let originalYamlData = null;  // Stores complete parsed YAML for passthrough of unknown fields
+        let originalYamlDoc = null;   // YAML.Document to preserve key order and formatting
+        let originalYamlText = '';    // Original YAML text to recreate Document when emitting
+
+        // Deep equality check for primitives, arrays, and plain objects
+        function deepEqual(a, b) {
+            if (a === b) return true;
+            if (typeof a !== typeof b) return false;
+            if (a && b && typeof a === 'object') {
+                const aIsArr = Array.isArray(a);
+                const bIsArr = Array.isArray(b);
+                if (aIsArr !== bIsArr) return false;
+                if (aIsArr && bIsArr) {
+                    if (a.length !== b.length) return false;
+                    for (let i = 0; i < a.length; i++) {
+                        if (!deepEqual(a[i], b[i])) return false;
+                    }
+                    return true;
+                }
+                // Plain object compare
+                const aKeys = Object.keys(a);
+                const bKeys = Object.keys(b);
+                if (aKeys.length !== bKeys.length) return false;
+                for (const k of aKeys) {
+                    if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+                    if (!deepEqual(a[k], b[k])) return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Collect changed paths between original and updated objects
+        function collectChanges(orig, upd, basePath = [], out = []) {
+            // If identical, nothing to change
+            if (deepEqual(orig, upd)) return out;
+
+            const origIsObj = orig && typeof orig === 'object';
+            const updIsObj = upd && typeof upd === 'object';
+            const origIsArr = Array.isArray(orig);
+            const updIsArr = Array.isArray(upd);
+
+            if (updIsArr || origIsArr) {
+                // For arrays, if any diff, replace whole array at this path
+                out.push({ path: basePath.slice(), value: upd });
+                return out;
+            }
+
+            if (updIsObj && origIsObj) {
+                // Dive recursively for objects to minimize writes
+                const keys = new Set([...Object.keys(orig || {}), ...Object.keys(upd || {})]);
+                for (const k of keys) {
+                    const npath = basePath.concat([k]);
+                    if (!deepEqual(orig ? orig[k] : undefined, upd ? upd[k] : undefined)) {
+                        const o = orig ? orig[k] : undefined;
+                        const u = upd ? upd[k] : undefined;
+                        const oIsObj = o && typeof o === 'object' && !Array.isArray(o);
+                        const uIsObj = u && typeof u === 'object' && !Array.isArray(u);
+                        if (oIsObj && uIsObj) {
+                            collectChanges(o, u, npath, out);
+                        } else {
+                            out.push({ path: npath, value: u });
+                        }
+                    }
+                }
+                return out;
+            }
+
+            // Primitive or type mismatch: set directly
+            out.push({ path: basePath.slice(), value: upd });
+            return out;
+        }
 
         function loadYAMLFile(event) {
             const file = event.target.files[0];
@@ -1534,8 +1606,15 @@
 
         function parseYAMLIntoForm(yamlText) {
             try {
-                // Use js-yaml to parse the YAML
+                // Parse for UI data (plain object) and for preserving order (YAML.Document)
                 const data = jsyaml.load(yamlText);
+                originalYamlText = yamlText;
+                try {
+                    // May be unavailable if YAML library wasn't loaded
+                    originalYamlDoc = (typeof YAML !== 'undefined') ? YAML.parseDocument(yamlText) : null;
+                } catch (e) {
+                    originalYamlDoc = null;
+                }
                 if (!data) return;
 
                 // Store original data for passthrough of unknown fields
@@ -1573,16 +1652,37 @@
 
         function createYAMLContent() {
             const form = document.getElementById('character-form');
-            // Start with original data to preserve unknown fields, or empty object if none
-            const data = originalYamlData ? structuredClone(originalYamlData) : {};
-            FIELDS.forEach(field => field.capture(data));
+            // Build updated data object using existing capture logic
+            const updated = originalYamlData ? structuredClone(originalYamlData) : {};
+            FIELDS.forEach(field => field.capture(updated));
 
-            // Use js-yaml to serialize the data structure
-            return jsyaml.dump(data, { 
-                indent: 2,
-                noRefs: true,
-                sortKeys: false 
-            });
+            // If we have an original document, apply only changes to preserve key order
+            if (originalYamlDoc && typeof YAML !== 'undefined') {
+                // Recreate a fresh doc from original text to avoid mutating shared state
+                const doc = YAML.parseDocument(originalYamlText);
+                const changes = collectChanges(originalYamlData || {}, updated || {});
+                for (const change of changes) {
+                    try {
+                        doc.setIn(change.path, change.value);
+                    } catch (e) {
+                        // Fallback: set at top-level if path fails
+                        if (change.path && change.path.length > 0) {
+                            const topKey = change.path[0];
+                            doc.setIn([topKey], updated[topKey]);
+                        }
+                    }
+                }
+                return doc.toString();
+            }
+
+            // No original doc (new file): emit fresh YAML with current ordering
+            if (typeof YAML !== 'undefined') {
+                const outDoc = new YAML.Document();
+                outDoc.contents = updated;
+                return outDoc.toString();
+            }
+            // Final fallback: js-yaml
+            return jsyaml.dump(updated, { indent: 2, noRefs: true, sortKeys: false });
         }
 
         function generateYAML() {
