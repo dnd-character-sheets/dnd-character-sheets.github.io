@@ -1431,11 +1431,6 @@
                     const el = form.querySelector('#proficiencies-text');
                     const text = el?.value || '';
 
-                    // Delete all proficiency-related fields before setting new ones
-                    // This prevents conflicts with passthrough preservation
-                    delete data['PROFICIENCIES'];
-                    delete data['SECONDARY PROFICIENCIES'];
-
                     // Parse the text into structured data
                     const parsed = parseProficienciesText(text);
 
@@ -1456,7 +1451,18 @@
                         }
                     }
 
-                    Object.assign(data, parsed);
+                    // Assign back without wholesale deletion to preserve key order
+                    if (Object.prototype.hasOwnProperty.call(parsed, 'PROFICIENCIES')) {
+                        data['PROFICIENCIES'] = parsed['PROFICIENCIES'];
+                    } else {
+                        delete data['PROFICIENCIES'];
+                    }
+
+                    if (Object.prototype.hasOwnProperty.call(parsed, 'SECONDARY PROFICIENCIES')) {
+                        data['SECONDARY PROFICIENCIES'] = parsed['SECONDARY PROFICIENCIES'];
+                    } else {
+                        delete data['SECONDARY PROFICIENCIES'];
+                    }
                 }
             };
 
