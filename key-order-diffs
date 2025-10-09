@@ -1,9 +1,22 @@
 #!/bin/ksh
 
+quiet=
+
+case "$1" in
+  -q*) quiet=yes ; shift ;;
+esac
+
 if [[ $# -ne 2 ]]; then
-  echo "Usage: $(basename "$0") file1 file2"
+  echo "Usage: $(basename "$0") [-q] file1 file2"
 fi
 cmd=(grep '^[A-Z].*:$')
 
+if [[ -n "$quiet" ]]; then
+  compare="cmp -s"
+else
+  compare="diff -u"
+fi
 
-diff -u <("${cmd[@]}" "$1")  <("${cmd[@]}" "$2")
+
+$compare <("${cmd[@]}" "$1")  <("${cmd[@]}" "$2")
+exit $?

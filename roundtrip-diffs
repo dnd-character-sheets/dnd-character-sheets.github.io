@@ -16,7 +16,9 @@ do
   if [[ $? -ne 0 ]]; then
     echo -e "---- (Diffs above in '$i')"
   else
-    echo "Key order changes for $i:"
-    ./key-order-diffs "$i" "$output"
+    if ! ./key-order-diffs -q "$i" "$output"; then
+      echo "Key order changes for $i:"
+      ./key-order-diffs "$i" "$output"
+    fi
   fi
 done
