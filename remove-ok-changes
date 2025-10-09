@@ -17,6 +17,7 @@ local pats = {
   'Insert "" at [%u%s]+',
   'At .*, replace { proficiencies_skip: true } with ""',
   [[Insert "\\%a+" at [%u%s]+ FONT]],
+  'Remove entry at .*PROFICIENCIES%.%d+%.proficiencies_skip',
 }
 
 local bools = { 'COLOR', 'STONES' }
