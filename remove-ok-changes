@@ -13,6 +13,7 @@ local function runf(...) return os.execute(stringf(...)) end
 local pats = {
   'Insert %d+ at LEVEL',
   'Insert "%a+" at CLASS',
+  'Insert "[%a%s]+" at SPECIALTY',
   'Insert "" at [%u%s]+',
   'At .*, replace { proficiencies_skip: true } with ""',
   [[Insert "\\%a+" at [%u%s]+ FONT]],
