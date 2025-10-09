@@ -69,6 +69,18 @@ ideally use the service something like this:
 
 # Working with YAML on your own
 
+## Yaml for beginners
+
+Key-value pairs, with colons
+Looks like markdown lists.
+Best to follow examples.
+
+round-trip through web form is meant to preserve, though some fields may be added, and sometimes empty space following a dash will render as `null`.
+
+Markdown, colons
+
+## Yaml for this project
+
 AI doco :-(
 
 ## Quick start
