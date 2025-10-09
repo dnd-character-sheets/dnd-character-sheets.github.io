@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: quinoa
+        Version: spinach
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -663,6 +663,7 @@
             item.style.textAlign = 'left'; // Force left alignment
             item.className = 'attack-item';
             item.innerHTML = `
+                <input type="hidden" data-field="original-name" />
                 <div class="attack-fields">
                     <input type="text" placeholder="Weapon" data-field="name" />
                     <input type="text" placeholder="Attack Bonus" data-field="attack" />
@@ -1077,12 +1078,14 @@
                                     const damageEl = lastItem.querySelector('[data-field="damage"]');
                                     const typeEl = lastItem.querySelector('[data-field="type"]');
                                     const rangeEl = lastItem.querySelector('[data-field="range"]');
+                                    const originalNameEl = lastItem.querySelector('[data-field="original-name"]');
 
                                     if (nameEl) nameEl.value = attack['NAME'] || '';
                                     if (attackEl) attackEl.value = attack['ATTACK'] || '';
                                     if (damageEl) damageEl.value = attack['DAMAGE'] || '';
                                     if (typeEl) typeEl.value = attack['TYPE'] || '';
                                     if (rangeEl) rangeEl.value = attack['RANGE'] || '';
+                                    if (originalNameEl) originalNameEl.value = attack['NAME'] || '';
                                 }
                             }
                         });
@@ -1096,15 +1099,27 @@
                         const damage = attackDiv.querySelector('[data-field="damage"]')?.value || '';
                         const type = attackDiv.querySelector('[data-field="type"]')?.value || '';
                         const range = attackDiv.querySelector('[data-field="range"]')?.value || '';
+                        const originalName = attackDiv.querySelector('[data-field="original-name"]')?.value || '';
 
                         if (name || attack || damage || type || range) {
-                            attacks.push({
-                                'NAME': name,
-                                'ATTACK': attack,
-                                'DAMAGE': damage,
-                                'TYPE': type,
-                                'RANGE': range
-                            });
+                            // Try to find original attack by original-name to preserve extra fields
+                            let attackObj = {};
+                            if (originalName && originalYamlData && originalYamlData['ATTACKS'] && Array.isArray(originalYamlData['ATTACKS'])) {
+                                const originalAttack = originalYamlData['ATTACKS'].find(a => a && a.NAME === originalName);
+                                if (originalAttack) {
+                                    // Start with original attack to preserve all extra fields (NOTES, AMMO TYPE, AMMO COUNT, etc.)
+                                    attackObj = { ...originalAttack };
+                                    // Remove obsolete AMMO field if present (replaced by AMMO TYPE and AMMO COUNT)
+                                    delete attackObj['AMMO'];
+                                }
+                            }
+                            // Update main fields (possibly changed from original)
+                            attackObj['NAME'] = name;
+                            attackObj['ATTACK'] = attack;
+                            attackObj['DAMAGE'] = damage;
+                            attackObj['TYPE'] = type;
+                            attackObj['RANGE'] = range;
+                            attacks.push(attackObj);
                         }
                     });
                     data['ATTACKS'] = attacks;
@@ -1490,7 +1505,19 @@
                         try {
                             // Parse equipment text into structured format
                             const structuredEquipment = parseEquipmentStrings(lines);
-                            data['EQUIPMENT'] = structuredEquipment;
+
+                            // If parsing produced no categories, preserve original format
+                            if (Object.keys(structuredEquipment).length === 0) {
+                                // Check if original data had equipment and preserve it if unchanged
+                                if (originalYamlData && originalYamlData['EQUIPMENT']) {
+                                    data['EQUIPMENT'] = originalYamlData['EQUIPMENT'];
+                                } else {
+                                    // Fall back to simple array format
+                                    data['EQUIPMENT'] = lines;
+                                }
+                            } else {
+                                data['EQUIPMENT'] = structuredEquipment;
+                            }
                         } catch (error) {
                             // Fallback to list format if parsing fails
                             console.warn('Equipment parsing failed, falling back to list format:', error);
