@@ -13,6 +13,9 @@ local function runf(...) return os.execute(stringf(...)) end
 local pats = {
   'Insert %d+ at LEVEL',
   'Insert "%a+" at CLASS',
+  'Insert "" at [%u%s]+',
+  'At .*, replace { proficiencies_skip: true } with ""',
+  [[Insert "\\%a+" at [%u%s]+ FONT]],
 }
 
 local bools = { 'COLOR', 'STONES' }
@@ -35,13 +38,17 @@ local function ok_change(line)
       return true
     end
   end
+  local num, string = line:match '^At .*, replace (%S+) with "(%S+)"$'
+  if num and num == string then
+    return true
+  end
 end
 
 require 'catpattern'.run (arg,
   function(fd)
     for line in fd:lines() do
       if not ok_change(line) then
-        io.stdout:write(line)
+        io.stdout:write(line, '\n')
       end
     end
   end)
