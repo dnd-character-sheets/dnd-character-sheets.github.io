@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: spinach
+        Version: vanilla
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -728,7 +728,7 @@
             if (message) {
                 statusBar.innerHTML = `<span style="color: ${isError ? '#d32f2f' : '#666'}">${message}</span>`;
             } else if (loadedFileName) {
-                const dirtyMark = isDirty ? ' (dirty)' : '';
+                const dirtyMark = isDirty ? ' (not saved)' : '';
                 statusBar.innerHTML = `Loaded from <strong>${loadedFileName}</strong>${dirtyMark}`;
             } else {
                 statusBar.innerHTML = '<strong>Tip:</strong> Use <kbd>Ctrl+Enter</kbd> (or <kbd>Cmd+Enter</kbd> on Mac) to quickly add items when focused in Attacks, Spells, or Features sections';
@@ -1193,13 +1193,9 @@
                     if (Array.isArray(value)) {
                         const listItems = value.map(v => `- ${v}`).join('\n');
                         return `${key}:\n${listItems}`;
+                    } else {
+                        return `${key}: ${value}`;
                     }
-
-                    // Handle special cases for backwards compatibility
-                    if (key === 'Languages') return value;
-                    if (key === 'Armor') return `${value} Armor`;
-                    if (key === 'Weapons') return `${value} Weapons`;
-                    return `${key}: ${value}`;
                 }
             }
             return item?.toString() || '';
@@ -1215,13 +1211,13 @@
                 }
             }
 
-            addToLines(data['MAIN PROFICIENCIES']?.map(stringOfProficienciesEntry));
+            // Add PROFICIENCIES
             addToLines(data['PROFICIENCIES']?.map(stringOfProficienciesEntry));
 
-            // Add horizontal line if OTHER PROFICIENCIES exists and is non-empty
-            if (data['OTHER PROFICIENCIES'] && Array.isArray(data['OTHER PROFICIENCIES']) && data['OTHER PROFICIENCIES'].length > 0) {
+            // Add horizontal line and SECONDARY PROFICIENCIES if exists
+            if (data['SECONDARY PROFICIENCIES'] && Array.isArray(data['SECONDARY PROFICIENCIES']) && data['SECONDARY PROFICIENCIES'].length > 0) {
                 addToLines(['----']);
-                addToLines(data['OTHER PROFICIENCIES'].map(stringOfProficienciesEntry));
+                addToLines(data['SECONDARY PROFICIENCIES'].map(stringOfProficienciesEntry));
             }
 
             return lines.join('\n');
@@ -1267,8 +1263,17 @@
                         i++;
                     }
                 } else {
-                    // Regular line, keep as-is
-                    processed.push(line);
+                    // Check if line has inline "key: value" format
+                    const inlineMatch = line.match(/^([^:]+):\s*(.+)$/);
+                    if (inlineMatch) {
+                        const [, key, value] = inlineMatch;
+                        const obj = {};
+                        obj[key.trim()] = value.trim();
+                        processed.push(obj);
+                    } else {
+                        // Regular line, keep as-is
+                        processed.push(line);
+                    }
                     i++;
                 }
             }
@@ -1293,10 +1298,10 @@
                 const mainLines = allLines.slice(0, horizontalLineIndex);
                 const otherLines = allLines.slice(horizontalLineIndex + 1);
 
-                if (mainLines.length > 0) data['MAIN PROFICIENCIES'] = processMarkdownLists(mainLines);
-                if (otherLines.length > 0) data['OTHER PROFICIENCIES'] = processMarkdownLists(otherLines);
+                if (mainLines.length > 0) data['PROFICIENCIES'] = processMarkdownLists(mainLines);
+                if (otherLines.length > 0) data['SECONDARY PROFICIENCIES'] = processMarkdownLists(otherLines);
             } else {
-                // No horizontal line, use legacy PROFICIENCIES field
+                // No horizontal line, just PROFICIENCIES
                 data['PROFICIENCIES'] = processMarkdownLists(allLines);
             }
 
@@ -1320,8 +1325,7 @@
                     // Delete all proficiency-related fields before setting new ones
                     // This prevents conflicts with passthrough preservation
                     delete data['PROFICIENCIES'];
-                    delete data['MAIN PROFICIENCIES'];
-                    delete data['OTHER PROFICIENCIES'];
+                    delete data['SECONDARY PROFICIENCIES'];
 
                     Object.assign(data, parseProficienciesText(text));
                 }
