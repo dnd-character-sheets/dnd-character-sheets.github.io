@@ -1439,7 +1439,19 @@
                         try {
                             // Parse equipment text into structured format
                             const structuredEquipment = parseEquipmentStrings(lines);
-                            data['EQUIPMENT'] = structuredEquipment;
+
+                            // If parsing produced no categories, preserve original format
+                            if (Object.keys(structuredEquipment).length === 0) {
+                                // Check if original data had equipment and preserve it if unchanged
+                                if (originalYamlData && originalYamlData['EQUIPMENT']) {
+                                    data['EQUIPMENT'] = originalYamlData['EQUIPMENT'];
+                                } else {
+                                    // Fall back to simple array format
+                                    data['EQUIPMENT'] = lines;
+                                }
+                            } else {
+                                data['EQUIPMENT'] = structuredEquipment;
+                            }
                         } catch (error) {
                             // Fallback to list format if parsing fails
                             console.warn('Equipment parsing failed, falling back to list format:', error);
