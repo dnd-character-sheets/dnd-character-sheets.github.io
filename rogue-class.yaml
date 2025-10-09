@@ -27,17 +27,15 @@ ATTACKS:
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
   - NAME: "Shortbow or Shortsword"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
   - NAME: "Dagger"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
+    RANGE: "20/60"
 
 # 1st level features
 FEATURES:

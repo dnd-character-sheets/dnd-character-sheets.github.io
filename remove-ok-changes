@@ -13,14 +13,19 @@ local function runf(...) return os.execute(stringf(...)) end
 local pats = {
   'Insert %d+ at LEVEL',
   'Insert "%a+" at CLASS',
+  'Insert "silverpine" at LAYOUT',
+  'Insert "3col" at LAYOUT',
   'Insert "[%a%s]+" at SPECIALTY',
   'Insert "" at [%u%s]+',
+  'Insert { } at %u+',
   'At .*, replace { proficiencies_skip: true } with ""',
+  'At [%u%s]+, replace { } with ""',
   [[Insert "\\%a+" at [%u%s]+ FONT]],
   'Remove entry at .*PROFICIENCIES%.%d+%.proficiencies_skip',
+  'At [%u%s]*PROFICIENCIES%.%d+[%.%d]*, replace "" with { }',
 }
 
-local bools = { 'COLOR', 'STONES' }
+local bools = { 'COLOR', 'STONES', 'PREGENERATED' }
 
 do
   for _, key in ipairs(bools) do
@@ -46,11 +51,16 @@ local function ok_change(line)
   end
 end
 
+local rc = 0
+
 require 'catpattern'.run (arg,
   function(fd)
     for line in fd:lines() do
       if not ok_change(line) then
         io.stdout:write(line, '\n')
+        rc = 1
       end
     end
   end)
+
+os.exit(rc)

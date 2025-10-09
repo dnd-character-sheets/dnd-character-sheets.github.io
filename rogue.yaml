@@ -5,7 +5,7 @@
 "RACE": Halfling (Lightfoot)
 "ALIGNMENT": Neutral
 "EXPERIENCE POINTS": 0/300
-PREGENERATED: 1
+PREGENERATED: true
 
 # ability scores — only the score in the lower oval
 STR: 8

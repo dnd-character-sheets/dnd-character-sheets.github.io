@@ -28,12 +28,11 @@ ATTACKS:
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
   - NAME: "Simple Weapon"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
+#   RANGE: unknown
 
 # Spellcasting (1st level: 2 cantrips, 2 first-level slots)
 MAGIC:

@@ -30,12 +30,11 @@ ATTACKS:
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
   - NAME: "Light Crossbow or Simple Weapon"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
+    RANGE: "unknown"
 
 # Spellcasting (1st level: 3 cantrips, 2 first-level slots)
 MAGIC:

@@ -29,12 +29,11 @@ ATTACKS:
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
   - NAME: "Longbow"
     ATTACK: ""
     DAMAGE: ""
     TYPE: ""
-    RANGE: ""
+    RANGE: "unknown"
 
 # 1st level features
 FEATURES:

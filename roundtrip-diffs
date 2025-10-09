@@ -1,0 +1,19 @@
+#!/bin/ksh
+
+verbose=
+case $1 in
+  -v) verbose=yes; shift ;;
+esac
+
+for i
+do
+  output="/tmp/round-$(basename "$i")"
+  if [[ -n "$verbose" ]]; then
+    echo "$i" >&2
+  fi
+  ./test-roundtrip "$i" -o "$output"
+  yamldiff "$i" "$output" | ./remove-ok-changes
+  if [[ $? -ne 0 ]]; then
+    echo -e "---- (Diffs above in '$i')"
+  fi
+done
