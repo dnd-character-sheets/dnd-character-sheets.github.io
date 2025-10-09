@@ -15,5 +15,8 @@ do
   yamldiff "$i" "$output" | ./remove-ok-changes
   if [[ $? -ne 0 ]]; then
     echo -e "---- (Diffs above in '$i')"
+  else
+    echo "Key order changes for $i:"
+    ./key-order-diffs "$i" "$output"
   fi
 done
