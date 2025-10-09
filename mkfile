@@ -52,7 +52,7 @@ github:V: ${GITDOCS:%=docs/%}
 docs/&.html: &.md
 	pandoc -s -o $target -c charsheet.css $prereq
 
-git-push:V: ${GITDOCS:%=docs/%}
+push:V: ${GITDOCS:%=docs/%}
 	git commit -m 'updated web page' -- $prereq
 	git push
 

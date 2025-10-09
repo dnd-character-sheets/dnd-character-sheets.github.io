@@ -76,6 +76,7 @@ Looks like markdown lists.
 Best to follow examples.
 
 round-trip through web form is meant to preserve, though some fields may be added, and sometimes empty space following a dash will render as `null`.
+and blank lines are necessarily lost.
 
 Markdown, colons
 
