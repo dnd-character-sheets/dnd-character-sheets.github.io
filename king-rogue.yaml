@@ -31,7 +31,7 @@ EP: ""
 GP: 10
 PP: ""
 
-MAIN PROFICIENCIES:
+PROFICIENCIES:
   - Skills:
     - Acrobatics
     - Animal Handling
@@ -48,7 +48,7 @@ MAIN PROFICIENCIES:
     - Advantage on saves against fright.
     - EXPERT means to double your proficiency bonus for that skill (+4)
 
-OTHER PROFICIENCIES:
+SECONDARY PROFICIENCIES:
   - Languages: Common, Halfling, Thieves' Cant
   - Armor: Light
   - Weapons: Simple & Hand Crossbow, Longsword, Rapier, Shortsword
