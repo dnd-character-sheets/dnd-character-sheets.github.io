@@ -1,0 +1,47 @@
+#!/usr/bin/env lua5.1
+
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function printf(...) return io.stdout:write(stringf(...)) end
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function fprintf(fd, ...) return fd:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) return error(stringf(...)) end
+local function runf(...) return os.execute(stringf(...)) end
+----------------------------------------------------------------
+
+local pats = {
+  'Insert %d+ at LEVEL',
+  'Insert "%a+" at CLASS',
+}
+
+local bools = { 'COLOR', 'STONES' }
+
+do
+  for _, key in ipairs(bools) do
+    for bool in ('true false'):gmatch '%S+' do
+      table.insert(pats, stringf('Insert %s at %s', bool, key))
+    end
+  end
+
+  for i, pat in ipairs(pats) do
+    pats[i] = stringf('^%s$', pat)
+  end
+end
+
+local function ok_change(line)
+  for _, pat in ipairs(pats) do
+    if line:find(pat) then
+      return true
+    end
+  end
+end
+
+require 'catpattern'.run (arg,
+  function(fd)
+    for line in fd:lines() do
+      if not ok_change(line) then
+        io.stdout:write(line)
+      end
+    end
+  end)
