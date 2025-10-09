@@ -111,6 +111,10 @@ silverpine
 
 hoping for more
 
+# Notes on sources
+
+AI used.  Link to Nox, Silverpine W, Alyssa sheets
+
 
 
 
