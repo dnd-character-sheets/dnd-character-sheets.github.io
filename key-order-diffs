@@ -1,0 +1,9 @@
+#!/bin/ksh
+
+if [[ $# -ne 2 ]]; then
+  echo "Usage: $(basename "$0") file1 file2"
+fi
+cmd=(grep '^[A-Z].*:$')
+
+
+diff -u <("${cmd[@]}" "$1")  <("${cmd[@]}" "$2")
