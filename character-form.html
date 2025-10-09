@@ -10,7 +10,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: vanilla
+        Version: xigua
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1194,7 +1194,8 @@
                         const listItems = value.map(v => `- ${v}`).join('\n');
                         return `${key}:\n${listItems}`;
                     } else {
-                        return `${key}: ${value}`;
+                        // Non-array values: render in block format with dash
+                        return `${key}:\n- ${value}`;
                     }
                 }
             }
@@ -1252,10 +1253,11 @@
                         }
                     }
 
-                    // Create object with key and array value if we found list items
+                    // Create object with key and value
                     if (listItems.length > 0) {
                         const obj = {};
-                        obj[key] = listItems;
+                        // If only one item, store as string; otherwise as array
+                        obj[key] = listItems.length === 1 ? listItems[0] : listItems;
                         processed.push(obj);
                     } else {
                         // No list items found, treat as regular line
@@ -1263,17 +1265,8 @@
                         i++;
                     }
                 } else {
-                    // Check if line has inline "key: value" format
-                    const inlineMatch = line.match(/^([^:]+):\s*(.+)$/);
-                    if (inlineMatch) {
-                        const [, key, value] = inlineMatch;
-                        const obj = {};
-                        obj[key.trim()] = value.trim();
-                        processed.push(obj);
-                    } else {
-                        // Regular line, keep as-is
-                        processed.push(line);
-                    }
+                    // Regular line, keep as-is (including strings that contain colons)
+                    processed.push(line);
                     i++;
                 }
             }
