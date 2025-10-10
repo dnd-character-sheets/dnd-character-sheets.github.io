@@ -379,16 +379,12 @@
      \newif\ifprofs
      \profsfalse
      \whenDNDnonempty{PROFICIENCIES}\profstrue
-     \whenDNDnonempty{MAIN PROFICIENCIES}\profstrue
-     \whenDNDnonempty{OTHER PROFICIENCIES}\profstrue
+     \whenDNDnonempty{SECONDARY PROFICIENCIES}\profstrue
      \begin{proflist}
-     \getDND*{MAIN PROFICIENCIES}
-     \whenDNDnonempty{MAIN PROFICIENCIES}{%
-         \whenDNDnonempty{PROFICIENCIES}{\profskip}}
      \getDND*{PROFICIENCIES}
      \whenDNDnonempty{PROFICIENCIES}{%
-         \whenDNDnonempty{OTHER PROFICIENCIES}{\profskip}}
-     \getDND*{OTHER PROFICIENCIES}
+         \whenDNDnonempty{SECONDARY PROFICIENCIES}{\profskip}}
+     \getDND*{SECONDARY PROFICIENCIES}
      \relax
      \ifprofs\else \item (No proficiencies listed.)\fi
      \end{proflist}

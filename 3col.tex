@@ -113,8 +113,8 @@
 \newcommand\nextstatloc{inside north west corner=of stats background}
 
 
-\setDNDlabel{OTHER PROFICIENCIES}{\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES}
-\setDNDlabel{MAIN PROFICIENCIES}{PROFICIENCIES}
+\setDNDlabel{SECONDARY PROFICIENCIES}{\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES}
+\setDNDlabel{PROFICIENCIES}{PROFICIENCIES}
 
 
 \input{stats}
@@ -439,8 +439,6 @@
         anchor=south east,at=(stats background.south -| saving throws.east)]
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
 \begin{proflist}
-   \getDND*{MAIN PROFICIENCIES}
-   \whenDNDnonempty{MAIN PROFICIENCIES}{\whenDNDnonempty{PROFICIENCIES}{\profskip}}
    \getDND*{PROFICIENCIES}
 \end{proflist}
    }
@@ -596,27 +594,27 @@
       ;
 
 
-\node (other proficiencies top) [below=of passive perception] { };
+\node (secondary proficiencies top) [below=of passive perception] { };
 
-\setdeltay\sectionheight{other proficiencies top}{bottom left}
+\setdeltay\sectionheight{secondary proficiencies top}{bottom left}
 
 \node [anchor=south west,columnbox,minimum height=\sectionheight,
        fill=proficiencies,
       ]
-   (other proficiencies)
+   (secondary proficiencies)
    at (stats background.west |- bottom center)
-  {\nodepart{label}\getDNDlabel{OTHER PROFICIENCES}
+  {\nodepart{label}\getDNDlabel{SECONDARY PROFICIENCES}
    \nodepart{text}%
-   \ifDNDnonempty{OTHER PROFICIENCIES}{%
+   \ifDNDnonempty{SECONDARY PROFICIENCIES}{%
        \multicolsep=0pt
       \begin{multicols}{2}
       \begin{proflist}
       \itemsep=1pt
-      \getDND*{OTHER PROFICIENCIES}
+      \getDND*{SECONDARY PROFICIENCIES}
       \end{proflist}
       \end{multicols}
    }{%
-     (No other proficiencies specified.)
+     (No secondary proficiencies specified.)
    }
   }
   ;

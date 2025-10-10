@@ -162,7 +162,7 @@ local function unnest(proficiencies)
 end
       
 local string_list_fields = {
-  'EQUIPMENT', 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES',
+  'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
   'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
 }  
 
@@ -238,7 +238,7 @@ local function un3ify(doc)
     doc.ATTACKS = attacks
   end
 
-  for _, f in ipairs { 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES' }
+  for _, f in ipairs { 'PROFICIENCIES', 'SECONDARY PROFICIENCIES' }
   do
     doc[f] = unnest(doc[f])
   end
