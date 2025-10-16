@@ -661,7 +661,7 @@ local field_specs = {
   { vd = optional(validate_magic),
     fs = {'MAGIC'} },
   { vd = optional(validate_proficiencies),
-    fs = {'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES'} },
+    fs = {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'} },
     
   -- Optional fields that can be present
   { vd = optional(inrange(1, 20)),
@@ -680,7 +680,7 @@ local field_specs = {
 }
 
 local string_list_fields = {
-  'EQUIPMENT', 'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES',
+  'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
   'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
 }  
 
@@ -852,18 +852,18 @@ local function keyformat(key)
   return (key:gsub('%&', '+'))
 end
 
+
+--- rendering
+---
+--- 
+
+local render = { }
+-- simple_kv (k, v): \setDND{k}{v} or \setDNDfont
+-- item_list (vs): \item as_item(v1) ... \item as_item(vn)
+-- as_item(v): \item scalar(v)
 ---------------------------------------------------------------------------
 -- 3. Rendering helpers
 ---------------------------------------------------------------------------
-local function render_simple_kv (key, val)
-  local fontbase = key:match('(.*) FONT$')
-  if fontbase then
-    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), do_not_escape(val))
-  else
-    return ([[\setDND{%s}{%s}]]):format(keyformat(key), do_not_escape(val))
-  end
-end
-
 local function is_empty_table(v)
   return type(v) == 'table' and next(v) == nil
 end
@@ -872,16 +872,24 @@ local function is_list(v)
   return type(v) == 'table' and (v[1] or next(v) == nil)
 end
 
-local function is_named_list(entry)
+local function is_named_list(entry) -- category: [a, b, c, ...]
   if type(entry) == 'table' then
     local k, v = next(entry)
     return type(k) == 'string' and is_list(v) and next(entry, k) == nil
   end
 end
 
-local item_list -- forward
+function render.simple_kv (key, val)
+  local fontbase = key:match('(.*) FONT$')
+  if fontbase then
+    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), do_not_escape(val))
+  else
+    return ([[\setDND{%s}{%s}]]):format(keyformat(key), do_not_escape(val))
+  end
+end
 
-local function render(v)
+
+function render.scalar(v)
   if type(v) == 'string' then
     return do_not_escape(v)
   elseif type(v) ~= 'table' then
@@ -891,7 +899,7 @@ local function render(v)
       return [[\profskip{}]]
     elseif is_named_list(v) then
       local name, elements = next(v)
-      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name, item_list(elements))
+      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name, render.item_list(elements))
     elseif v.smallskip then
       return [[\smallskip{}]]
     elseif v.medskip then
@@ -903,11 +911,11 @@ local function render(v)
 end
 
 
-local function render_item(v)
+function render.as_item(v)
   if is_empty_table(v) then -- blank list entry
     return [[\profskip{}]]
   else
-    local s = render(v)
+    local s = render.scalar(v)
     if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
     or s:find [[\bigskip]]
     then
@@ -919,32 +927,31 @@ local function render_item(v)
   end
 end
 
-item_list = function (list)
+function render.item_list (key, list)
   local items = {}
   for _,v in ipairs(list) do
---if type(v) == 'string' and v:find '_' then require 'inspect'.show {item = v} end
-    table.insert(items, render_item(v))
+    table.insert(items, render.as_item(v))
   end
-  return table.concat(items, "\n")
+  local items = table.concat(items, "\n")
+  return ([[\setDND{%s}{%s}]]):format(keyformat(key), items)
 end
 
-local function render_item_list (key, list)
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), item_list(list))
-end
-
-local function render_attack_record (rec)
+function render.attack_record (rec)
   local parts = {}
   if type(rec.ATTACK) == 'number' then
     rec.ATTACK = stringf('%+d', rec.ATTACK)
   end
-  for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO TYPE", "AMMO COUNT", 'NOTES' }
-  do
-    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(rec[k] or ""))
+--  for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO TYPE", "AMMO COUNT", 'NOTES' }
+--  do
+--    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(rec[k] or ""))
+--  end
+  for k, v in pairs(rec) do
+    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
   end
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
 
-local function render_generic_record (rec)
+function render.generic_record (rec)
   local parts = {}
   for k,v in pairs(rec) do
     outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
@@ -960,7 +967,7 @@ end
 
 
 
-local function render_struct_list (key, list)
+function render.struct_list (key, list)
   vprintf('rendering struct for %s\n', key)
   local out = {}
   local notes_header_out = false
@@ -983,9 +990,9 @@ local function render_struct_list (key, list)
            do_not_escape(elem.name or ''), do_not_escape(elem.description or ''))
     elseif false and elem.ATTACK then
       vprintf('rendering an attack\n')
-      table.insert(out, render_attack_record(elem))
+      table.insert(out, render.attack_record(elem))
     else
-      table.insert(out, render_generic_record(elem))
+      table.insert(out, render.generic_record(elem))
     end
   end
 
@@ -1081,7 +1088,7 @@ local function add_equipment_item(category, equipment_item, lines, flattened_equ
   local weight_arg = extract_weight_arg(category, equipment_item)
   table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
     weight_arg, category:gsub('&', '+'), do_not_escape(equipment_item)))
-  table.insert(flattened_equipment, render_item(equipment_item))
+  table.insert(flattened_equipment, render.as_item(equipment_item))
 end
 
 -- Process structured equipment and generate LaTeX output
@@ -1099,7 +1106,7 @@ local function emit_structured_equipment(structured_equipment, lines)
       else
         -- Uncategorized items only go to flattened list
         for _, equipment_item in ipairs(items) do
-          table.insert(flattened_equipment, render_item(equipment_item))
+          table.insert(flattened_equipment, render.as_item(equipment_item))
         end
       end
     end
@@ -1302,8 +1309,7 @@ local function convert_mapping (map)
   table.sort(keys)
 
   local use_items = { PROFICIENCIES = true,
-                      ['MAIN PROFICIENCIES'] = true,
-                      ['OTHER PROFICIENCIES'] = true,
+                      ['SECONDARY PROFICIENCIES'] = true,
   }
 
   for _, k in ipairs(keys) do
@@ -1312,14 +1318,14 @@ local function convert_mapping (map)
     if k == "EQUIPMENT" and t == "table" then
       emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
     elseif t=="string" or t=="number" or t=="boolean" then
-      table.insert(lines, render_simple_kv(k, tostring(v)))
+      table.insert(lines, render.simple_kv(k, tostring(v)))
     elseif t=="table" then
       if use_items[k]
       or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
       then
-        table.insert(lines, render_item_list(k, v))
+        table.insert(lines, render.item_list(k, v))
       else
-        table.insert(lines, render_struct_list(k, v))
+        table.insert(lines, render.struct_list(k, v))
       end
     end
   end
@@ -1374,14 +1380,12 @@ end
 
 
 local function preprocess(doc)
---  require 'inspect'.show { pre = doc['MAIN PROFICIENCIES'] }
   for _, f in ipairs(string_list_fields) do
     doc[f] = convert_colon_tables(doc[f])
   end
---  require 'inspect'.show { post = doc['MAIN PROFICIENCIES'] }
 
   -- work around parsing in javascript 
-  for _, f in ipairs {'PROFICIENCIES', 'MAIN PROFICIENCIES', 'OTHER PROFICIENCIES'}
+  for _, f in ipairs {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'}
   do
     local t = doc[f]
     if islist(t) then
@@ -1476,7 +1480,7 @@ local function extend(doc)
     end
     
     local proficient_perceiver =
-      has_perception(doc.PROFICIENCIES or doc['MAIN PROFICIENCIES'] or doc['OTHER PROFICIENCIES'])
+      has_perception(doc.PROFICIENCIES or doc['SECONDARY PROFICIENCIES'])
 
     if not has_expertise then
       -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
