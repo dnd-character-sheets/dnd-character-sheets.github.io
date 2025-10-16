@@ -858,7 +858,7 @@ end
 --- 
 
 local render = { }
--- simple_kv (k, v): \setDND{k}{v} or \setDNDfont
+-- simple_kv (k, string): \setDND{k}{string} or \setDNDfont
 -- item_list (vs): \item as_item(v1) ... \item as_item(vn)
 -- as_item(v): \item scalar(v)
 ---------------------------------------------------------------------------
@@ -927,13 +927,12 @@ function render.as_item(v)
   end
 end
 
-function render.item_list (key, list)
+function render.item_list (list)
   local items = {}
   for _,v in ipairs(list) do
     table.insert(items, render.as_item(v))
   end
-  local items = table.concat(items, "\n")
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), items)
+  return table.concat(items, "\n")
 end
 
 function render.attack_record (rec)
@@ -1323,7 +1322,7 @@ local function convert_mapping (map)
       if use_items[k]
       or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
       then
-        table.insert(lines, render.item_list(k, v))
+        table.insert(lines, render.simple_kv(k, render.item_list(v)))
       else
         table.insert(lines, render.struct_list(k, v))
       end
