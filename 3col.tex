@@ -307,7 +307,8 @@
 
 \ifDNDdefined{FEATURES}{%
   %%% XXX drops below bottom right
-  \node (features) [columnbox,height=\sectionheight-\mynodedistance,fill=features,below=of motivation]  {
+  \ifDNDnonempty{MAGIC}{\def\myfill{magic}}{\def\myfill{features}}%
+  \node (features) [columnbox,height=\sectionheight-\mynodedistance,fill=\myfill,below=of motivation]  {
     \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
     \raggedright
     \useDNDfont*{FEATURES}%
@@ -336,6 +337,9 @@
         \begin{itemize spells}
       }
       \long\def\described#1#2{\item #1: #2}%
+      \long\def\describedColored#1#2#3{%
+            \item \hspace*{-\fboxsep}{\colorbox{#1}{#2:} #3}%
+      }
       \getDND{MAGIC}
       \end{itemize spells}
     }{}
