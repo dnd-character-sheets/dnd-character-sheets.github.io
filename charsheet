@@ -481,7 +481,11 @@ local function validate_spell_level(level)
 end
 
 local function validate_spell_slots(level, slots)
-  if not can_be 'number'(slots) then
+  if level == 0 and slots == nil then
+    -- all is well
+  elseif not slots then
+    verrorf('Number of slots for level %s not given', tostring(level))
+  elseif not can_be 'number'(slots) then
     verrorf('For level %s, spell-slot count %s is not a number',
             tostring(level), require 'inspect'.image(slots))
   else
@@ -497,15 +501,11 @@ local function validate_magic_entry(entry)
   if not can_be 'table'(entry) then
     verrorf("MAGIC entry %q is not be a table", image(entry))
   elseif isnull(entry) then -- skip it
-  elseif is_singleton_table(entry) and entry.level then
+  elseif entry.level then
     -- Level entry
-    if can_be 'number'(entry.level) then
-      validate_spell_level(entry.level)
-    elseif can_be 'table'(entry.level) then
-      validate_spell_level(entry.level.number)
-      if entry.level.slots then
-        validate_spell_slots(entry.level.number, entry.level.slots)
-      end
+    validate_spell_level(entry.level)
+    if entry.slots then
+      validate_spell_slots (entry.level, entry.slots)
     end
   elseif nonempty_string(entry.name) then
     -- Spell entry
@@ -973,9 +973,13 @@ function render.struct_list (key, list)
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
       outf(out, [[\item %s]], do_not_escape(tostring(elem)))
-    elseif elem.level and not next(elem, 'level') then
+    elseif elem.level and (elem.slots or not next(elem, 'level')) then
       if type(elem.level) == 'table' then
-        outf(out, [[\spellslevellabel{%s}{%s}]], elem.level.number, elem.level.slots)
+        verrorf('Spell-level table uses old format; switch to { level: N, slots: M }')
+        elem.level = 99
+      end
+      if elem.slots then
+        outf(out, [[\spellslevellabel{%s}{%s}]], elem.level, elem.slots)
       else
         outf(out, [[\spellslevellabel{%s}{%s}]], do_not_escape(elem.level), 0)
       end

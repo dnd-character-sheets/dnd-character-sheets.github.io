@@ -92,7 +92,8 @@ MAGIC:
   - name: Minor Blessing
     description: One touched creature gains +2 to attack rolls until the end of your next turn.
     duration: 1+ turn
-  - level : { number: 1, slots : 2 }                             # 1st LEVEL
+  - level : 1
+    slots : 2                             # 1st LEVEL
   - name: Bless
     description: Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute while you maintain concentration.
     duration: 1 min
