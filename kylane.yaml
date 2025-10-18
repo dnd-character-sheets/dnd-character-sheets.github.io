@@ -92,14 +92,16 @@ MAGIC:
     description: Melee spell attack +5, 1d8 lightning; advantage on creatures wearing metal armor; target can’t take reactions until its next turn.
   - name: Light
     description: Touched object shines like a torch for 1 hour.
-  - level: { number: 1, slots: 4 }
+  - level: 1
+    slots: 4
   - name: Burning Hands
     description: 15-ft. cone; each creature Dex DC 13 for 3d6 fire (half on success).
   - name: Magic Missile
     description: Create three darts that each deal 1d4+1 force damage to a target you choose; darts never miss.
   - name: Shield
     description: As a reaction, gain +5 to AC and suffer no damage from \emph{magic missile}.
-  - level: { number: 2, slots: 2 }
+  - level: 2
+    slots: 2
   - name: Misty Step [B]
     description: Teleport 30 ft to an unoccupied space you can see.
 

@@ -106,7 +106,8 @@ MAGIC:
   - name: Light
     description: Touched object shines like a torch for 1 hour.
     duration: 1 hr
-  - level: {number: 1, slots: 2}                               # 1st LEVEL
+  - level: 1
+    slots: 2                               # 1st LEVEL
   - name: Burning Hands
     description: >-
       Emit 15-ft cone of fire; each affected creature takes 3d6

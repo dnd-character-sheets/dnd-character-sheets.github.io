@@ -129,7 +129,8 @@ MAGIC:
 #    description: A creature within 60 ft gains +2 AC for 10 min.
 #  - name: Thunderwave
 #    description: Each creature in a 15-foot cube from you takes 2d8 thunder damage and is pushed 10 feet away. On a successful \textbf{CON save}, half damage and no push.
-  - level: { number: 2, slots: 2 }
+  - level: 2
+    slots: 2
   - name: Aid
     description: For 3 hours, up to 3 creatures gain 5 max and current HP.
   - name: Lesser Restoration # domain spell

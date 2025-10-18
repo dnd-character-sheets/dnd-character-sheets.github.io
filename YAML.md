@@ -576,9 +576,11 @@ FEATURES:
 **Type**: List of mixed objects or empty list
 **Template Usage**: Displayed in magic section when present
 **Structure**: Can contain:
-- Level indicators: `level: 0` (cantrips) or `level: {number: 1, slots: 4}`
+- Level indicators: A single table entry with `level` (required) and `slots` (required for level ≥ 1, omitted for cantrips)
+  - For cantrips: `level: 0`
+  - For spell levels: `level: 1` with `slots: 2` (or appropriate slot count)
 - Spell entries with `name` and `description`
-In addition, each feature may be labeled with any or all of the following keys:
+In addition, each spell may be labeled with any or all of the following keys:
 - `bonus`: true (the spell may be cast as a bonus action)
 - `reaction`: true (the spell may be cast as a reaction)
 - `attack`: true (casting the spell requires an attack roll)
@@ -594,7 +596,8 @@ MAGIC:
   - level: 0
   - name: "Fire Bolt"
     description: "Make a ranged spell attack (+5) to deal 1d10 fire damage"
-  - level: 1  
+  - level: 1
+    slots: 2
   - name: "Magic Missile"
     description: "Create 3 darts that each deal 1d4+1 force damage"
 ```

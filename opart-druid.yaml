@@ -48,9 +48,8 @@ MAGIC:
   - level: 0
   - name: '1'
   - name: '2'
-  - level:
-      number: 1
-      slots: 2
+  - level: 1
+    slots: 2
   - name: '1'
   - name: '2'
 FEATURES:

@@ -102,7 +102,8 @@ MAGIC:
     duration: 1 min
 #  - name: Shocking Grasp
 #    description: Melee spell attack +5; 1d8 lightning, advantage on metal armor; target can’t take reactions until its next turn.
-  - level: {number: 1, slots: 2}                                  # 1st LEVEL
+  - level: 1
+    slots: 2                                  # 1st LEVEL
   - name: Detect Magic [R]
     description: Sense magic within 30 ft for 10 min; ritual.
     ritual: true
