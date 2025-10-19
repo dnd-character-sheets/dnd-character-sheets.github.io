@@ -128,12 +128,12 @@ FEATURES:
 #  - name: Spellcasting
 #    description: You can cast cleric spells. You prepare Wisdom mod (+3) + level (1) = 4 spells and recover all slots after a long rest.
 
-"SUGGESTED MOTIVATIONS":
+SUGGESTED MOTIVATIONS:
   - Earn recognition.
   - Do good.
   - Help others.
 
-"SUGGESTED NAMES":
+SUGGESTED NAMES:
   - Auros or Aurenia
 
 PREGENERATED: true
