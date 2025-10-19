@@ -11,7 +11,7 @@
 <body>
     <h1>D&D Character Sheet Creator</h1>
     <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: eggplant
+        Version: fennel
     </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
@@ -1157,15 +1157,13 @@
                         let currentLevel = null;
                         data['MAGIC'].forEach(item => {
                             if (item.level !== undefined) {
-                                // This is a level header
-                                if (typeof item.level === 'number') {
-                                    currentLevel = item.level;
-                                } else if (typeof item.level === 'object' && item.level.number !== undefined) {
-                                    currentLevel = item.level.number;
-                                    // Set slot count if provided
+                                // This is a level header (new format: level and slots as siblings)
+                                currentLevel = item.level;
+                                // Set slot count if provided (slots is sibling to level)
+                                if (item.slots !== undefined) {
                                     const slotsInput = document.querySelector(`[data-slots="${currentLevel}"]`);
-                                    if (slotsInput && item.level.slots !== undefined) {
-                                        slotsInput.value = item.level.slots;
+                                    if (slotsInput) {
+                                        slotsInput.value = item.slots;
                                     }
                                 }
                             } else if (item.name && currentLevel !== null) {
@@ -1197,7 +1195,7 @@
                         const slotsInput = levelDiv.querySelector(`[data-slots="${level}"]`);
                         
                         if (spellItems.length > 0) {
-                            // Add level header with slot information
+                            // Add level header with slot information (new format)
                             if (level === '0') {
                                 magic.push({ level: 0 });
                             } else {
@@ -1205,20 +1203,19 @@
                                 // If no slots in form, try to preserve from original data
                                 if (!slots && originalYamlData && originalYamlData['MAGIC'] && Array.isArray(originalYamlData['MAGIC'])) {
                                     const originalLevelHeader = originalYamlData['MAGIC'].find(i =>
-                                        i && i.level !== undefined &&
-                                        (i.level === parseInt(level) ||
-                                         (typeof i.level === 'object' && i.level.number === parseInt(level)))
+                                        i && i.level !== undefined && i.level === parseInt(level)
                                     );
-                                    if (originalLevelHeader && typeof originalLevelHeader.level === 'object') {
-                                        slots = originalLevelHeader.level.slots;
+                                    if (originalLevelHeader && originalLevelHeader.slots !== undefined) {
+                                        slots = originalLevelHeader.slots;
                                     }
                                 }
 
+                                // New format: level and slots as sibling keys
+                                const levelHeader = { level: parseInt(level) };
                                 if (slots) {
-                                    magic.push({ level: { number: parseInt(level), slots: parseInt(slots) } });
-                                } else {
-                                    magic.push({ level: parseInt(level) });
+                                    levelHeader.slots = parseInt(slots);
                                 }
+                                magic.push(levelHeader);
                             }
                             
                             // Add spells for this level
