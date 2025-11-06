@@ -1149,6 +1149,18 @@
 }
 
 
+\newcommand\setDNDplayer[2]{%
+  \expandafter\def\csname dnd@player@#1\endcsname{#2}%
+}  
+\newcommand\whenDNDplayer[2]{%
+  \@ifundefined{dnd@player@#1}{}{#2}%
+}
+
+\newcommand\useDNDplayer[1]{%
+  \csname dnd@player@#1\endcsname
+}  
+
+
 %%  A "stub rectangle" is a rectangle except each
 %%  corner is replaced with a corner circle, as if a circular bite had
 %%  been taken out of each corner.  Get the radius from a tikz key `stub
@@ -1908,6 +1920,16 @@
   \fi
 }
 
+\newcommand\signedmath[1]{%
+  \setcounter{ptemp}{#1}%
+  \expandafter\ifnum\value{ptemp}<0
+    \setcounter{ptemp}{0-\value{ptemp}}%
+    -\arabic{ptemp}%
+  \else
+    +\arabic{ptemp}%
+  \fi
+}
+
 \newif\ifdndstatshield
 \dndstatshieldtrue
 
@@ -2038,6 +2060,7 @@
 \newDND{ALIGNMENT}
 \newDND{ARMOR CLASS}
 \newDND{ATTACKS}
+\newDND{BONUS ACTIONS} % \bonus{one}\bonus{two}...\bonus{last}
 \newDND{BACKGROUND}
 \newDND{CHA}
 \newDND{CHA SAVING}
@@ -2076,6 +2099,7 @@
 \newDND{PROFICIENCIES} % see also main and other
 \newDND{PROFICIENCY BONUS}
 \newDND{RACE}
+\newDND{REACTIONS} % \reaction{one}\reaction{two}...\reaction{last}
 \newDND{SECONDARY PROFICIENCIES}
 \newDND{SENSES}
 \newDND{SHEET ORIGIN}
@@ -2114,9 +2138,12 @@
 
 \newcommand\psam{%  Add to user documentation
   \ifDNDnonempty{SPELLCASTING ABILITY MODIFIER}%
-    {\expandafter\ifnum\rawgetDND{SPELLCASTING ABILITY MODIFIER}>0
-       \expandafter\signed\expandafter{\rawgetDND{SPELLCASTING ABILITY MODIFIER}}%
-     \fi
+%    {\expandafter\ifnum\rawgetDND{SPELLCASTING ABILITY MODIFIER}>0
+%       \expandafter\signed\expandafter{\rawgetDND{SPELLCASTING ABILITY MODIFIER}}%
+%     \fi
+%    }
+    {\edef\go{\noexpand\setcounter{ptemp}{\value{proficiency bonus}+\rawgetDND{SPELLCASTING ABILITY MODIFIER}}}%
+     +\go\arabic{ptemp}%
     }
     {+?}%
 }
@@ -2225,7 +2252,7 @@
   \gdef\@attackammocount{}%
 %  {\def\statdc{\protect\statdc}\typeout{attack keys: #1}}%
   \pgfkeys{/attacks/.cd, #1}%
-  \@attackname&\@attackattack&\@attackdamage&\@attacktype&\@attackrange&
+  \@attackname&\signed{\@attackattack}&\@attackdamage&\@attacktype&\@attackrange&
     \@ammocolumn\\
 }
 

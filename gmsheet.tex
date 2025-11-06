@@ -1,0 +1,504 @@
+\documentclass[12pt,twocolumn]{article}
+%\usepackage[margin=0.8cm]{geometry}
+\usepackage{times}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{charsheet}
+\newcolumntype{e}{>{\itshape}l}
+\usepackage{soul}
+\pagestyle{empty}
+\parindent=0pt
+\newcommand\bigstrut{\vrule width 0pt height 12pt}
+\newcommand\X{\leavevmode\bigstrut}
+
+\newcommand\vfilbreak[1][3\baselineskip]{\vskip 0pt plus #1\penalty-200 \vskip 0pt plus -#1}
+
+
+\newcommand\E{\rlap{ [E]}}
+
+\newcommand\saving[1]{%
+  \whenDNDtrue{#1 SAVING}{{}^*}%
+}
+
+   % calc package rounds toward zero; do not use
+
+
+
+\usepackage{multicol}
+\usepackage{enumitem}
+
+
+\makeatletter
+
+\let\expandArg=\@expandArg
+
+
+\newenvironment{gmproflist}
+  {\clubpenalty=10000
+   \widowpenalty=10000
+   \begin{list}{}{%
+      \advance\@itemdepth\@ne
+      \raggedright
+      \setlength{\leftmargin}{10pt}% hanging indentation
+      \setlength{\itemindent}{-10pt}%
+      \setlength{\labelwidth}{0pt}%
+      \setlength{\labelsep}{0pt}%
+      \setlength{\topsep}{0pt}% space before/after the list
+      \setlength{\partopsep}{0pt}%
+      \setlength{\parsep}{0pt}%
+      \setlength{\itemsep}{1pt}% space between items
+      \renewcommand*{\makelabel}[1]{}% suppress the bullet
+%      \let\trueitem\item
+%      \def\item{\trueitem \textbf}%
+      \baselineskip=13pt
+  }}%
+  {\end{list}}
+
+\makeatother
+
+
+
+
+
+\ExplSyntaxOn
+\DeclareRobustCommand{\supE}[1]{\nr_supE:n { #1 }}
+
+\cs_new_protected:Nn \nr_supE:n
+  {
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    % Replace every literal space + [E] with a superscript E, math-safe
+    \regex_replace_all:nnN { \ \[E\] } { \c{mysuperE} } \l_tmpa_tl
+%    \tl_use:N \l_tmpa_tl
+    \l_tmpa_tl
+  }
+\ExplSyntaxOff
+
+\newcommand\regexpVar[2]{
+   \expandArg{\expandArg{\expandArg#1}}{\rawgetDND{#2}}%
+}
+
+\newcommand\mysuperE{\rlap{\textsuperscript{E}}}
+
+
+\newcommand\showstat[2]{% Str STR
+   \ifDNDnonempty{#2}{%
+     \expandafter\setstatnumber\expandafter{\rawgetDND{#2}}%
+     \pgfmathsetcounter{statmod}{floor((\value{statnumber} - 10) / 2)}%
+     \textrm{\small\textsc{#1}}\,\ensuremath{\signedmath{\value{statmod}}\saving{#2}}%
+   }{%
+     \textrm{\small\textsc{#1}}\,??
+   }%
+}
+
+\ExplSyntaxOn
+\NewDocumentCommand{\endwithperiod}{m}{\nr_end_with_period:n { #1 }}
+
+\cs_new_protected:Nn \nr_end_with_period:n
+  {
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    % Trim trailing explicit spaces, ties (~), and control-space (\ )
+    \regex_replace_once:nnN { (?:\s|~|\\ )+\Z } {} \l_tmpa_tl
+    % If it (now) ends with a dot, remove it
+    \regex_replace_once:nnN { \.\Z } {} \l_tmpa_tl
+    % Add exactly one dot
+    \tl_use:N \l_tmpa_tl .
+  }
+\ExplSyntaxOff
+
+
+\newcounter{profscounter}
+\def\gobbleprofs#1\end{\end}%
+
+\newcommand\commasep[1]{%
+  \begingroup
+    \def\bonus{\def\bonus{, }}%
+    #1%
+  \endgroup
+}
+
+\newcommand\showplayer[1]{%
+  \begingroup
+    \tabcolsep=4pt
+    \useDNDplayer{#1}%
+    \vskip 1.0\baselineskip plus 0.4\baselineskip minus 0.6\baselineskip
+    \begin{tabular}{|>{\raggedright \arraybackslash}p{\hsize-2\tabcolsep}|}
+    \multicolumn1{l}{%
+      \getDND*{CLASS} \emph{\getDND*{CHARACTER NAME}}
+      (\getDND*{RACE})
+    }%
+    \\
+    \hline
+    \getDND*{DESCRIPTION}
+    \\
+    \hline
+    \X
+  \begingroup
+    \newcommand\myspace{\hskip 1em minus 5pt}%
+    \hbox to \hsize{%
+      \showstat{Str}{STR}\myspace
+      \showstat{Dex}{DEX}\myspace
+      \showstat{Con}{CON}\myspace
+      \showstat{Int}{INT}\myspace
+      \showstat{Wis}{WIS}\myspace
+      \showstat{Cha}{CHA}%
+     }%
+  \endgroup
+    \\
+    \hline
+    \begingroup
+      \vspace*{-8pt}%
+      \raggedcolumns
+      \setcounter{profscounter}{0}
+      \multicolsep=0pt
+      \columnsep=3pt
+      \def\profskip{%
+%         \item {\upshape Skipped \arabic{profscounter}}
+         \let\profsnext\relax
+         \ifcase\value{profscounter}
+             \end{gmproflist}\end{multicols}%
+             \par\medskip
+             \stepcounter{profscounter}%
+             \begin{multicols}{3}\begin{gmproflist}
+             \def\profsnext{}%\relax
+         \or
+             \stepcounter{profscounter}%
+             \def\profsnext{}%
+         \or
+             \def\profsnext{\gobbleprofs}%
+         \fi
+         \profsnext
+      }%
+      \scshape
+      \begin{multicols}{3}
+\rightskip 0pt plus -3em
+      \begin{gmproflist}
+      \regexpVar\supE{PROFICIENCIES}%
+      \end{gmproflist}
+      \end{multicols}
+    \endgroup
+    \\
+    \hline
+{%
+\tracingmacros=1
+    \whenDNDnonempty{SENSES}{\regexpVar\endwithperiod{SENSES} }%
+}%
+    \whenDNDnonempty{ARMOR CLASS}{AC~\getDND{ARMOR CLASS}. }%
+    \whenDNDnonempty{SPELL DC}{Spell~DC~\getDND{SPELL DC}. }%
+    \whenDNDnonempty{BACKGROUND}{\getDND{BACKGROUND}. }%
+    \\
+    \whenDNDnonempty{BONUS ACTIONS}{\textbf{Bonus:} \commasep{\getDND{BONUS ACTIONS}}.\\}%
+    \whenDNDnonempty{GM NOTES}{\getDND{GM NOTES}\\}%
+    \whenDNDnonempty{MOTIVATION}{\emph{Motivation: \getDND{MOTIVATION}.}\\}%
+    \hline
+    \end{tabular}%
+  \endgroup
+}
+
+
+
+%\newcommand\setbonusactions[2]{%
+%  \expandafter\def\expandafter\csname bonus@actions@#1\endcsname{#2}%
+%}
+
+
+\input{stats}
+
+\begin{document}
+
+\raggedright
+
+\whenDNDplayer1{\showplayer1}
+
+\whenDNDplayer2{\showplayer2}
+
+
+
+%\player{%
+%  name={Rogue \vrule height 0pt depth 0.2pt width 2in\ (elf)},
+%  description={leather armor},
+%  stats={\emptystats}, % {\stats{-1}{+2}{+2\*}{+1}{+0}{+3\*}},
+%  proficiencies={{R1\\R2\\R3\\R4\\Perception\\Sleight \rlap{of Hand}\\Stealth}
+%                 {Common\\Elvish\\Thieves' Tools\\Disguise Kit}},
+%  other={},
+%}
+%
+%\player{%
+%  name={Ranger \vrule height 0pt depth 0.2pt width 2in\ (elf)},
+%  description={armor, weapons, longbow},
+%  stats={\emptystats}, %{\stats{-1}{+2}{+2}{+0}{+3\*}{+1\*}},
+%  proficiencies={{Nature\\Perception\\Survival\\R1\\R2\\R3}
+%                 {Common\\ Elvish\\L1}},
+%  other={Favored enemy, favored terrain},
+%}
+%
+
+%%\player{%
+%%  name={Bard \bard\ (high elf)},
+%%  description={},
+%%  stats={\stats{+0}{+2\*}{-1}{+2}{+1}{+2\*}},
+%%  proficiencies={{Acrobatics\\Arcana\\History\\Investigation\\Perception (13)\\
+%%                  Performance\\Persuasion}
+%%                 {Lyre\\(Common)\\(Elven)}},
+%%  other={Darkvision}
+%%}
+
+%\player{%
+%  name={Fighter \fighter\ (dwarf)},
+%  description={},
+%  stats={\stats{+3\*}{+2}{+2\*}{-1}{+2}{+0}},
+%  proficiencies={{Athletics\\Intimidation\\Perception~(14)\\Stonecunning*\\Survival}
+%                 {Common\\Dwarvish\\Dice set\\Land Vehicles\\Smith's Tools}},
+%  other={Darkvision 60ft; Protection; Military Rank}
+%}
+
+\medskip
+
+\vfilbreak
+
+\bigskip
+
+Passive perceptions: 15~(Arana, Elodie); 14~(Mira); 12~(Gwyndelle)
+
+\medskip
+
+Passive insights: 15~(Arana); 14~(Gwyndelle); 13~(Elodie); 12~(Mira)
+
+\bigskip
+
+\emph{\large Offensive Spells}
+\par
+\medskip
+\noindent
+\begin{tabular}{@{}c@{}}
+\toprule
+\begin{tabular}[t]{@{}e}
+\upshape{Attack roll}\\
+\midrule
+%Firebolt\\
+Guiding Bolt\\
+%Inflict Wounds\\
+Produce Flame\\
+%Ray of Frost (slows)\hbox{\qquad}\\
+%Shocking Grasp\\
+%Spiritual Weapon\\
+Thorn Whip\\
+\end{tabular}%
+\begin{tabular}[t]{e}
+\upshape{Saving throw}\\
+\midrule
+%Breath weapon \upshape(Dex~11, half)\\
+Bane \upshape(Cha~12)\\
+Charm Person \upshape(Wis~12)\\
+%Burning Hands (Dex~13)\\
+%Magic missile \upshape(always hits)\\
+%Burning Hands \upshape(Dex~13, half)\\
+%Sacred Flame \upshape(Dex~13, miss)\\
+%Thunderwave \upshape(Con~13, half)\\
+Turn Undead \upshape(Wis~12)\\
+%Vicious Mockery \upshape(Wis~12, miss)\\
+\end{tabular}\\
+\bottomrule
+\end{tabular}
+
+
+
+\noindent
+%%%%    \begin{tabular}[t]{@{}ll}
+%%%%    \multicolumn2{@{}l}{\emph{Damage Types}}\\
+%%%%    \barbarian
+%%%%    &Greataxe (\ul{slashing})\\
+%%%%    &Hand axe (\ul{slashing})\\
+%%%%    %&Ray of Frost (cold)\\
+%%%%    %&Vicious Mockery (psychic)\\
+%%%%    \cleric
+%%%%    &Mace (\ul{bludgeoning})\\
+%%%%    &Light crossbow (\ul{piercing})\\
+%%%%    &\emph{Guiding bolt} (\emph{radiant})\\
+%%%%    %\fighter
+%%%%    %&Longsword (\ul{slashing})\\
+%%%%    %&Dwarven long axe (\ul{slashing})\\
+%%%%    %\monk
+%%%%    %&Punch (\ul{bludgeoning})\\
+%%%%    %&Brass knuckle (\ul{bludgeoning})\\
+%%%%    %&Dart (\ul{piercing})\\
+%%%%    %\paladin
+%%%%    %&Greatsword (\ul{slashing})\\
+%%%%    %&Javelin (\ul{piercing})\\
+%%%%    %&Breath weapon (\ul{lightning})\\
+%%%%    \end{tabular}\hspace*{0.5em}%
+%%%%    \begin{tabular}[t]{ll@{}}
+%%%%    \strut&\\
+%%%%    %\rogue
+%%%%    %&Rapier (piercing)\\
+%%%%    %&Dagger (piercing)\\
+%%%%    %&Shortbow (piercing)\\
+%%%%    \sorcerer
+%%%%    &\emph{Firebolt ({fire})}\\
+%%%%    &\emph{Ray of Frost {cold})}\\
+%%%%    &Longbow (\ul{piercing})\\
+%%%%    &\emph{Shocking grasp ({lightning})}\\
+%%%%    &Light crossbow (\ul{piercing})\\
+%%%%    %\wizard
+%%%%    %&Longbow (\ul{piercing})\\
+%%%%    %&\emph{Ray of Frost ({cold})}\\
+%%%%    %%&Burning Hands (\emph{fire})\\
+%%%%    %&\emph{Magic Missile (\textbf{force})}\\
+%%%%    \end{tabular}
+
+%\noindent
+%\begin{tabular}{@{}ll}
+%Ghost:& V~\emph{force}\\
+%&R \ul{bludgeoning}, \ul{piercing}, \ul{slashing}\\
+%Zombies, Smith:&V \emph{fire}, \emph{radiant}\\
+%\end{tabular}
+
+%Passive perceptions:\\
+%\begin{tabular}{lll}
+%\bigstrut
+%13&\ranger &(bonus +3)\\
+%13&\bard &(bonus +3)\\
+%13&\cleric &(bonus +3)\\
+%12&\wizard &(bonus +2)\\
+%11&\fighter &(bonus +1)\\
+%\end{tabular}
+
+%\clearpage
+
+
+\newpage
+
+
+
+\whenDNDplayer3{\showplayer3}
+
+
+\whenDNDplayer4{\showplayer4}
+
+
+%%\player{%
+%%  name={Cleric \vrule height 0pt depth 0.2pt width 2in\ (dwarf)},
+%%  description={},
+%%  stats={\emptystats}, % {\stats{+3\*}{+2}{+2\*}{-1}{+1}{+0}},
+%%  proficiencies={{Insight\\Religion\\C1\\C2}
+%%                 {Common\\Dwarvish\\L1\\L2\\Tools}},
+%%  other={Darkvision 60ft},
+%%}
+%%
+%%\bigskip
+%%\player{%
+%%  name={Druid \vrule height 0pt depth 0.2pt width 2in\ (halfling)},
+%%  description={shield?, leather armor},
+%%  stats={\emptystats}, % \stats{+3\*}{+2}{+2\*}{-1}{+1}{+0}},
+%%  proficiencies={{Athletics\\Survival\\D1\\D2}
+%%                 {Common\\Druidic\\Halfling\\L1\\Herbalism kit}},
+%%  other={Lucky, Brave, Nimble, Resilient (poison), Wanderer},
+%%}
+
+
+\bigskip
+
+
+
+
+\bigskip
+
+\newcommand\C{\/\upshape{[C]}}
+
+\emph{\Large Durable Effects}
+\par
+\newcommand\?{\phantom{1}}
+\medskip
+\begin{tabular}[t]{@{}el@{}}
+{Bane \C}&\?1~min.\\
+%\st{Beast Sense \C}&\?1~hour\\
+Bless \C [VSM]&\?1~min.\\
+Charm Person &\?1~hour\\
+%Languages&\?1~hour\\
+%Detect Magic&10~min.\\
+Divine Favor [VS]&\?1~min.\\
+%Feather Fall&\?1~min.\\
+%Mage Armor&\?8~hours\\
+%Mage Hand&\?1~min.\\
+Light [VM]&\?1~hour\\
+%Minor Blessing&1~round\\
+%&+1~turn\\
+\end{tabular}
+\qquad
+\begin{tabular}[t]{@{}el@{}}
+%Friends \C&\?1~min.\\
+%Heroism \C&\?1~min.\\
+Hunter's Mark \C&\?1~hour\\
+%Light&\?1~hour\\
+%Rage&\?1~min.\ (combat only)\\
+Resistance \C [VSM]&\?1~min.\\
+%Sanctuary&\?1~min.\\
+%Shield&\?1~round\\
+Shield of Faith \C [VSM]&10~min.\\
+Speak with Animals [VS]&10~min.\\
+%Spiritual Weapon&\?1~min.\\
+%Silent Image \C&10~min.\\
+%Sleep&\?1~min.\\
+\end{tabular}
+
+\begingroup
+\medskip
+\parskip=0pt
+\parindent=0pt
+
+%L2 Sorcerer: 3~known, 4~cantrips, 3~spells, 2~sorcery points
+%
+%L2 Cleric: 3~cantrips, 5~choice spells, 2~domain spells (Bless, Cure Wounds)
+%
+%\medskip
+
+%%L1 Druid: 4~known, 4~cantrips, 4~L1~spells, 2~L2~spells, 3~sorcery
+%%points
+%%
+%%\hangindent=30pt
+%%L3 Cleric: 3~cantrips, 6~choice spells, 4~domain spells (Bless, Cure
+%%Wounds, Lesser Restoration, Spiritual Weapon)
+
+\endgroup
+
+%\player{%
+%  name={Paladin \paladin\ (dragonborn)},
+%  description={},
+%  stats={\stats{+3}{-1}{+1}{+0}{+1\*}{+3\*}},
+%  proficiencies={{Athletics\\Intimidation\\Persuasion\\Religion}
+%                 {Dice\\Land vehicles\\ Common\\ Draconic}},
+%  other={Lay on Hands; Chain mail (bad Stealth); Military Rank; Lightning Resistance;
+%         Divine Sense; Breath Weapon}
+%}
+
+%\enlargethispage{1\baselineskip}
+
+%\player{%
+%  name={Rogue \rogue\ (halfling)},
+%  description={},
+%  stats={\stats{+0}{+3\*}{+1}{+2\*}{-1}{+2}},
+%  proficiencies={{Acrobatics\\Animal \rlap{Handling}\\Deception\\
+%                  Investigation\E\\Stealth\E}
+%                 {Thieves' Tools\\Alchemist's\rlap{ Supp.}\\ Land Vehicles\\ Common\\Halfling\\ Thieves' Cant}},
+%  other={}
+%}
+%
+%\player{%
+%  name={Monk \monk\ (half-elf)},
+%  description={},
+%  stats={\stats{+0\*}{+3\*}{+1}{+2}{+2}{+0}},
+%  proficiencies={{Acrobatics\\History\\Insight\\
+%                  Investigation\\Performance\\Stealth}
+%                 {Thieves' Tools\\Leather
+%                 Tools\\ Common\\Elvish\\ Dwarfish\\Orcish}},
+%  other={Martial Arts; ``Hammerfist'' charisma}
+%}
+
+
+
+
+
+
+
+
+\end{document}
+

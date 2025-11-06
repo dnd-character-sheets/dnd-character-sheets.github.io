@@ -21,13 +21,22 @@ local function outf(out, ...)
   return out
 end
 
+local nothing = { }
+
 -- Global validation errors list
 local global_validation_errors = {}
+
+local curfile, last_file_announced
 
 local function verrorf(...)
   local msg = stringf(...)
   table.insert(global_validation_errors, msg)
-  eprintf('Validation error: %s\n', msg)
+  if last_file_announced ~= curfile then
+    eprintf('Validation error in %s: %s\n', curfile, msg)
+    last_file_announced = curfile
+  else
+    eprintf('Validation error: %s\n', msg)
+  end
 end
 
 function string.lfind(self, ...)
@@ -36,20 +45,31 @@ end
 
 ----------------------------------------------------------------
 
+local basename = arg[0]:gsub('^.*/', '')
+
+local function charoptions(parser)
+  return parser
+  :numarg(1)
+end
+
+local function gmoptions(parser)
+  return parser:minarg(1)
+end
+
 local fields = require 'flags'.parser()
-  :bool('standalone as s'):help('emit just definitions, not full file')
   :output_file('output as o'):help('where to write if not stdout')
-  :string('layout as t as l'):help('template for character sheet')
-  :bool('nocolor'):help('disable color')
   :bool('verbose as v')
+  :bool('nocolor'):help('disable color')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
   :bool('strict'):help('halt on field validation errors (default: warn and continue)')
+  :bool('standalone as s'):help('emit just definitions, not full file')
+  :string('layout as t as l'):help('template for character sheet')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets')
          :help('directory where character-sheet templates live') 
-  :numarg(1)
+  :wrap(basename == 'gmsheet' and gmoptions or charoptions)
   :parse(arg)
 
-local default_layout = 'silverpine'
+local default_layout = basename == 'charsheet' and 'silverpine' or 'gmsheet'
 
 local vprintf = fields.verbose and eprintf or function() end
 
@@ -497,6 +517,20 @@ local function validate_spell_slots(level, slots)
   end
 end
 
+local magic_property = {
+  bonus = 'the spell may be cast as a bonus action',
+  reaction = 'the spell may be cast as a reaction',
+  attack = 'casting the spell requires an attack roll',
+  save = 'casting the spell requires an enemy to make a saving throw',
+  enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
+  ritual = 'the spell may be cast as a ritual',
+  duration = 'how long the spell lasts, if more than one action',
+  concentration = 'the spell requires concentration',
+  name = 'Name of the spell',
+  description = 'How the spell works',
+}
+
+
 local function validate_magic_entry(entry)
   if not can_be 'table'(entry) then
     verrorf("MAGIC entry %q is not be a table", image(entry))
@@ -511,6 +545,12 @@ local function validate_magic_entry(entry)
     -- Spell entry
     if not nonempty_string(entry.description) then
         verrorf('spell %s does not have a description', tostring(entry.name))
+    end
+    for k in pairs(entry) do
+      if not magic_property[k] then
+        verrorf('spell %s is labeled with the unknown property %q',
+                tostring(entry.name), k)
+      end
     end
   elseif empty(entry.name) then
     verrorf('magic entry %q does not have a name', image(entry))
@@ -1506,6 +1546,29 @@ local function extend(doc)
     end
   end
 
+  if not doc['BONUS ACTIONS'] then
+    local function stripname(s)
+      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
+              :gsub([[\footnotesize%s*]], '')
+              :gsub('%s*%b[]', '')
+              :gsub('%s+$', '')
+    end
+    local bonuses = { }
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = doc[section] or nothing
+      for _, thing in ipairs(things) do
+        if thing.name and thing.bonus then
+          local name = stripname(thing.name)
+          local description =
+            thing['GM note'] and stringf('%s [%s]', name, thing['GM note']) or name
+          table.insert(bonuses, stringf([[\bonus{%s}]], description))
+        end
+      end
+    end
+    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n')
+  end
+
+
   return doc
 end
 
@@ -1561,7 +1624,7 @@ local function fill_template(assignments, layout)
     os.exit(1)
   else
     local bracketed_splash = stringf('{%s/splash.png}', fields.templates)
-    return (template:gsub('\n%s*\\input%b{}', assignments)
+    return (template:gsub('\n[ \t]*\\input%b{}', '\n' .. assignments)
                     :gsub('%{splash.png%}', bracketed_splash)
            )
   end
@@ -1579,9 +1642,7 @@ end
 
 local runlatex = [=[
 pdflatex=$PDFLATEX
-output=$OUTPUT
-
-rm -f "$OUTPUT"
+output="$OUTPUT"
 
 dir="$(mktemp -d)"
 trap "rm -rf $dir" 0
@@ -1595,6 +1656,8 @@ fi
 
 if [[ -r "$dir/sheet.pdf" ]]; then
   cp "$dir/sheet.pdf" "$output"
+else
+  rm -f "$output"
 fi
 ]=]
 
@@ -1640,8 +1703,9 @@ local function process(output)
   end
 end
 
-local main = function(arg)
-  local yaml_text = slurp(arg[1])
+local function sheet_of_file(pathname)
+  curfile = pathname
+  local yaml_text = slurp(pathname)
   local ok, doc, msg = pcall(lyaml.load, yaml_text)
   if not ok or type(doc) ~= 'table' then
     eprintf('charsheet load failed %s\n', (not ok and doc) or msg or 'YAML loaded as string')
@@ -1677,9 +1741,34 @@ local main = function(arg)
       doc['VALIDATION ERRORS'] = global_validation_errors
     end
   end
+  return doc
+end
+
+local scripts = { }
+function scripts.charsheet(arg)
+  local doc = sheet_of_file(arg[1])
   local layout = fields.layout or doc.LAYOUT or default_layout
   process(wrap_latex(convert_mapping(doc), layout, font))
 end
 
+local function newline(s)
+  return s .. '\n'
+end
 
-main(arg)
+function scripts.gmsheet(arg)
+  local latexs = { }
+  for i, playerfile in ipairs(arg) do
+    local doc = sheet_of_file(playerfile)
+    local defs = convert_mapping(doc)
+    table.insert(latexs, stringf(newline [[\setDNDplayer{%d}{%s}]], i, defs))
+  end
+  local layout = fields.layout or default_layout
+  process(wrap_latex(table.concat(latexs, '\n'), layout, font))
+end
+
+if scripts[basename] then
+  scripts[basename](arg)
+else
+  dief('%s: I expected to be called as `charsheet` or `gmsheet`.\n')
+end
+
