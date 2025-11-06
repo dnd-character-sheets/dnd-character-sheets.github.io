@@ -1,0 +1,64 @@
+Session Handover Report
+
+  Project: D&D Character Sheet Generation SystemWorking Directory:
+  /home/nr/etc/dnd/resources/character-sheetsDate: 2025-10-07
+
+  Recent Work Completed
+
+  1. CSS Extraction (Major)
+    - Split all CSS from character-form.html into separate
+  docs/charsheet.css file
+    - Updated HTML to use <link rel="stylesheet" href="charsheet.css">
+    - Version updated from "yuzu5" → "artichoke" (user's numbering
+  convention noted)
+  2. YAML File Cleanup (Major)
+    - Fixed GP value duplication issue across all king-*.yaml files
+    - Moved GP values from bottom of files to proper top location (coin
+  totals section)
+    - Final GP values: barbarian(5), cleric(10), paladin(10), rogue(10),
+  sorcerer(10), wizard(10), fighter(""), monk("")
+
+  Important Conventions Established
+
+  - Version Naming: User prefers vegetable names WITHOUT numbers (I add
+  numbers, user removes them to track who made changes)
+  - YAML Structure: GP values belong in coin totals section near top, not
+  duplicated at bottom
+  - AMMO Format: Uses separate AMMO TYPE (string) and AMMO COUNT (number)
+  fields, not single AMMO field
+  - Class/Level Parsing: Supports both legacy "CLASS & LEVEL": "Fighter 1"
+  and modern separate CLASS/LEVEL fields
+
+  Current File States
+
+  - character-form.html: Version "artichoke", links to external CSS, fully
+  functional web form
+  - docs/charsheet.css: Contains all extracted styles, deployed at same
+  level as HTML
+  - All king-*.yaml: GP values cleaned up, no duplicates, ready for use
+  - insert-pregen-yamls: Lua script for embedding YAML data, uses flags
+  module
+
+  Key Technical Context
+
+  - LaTeX System: Uses charsheet.sty package with \setDND{}, \addDNDitem{},
+  \attackkeys{} macros
+  - TikZ Issues: \pgfmathsetcounter has restrictions in node text contexts,
+  use \pgfmathparse instead
+  - JavaScript Features: Form supports markdown-style list conversion,
+  pregenerated character loading, bidirectional YAML conversion
+  - Validation: charsheet script validates YAML, handles AMMO TYPE/COUNT
+  relationships
+
+  Previous Session Context
+
+  Long conversation focused on:
+  1. AMMO format changes (single field → TYPE/COUNT fields)
+  2. LaTeX macro development (\statdc{} for DC calculations)
+  3. JavaScript proficiency enhancements (markdown list support)
+  4. Sample YAML loader implementation
+  5. Multiple UI/CSS alignment fixes
+  6. Version management and file organization
+
+  All major systems are functional and files are in clean state for
+  continued development.
