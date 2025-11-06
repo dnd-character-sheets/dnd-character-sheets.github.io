@@ -1,0 +1,85 @@
+#!/usr/bin/env lua5.1
+--------------------------------------------------------------------------
+-- yaml-to-dndtex.lua   ‒  Convert character-sheet YAML to LaTeX macros
+-- Usage:   lua yaml-to-dndtex.lua  file.yaml   > file.tex
+--          cat file.yaml | lua yaml-to-dndtex.lua   > file.tex
+--------------------------------------------------------------------------
+
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function printf(...) return io.stdout:write(stringf(...)) end
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function fprintf(fd, ...) return fd:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function luaerrorf(...) return error(stringf(...)) end
+local function runf(...) return os.execute(stringf(...)) end
+local function warnf(...)
+  io.stderr:write 'Warning: '; eprintf(...); io.stderr:write '\n'
+end
+local function outf(out, ...)
+  table.insert(out, stringf(...))
+  return out
+end
+
+-- Global validation errors list
+local global_validation_errors = {}
+
+local function verrorf(...)
+  local msg = stringf(...)
+  table.insert(global_validation_errors, msg)
+  eprintf('Validation error: %s\n', msg)
+end
+
+function string.lfind(self, ...)
+  return self:lower():find(...)
+end  
+
+----------------------------------------------------------------
+
+local fields = require 'flags'.parser()
+  :bool('verbose as v')
+  :parse(arg)
+
+local vprintf = fields.verbose and eprintf or function() end
+
+local lyaml  = require "lyaml"
+local function isnull(v) return v == lyaml.null end
+
+assert(lyaml.dump)
+local function image(v)
+  return lyaml.dump({v}):gsub([[\]], [[\textbackslash{}]])
+                        :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]])
+end
+
+local function slurp(filename)
+  if filename == '-' or filename == '.' or not filename then
+    return io.stdin:read("*a")
+  else
+    local f = assert(io.open(filename, "r"))
+    local txt = f:read("*a"); f:close(); return txt
+  end
+end
+
+local nothing = {}
+
+local function show(fd, filename)
+  local txt = fd:read '*a'
+  
+  local ok, doc, msg = pcall(lyaml.load, txt)
+  if not ok or type(doc) ~= 'table' then
+    dief('%s load failed %s\n',
+            arg[0], (not ok and doc) or msg or 'YAML loaded as string')
+  end
+  assert(type(doc) == 'table')
+
+  printf('%s:\n', doc['CHARACTER NAME'] or filename or 'stdin')
+  for _, key in ipairs { 'ATTACKS', 'MAGIC', 'FEATURES' } do
+    for _, thing in ipairs(doc[key] or nothing) do
+      if thing.bonus then
+         printf('  - %s\n', thing.name or thing.NAME or '???')
+      end
+    end
+  end
+end
+
+require 'catpattern'.run(show, arg)
