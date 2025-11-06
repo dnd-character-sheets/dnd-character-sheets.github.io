@@ -233,6 +233,20 @@ local function scalarvalues(list)
     end)
 end
 
+local function named_things(doc)
+  return coroutine.wrap(function()
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = doc[section] or nothing
+      for _, thing in ipairs(things) do
+        if thing.name then
+          coroutine.yield(thing)
+        end
+      end
+    end
+  end)
+end
+
+
 -------------------------------------------------
 ---
 -- 
@@ -1406,8 +1420,8 @@ local saving_throw_proficiencies = {
 local function same_values(v1, v2)
   local s1, s2 = tostring(s1), tostring(s2)
   return v1 == v2 or
-         v1:find '^%d+$' and v2 == '+' .. v1 or
-         v2:find '^%d+$' and v1 == '+' .. v2
+         s1:find '^%d+$' and s2 == '+' .. s1 or
+         s2:find '^%d+$' and s1 == '+' .. s2
 end
 
 local function has_perception(t)
@@ -1452,8 +1466,8 @@ local function extend(doc)
   local function update(field, value) -- checks for consistency
     local v = doc[field]
     if v and tostring(v):find '%S' and not same_values(v, value) then
-      verror('Value %s computed as %s, but input says %s\n',
-             field, tostring(value), tostring(v))
+      verrorf('Value %s computed as %s, but input says %s\n',
+              field, tostring(value), tostring(v))
     elseif not tostring(v):find '^%+' then
       doc[field] = value
     end
@@ -1545,6 +1559,9 @@ local function extend(doc)
       end
     end
   end
+
+  --- GM things.  Not clear to me this should be done with variables
+
 
   if not doc['BONUS ACTIONS'] then
     local function stripname(s)
@@ -1661,8 +1678,7 @@ else
 fi
 ]=]
 
-local function wrap_latex(assignments, layout, font)
-  local latex = sanitize_control_sequences(escape(assignments))
+local function wrap_latex(latex, layout, font)
   local output = fields.standalone and latex or fill_template(latex, layout)
   if font then
     output = output:gsub([[\documentclass.-%d+pt.-article]],
@@ -1748,22 +1764,141 @@ local scripts = { }
 function scripts.charsheet(arg)
   local doc = sheet_of_file(arg[1])
   local layout = fields.layout or doc.LAYOUT or default_layout
-  process(wrap_latex(convert_mapping(doc), layout, font))
+  local latex = sanitize_control_sequences(escape(convert_mapping(doc)))
+  process(wrap_latex(latex, layout, font))
 end
 
-local function newline(s)
+local function plus_newline(s)
   return s .. '\n'
 end
 
+local function namelt (t1, t2) return t1.name < t2.name end
+
 function scripts.gmsheet(arg)
-  local latexs = { }
+  local latexes = { }
+  local docs = { }
   for i, playerfile in ipairs(arg) do
     local doc = sheet_of_file(playerfile)
-    local defs = convert_mapping(doc)
-    table.insert(latexs, stringf(newline [[\setDNDplayer{%d}{%s}]], i, defs))
+    table.insert(docs, doc)
+    local defs = sanitize_control_sequences(escape(convert_mapping(doc)))
+    table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
   end
+
+  do -- durable effects
+    local function dname(thing)
+      local s = thing.name
+      local concentration = ''
+      if thing.concentration or s:find('%b[]') and s:find('%AC%A') then
+        concentration = [[ \C]]
+      end
+      return s:gsub('%s+%b[]', ''):gsub([[\rlap%s*%b{}]], ''):gsub(',%s*$', '') ..
+             concentration
+    end
+
+    local durables = { }
+    for _, doc in ipairs(docs) do
+      for thing in named_things(doc) do
+        if thing.duration then
+          table.insert(durables, thing)
+        end
+      end
+    end
+    table.sort(durables, namelt)
+    local code = {}
+    local function outdurable(thing)
+      local duration = stringf([[\?%s]], thing.duration):gsub([[%\%?(%d%d)]], '%1')
+      outf(code, plus_newline [[  \durable{%s}{%s}%%]], dname(thing), duration)
+    end
+    local function outdurables(lo, hi)
+      outf(code, '%%\n {%%\n')
+      for i = lo, hi do
+        outdurable(durables[i])
+      end
+      outf(code, ' }')
+    end
+    outf(code, [[\def\durables{]])
+    local mid = math.ceil(#durables/2.0)
+    outdurables(1, mid)
+    outdurables(mid+1, #durables)
+    outf(code, '}')
+
+    table.insert(latexes, table.concat(code, ''))
+  end
+ 
+  do -- attack spells
+    local attacks = { }
+    for _, doc in ipairs(docs) do
+      for spell in named_things(doc) do
+        if spell.attack then
+          table.insert(attacks, spell)
+        end
+      end
+    end
+    table.sort(attacks, namelt)
+    for i, attack in ipairs(attacks) do
+      attacks[i] = stringf([[\attack{%s}]], attack.name)
+    end
+    table.insert(latexes,
+                 stringf([[\def\spellattacks]] .. '{%%\n  %s%%\n}%%\n',
+                         table.concat(attacks, '%\n  ')))
+  end
+
+  local function first_initial(doc)
+    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u'
+    return first
+  end
+
+  do -- saving-throw spells
+    local savedocs = { } -- map spell name to list of docs
+    local savestats = { } -- and to stat
+    for _, doc in ipairs(docs) do
+      for spell in named_things(doc) do
+        if spell.save then
+          local name = spell.name:gsub('%s*%b[]', '')
+          savestats[name] = spell.save
+          savedocs[name] = savedocs[name] or {}
+          table.insert(savedocs[name], doc)
+        end
+      end
+    end
+    local savekeys = { }
+    for spell in pairs(savedocs) do
+      table.insert(savekeys, spell)
+    end
+    require 'inspect'.show { savekeys = savekeys }
+    table.sort(savekeys)
+    for i, spellname in ipairs(savekeys) do
+      local dcs = { }
+      for _, doc in ipairs(savedocs[spellname]) do
+        local dc = tonumber(doc['SPELL DC'])
+        dcs[dc] = dcs[dc] or { }
+        table.insert(dcs[dc], doc)
+      end
+      local suffix
+      if is_singleton_table(dcs) then
+        require 'inspect'.show(dcs)
+        suffix = stringf([[\textsc{%s}~%d]], savestats[spellname], (next(dcs)))
+      else
+        local dclist = { }
+        for _, doc in ipairs(savedocs[spellname]) do
+          local s = stringf('%s,~%d', first_initial(doc), tonumber(doc['SPELL DC']))
+          table.insert(dclist, s)
+        end
+        suffix =
+          stringf([[\textsc{%s}: %s]], savestats[spellname], table.concat(dclist, '; '))
+      end
+      savedocs[i] = stringf([[\savespell{%s}{%s}]], spellname, suffix)
+    end
+    table.insert(latexes,
+                 stringf([[\def\spellsaves]] .. '{%%\n  %s%%\n}%%\n',
+                         table.concat(savedocs, '%\n  ')))
+  end
+
+    
+    
+
   local layout = fields.layout or default_layout
-  process(wrap_latex(table.concat(latexs, '\n'), layout, font))
+  process(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
 
 if scripts[basename] then

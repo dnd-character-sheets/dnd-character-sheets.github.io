@@ -10,6 +10,8 @@
 \parindent=0pt
 \newcommand\bigstrut{\vrule width 0pt height 12pt}
 \newcommand\X{\leavevmode\bigstrut}
+\newcommand\deepstrut{\vrule width 0pt depth 5pt}
+\newcommand\Y{\deepstrut}
 
 \newcommand\vfilbreak[1][3\baselineskip]{\vskip 0pt plus #1\penalty-200 \vskip 0pt plus -#1}
 
@@ -128,7 +130,8 @@
     }%
     \\
     \hline
-    \getDND*{DESCRIPTION}
+    \X
+    \getDND*{DESCRIPTION}\Y
     \\
     \hline
     \X
@@ -146,7 +149,7 @@
     \\
     \hline
     \begingroup
-      \vspace*{-8pt}%
+      \vspace*{-9pt}%
       \raggedcolumns
       \setcounter{profscounter}{0}
       \multicolsep=0pt
@@ -178,12 +181,10 @@
     \endgroup
     \\
     \hline
-{%
-\tracingmacros=1
+    \X
     \whenDNDnonempty{SENSES}{\regexpVar\endwithperiod{SENSES} }%
-}%
-    \whenDNDnonempty{ARMOR CLASS}{AC~\getDND{ARMOR CLASS}. }%
     \whenDNDnonempty{SPELL DC}{Spell~DC~\getDND{SPELL DC}. }%
+    \whenDNDnonempty{ARMOR CLASS}{AC~\getDND{ARMOR CLASS}. }%
     \whenDNDnonempty{BACKGROUND}{\getDND{BACKGROUND}. }%
     \\
     \whenDNDnonempty{BONUS ACTIONS}{\textbf{Bonus:} \commasep{\getDND{BONUS ACTIONS}}.\\}%
@@ -265,41 +266,59 @@ Passive insights: 15~(Arana); 14~(Gwyndelle); 13~(Elodie); 12~(Mira)
 
 \bigskip
 
-\emph{\large Offensive Spells}
+\emph{\large Offensive Spells and Features}
 \par
 \medskip
 \noindent
-\begin{tabular}{@{}c@{}}
-\toprule
-\begin{tabular}[t]{@{}e}
-\upshape{Attack roll}\\
-\midrule
-%Firebolt\\
-Guiding Bolt\\
-%Inflict Wounds\\
-Produce Flame\\
-%Ray of Frost (slows)\hbox{\qquad}\\
-%Shocking Grasp\\
-%Spiritual Weapon\\
-Thorn Whip\\
-\end{tabular}%
-\begin{tabular}[t]{e}
-\upshape{Saving throw}\\
-\midrule
-%Breath weapon \upshape(Dex~11, half)\\
-Bane \upshape(Cha~12)\\
-Charm Person \upshape(Wis~12)\\
-%Burning Hands (Dex~13)\\
-%Magic missile \upshape(always hits)\\
-%Burning Hands \upshape(Dex~13, half)\\
-%Sacred Flame \upshape(Dex~13, miss)\\
-%Thunderwave \upshape(Con~13, half)\\
-Turn Undead \upshape(Wis~12)\\
-%Vicious Mockery \upshape(Wis~12, miss)\\
-\end{tabular}\\
-\bottomrule
-\end{tabular}
-
+\begingroup
+  \def\attack#1{#1\\}%
+  \def\savespell#1#2{#1 \upshape(#2)\\}%
+  \begin{tabular}{@{}c@{}}
+  \toprule
+  \begin{tabular}[t]{@{}e}
+  \upshape{Attack roll}\\
+  \midrule
+  \spellattacks
+  \end{tabular}%
+  \begin{tabular}[t]{e}
+  \upshape{Saving throw}\\
+  \midrule
+  \spellsaves
+  \end{tabular}\\
+  \bottomrule
+  \end{tabular}
+\endgroup
+%%%%\begin{tabular}{@{}c@{}}
+%%%%\toprule
+%%%%\begin{tabular}[t]{@{}e}
+%%%%\upshape{Attack roll}\\
+%%%%\midrule
+%%%%%Firebolt\\
+%%%%Guiding Bolt\\
+%%%%%Inflict Wounds\\
+%%%%Produce Flame\\
+%%%%%Ray of Frost (slows)\hbox{\qquad}\\
+%%%%%Shocking Grasp\\
+%%%%%Spiritual Weapon\\
+%%%%Thorn Whip\\
+%%%%\end{tabular}%
+%%%%\begin{tabular}[t]{e}
+%%%%\upshape{Saving throw}\\
+%%%%\midrule
+%%%%%Breath weapon \upshape(Dex~11, half)\\
+%%%%Bane \upshape(Cha~12)\\
+%%%%Charm Person \upshape(Wis~12)\\
+%%%%%Burning Hands (Dex~13)\\
+%%%%%Magic missile \upshape(always hits)\\
+%%%%%Burning Hands \upshape(Dex~13, half)\\
+%%%%%Sacred Flame \upshape(Dex~13, miss)\\
+%%%%%Thunderwave \upshape(Con~13, half)\\
+%%%%Turn Undead \upshape(Wis~12)\\
+%%%%%Vicious Mockery \upshape(Wis~12, miss)\\
+%%%%\end{tabular}\\
+%%%%\bottomrule
+%%%%\end{tabular}
+%%%%
 
 
 \noindent
@@ -404,41 +423,29 @@ Turn Undead \upshape(Wis~12)\\
 
 \newcommand\C{\/\upshape{[C]}}
 
+\newcommand\durablestable[2]{%
+  \begingroup
+    \def\durable##1##2{##1&##2\\}%
+    \begin{tabular}{@{}ll@{}}
+      \begin{tabular}[t]{@{}el@{}}
+         #1
+      \end{tabular}
+      &
+      \begin{tabular}[t]{@{}el@{}}
+         #2
+      \end{tabular}
+      \\
+    \end{tabular}
+  \endgroup
+}
+
+\newcommand\?{\phantom{1}}
+
 \emph{\Large Durable Effects}
 \par
-\newcommand\?{\phantom{1}}
 \medskip
-\begin{tabular}[t]{@{}el@{}}
-{Bane \C}&\?1~min.\\
-%\st{Beast Sense \C}&\?1~hour\\
-Bless \C [VSM]&\?1~min.\\
-Charm Person &\?1~hour\\
-%Languages&\?1~hour\\
-%Detect Magic&10~min.\\
-Divine Favor [VS]&\?1~min.\\
-%Feather Fall&\?1~min.\\
-%Mage Armor&\?8~hours\\
-%Mage Hand&\?1~min.\\
-Light [VM]&\?1~hour\\
-%Minor Blessing&1~round\\
-%&+1~turn\\
-\end{tabular}
-\qquad
-\begin{tabular}[t]{@{}el@{}}
-%Friends \C&\?1~min.\\
-%Heroism \C&\?1~min.\\
-Hunter's Mark \C&\?1~hour\\
-%Light&\?1~hour\\
-%Rage&\?1~min.\ (combat only)\\
-Resistance \C [VSM]&\?1~min.\\
-%Sanctuary&\?1~min.\\
-%Shield&\?1~round\\
-Shield of Faith \C [VSM]&10~min.\\
-Speak with Animals [VS]&10~min.\\
-%Spiritual Weapon&\?1~min.\\
-%Silent Image \C&10~min.\\
-%Sleep&\?1~min.\\
-\end{tabular}
+\expandafter\durablestable\durables
+
 
 \begingroup
 \medskip
