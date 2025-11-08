@@ -1,11 +1,14 @@
 \documentclass[12pt,twocolumn]{article}
-%\usepackage[margin=0.8cm]{geometry}
 \usepackage{times}
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{charsheet}
-\newcolumntype{e}{>{\itshape}l}
 \usepackage{soul}
+\usepackage{multicol}
+\usepackage{enumitem}
+
+\newcolumntype{e}{>{\itshape}l}
+
 \pagestyle{empty}
 \parindent=0pt
 \newcommand\bigstrut{\vrule width 0pt height 12pt}
@@ -15,25 +18,9 @@
 
 \newcommand\vfilbreak[1][3\baselineskip]{\vskip 0pt plus #1\penalty-200 \vskip 0pt plus -#1}
 
-
-\newcommand\E{\rlap{ [E]}}
-
-\newcommand\saving[1]{%
-  \whenDNDtrue{#1 SAVING}{{}^*}%
-}
-
-   % calc package rounds toward zero; do not use
-
-
-
-\usepackage{multicol}
-\usepackage{enumitem}
-
-
 \makeatletter
 
 \let\expandArg=\@expandArg
-
 
 \newenvironment{gmproflist}
   {\clubpenalty=10000
@@ -50,8 +37,6 @@
       \setlength{\parsep}{0pt}%
       \setlength{\itemsep}{1pt}% space between items
       \renewcommand*{\makelabel}[1]{}% suppress the bullet
-%      \let\trueitem\item
-%      \def\item{\trueitem \textbf}%
       \baselineskip=13pt
   }}%
   {\end{list}}
@@ -68,9 +53,7 @@
 
 \makeatother
 
-
-
-
+%% regexp-based editing commands
 
 \ExplSyntaxOn
 \DeclareRobustCommand{\supE}[1]{\nr_supE:n { #1 }}
@@ -85,22 +68,7 @@
   }
 \ExplSyntaxOff
 
-\newcommand\regexpVar[2]{
-   \expandArg{\expandArg{\expandArg#1}}{\rawgetDND{#2}}%
-}
 
-\newcommand\mysuperE{\rlap{\textsuperscript{E}}}
-
-
-\newcommand\showstat[2]{% Str STR
-   \ifDNDnonempty{#2}{%
-     \expandafter\setstatnumber\expandafter{\rawgetDND{#2}}%
-     \pgfmathsetcounter{statmod}{floor((\value{statnumber} - 10) / 2)}%
-     \textrm{\small\textsc{#1}}\,\ensuremath{\signedmath{\value{statmod}}\saving{#2}}%
-   }{%
-     \textrm{\small\textsc{#1}}\,??
-   }%
-}
 
 \ExplSyntaxOn
 \NewDocumentCommand{\endwithperiod}{m}{\nr_end_with_period:n { #1 }}
@@ -117,8 +85,28 @@
   }
 \ExplSyntaxOff
 
+\newcommand\regexpVar[2]{% apply command to tokens stored in var
+   \expandArg{\expandArg{\expandArg#1}}{\rawgetDND{#2}}%
+}
 
-\newcounter{profscounter}
+\newcommand\mysuperE{\rlap{\textsuperscript{E}}}
+
+
+\newcommand\showstat[2]{% Str STR % get modifier, saving bonus
+   \ifDNDnonempty{#2}{%
+     \expandafter\setstatnumber\expandafter{\rawgetDND{#2}}%
+     \pgfmathsetcounter{statmod}{floor((\value{statnumber} - 10) / 2)}%
+     \textrm{\small\textsc{#1}}\,\ensuremath{\signedmath{\value{statmod}}\saving{#2}}%
+   }{%
+     \textrm{\small\textsc{#1}}\,??
+   }%
+}
+
+\newcommand\saving[1]{%
+  \whenDNDtrue{#1 SAVING}{{}^*}%
+}
+
+\newcounter{profscounter}  % counts groups of proficiencies
 \def\gobbleprofs#1\end{\end}%
 
 \newcommand\commasep[1]{%
@@ -166,7 +154,6 @@
       \multicolsep=0pt
       \columnsep=3pt
       \def\profskip{%
-%         \item {\upshape Skipped \arabic{profscounter}}
          \let\profsnext\relax
          \ifcase\value{profscounter}
              \end{gmproflist}\end{multicols}%
@@ -184,7 +171,7 @@
       }%
       \scshape
       \begin{multicols}{3}
-\rightskip 0pt plus -3em
+      \rightskip 0pt plus -3em  % cheat into right margin
       \begin{gmproflist}
       \regexpVar\supE{PROFICIENCIES}%
       \end{gmproflist}
@@ -212,14 +199,9 @@
 }
 
 
+\input{stats} % loads data on players plus group data
 
-%\newcommand\setbonusactions[2]{%
-%  \expandafter\def\expandafter\csname bonus@actions@#1\endcsname{#2}%
-%}
-
-
-
-\input{stats}
+\columnsep=15pt
 
 \begin{document}
 
@@ -229,49 +211,7 @@
 
 \whenDNDplayer2{\showplayer2}
 
-
-
-%\player{%
-%  name={Rogue \vrule height 0pt depth 0.2pt width 2in\ (elf)},
-%  description={leather armor},
-%  stats={\emptystats}, % {\stats{-1}{+2}{+2\*}{+1}{+0}{+3\*}},
-%  proficiencies={{R1\\R2\\R3\\R4\\Perception\\Sleight \rlap{of Hand}\\Stealth}
-%                 {Common\\Elvish\\Thieves' Tools\\Disguise Kit}},
-%  other={},
-%}
-%
-%\player{%
-%  name={Ranger \vrule height 0pt depth 0.2pt width 2in\ (elf)},
-%  description={armor, weapons, longbow},
-%  stats={\emptystats}, %{\stats{-1}{+2}{+2}{+0}{+3\*}{+1\*}},
-%  proficiencies={{Nature\\Perception\\Survival\\R1\\R2\\R3}
-%                 {Common\\ Elvish\\L1}},
-%  other={Favored enemy, favored terrain},
-%}
-%
-
-%%\player{%
-%%  name={Bard \bard\ (high elf)},
-%%  description={},
-%%  stats={\stats{+0}{+2\*}{-1}{+2}{+1}{+2\*}},
-%%  proficiencies={{Acrobatics\\Arcana\\History\\Investigation\\Perception (13)\\
-%%                  Performance\\Persuasion}
-%%                 {Lyre\\(Common)\\(Elven)}},
-%%  other={Darkvision}
-%%}
-
-%\player{%
-%  name={Fighter \fighter\ (dwarf)},
-%  description={},
-%  stats={\stats{+3\*}{+2}{+2\*}{-1}{+2}{+0}},
-%  proficiencies={{Athletics\\Intimidation\\Perception~(14)\\Stonecunning*\\Survival}
-%                 {Common\\Dwarvish\\Dice set\\Land Vehicles\\Smith's Tools}},
-%  other={Darkvision 60ft; Protection; Military Rank}
-%}
-
 \medskip
-
-\vfilbreak
 
 \newcommand\showpassive[1]{%
   \whenpassive{#1}{%
@@ -289,169 +229,12 @@
 \showpassive{Perception}
 \showpassive{Insight}
 
-%
-%\bigskip
-%
-%Passive perceptions: 15~(Arana, Elodie); 14~(Mira); 12~(Gwyndelle)
-%
-%\medskip
-%
-%Passive insights: 15~(Arana); 14~(Gwyndelle); 13~(Elodie); 12~(Mira)
-
-\bigskip
-
-\emph{\large Offensive Spells and Features}
-\par
-\medskip
-\noindent
-\begingroup
-  \def\attack#1{#1\\}%
-  \def\savespell#1#2{#1 \upshape(#2)\\}%
-  \begin{tabular}{@{}c@{}}
-  \toprule
-  \begin{tabular}[t]{@{}e}
-  \upshape{Attack roll}\\
-  \midrule
-  \spellattacks
-  \end{tabular}%
-  \begin{tabular}[t]{e}
-  \upshape{Saving throw}\\
-  \midrule
-  \spellsaves
-  \end{tabular}\\
-  \bottomrule
-  \end{tabular}
-\endgroup
-%%%%\begin{tabular}{@{}c@{}}
-%%%%\toprule
-%%%%\begin{tabular}[t]{@{}e}
-%%%%\upshape{Attack roll}\\
-%%%%\midrule
-%%%%%Firebolt\\
-%%%%Guiding Bolt\\
-%%%%%Inflict Wounds\\
-%%%%Produce Flame\\
-%%%%%Ray of Frost (slows)\hbox{\qquad}\\
-%%%%%Shocking Grasp\\
-%%%%%Spiritual Weapon\\
-%%%%Thorn Whip\\
-%%%%\end{tabular}%
-%%%%\begin{tabular}[t]{e}
-%%%%\upshape{Saving throw}\\
-%%%%\midrule
-%%%%%Breath weapon \upshape(Dex~11, half)\\
-%%%%Bane \upshape(Cha~12)\\
-%%%%Charm Person \upshape(Wis~12)\\
-%%%%%Burning Hands (Dex~13)\\
-%%%%%Magic missile \upshape(always hits)\\
-%%%%%Burning Hands \upshape(Dex~13, half)\\
-%%%%%Sacred Flame \upshape(Dex~13, miss)\\
-%%%%%Thunderwave \upshape(Con~13, half)\\
-%%%%Turn Undead \upshape(Wis~12)\\
-%%%%%Vicious Mockery \upshape(Wis~12, miss)\\
-%%%%\end{tabular}\\
-%%%%\bottomrule
-%%%%\end{tabular}
-%%%%
-
-
-\noindent
-%%%%    \begin{tabular}[t]{@{}ll}
-%%%%    \multicolumn2{@{}l}{\emph{Damage Types}}\\
-%%%%    \barbarian
-%%%%    &Greataxe (\ul{slashing})\\
-%%%%    &Hand axe (\ul{slashing})\\
-%%%%    %&Ray of Frost (cold)\\
-%%%%    %&Vicious Mockery (psychic)\\
-%%%%    \cleric
-%%%%    &Mace (\ul{bludgeoning})\\
-%%%%    &Light crossbow (\ul{piercing})\\
-%%%%    &\emph{Guiding bolt} (\emph{radiant})\\
-%%%%    %\fighter
-%%%%    %&Longsword (\ul{slashing})\\
-%%%%    %&Dwarven long axe (\ul{slashing})\\
-%%%%    %\monk
-%%%%    %&Punch (\ul{bludgeoning})\\
-%%%%    %&Brass knuckle (\ul{bludgeoning})\\
-%%%%    %&Dart (\ul{piercing})\\
-%%%%    %\paladin
-%%%%    %&Greatsword (\ul{slashing})\\
-%%%%    %&Javelin (\ul{piercing})\\
-%%%%    %&Breath weapon (\ul{lightning})\\
-%%%%    \end{tabular}\hspace*{0.5em}%
-%%%%    \begin{tabular}[t]{ll@{}}
-%%%%    \strut&\\
-%%%%    %\rogue
-%%%%    %&Rapier (piercing)\\
-%%%%    %&Dagger (piercing)\\
-%%%%    %&Shortbow (piercing)\\
-%%%%    \sorcerer
-%%%%    &\emph{Firebolt ({fire})}\\
-%%%%    &\emph{Ray of Frost {cold})}\\
-%%%%    &Longbow (\ul{piercing})\\
-%%%%    &\emph{Shocking grasp ({lightning})}\\
-%%%%    &Light crossbow (\ul{piercing})\\
-%%%%    %\wizard
-%%%%    %&Longbow (\ul{piercing})\\
-%%%%    %&\emph{Ray of Frost ({cold})}\\
-%%%%    %%&Burning Hands (\emph{fire})\\
-%%%%    %&\emph{Magic Missile (\textbf{force})}\\
-%%%%    \end{tabular}
-
-%\noindent
-%\begin{tabular}{@{}ll}
-%Ghost:& V~\emph{force}\\
-%&R \ul{bludgeoning}, \ul{piercing}, \ul{slashing}\\
-%Zombies, Smith:&V \emph{fire}, \emph{radiant}\\
-%\end{tabular}
-
-%Passive perceptions:\\
-%\begin{tabular}{lll}
-%\bigstrut
-%13&\ranger &(bonus +3)\\
-%13&\bard &(bonus +3)\\
-%13&\cleric &(bonus +3)\\
-%12&\wizard &(bonus +2)\\
-%11&\fighter &(bonus +1)\\
-%\end{tabular}
-
-%\clearpage
-
 
 \newpage
 
-
-
 \whenDNDplayer3{\showplayer3}
 
-
 \whenDNDplayer4{\showplayer4}
-
-
-%%\player{%
-%%  name={Cleric \vrule height 0pt depth 0.2pt width 2in\ (dwarf)},
-%%  description={},
-%%  stats={\emptystats}, % {\stats{+3\*}{+2}{+2\*}{-1}{+1}{+0}},
-%%  proficiencies={{Insight\\Religion\\C1\\C2}
-%%                 {Common\\Dwarvish\\L1\\L2\\Tools}},
-%%  other={Darkvision 60ft},
-%%}
-%%
-%%\bigskip
-%%\player{%
-%%  name={Druid \vrule height 0pt depth 0.2pt width 2in\ (halfling)},
-%%  description={shield?, leather armor},
-%%  stats={\emptystats}, % \stats{+3\*}{+2}{+2\*}{-1}{+1}{+0}},
-%%  proficiencies={{Athletics\\Survival\\D1\\D2}
-%%                 {Common\\Druidic\\Halfling\\L1\\Herbalism kit}},
-%%  other={Lucky, Brave, Nimble, Resilient (poison), Wanderer},
-%%}
-
-
-\bigskip
-
-
-
 
 \bigskip
 
@@ -478,7 +261,32 @@
 \emph{\Large Durable Effects}
 \par
 \medskip
-\expandafter\durablestable\durables
+\expandafter\durablestable\durables % \durables set in stats, two columns
+
+\bigskip
+
+\emph{\large Offensive Spells and Features}
+\par
+\medskip
+\noindent
+\begingroup
+  \def\attack#1{#1\\}%
+  \def\savespell#1#2{#1 \upshape(#2)\\}%
+  \begin{tabular}{@{}c@{}}
+  \toprule
+  \begin{tabular}[t]{@{}e}
+  \upshape{Attack roll}\\
+  \midrule
+  \spellattacks
+  \end{tabular}%
+  \begin{tabular}[t]{e}
+  \upshape{Saving throw}\\
+  \midrule
+  \spellsaves
+  \end{tabular}\\
+  \bottomrule
+  \end{tabular}
+\endgroup
 
 
 \begingroup
@@ -500,46 +308,6 @@
 %%Wounds, Lesser Restoration, Spiritual Weapon)
 
 \endgroup
-
-%\player{%
-%  name={Paladin \paladin\ (dragonborn)},
-%  description={},
-%  stats={\stats{+3}{-1}{+1}{+0}{+1\*}{+3\*}},
-%  proficiencies={{Athletics\\Intimidation\\Persuasion\\Religion}
-%                 {Dice\\Land vehicles\\ Common\\ Draconic}},
-%  other={Lay on Hands; Chain mail (bad Stealth); Military Rank; Lightning Resistance;
-%         Divine Sense; Breath Weapon}
-%}
-
-%\enlargethispage{1\baselineskip}
-
-%\player{%
-%  name={Rogue \rogue\ (halfling)},
-%  description={},
-%  stats={\stats{+0}{+3\*}{+1}{+2\*}{-1}{+2}},
-%  proficiencies={{Acrobatics\\Animal \rlap{Handling}\\Deception\\
-%                  Investigation\E\\Stealth\E}
-%                 {Thieves' Tools\\Alchemist's\rlap{ Supp.}\\ Land Vehicles\\ Common\\Halfling\\ Thieves' Cant}},
-%  other={}
-%}
-%
-%\player{%
-%  name={Monk \monk\ (half-elf)},
-%  description={},
-%  stats={\stats{+0\*}{+3\*}{+1}{+2}{+2}{+0}},
-%  proficiencies={{Acrobatics\\History\\Insight\\
-%                  Investigation\\Performance\\Stealth}
-%                 {Thieves' Tools\\Leather
-%                 Tools\\ Common\\Elvish\\ Dwarfish\\Orcish}},
-%  other={Martial Arts; ``Hammerfist'' charisma}
-%}
-
-
-
-
-
-
-
 
 \end{document}
 
