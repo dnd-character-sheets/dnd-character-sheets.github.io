@@ -77,6 +77,14 @@ local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
     or 'pdflatex -interaction=scrollmode -halt-on-error -no-shell-escape'
 
+----------------------------------------------------------------
+
+local function sorted_keys(t, lt)
+  local u = { }
+  for k in pairs(t) do table.insert(u, k) end
+  table.sort(u, lt)
+  return u
+end
 
 
 local lyaml  = require "lyaml"
@@ -535,7 +543,7 @@ local magic_property = {
   bonus = 'the spell may be cast as a bonus action',
   reaction = 'the spell may be cast as a reaction',
   attack = 'casting the spell requires an attack roll',
-  save = 'casting the spell requires an enemy to make a saving throw',
+  save = 'the stat the enemy has to use to make a saving throw',
   enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
   ritual = 'the spell may be cast as a ritual',
   duration = 'how long the spell lasts, if more than one action',
@@ -1348,22 +1356,27 @@ local function validate_equipment_parsing(structured_equipment)
   return structured_equipment
 end
 
+local function proficiency_bonus(doc)
+  local level = tonumber(doc.LEVEL)
+  local prof = level and (2 + math.floor((level - 1) / 4)) or 2
+  return assert(prof)
+end
+
+local function ability_modifier(score)
+  return math.floor((score - 10) / 2)
+end
+
+
 ---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
 ---------------------------------------------------------------------------
 local function convert_mapping (map)
   local lines = {}
 
-  do -- set proficiency bonus first
-    local level = tonumber(map.LEVEL)
-    local prof = level and (2 + math.floor((level - 1) / 4)) or 2
-    outf(lines, [[\setcounter{proficiency bonus}{%d}]], prof)
-  end
+  outf(lines, [[\setcounter{proficiency bonus}{%d}]], proficiency_bonus(map))
 
   -- emit keys in predictable order
-  local keys = {}
-  for k in pairs(map) do table.insert(keys, k) end
-  table.sort(keys)
+  local keys = sorted_keys(map)
 
   local use_items = { PROFICIENCIES = true,
                       ['SECONDARY PROFICIENCIES'] = true,
@@ -1424,10 +1437,11 @@ local function same_values(v1, v2)
          s2:find '^%d+$' and s1 == '+' .. s2
 end
 
-local function has_perception(t)
+local function has_skill(t, skill)
+  local skill = skill:lower()
   if type(t) == 'table' then
     for p in scalarvalues(t) do
-      if type(p) == 'string' and p:lower():find 'perception' then
+      if type(p) == 'string' and p:lower():find(skill) then
         return true
       end
     end
@@ -1535,30 +1549,37 @@ local function extend(doc)
         end
       end
     end
+  end
     
-    local proficient_perceiver =
-      has_perception(doc.PROFICIENCIES or doc['SECONDARY PROFICIENCIES'])
+  local function set_passive_skill(stat, skill)
+    local proficient =
+      has_skill(doc.PROFICIENCIES, skill) or
+      has_skill(doc['SECONDARY PROFICIENCIES'], skill)
 
-    if not has_expertise then
-      -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
-      local wis_score = tonumber(doc.WIS)
-      local wis_modifier = math.floor((wis_score - 10) / 2)
-      local calculated_pp =
-        10 + wis_modifier + (proficient_perceiver and prof_bonus or 0)
-      
-      if not empty(doc['PASSIVE PERCEPTION']) then
-        -- Validate existing PASSIVE PERCEPTION
-        local existing_pp = tonumber(doc['PASSIVE PERCEPTION'])
-        if existing_pp and existing_pp ~= calculated_pp then
-          verrorf('PASSIVE PERCEPTION mismatch: got %d, expected %d (10 + WIS mod %+d + prof %d)', 
-                  existing_pp, calculated_pp, wis_modifier, prof_bonus)
+    if doc[stat] and not has_expertise then
+    -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
+      local stat_score = tonumber(doc[stat])
+      local modifier = math.floor((stat_score - 10) / 2)
+      local calculated = 10 + modifier + (proficient and prof_bonus or 0)
+    
+      local passive_skill = stringf('PASSIVE %s', skill:upper())
+
+      if not empty(doc[passive_skill]) then
+        local existing_skill = tonumber(doc[passive_skill])
+        if existing_skill and existing_skill ~= calculated then
+          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %d)', 
+                  passive_skill, existing_skill, calculated,
+                  stat, modifier, prof_bonus)
         end
       else
         -- Set calculated PASSIVE PERCEPTION
-        doc['PASSIVE PERCEPTION'] = calculated_pp
+        doc[passive_skill] = calculated
       end
     end
   end
+
+  set_passive_skill('WIS', 'Perception')
+  set_passive_skill('WIS', 'Insight')
 
   --- GM things.  Not clear to me this should be done with variables
 
@@ -1582,7 +1603,29 @@ local function extend(doc)
         end
       end
     end
-    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n')
+    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
+  end
+
+  if not doc.REACTIONS then
+    local function stripname(s)
+      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
+              :gsub([[\footnotesize%s*]], '')
+              :gsub('%s*%b[]', '')
+              :gsub('%s+$', '')
+    end
+    local reactions = { }
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = doc[section] or nothing
+      for _, thing in ipairs(things) do
+        if thing.name and thing.reaction then
+          local name = stripname(thing.name)
+          local description =
+            thing['GM note'] and stringf('%s [%s]', name, thing['GM note']) or name
+          table.insert(reactions, stringf([[\reaction{%s}]], description))
+        end
+      end
+    end
+    doc.REACTIONS = table.concat(reactions, '\\relax\n')
   end
 
 
@@ -1633,6 +1676,10 @@ function osquote(s)
   end
 end
 
+local function double_percents(s)
+  return (s:gsub('%%', '%%%%'))
+end
+
 local function fill_template(assignments, layout)
   local pathname = stringf('%s/%s.tex', fields.templates, layout)
   local template, msg = contents(pathname)
@@ -1641,7 +1688,7 @@ local function fill_template(assignments, layout)
     os.exit(1)
   else
     local bracketed_splash = stringf('{%s/splash.png}', fields.templates)
-    return (template:gsub('\n[ \t]*\\input%b{}', '\n' .. assignments)
+    return (template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
                     :gsub('%{splash.png%}', bracketed_splash)
            )
   end
@@ -1848,6 +1895,11 @@ function scripts.gmsheet(arg)
     return first
   end
 
+  local function firstname(doc)
+    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+'
+    return first
+  end
+
   do -- saving-throw spells
     local savedocs = { } -- map spell name to list of docs
     local savestats = { } -- and to stat
@@ -1861,13 +1913,7 @@ function scripts.gmsheet(arg)
         end
       end
     end
-    local savekeys = { }
-    for spell in pairs(savedocs) do
-      table.insert(savekeys, spell)
-    end
-    require 'inspect'.show { savekeys = savekeys }
-    table.sort(savekeys)
-    for i, spellname in ipairs(savekeys) do
+    for i, spellname in ipairs(sorted_keys(savedocs)) do
       local dcs = { }
       for _, doc in ipairs(savedocs[spellname]) do
         local dc = tonumber(doc['SPELL DC'])
@@ -1876,7 +1922,6 @@ function scripts.gmsheet(arg)
       end
       local suffix
       if is_singleton_table(dcs) then
-        require 'inspect'.show(dcs)
         suffix = stringf([[\textsc{%s}~%d]], savestats[spellname], (next(dcs)))
       else
         local dclist = { }
@@ -1894,8 +1939,27 @@ function scripts.gmsheet(arg)
                          table.concat(savedocs, '%\n  ')))
   end
 
-    
-    
+  do -- passives
+    local function gt(v1, v2) return v1 > v2 end
+    for _, skill in ipairs { 'Perception', 'Insight' } do
+      local players = { } -- map skill to list of players
+      for _, doc in ipairs(docs) do
+        local passive_skill = tonumber(assert(doc['PASSIVE ' .. skill:upper()]))
+        players[passive_skill] = players[passive_skill] or { }
+        table.insert(players[passive_skill], firstname(doc))
+      end
+      local rows = { }
+      for _, passive in ipairs(sorted_keys(players, gt)) do
+        local ps = players[passive]
+        table.sort(ps)
+        local cmd = stringf([[\skillrow{%d}{%s}]], passive, table.concat(ps, ', '))
+        table.insert(rows, cmd)
+      end
+      local latex = stringf([[\setpassive{%s}{%%]] .. '\n  %s%%\n}\n',
+                            skill, table.concat(rows, '%\n  '))
+      table.insert(latexes, latex)
+    end
+  end
 
   local layout = fields.layout or default_layout
   process(wrap_latex(table.concat(latexes, '\n'), layout, font))
