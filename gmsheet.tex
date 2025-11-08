@@ -56,6 +56,16 @@
   }}%
   {\end{list}}
 
+\newcommand\setpassive[2]{%
+  \expandafter\def\csname passive@#1\endcsname{#2}%
+}
+\newcommand\usepassive[1]{%
+  \csname passive@#1\endcsname
+}
+\newcommand\whenpassive[2]{%
+  \@ifundefined{passive@#1}{}{#2}%
+}
+
 \makeatother
 
 
@@ -114,6 +124,7 @@
 \newcommand\commasep[1]{%
   \begingroup
     \def\bonus{\def\bonus{, }}%
+    \def\reaction{\def\reaction{, }}%
     #1%
   \endgroup
 }
@@ -187,7 +198,12 @@
     \whenDNDnonempty{ARMOR CLASS}{AC~\getDND{ARMOR CLASS}. }%
     \whenDNDnonempty{BACKGROUND}{\getDND{BACKGROUND}. }%
     \\
-    \whenDNDnonempty{BONUS ACTIONS}{\textbf{Bonus:} \commasep{\getDND{BONUS ACTIONS}}.\\}%
+    \whenDNDnonempty{BONUS ACTIONS}{%
+       \hangindent=1em \hangafter=1
+       \textbf{Bonus Actions:} \commasep{\getDND{BONUS ACTIONS}}.\par\\}%
+    \whenDNDnonempty{REACTIONS}{%
+       \hangindent=1em \hangafter=1
+       \textbf{Reactions:} \commasep{\getDND{REACTIONS}}.\par\\}%
     \whenDNDnonempty{GM NOTES}{\getDND{GM NOTES}\\}%
     \whenDNDnonempty{MOTIVATION}{\emph{Motivation: \getDND{MOTIVATION}.}\\}%
     \hline
@@ -200,6 +216,7 @@
 %\newcommand\setbonusactions[2]{%
 %  \expandafter\def\expandafter\csname bonus@actions@#1\endcsname{#2}%
 %}
+
 
 
 \input{stats}
@@ -256,13 +273,30 @@
 
 \vfilbreak
 
-\bigskip
+\newcommand\showpassive[1]{%
+  \whenpassive{#1}{%
+    \par\bigskip
+    \begingroup
+      \def\skillrow##1##2{##1&(##2)\\}%
+      \noindent Passive #1s:\\
+      \begin{tabular}{@{\quad}r@{~}l@{}}
+      \usepassive{#1}%
+      \end{tabular}
+    \endgroup
+  }%
+}
 
-Passive perceptions: 15~(Arana, Elodie); 14~(Mira); 12~(Gwyndelle)
+\showpassive{Perception}
+\showpassive{Insight}
 
-\medskip
-
-Passive insights: 15~(Arana); 14~(Gwyndelle); 13~(Elodie); 12~(Mira)
+%
+%\bigskip
+%
+%Passive perceptions: 15~(Arana, Elodie); 14~(Mira); 12~(Gwyndelle)
+%
+%\medskip
+%
+%Passive insights: 15~(Arana); 14~(Gwyndelle); 13~(Elodie); 12~(Mira)
 
 \bigskip
 
