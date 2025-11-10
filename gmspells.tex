@@ -1,0 +1,93 @@
+\documentclass[12pt]{article}
+\usepackage{times}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{charsheet}
+\usepackage{soul}
+\usepackage{multicol}
+\usepackage{enumitem}
+
+\newcolumntype{e}{>{\itshape}l}
+
+\pagestyle{empty}
+\parindent=0pt
+\newcommand\bigstrut{\vrule width 0pt height 12pt}
+\newcommand\X{\leavevmode\bigstrut}
+\newcommand\deepstrut{\vrule width 0pt depth 5pt}
+\newcommand\Y{\deepstrut}
+
+\newcommand\vfilbreak[1][3\baselineskip]{\vskip 0pt plus #1\penalty-200 \vskip 0pt plus -#1}
+
+\makeatletter
+
+\let\expandArg=\@expandArg
+
+\makeatother
+
+%% regexp-based editing commands
+
+\ExplSyntaxOn
+\DeclareRobustCommand{\supE}[1]{\nr_supE:n { #1 }}
+
+\cs_new_protected:Nn \nr_supE:n
+  {
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    % Replace every literal space + [E] with a superscript E, math-safe
+    \regex_replace_all:nnN { \ \[E\] } { \c{mysuperE} } \l_tmpa_tl
+%    \tl_use:N \l_tmpa_tl
+    \l_tmpa_tl
+  }
+\ExplSyntaxOff
+
+
+
+\ExplSyntaxOn
+\NewDocumentCommand{\endwithperiod}{m}{\nr_end_with_period:n { #1 }}
+
+\cs_new_protected:Nn \nr_end_with_period:n
+  {
+    \tl_set:Nn \l_tmpa_tl { #1 }
+    % Trim trailing explicit spaces, ties (~), and control-space (\ )
+    \regex_replace_once:nnN { (?:\s|~|\\ )+\Z } {} \l_tmpa_tl
+    % If it (now) ends with a dot, remove it
+    \regex_replace_once:nnN { \.\Z } {} \l_tmpa_tl
+    % Add exactly one dot
+    \tl_use:N \l_tmpa_tl .
+  }
+\ExplSyntaxOff
+
+\newcommand\regexpVar[2]{% apply command to tokens stored in var
+   \expandArg{\expandArg{\expandArg#1}}{\rawgetDND{#2}}%
+}
+
+\newcommand\mysuperE{\rlap{\textsuperscript{E}}}
+
+\newenvironment{spell}[1]{%
+  \par
+  \vskip 8pt plus 3\baselineskip 
+  \penalty-200
+  \vskip 0pt plus -3\baselineskip 
+  \let\rlap=\relax
+  \noindent \emph{#1}.\hfil\break
+  \hangindent=1em
+  \hangafter=1
+}
+{\par \vfilbreak}
+    
+\clubpenalty=10000
+\widowpenalty=10000
+
+
+\begin{document}
+\raggedright
+\newcommand\bracket[1]{$\langle${#1}$\rangle$}
+\def\psam{+\bracket{\footnotesize\textsc{Spell ability modifier}}}
+\def\spelldc{\bracket{\footnotesize\textsc{Spell DC}}}
+\def\satk{\bracket{\footnotesize\textsc{Spell Attack}}}
+%\columnseprule=0.4pt
+\columnsep=25pt
+\begin{multicols}{3}[\begin{center}\LARGE \textbf{Spells} \end{center}]
+\input{spells}
+\end{multicols}
+\end{document}
+
