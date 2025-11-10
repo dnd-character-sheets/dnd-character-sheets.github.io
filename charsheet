@@ -56,6 +56,12 @@ local function gmoptions(parser)
   return parser:minarg(1)
 end
 
+local options = {
+  charsheet = charoptions,
+  gmsheet = gmoptions,
+  gmspells = gmoptions,
+}
+
 local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
   :bool('verbose as v')
@@ -66,10 +72,17 @@ local fields = require 'flags'.parser()
   :string('layout as t as l'):help('template for character sheet')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets')
          :help('directory where character-sheet templates live') 
-  :wrap(basename == 'gmsheet' and gmoptions or charoptions)
+  :wrap(assert(options[basename]))
   :parse(arg)
 
-local default_layout = basename == 'charsheet' and 'silverpine' or 'gmsheet'
+local default_layouts = {
+  charsheet = 'silverpine',
+  gmsheet = 'gmsheet',
+  gmspells = 'gmspells',
+}
+
+local default_layout =
+  assert(default_layouts[basename], 'No default layout defined for ' .. basename)
 
 local vprintf = fields.verbose and eprintf or function() end
 
@@ -1821,6 +1834,10 @@ end
 
 local function namelt (t1, t2) return t1.name < t2.name end
 
+local function docs_of_paths(arg)
+  return docs
+end
+
 function scripts.gmsheet(arg)
   local latexes = { }
   local docs = { }
@@ -1959,6 +1976,49 @@ function scripts.gmsheet(arg)
                             skill, table.concat(rows, '%\n  '))
       table.insert(latexes, latex)
     end
+  end
+
+  local layout = fields.layout or default_layout
+  process(wrap_latex(table.concat(latexes, '\n'), layout, font))
+end
+
+local function remove_duplicates(spells)
+  local i = 2 -- next candidate for removal
+  while i <= #spells do
+    if spells[i].name ~= spells[i-1].name then
+      i = i + 1
+    else
+      table.remove(spells, i)
+    end
+  end
+end
+
+function scripts.gmspells(arg)
+  local latexes = { }
+  local docs = { }
+  for _, path in ipairs(arg) do
+    table.insert(docs, sheet_of_file(path))
+  end
+  local spells = { } -- need a way to identify features
+  for _, doc in ipairs(docs) do
+    for _, spell in ipairs(doc.MAGIC or nothing) do
+      if spell.name then
+        table.insert(spells, spell)
+      end
+    end
+    for _, feature in ipairs(doc.FEATURES or nothing) do
+      if feature['GM note'] then
+        table.insert(spells, feature)
+      end
+    end
+  end
+  latexes = { }
+  function latexf(...) table.insert(latexes, stringf(...)) end
+  table.sort(spells, namelt)
+  remove_duplicates(spells)
+  for _, spell in ipairs(spells) do
+    local note = spell['GM note'] and stringf([[ \emph{%s}]], spell['GM note']) or ''
+    latexf([[\spell{%s}{%s%s}]], escape(spell.name), escape(spell.description), note)
   end
 
   local layout = fields.layout or default_layout
