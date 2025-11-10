@@ -1484,6 +1484,13 @@ local function preprocess(doc)
   return doc
 end
 
+local function string_note(thing)
+  local n = thing['GM note']
+  if type(n) == 'string' then
+    return n
+  end
+end
+
 local function extend(doc)
 
   if fields.nocolor then
@@ -1611,7 +1618,7 @@ local function extend(doc)
         if thing.name and thing.bonus then
           local name = stripname(thing.name)
           local description =
-            thing['GM note'] and stringf('%s [%s]', name, thing['GM note']) or name
+            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
           table.insert(bonuses, stringf([[\bonus{%s}]], description))
         end
       end
@@ -1633,7 +1640,7 @@ local function extend(doc)
         if thing.name and thing.reaction then
           local name = stripname(thing.name)
           local description =
-            thing['GM note'] and stringf('%s [%s]', name, thing['GM note']) or name
+            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
           table.insert(reactions, stringf([[\reaction{%s}]], description))
         end
       end
@@ -2017,7 +2024,7 @@ function scripts.gmspells(arg)
   table.sort(spells, namelt)
   remove_duplicates(spells)
   for _, spell in ipairs(spells) do
-    local note = spell['GM note'] and stringf([[ \emph{%s}]], spell['GM note']) or ''
+    local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
     latexf([[\spell{%s}{%s%s}]], escape(spell.name), escape(spell.description), note)
   end
 
