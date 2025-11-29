@@ -192,29 +192,18 @@ local function convert_monster(json_mon)
     end
 
     -- THREATS table (stat threat levels)
-    local threats = {}
-    local threat_mappings = {
-        {json_field = "armorName", yaml_field = "AC"},
-        {json_field = "atkName", yaml_field = "ATTACK BONUS"},
-        {json_field = "dprName", yaml_field = "DPR"},
-        {json_field = "hpName", yaml_field = "MAX HP"},
-        {json_field = "stName", yaml_field = "DC"}
-    }
     local threat_values = {poor = -1, average = 0, good = 1}
-
-    for _, mapping in ipairs(threat_mappings) do
-        local threat_name = json_mon[mapping.json_field]
-        if threat_name and threat_name ~= "average" then
-            local threat_val = threat_values[threat_name]
-            if threat_val then
-                threats[mapping.yaml_field] = threat_val
-            end
-        end
+    local function threat(name)
+        return name and assert(threat_values[name])
     end
 
-    if next(threats) then
-        mon.THREATS = threats
-    end
+    mon.THREATS = {
+        AC = threat(json_mon.armorName),
+        ["ATTACK BONUS"] = threat(json_mon.atkName),
+        DPR = threat(json_mon.dprName),
+        ["MAX HP"] = threat(json_mon.hpName),
+        DC = threat(json_mon.stName),
+    }
 
     -- MORALE table
     local morale = {
