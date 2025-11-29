@@ -40,22 +40,18 @@ These map to THREATS table in YAML: poor=-1, average=0, good=+1
 
 ## Fields for presentation/UI (ignore - not core data)
 
-- bonuses → Presentation detail
 - customSpeed → Redundant with speedDesc
 - doubleColumns → Layout flag
-- hpCut → Layout/calculation threshold
 - isLegendary → Can derive from presence of LEGENDARY ACTIONS
-- legendariesDescription → Standard text, not unique data
-- otherArmorDesc → Presentation detail
-- paragon → Presentation flag
-- shieldBonus → Already factored into AC
+- legendariesDescription → Standard text, not unique data.  ignore.
+- paragon → fancy pants stuff for special monsters. ignore.
+- shieldBonus → Already factored into AC.  ignore.
 - specialdamage → Presentation detail
 
 ## Fields that are field labels/names (ignore - metadata)
 
 
 
-- blind → Seems to be for blindsight range (but we use "blindsight" field)
 
 
 ## Other
@@ -79,3 +75,14 @@ These come from the following json fields
 - mtrig
 - mtype
 - mdc
+
+
+
+- bonuses → translate to BONUS ACTIONS list when nonempty
+- otherArmorDesc → ARMOR (string description)
+- blind -> BLIND (boolean, the monster does not have vision)
+
+- hpCut → a number.  assert that it is 1.
+
+- customSpeed: assert it is `false`
+- specialDamage: assert it is the empty object
