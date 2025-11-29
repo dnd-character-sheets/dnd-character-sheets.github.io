@@ -5,6 +5,44 @@
 local cjson = require('cjson')
 local yaml = require('lyaml')
 
+-- Create a proxy table that tracks which keys are accessed from the original JSON
+-- Returns: proxy table, original table, accessed keys table
+local function make_tracking_proxy(original)
+    local proxy = {}
+    local accessed = {}
+
+    local mt = {
+        __index = function(t, k)
+            accessed[k] = true
+            local v = original[k]
+            rawset(t, k, v)
+            return v
+        end
+    }
+
+    setmetatable(proxy, mt)
+    return proxy, original, accessed
+end
+
+-- Check for unaccessed keys in original JSON and error if any found
+local function check_unaccessed_keys(original, accessed, input_file)
+    local unaccessed = {}
+    for k, _ in pairs(original) do
+        if not accessed[k] then
+            table.insert(unaccessed, k)
+        end
+    end
+
+    if #unaccessed > 0 then
+        table.sort(unaccessed)
+        io.stderr:write("Error: Unaccessed JSON keys in " .. input_file .. ":\n")
+        for _, k in ipairs(unaccessed) do
+            io.stderr:write("  " .. k .. "\n")
+        end
+        os.exit(1)
+    end
+end
+
 -- Convert JSON monster to YAML structure
 local function convert_monster(json_mon)
     local mon = {}
@@ -21,12 +59,12 @@ local function convert_monster(json_mon)
     mon.ORGANIZATION = json_mon.org
 
     -- Ability scores
-    mon.STR = tonumber(json_mon.strPoints)
-    mon.DEX = tonumber(json_mon.dexPoints)
-    mon.CON = tonumber(json_mon.conPoints)
-    mon.INT = tonumber(json_mon.intPoints)
-    mon.WIS = tonumber(json_mon.wisPoints)
-    mon.CHA = tonumber(json_mon.chaPoints)
+    mon.STR = json_mon.strPoints
+    mon.DEX = json_mon.dexPoints
+    mon.CON = json_mon.conPoints
+    mon.INT = json_mon.intPoints
+    mon.WIS = json_mon.wisPoints
+    mon.CHA = json_mon.chaPoints
 
     -- Hit points
     if json_mon.avgHP then
@@ -159,6 +197,40 @@ local function convert_monster(json_mon)
         end
     end
 
+    -- Access fields that exist in JSON but are not used in YAML conversion
+    -- This prevents errors about unaccessed keys while documenting what we ignore
+    local _ = json_mon.acadj           -- AC adjustment
+    _ = json_mon.armorName             -- Armor type name
+    _ = json_mon.atkName               -- Attack stat name
+    _ = json_mon.blind                 -- Blind range
+    _ = json_mon.bonuses               -- Various bonuses
+    _ = json_mon.conditions            -- Condition immunities
+    _ = json_mon.customSpeed           -- Custom speed description
+    _ = json_mon.doubleColumns         -- Layout flag
+    _ = json_mon.dprName               -- DPR stat name
+    _ = json_mon.hitDice               -- Hit dice size
+    _ = json_mon.hover                 -- Hover flight flag
+    _ = json_mon.hpCut                 -- HP cutoff
+    _ = json_mon.hpName                -- HP stat name
+    _ = json_mon.hpadj                 -- HP adjustment
+    _ = json_mon.isLegendary           -- Legendary creature flag
+    _ = json_mon.legendariesDescription -- Legendary action description
+    _ = json_mon.mthresh               -- Minion threshold
+    _ = json_mon.mtrig                 -- Minion trigger
+    _ = json_mon.mtype                 -- Minion type
+    _ = json_mon.otherArmorDesc        -- Other armor description
+    _ = json_mon.paragon               -- Paragon creature flag
+    _ = json_mon.properties            -- Special properties
+    _ = json_mon.separationPoint       -- Layout separation
+    _ = json_mon.shieldBonus           -- Shield AC bonus
+    _ = json_mon.specialdamage         -- Special damage types
+    _ = json_mon.speedDesc             -- Speed description
+    _ = json_mon.stName                -- Save stat name
+    _ = json_mon.sthrows               -- Saving throws
+    _ = json_mon.telepathy             -- Telepathy range
+    _ = json_mon.threatadj             -- Threat adjustment
+    _ = json_mon.threatval             -- Threat value
+
     return mon
 end
 
@@ -185,14 +257,20 @@ local function main()
     json_text = json_text:gsub(",%s*([%]%}])", "%1")
 
     -- Parse JSON
-    local ok, json_mon = pcall(cjson.decode, json_text)
+    local ok, json_data = pcall(cjson.decode, json_text)
     if not ok then
-        io.stderr:write("Error: Failed to parse JSON: " .. json_mon .. "\n")
+        io.stderr:write("Error: Failed to parse JSON: " .. json_data .. "\n")
         os.exit(1)
     end
 
+    -- Create tracking proxy for the JSON data
+    local json_mon, original_json, accessed_keys = make_tracking_proxy(json_data)
+
     -- Convert to YAML structure
     local mon = convert_monster(json_mon)
+
+    -- Check for unaccessed keys
+    check_unaccessed_keys(original_json, accessed_keys, input_file)
 
     -- Output YAML
     local yaml_text = yaml.dump({mon})
