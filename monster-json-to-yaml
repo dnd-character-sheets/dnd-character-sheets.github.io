@@ -2,6 +2,7 @@
 -- Convert Angry Monster Creator JSON to YAML format for character sheets
 -- Direct field mapping without calculating derived values
 
+local stringf = string.format
 local cjson = require('cjson')
 local yaml = require('lyaml')
 
@@ -43,16 +44,19 @@ local function check_unaccessed_keys(original, accessed, input_file)
     end
 end
 
+-- Helper function to ignore fields we don't convert
+local function ignore(x) end
+
 -- Convert JSON monster to YAML structure
 local function convert_monster(json_mon)
     local mon = {}
 
     -- Basic info
     mon.NAME = json_mon.name
-    mon.SIZE = json_mon.size and json_mon.size:upper() or nil
+    mon.SIZE = json_mon.size
     mon["MONSTER TYPE"] = json_mon.type
     if json_mon.tag and json_mon.tag ~= "" then
-        mon["MONSTER TYPE"] = mon["MONSTER TYPE"] .. " (" .. json_mon.tag .. ")"
+        mon["MONSTER TYPE"] = stringf("%s (%s)", mon["MONSTER TYPE"], json_mon.tag)
     end
     mon.ALIGNMENT = json_mon.alignment
     mon.TIER = json_mon.tier
@@ -66,26 +70,30 @@ local function convert_monster(json_mon)
     mon.WIS = json_mon.wisPoints
     mon.CHA = json_mon.chaPoints
 
-    -- Hit points
-    if json_mon.avgHP then
-        mon["MAX HP"] = json_mon.avgHP
-    end
+    mon["MAX HP"] = json_mon.avgHP
+    mon["HP ADJUSTMENT"] = json_mon.hpadj ~= 0 and json_mon.hpadj
+    mon["HIT DICE"] = json_mon.hitDice and string.format("d%d", json_mon.hitDice)
+    mon.SPEED = json_mon.speedDesc ~= "" and json_mon.speedDesc -- narrative
 
-    -- Speed (base speed always present)
-    mon.SPEED = json_mon.speed
-    -- Additional movement modes (table-driven to reduce repetition)
+    -- SPEEDS table (numeric values)
+    local speeds = {}
     local movement_modes = {
+        {json_field = "speed", yaml_field = "WALK"},
         {json_field = "burrowSpeed", yaml_field = "BURROW"},
         {json_field = "climbSpeed", yaml_field = "CLIMB"},
         {json_field = "flySpeed", yaml_field = "FLY"},
         {json_field = "swimSpeed", yaml_field = "SWIM"}
     }
     for _, mode in ipairs(movement_modes) do
-        local speed = tonumber(json_mon[mode.json_field])
-        if speed and speed > 0 then
-            mon[mode.yaml_field] = json_mon[mode.json_field]
+        local speed_val = tonumber(json_mon[mode.json_field])
+        if speed_val and speed_val > 0 then
+            speeds[mode.yaml_field] = json_mon[mode.json_field]
         end
     end
+
+    -- Add hover flag if applicable
+    speeds.HOVER = json_mon.hover or nil
+    mon.SPEEDS = next(speeds) and speeds
 
     -- Senses (table-driven to reduce repetition)
     local senses = {}
@@ -101,13 +109,19 @@ local function convert_monster(json_mon)
             table.insert(senses, {sense.name, json_mon[sense.json_field] .. " ft."})
         end
     end
-    if #senses > 0 then
-        mon.SENSES = senses
+
+    -- Add telepathy to senses if present
+    local telepathy_range = tonumber(json_mon.telepathy)
+    if telepathy_range and telepathy_range > 0 then
+        table.insert(senses, {"Telepathy", telepathy_range .. " ft."})
     end
 
+    mon.SENSES = #senses > 0 and senses or nil
+    mon.BLIND = json_mon.blind or nil      -- Blind flag (only if true)
+
     -- Languages
-    if json_mon.languages and #json_mon.languages > 0 then
-        local langs = {}
+    local langs = json_mon.languages and #json_mon.languages > 0 and {}
+    if langs then
         for _, lang in ipairs(json_mon.languages) do
             table.insert(langs, lang.name)
         end
@@ -122,6 +136,15 @@ local function convert_monster(json_mon)
             table.insert(skills, {skill.name, skill.stat})
         end
         mon.SKILLS = skills
+    end
+
+    -- Saving throw proficiencies
+    if json_mon.sthrows and #json_mon.sthrows > 0 then
+        local saves = {}
+        for _, save in ipairs(json_mon.sthrows) do
+            table.insert(saves, save.name)
+        end
+        mon["SAVE PROFICIENCIES"] = saves
     end
 
     -- Damage types (table-driven to reduce repetition)
@@ -144,16 +167,71 @@ local function convert_monster(json_mon)
         end
     end
 
-    -- DPR (damage per round)
-    if json_mon.avgDMG then
-        mon.DPR = json_mon.avgDMG
-    elseif json_mon.dpr then
-        mon.DPR = json_mon.dpr
+    -- Condition immunities
+    if json_mon.conditions and #json_mon.conditions > 0 then
+        local conds = {}
+        for _, cond in ipairs(json_mon.conditions) do
+            table.insert(conds, cond.name)
+        end
+        mon["CONDITION IMMUNITIES"] = conds
     end
 
-    -- Save DC (from mdc field)
-    if json_mon.mdc then
-        mon.DC = tonumber(json_mon.mdc)
+    mon.ARMOR = json_mon.otherArmorDesc ~= "" and json_mon.otherArmorDesc
+    mon["AC ADJUSTMENT"] = json_mon.acadj ~= 0 and json_mon.acadj
+    mon.DPR = json_mon.avgDMG
+
+    -- Threat value
+    if json_mon.threatval then
+        mon.THREAT = json_mon.threatval
+    end
+
+    -- Assert threatadj is 0
+    if json_mon.threatadj and json_mon.threatadj ~= 0 then
+        io.stderr:write("Error: threatadj is " .. tostring(json_mon.threatadj) .. ", expected 0\n")
+        os.exit(1)
+    end
+
+    -- THREATS table (stat threat levels)
+    local threats = {}
+    local threat_mappings = {
+        {json_field = "armorName", yaml_field = "AC"},
+        {json_field = "atkName", yaml_field = "ATTACK BONUS"},
+        {json_field = "dprName", yaml_field = "DPR"},
+        {json_field = "hpName", yaml_field = "MAX HP"},
+        {json_field = "stName", yaml_field = "DC"}
+    }
+    local threat_values = {poor = -1, average = 0, good = 1}
+
+    for _, mapping in ipairs(threat_mappings) do
+        local threat_name = json_mon[mapping.json_field]
+        if threat_name and threat_name ~= "average" then
+            local threat_val = threat_values[threat_name]
+            if threat_val then
+                threats[mapping.yaml_field] = threat_val
+            end
+        end
+    end
+
+    if next(threats) then
+        mon.THREATS = threats
+    end
+
+    -- MORALE table
+    local morale = {
+      THRESHOLD = json_mon.mthresh,
+      TRIGGER = json_mon.mtrig ~= "" and json_mon.mtrig,
+      TYPE =  json_mon.mtype ~= "" and json_mon.mtype,
+      DC =  json_mon.mdc,
+    }
+    mon.MORALE = next(morale) and morale
+
+    -- Bonus actions
+    if json_mon.bonuses and #json_mon.bonuses > 0 then
+        local bonus_actions = {}
+        for _, bonus in ipairs(json_mon.bonuses) do
+            table.insert(bonus_actions, {name = bonus.name, description = bonus.desc})
+        end
+        mon["BONUS ACTIONS"] = bonus_actions
     end
 
     -- Simple action lists (table-driven to reduce repetition)
@@ -197,39 +275,48 @@ local function convert_monster(json_mon)
         end
     end
 
-    -- Access fields that exist in JSON but are not used in YAML conversion
-    -- This prevents errors about unaccessed keys while documenting what we ignore
-    local _ = json_mon.acadj           -- AC adjustment
-    _ = json_mon.armorName             -- Armor type name
-    _ = json_mon.atkName               -- Attack stat name
-    _ = json_mon.blind                 -- Blind range
-    _ = json_mon.bonuses               -- Various bonuses
-    _ = json_mon.conditions            -- Condition immunities
-    _ = json_mon.customSpeed           -- Custom speed description
-    _ = json_mon.doubleColumns         -- Layout flag
-    _ = json_mon.dprName               -- DPR stat name
-    _ = json_mon.hitDice               -- Hit dice size
-    _ = json_mon.hover                 -- Hover flight flag
-    _ = json_mon.hpCut                 -- HP cutoff
-    _ = json_mon.hpName                -- HP stat name
-    _ = json_mon.hpadj                 -- HP adjustment
-    _ = json_mon.isLegendary           -- Legendary creature flag
-    _ = json_mon.legendariesDescription -- Legendary action description
-    _ = json_mon.mthresh               -- Minion threshold
-    _ = json_mon.mtrig                 -- Minion trigger
-    _ = json_mon.mtype                 -- Minion type
-    _ = json_mon.otherArmorDesc        -- Other armor description
-    _ = json_mon.paragon               -- Paragon creature flag
-    _ = json_mon.properties            -- Special properties
-    _ = json_mon.separationPoint       -- Layout separation
-    _ = json_mon.shieldBonus           -- Shield AC bonus
-    _ = json_mon.specialdamage         -- Special damage types
-    _ = json_mon.speedDesc             -- Speed description
-    _ = json_mon.stName                -- Save stat name
-    _ = json_mon.sthrows               -- Saving throws
-    _ = json_mon.telepathy             -- Telepathy range
-    _ = json_mon.threatadj             -- Threat adjustment
-    _ = json_mon.threatval             -- Threat value
+    -- Assertions for fields that should have specific values
+    if json_mon.hpCut and json_mon.hpCut ~= 1 then
+        io.stderr:write("Error: hpCut is " .. tostring(json_mon.hpCut) .. ", expected 1\n")
+        os.exit(1)
+    end
+
+    if json_mon.customSpeed ~= false and json_mon.customSpeed ~= nil then
+        io.stderr:write("Error: customSpeed is " .. tostring(json_mon.customSpeed) .. ", expected false\n")
+        os.exit(1)
+    end
+
+    if json_mon.specialdamage then
+        local sd_type = type(json_mon.specialdamage)
+        if sd_type == "table" and next(json_mon.specialdamage) ~= nil then
+            io.stderr:write("Error: specialdamage is not empty\n")
+            os.exit(1)
+        elseif sd_type ~= "table" then
+            io.stderr:write("Error: specialdamage is " .. sd_type .. ", expected empty table\n")
+            os.exit(1)
+        end
+    end
+
+    if json_mon.properties then
+        if type(json_mon.properties) == "table" and #json_mon.properties > 0 then
+            io.stderr:write("Error: properties is not an empty list\n")
+            os.exit(1)
+        end
+    end
+
+    -- Ignore fields we don't convert (presentation/UI/metadata)
+    ignore(json_mon.doubleColumns)
+    ignore(json_mon.hpCut)
+    ignore(json_mon.isLegendary)
+    ignore(json_mon.legendariesDescription)
+    ignore(json_mon.paragon)
+    ignore(json_mon.shieldBonus)
+    ignore(json_mon.customSpeed)
+    ignore(json_mon.specialdamage)
+    ignore(json_mon.properties)
+    ignore(json_mon.separationPoint)
+    ignore(json_mon.dpr)  -- Using avgDMG instead
+    ignore(json_mon.threatadj)  -- Already asserted to be 0
 
     return mon
 end
