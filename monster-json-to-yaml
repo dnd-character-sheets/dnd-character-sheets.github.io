@@ -1,0 +1,287 @@
+#!/usr/bin/env lua5.1
+-- Convert Angry Monster Creator JSON to YAML format for character sheets
+-- JSON fields from statblock-script.js to monster YAML format
+
+local cjson = require('cjson')
+local yaml = require('lyaml')
+
+-- Helper: Calculate ability modifier from score
+local function ability_mod(score)
+    return math.floor((score - 10) / 2)
+end
+
+-- Helper: Calculate proficiency bonus from CR
+local function proficiency_bonus(cr)
+    if cr < 5 then return 2
+    elseif cr < 9 then return 3
+    elseif cr < 13 then return 4
+    elseif cr < 17 then return 5
+    elseif cr < 21 then return 6
+    elseif cr < 25 then return 7
+    elseif cr < 29 then return 8
+    else return 9
+    end
+end
+
+-- Tier to CR mapping (approximate)
+local tier_to_cr = {
+    apprentice = 0.5,
+    journeyman = 2,
+    adventurer = 5,
+    heroic = 8,
+    champion = 11,
+    veteran = 14,
+    legendary = 17
+}
+
+-- Convert JSON monster to YAML structure
+local function convert_monster(json_mon)
+    local mon = {}
+
+    -- Basic info
+    mon.NAME = json_mon.name
+    mon.SIZE = json_mon.size and json_mon.size:upper() or nil
+    mon["MONSTER TYPE"] = json_mon.type
+    if json_mon.tag and json_mon.tag ~= "" then
+        mon["MONSTER TYPE"] = mon["MONSTER TYPE"] .. " (" .. json_mon.tag .. ")"
+    end
+    mon.ALIGNMENT = json_mon.alignment
+    mon.TIER = json_mon.tier
+    mon.ORGANIZATION = json_mon.org
+
+    -- Ability scores
+    mon.STR = tonumber(json_mon.strPoints) or 10
+    mon.DEX = tonumber(json_mon.dexPoints) or 10
+    mon.CON = tonumber(json_mon.conPoints) or 10
+    mon.INT = tonumber(json_mon.intPoints) or 10
+    mon.WIS = tonumber(json_mon.wisPoints) or 10
+    mon.CHA = tonumber(json_mon.chaPoints) or 10
+
+    -- Calculate CR from tier if not provided
+    local cr = tier_to_cr[json_mon.tier] or 1
+    mon.CR = cr
+
+    -- Hit points and hit dice
+    mon["MAX HP"] = json_mon.avgHP
+    -- Hit dice size based on size
+    local hit_die_by_size = {
+        tiny = 4, small = 6, medium = 8, large = 10, huge = 12, gargantuan = 20
+    }
+    local die_size = hit_die_by_size[json_mon.size:lower()] or 8
+    mon["HIT DICE"] = "d" .. die_size
+
+    -- Armor class (calculate from armorName and acadj)
+    -- AC by CR (baseline values)
+    local ac_by_cr = {13, 13, 13, 13, 14, 15, 15, 16, 16, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 19}
+    local base_ac = ac_by_cr[math.min(math.floor(cr) + 1, #ac_by_cr)] or 13
+    local acadj = tonumber(json_mon.acadj) or 0
+    local shield = tonumber(json_mon.shieldBonus) or 0
+    mon["ARMOR CLASS"] = base_ac + acadj + shield
+
+    -- Speed
+    mon.SPEED = json_mon.speed
+    if tonumber(json_mon.burrowSpeed) and tonumber(json_mon.burrowSpeed) > 0 then
+        mon.BURROW = json_mon.burrowSpeed
+    end
+    if tonumber(json_mon.climbSpeed) and tonumber(json_mon.climbSpeed) > 0 then
+        mon.CLIMB = json_mon.climbSpeed
+    end
+    if tonumber(json_mon.flySpeed) and tonumber(json_mon.flySpeed) > 0 then
+        mon.FLY = json_mon.flySpeed
+    end
+    if tonumber(json_mon.swimSpeed) and tonumber(json_mon.swimSpeed) > 0 then
+        mon.SWIM = json_mon.swimSpeed
+    end
+
+    -- Senses
+    local senses = {}
+    if tonumber(json_mon.darkvision) and tonumber(json_mon.darkvision) > 0 then
+        table.insert(senses, {"Darkvision", json_mon.darkvision .. " ft."})
+    end
+    if tonumber(json_mon.blindsight) and tonumber(json_mon.blindsight) > 0 then
+        table.insert(senses, {"Blindsight", json_mon.blindsight .. " ft."})
+    end
+    if tonumber(json_mon.tremorsense) and tonumber(json_mon.tremorsense) > 0 then
+        table.insert(senses, {"Tremorsense", json_mon.tremorsense .. " ft."})
+    end
+    if tonumber(json_mon.truesight) and tonumber(json_mon.truesight) > 0 then
+        table.insert(senses, {"Truesight", json_mon.truesight .. " ft."})
+    end
+    if #senses > 0 then
+        mon.SENSES = senses
+    end
+
+    -- Passive perception
+    local wis_mod = ability_mod(mon.WIS)
+    mon["PASSIVE PERCEPTION"] = 10 + wis_mod
+
+    -- Initiative
+    local dex_mod = ability_mod(mon.DEX)
+    mon.INITIATIVE = dex_mod >= 0 and ("+" .. dex_mod) or tostring(dex_mod)
+
+    -- Languages
+    if json_mon.languages and #json_mon.languages > 0 then
+        local langs = {}
+        for _, lang in ipairs(json_mon.languages) do
+            table.insert(langs, lang.name)
+        end
+        mon.LANGUAGES = langs
+    end
+
+    -- Skills
+    if json_mon.skills and #json_mon.skills > 0 then
+        local skills = {}
+        for _, skill in ipairs(json_mon.skills) do
+            local stat = skill.stat and skill.stat:upper() or "DEX"
+            local stat_mod = ability_mod(mon[stat] or 10)
+            local prof = proficiency_bonus(cr)
+            local bonus = stat_mod
+            if skill.note and skill.note:match("ex") then
+                bonus = bonus + prof * 2  -- expertise
+            elseif not skill.note then
+                bonus = bonus + prof  -- proficiency
+            end
+            table.insert(skills, {skill.name, bonus >= 0 and ("+" .. bonus) or tostring(bonus)})
+        end
+        mon.SKILLS = skills
+    end
+
+    -- Damage types (vulnerabilities, resistances, immunities)
+    if json_mon.damagetypes and #json_mon.damagetypes > 0 then
+        local vuln, resist, immune = {}, {}, {}
+        for _, dt in ipairs(json_mon.damagetypes) do
+            if dt.type == "vulnerable" then
+                table.insert(vuln, dt.name)
+            elseif dt.type == "resistant" then
+                table.insert(resist, dt.name)
+            elseif dt.type == "immune" then
+                table.insert(immune, dt.name)
+            end
+        end
+        if #vuln > 0 then mon.VULNERABILITIES = vuln end
+        if #resist > 0 then mon.RESISTANCES = resist end
+        if #immune > 0 then mon.IMMUNITIES = immune end
+    end
+
+    -- DPR and attack bonus
+    mon.DPR = json_mon.avgDMG or json_mon.dpr
+
+    -- Find best attack bonus from actions
+    local best_atk = nil
+    if json_mon.actions and #json_mon.actions > 0 then
+        for _, action in ipairs(json_mon.actions) do
+            if action.atkbonus then
+                local atk = tonumber(action.atkbonus) or tonumber(action.atkbonus:match("[+-]?%d+"))
+                if not best_atk or atk > best_atk then
+                    best_atk = atk
+                end
+            end
+        end
+    end
+    mon["ATTACK BONUS"] = best_atk
+
+    -- Save DC (from mdc field)
+    if json_mon.mdc then
+        mon.DC = tonumber(json_mon.mdc)
+    end
+
+    -- TRAITS (abilities)
+    if json_mon.abilities and #json_mon.abilities > 0 then
+        local traits = {}
+        for _, ability in ipairs(json_mon.abilities) do
+            table.insert(traits, {name = ability.name, description = ability.desc})
+        end
+        mon.TRAITS = traits
+    end
+
+    -- ACTIONS
+    if json_mon.actions and #json_mon.actions > 0 then
+        local actions = {}
+        local multiattack = nil
+        for _, action in ipairs(json_mon.actions) do
+            if action.name == "Multiattack" then
+                multiattack = {name = action.name, description = action.desc}
+            else
+                local act = {name = action.name, description = action.desc}
+                if action.atkbonus then
+                    act["ATTACK BONUS"] = action.atkbonus
+                end
+                table.insert(actions, act)
+            end
+        end
+        if multiattack then
+            mon.MULTIATTACK = {multiattack}
+        end
+        if #actions > 0 then
+            mon.ATTACKS = actions
+        end
+    end
+
+    -- REACTIONS
+    if json_mon.reactions and #json_mon.reactions > 0 then
+        local reactions = {}
+        for _, reaction in ipairs(json_mon.reactions) do
+            table.insert(reactions, {name = reaction.name, description = reaction.desc})
+        end
+        mon.REACTIONS = reactions
+    end
+
+    -- LEGENDARY ACTIONS
+    if json_mon.legendaries and #json_mon.legendaries > 0 then
+        local legendaries = {}
+        for _, legendary in ipairs(json_mon.legendaries) do
+            table.insert(legendaries, {name = legendary.name, description = legendary.desc})
+        end
+        mon["LEGENDARY ACTIONS"] = legendaries
+    end
+
+    -- VILLAIN ACTIONS
+    if json_mon.villains and #json_mon.villains > 0 then
+        local villains = {}
+        for _, villain in ipairs(json_mon.villains) do
+            table.insert(villains, {name = villain.name, description = villain.desc})
+        end
+        mon["VILLAIN ACTIONS"] = villains
+    end
+
+    return mon
+end
+
+-- Main program
+local function main()
+    local input_file = arg[1]
+
+    if not input_file then
+        io.stderr:write("Usage: " .. arg[0] .. " <input.monster>\n")
+        os.exit(1)
+    end
+
+    -- Read JSON
+    local f = io.open(input_file, "r")
+    if not f then
+        io.stderr:write("Error: Cannot open file: " .. input_file .. "\n")
+        os.exit(1)
+    end
+    local json_text = f:read("*all")
+    f:close()
+
+    -- Remove trailing commas (common in JavaScript but invalid in JSON)
+    -- Pattern: comma followed by optional whitespace and then closing bracket/brace
+    json_text = json_text:gsub(",%s*([%]%}])", "%1")
+
+    -- Parse JSON
+    local ok, json_mon = pcall(cjson.decode, json_text)
+    if not ok then
+        io.stderr:write("Error: Failed to parse JSON: " .. json_mon .. "\n")
+        os.exit(1)
+    end
+
+    -- Convert to YAML structure
+    local mon = convert_monster(json_mon)
+
+    -- Output YAML
+    local yaml_text = yaml.dump({mon})
+    print(yaml_text)
+end
+
+main()
