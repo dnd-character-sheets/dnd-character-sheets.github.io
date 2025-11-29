@@ -21,46 +21,47 @@ local function convert_monster(json_mon)
     mon.ORGANIZATION = json_mon.org
 
     -- Ability scores
-    mon.STR = tonumber(json_mon.strPoints) or 10
-    mon.DEX = tonumber(json_mon.dexPoints) or 10
-    mon.CON = tonumber(json_mon.conPoints) or 10
-    mon.INT = tonumber(json_mon.intPoints) or 10
-    mon.WIS = tonumber(json_mon.wisPoints) or 10
-    mon.CHA = tonumber(json_mon.chaPoints) or 10
+    mon.STR = tonumber(json_mon.strPoints)
+    mon.DEX = tonumber(json_mon.dexPoints)
+    mon.CON = tonumber(json_mon.conPoints)
+    mon.INT = tonumber(json_mon.intPoints)
+    mon.WIS = tonumber(json_mon.wisPoints)
+    mon.CHA = tonumber(json_mon.chaPoints)
 
     -- Hit points
     if json_mon.avgHP then
         mon["MAX HP"] = json_mon.avgHP
     end
 
-    -- Speed
+    -- Speed (base speed always present)
     mon.SPEED = json_mon.speed
-    if tonumber(json_mon.burrowSpeed) and tonumber(json_mon.burrowSpeed) > 0 then
-        mon.BURROW = json_mon.burrowSpeed
-    end
-    if tonumber(json_mon.climbSpeed) and tonumber(json_mon.climbSpeed) > 0 then
-        mon.CLIMB = json_mon.climbSpeed
-    end
-    if tonumber(json_mon.flySpeed) and tonumber(json_mon.flySpeed) > 0 then
-        mon.FLY = json_mon.flySpeed
-    end
-    if tonumber(json_mon.swimSpeed) and tonumber(json_mon.swimSpeed) > 0 then
-        mon.SWIM = json_mon.swimSpeed
+    -- Additional movement modes (table-driven to reduce repetition)
+    local movement_modes = {
+        {json_field = "burrowSpeed", yaml_field = "BURROW"},
+        {json_field = "climbSpeed", yaml_field = "CLIMB"},
+        {json_field = "flySpeed", yaml_field = "FLY"},
+        {json_field = "swimSpeed", yaml_field = "SWIM"}
+    }
+    for _, mode in ipairs(movement_modes) do
+        local speed = tonumber(json_mon[mode.json_field])
+        if speed and speed > 0 then
+            mon[mode.yaml_field] = json_mon[mode.json_field]
+        end
     end
 
-    -- Senses
+    -- Senses (table-driven to reduce repetition)
     local senses = {}
-    if tonumber(json_mon.darkvision) and tonumber(json_mon.darkvision) > 0 then
-        table.insert(senses, {"Darkvision", json_mon.darkvision .. " ft."})
-    end
-    if tonumber(json_mon.blindsight) and tonumber(json_mon.blindsight) > 0 then
-        table.insert(senses, {"Blindsight", json_mon.blindsight .. " ft."})
-    end
-    if tonumber(json_mon.tremorsense) and tonumber(json_mon.tremorsense) > 0 then
-        table.insert(senses, {"Tremorsense", json_mon.tremorsense .. " ft."})
-    end
-    if tonumber(json_mon.truesight) and tonumber(json_mon.truesight) > 0 then
-        table.insert(senses, {"Truesight", json_mon.truesight .. " ft."})
+    local sense_types = {
+        {json_field = "darkvision", name = "Darkvision"},
+        {json_field = "blindsight", name = "Blindsight"},
+        {json_field = "tremorsense", name = "Tremorsense"},
+        {json_field = "truesight", name = "Truesight"}
+    }
+    for _, sense in ipairs(sense_types) do
+        local range = tonumber(json_mon[sense.json_field])
+        if range and range > 0 then
+            table.insert(senses, {sense.name, json_mon[sense.json_field] .. " ft."})
+        end
     end
     if #senses > 0 then
         mon.SENSES = senses
@@ -85,21 +86,24 @@ local function convert_monster(json_mon)
         mon.SKILLS = skills
     end
 
-    -- Damage types (vulnerabilities, resistances, immunities)
+    -- Damage types (table-driven to reduce repetition)
     if json_mon.damagetypes and #json_mon.damagetypes > 0 then
-        local vuln, resist, immune = {}, {}, {}
-        for _, dt in ipairs(json_mon.damagetypes) do
-            if dt.type == "vulnerable" then
-                table.insert(vuln, dt.name)
-            elseif dt.type == "resistant" then
-                table.insert(resist, dt.name)
-            elseif dt.type == "immune" then
-                table.insert(immune, dt.name)
+        local damage_type_mappings = {
+            {json_type = "vulnerable", yaml_field = "VULNERABILITIES"},
+            {json_type = "resistant", yaml_field = "RESISTANCES"},
+            {json_type = "immune", yaml_field = "IMMUNITIES"}
+        }
+        for _, mapping in ipairs(damage_type_mappings) do
+            local damages = {}
+            for _, dt in ipairs(json_mon.damagetypes) do
+                if dt.type == mapping.json_type then
+                    table.insert(damages, dt.name)
+                end
+            end
+            if #damages > 0 then
+                mon[mapping.yaml_field] = damages
             end
         end
-        if #vuln > 0 then mon.VULNERABILITIES = vuln end
-        if #resist > 0 then mon.RESISTANCES = resist end
-        if #immune > 0 then mon.IMMUNITIES = immune end
     end
 
     -- DPR (damage per round)
@@ -114,13 +118,22 @@ local function convert_monster(json_mon)
         mon.DC = tonumber(json_mon.mdc)
     end
 
-    -- TRAITS (abilities)
-    if json_mon.abilities and #json_mon.abilities > 0 then
-        local traits = {}
-        for _, ability in ipairs(json_mon.abilities) do
-            table.insert(traits, {name = ability.name, description = ability.desc})
+    -- Simple action lists (table-driven to reduce repetition)
+    local simple_action_lists = {
+        {json_field = "abilities", yaml_field = "TRAITS"},
+        {json_field = "reactions", yaml_field = "REACTIONS"},
+        {json_field = "legendaries", yaml_field = "LEGENDARY ACTIONS"},
+        {json_field = "villains", yaml_field = "VILLAIN ACTIONS"}
+    }
+    for _, list_config in ipairs(simple_action_lists) do
+        local json_list = json_mon[list_config.json_field]
+        if json_list and #json_list > 0 then
+            local items = {}
+            for _, item in ipairs(json_list) do
+                table.insert(items, {name = item.name, description = item.desc})
+            end
+            mon[list_config.yaml_field] = items
         end
-        mon.TRAITS = traits
     end
 
     -- ACTIONS
@@ -144,33 +157,6 @@ local function convert_monster(json_mon)
         if #actions > 0 then
             mon.ATTACKS = actions
         end
-    end
-
-    -- REACTIONS
-    if json_mon.reactions and #json_mon.reactions > 0 then
-        local reactions = {}
-        for _, reaction in ipairs(json_mon.reactions) do
-            table.insert(reactions, {name = reaction.name, description = reaction.desc})
-        end
-        mon.REACTIONS = reactions
-    end
-
-    -- LEGENDARY ACTIONS
-    if json_mon.legendaries and #json_mon.legendaries > 0 then
-        local legendaries = {}
-        for _, legendary in ipairs(json_mon.legendaries) do
-            table.insert(legendaries, {name = legendary.name, description = legendary.desc})
-        end
-        mon["LEGENDARY ACTIONS"] = legendaries
-    end
-
-    -- VILLAIN ACTIONS
-    if json_mon.villains and #json_mon.villains > 0 then
-        local villains = {}
-        for _, villain in ipairs(json_mon.villains) do
-            table.insert(villains, {name = villain.name, description = villain.desc})
-        end
-        mon["VILLAIN ACTIONS"] = villains
     end
 
     return mon
