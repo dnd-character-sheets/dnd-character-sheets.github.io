@@ -1,38 +1,9 @@
 #!/usr/bin/env lua5.1
 -- Convert Angry Monster Creator JSON to YAML format for character sheets
--- JSON fields from statblock-script.js to monster YAML format
+-- Direct field mapping without calculating derived values
 
 local cjson = require('cjson')
 local yaml = require('lyaml')
-
--- Helper: Calculate ability modifier from score
-local function ability_mod(score)
-    return math.floor((score - 10) / 2)
-end
-
--- Helper: Calculate proficiency bonus from CR
-local function proficiency_bonus(cr)
-    if cr < 5 then return 2
-    elseif cr < 9 then return 3
-    elseif cr < 13 then return 4
-    elseif cr < 17 then return 5
-    elseif cr < 21 then return 6
-    elseif cr < 25 then return 7
-    elseif cr < 29 then return 8
-    else return 9
-    end
-end
-
--- Tier to CR mapping (approximate)
-local tier_to_cr = {
-    apprentice = 0.5,
-    journeyman = 2,
-    adventurer = 5,
-    heroic = 8,
-    champion = 11,
-    veteran = 14,
-    legendary = 17
-}
 
 -- Convert JSON monster to YAML structure
 local function convert_monster(json_mon)
@@ -57,26 +28,10 @@ local function convert_monster(json_mon)
     mon.WIS = tonumber(json_mon.wisPoints) or 10
     mon.CHA = tonumber(json_mon.chaPoints) or 10
 
-    -- Calculate CR from tier if not provided
-    local cr = tier_to_cr[json_mon.tier] or 1
-    mon.CR = cr
-
-    -- Hit points and hit dice
-    mon["MAX HP"] = json_mon.avgHP
-    -- Hit dice size based on size
-    local hit_die_by_size = {
-        tiny = 4, small = 6, medium = 8, large = 10, huge = 12, gargantuan = 20
-    }
-    local die_size = hit_die_by_size[json_mon.size:lower()] or 8
-    mon["HIT DICE"] = "d" .. die_size
-
-    -- Armor class (calculate from armorName and acadj)
-    -- AC by CR (baseline values)
-    local ac_by_cr = {13, 13, 13, 13, 14, 15, 15, 16, 16, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 19}
-    local base_ac = ac_by_cr[math.min(math.floor(cr) + 1, #ac_by_cr)] or 13
-    local acadj = tonumber(json_mon.acadj) or 0
-    local shield = tonumber(json_mon.shieldBonus) or 0
-    mon["ARMOR CLASS"] = base_ac + acadj + shield
+    -- Hit points
+    if json_mon.avgHP then
+        mon["MAX HP"] = json_mon.avgHP
+    end
 
     -- Speed
     mon.SPEED = json_mon.speed
@@ -111,14 +66,6 @@ local function convert_monster(json_mon)
         mon.SENSES = senses
     end
 
-    -- Passive perception
-    local wis_mod = ability_mod(mon.WIS)
-    mon["PASSIVE PERCEPTION"] = 10 + wis_mod
-
-    -- Initiative
-    local dex_mod = ability_mod(mon.DEX)
-    mon.INITIATIVE = dex_mod >= 0 and ("+" .. dex_mod) or tostring(dex_mod)
-
     -- Languages
     if json_mon.languages and #json_mon.languages > 0 then
         local langs = {}
@@ -128,20 +75,12 @@ local function convert_monster(json_mon)
         mon.LANGUAGES = langs
     end
 
-    -- Skills
+    -- Skills (just names and stats, bonuses calculated elsewhere)
     if json_mon.skills and #json_mon.skills > 0 then
         local skills = {}
         for _, skill in ipairs(json_mon.skills) do
-            local stat = skill.stat and skill.stat:upper() or "DEX"
-            local stat_mod = ability_mod(mon[stat] or 10)
-            local prof = proficiency_bonus(cr)
-            local bonus = stat_mod
-            if skill.note and skill.note:match("ex") then
-                bonus = bonus + prof * 2  -- expertise
-            elseif not skill.note then
-                bonus = bonus + prof  -- proficiency
-            end
-            table.insert(skills, {skill.name, bonus >= 0 and ("+" .. bonus) or tostring(bonus)})
+            -- Store skill name and which ability it uses
+            table.insert(skills, {skill.name, skill.stat})
         end
         mon.SKILLS = skills
     end
@@ -163,22 +102,12 @@ local function convert_monster(json_mon)
         if #immune > 0 then mon.IMMUNITIES = immune end
     end
 
-    -- DPR and attack bonus
-    mon.DPR = json_mon.avgDMG or json_mon.dpr
-
-    -- Find best attack bonus from actions
-    local best_atk = nil
-    if json_mon.actions and #json_mon.actions > 0 then
-        for _, action in ipairs(json_mon.actions) do
-            if action.atkbonus then
-                local atk = tonumber(action.atkbonus) or tonumber(action.atkbonus:match("[+-]?%d+"))
-                if not best_atk or atk > best_atk then
-                    best_atk = atk
-                end
-            end
-        end
+    -- DPR (damage per round)
+    if json_mon.avgDMG then
+        mon.DPR = json_mon.avgDMG
+    elseif json_mon.dpr then
+        mon.DPR = json_mon.dpr
     end
-    mon["ATTACK BONUS"] = best_atk
 
     -- Save DC (from mdc field)
     if json_mon.mdc then
