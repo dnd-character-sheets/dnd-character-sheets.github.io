@@ -72,7 +72,7 @@ local function convert_monster(json_mon)
 
     mon["MAX HP"] = json_mon.avgHP
     mon["HIT DICE"] = json_mon.hitDice and string.format("d%d", json_mon.hitDice)
-    mon.SPEED = json_mon.speedDesc ~= "" and json_mon.speedDesc -- narrative
+    mon.SPEED = json_mon.speedDesc ~= "" and json_mon.speedDesc or nil -- narrative
 
     -- SPEEDS table (numeric values)
     local speeds = {}
@@ -175,14 +175,18 @@ local function convert_monster(json_mon)
         mon["CONDITION IMMUNITIES"] = conds
     end
 
-    mon.ARMOR = json_mon.otherArmorDesc ~= "" and json_mon.otherArmorDesc
-    mon["AC ADJUSTMENT"] = json_mon.acadj ~= 0 and json_mon.acadj
+    mon.ARMOR = json_mon.otherArmorDesc ~= "" and json_mon.otherArmorDesc or nil
     mon.DPR = json_mon.avgDMG
 
     -- Threat value
     if json_mon.threatval then
         mon.THREAT = json_mon.threatval
     end
+
+    local adjustments = { }
+    adjustments["MAX HP"] = json_mon.hpadj ~= 0 and json_mon.hpadj or nil
+    adjustments["AC"]     = json_mon.acadj ~= 0 and json_mon.acadj or nil
+    mon.ADJUSTMENTS = next(adjustments) and adjustments
 
     -- Assert threatadj is 0
     if json_mon.threatadj and json_mon.threatadj ~= 0 then
@@ -207,8 +211,8 @@ local function convert_monster(json_mon)
     -- MORALE table
     local morale = {
       THRESHOLD = json_mon.mthresh,
-      TRIGGER = json_mon.mtrig ~= "" and json_mon.mtrig,
-      TYPE =  json_mon.mtype ~= "" and json_mon.mtype,
+      TRIGGER = json_mon.mtrig ~= "" and json_mon.mtrig or nil,
+      TYPE =  json_mon.mtype ~= "" and json_mon.mtype or nil,
       DC =  json_mon.mdc,
     }
     mon.MORALE = next(morale) and morale
