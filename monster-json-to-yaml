@@ -127,12 +127,20 @@ local function convert_monster(json_mon)
         mon.LANGUAGES = langs
     end
 
-    -- Skills (just names and stats, bonuses calculated elsewhere)
+    -- Skills (calculate bonuses from ability scores and proficiency)
     if json_mon.skills and #json_mon.skills > 0 then
+        local fcr = require 'fcr'
         local skills = {}
+        local prof_bonus = fcr.prof_bonus(json_mon.tier)
+
         for _, skill in ipairs(json_mon.skills) do
-            -- Store skill name and which ability it uses
-            table.insert(skills, {skill.name, skill.stat})
+            local ability_score = json_mon[skill.stat .. "Points"]
+            local ability_mod = math.floor((ability_score - 10) / 2)
+            -- Expertise multiplier: 2 if skill has "note" field, 1 otherwise
+            local expertise = skill.note and 2 or 1
+            local bonus = ability_mod + prof_bonus * expertise
+            local skill_name = skill.name:sub(1,1):upper() .. skill.name:sub(2)
+            table.insert(skills, stringf("%s %+d", skill_name, bonus))
         end
         mon.SKILLS = skills
     end
