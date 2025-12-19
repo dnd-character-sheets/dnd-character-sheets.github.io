@@ -263,7 +263,7 @@ local function convert_monster(json_mon)
             mon.MULTIATTACK = {multiattack}
         end
         if #actions > 0 then
-            mon.ATTACKS = actions
+            mon.ACTIONS = actions
         end
     end
 
