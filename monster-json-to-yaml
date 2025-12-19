@@ -71,7 +71,6 @@ local function convert_monster(json_mon)
     mon.CHA = json_mon.chaPoints
 
     mon["MAX HP"] = json_mon.avgHP
-    mon["HP ADJUSTMENT"] = json_mon.hpadj ~= 0 and json_mon.hpadj
     mon["HIT DICE"] = json_mon.hitDice and string.format("d%d", json_mon.hitDice)
     mon.SPEED = json_mon.speedDesc ~= "" and json_mon.speedDesc -- narrative
 
