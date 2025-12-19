@@ -254,7 +254,7 @@ local function convert_monster(json_mon)
             else
                 local act = {name = action.name, description = action.desc}
                 if action.atkbonus then
-                    act["ATTACK BONUS"] = action.atkbonus
+                    act.bonus = action.atkbonus
                 end
                 table.insert(actions, act)
             end
