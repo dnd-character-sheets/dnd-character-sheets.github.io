@@ -105,14 +105,14 @@ local function convert_monster(json_mon)
     for _, sense in ipairs(sense_types) do
         local range = tonumber(json_mon[sense.json_field])
         if range and range > 0 then
-            table.insert(senses, {sense.name, json_mon[sense.json_field] .. " ft."})
+            table.insert(senses, stringf('%s %d ft', sense.name, range))
         end
     end
 
     -- Add telepathy to senses if present
     local telepathy_range = tonumber(json_mon.telepathy)
     if telepathy_range and telepathy_range > 0 then
-        table.insert(senses, {"Telepathy", telepathy_range .. " ft."})
+        table.insert(senses, stringf('Telepathy %d ft', telepathy_range))
     end
 
     mon.SENSES = #senses > 0 and senses or nil
