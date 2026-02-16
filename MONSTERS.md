@@ -364,7 +364,7 @@ NOTES: >-
   FM 309. Modified.
 ```
 
-**Note**: Consider using `SOURCE` instead for source citations.
+**Note**: Consider using `SOURCES` instead for source citations.
 
 ---
 
@@ -389,6 +389,17 @@ OVERRIDES:
   - AC
   - DPR
   - MAX HP
+```
+
+---
+
+## **PASSIVE PERCEPTION** (USER)
+**Usage**: Passive Perception score
+**Type**: Number
+**Examples**:
+```yaml
+PASSIVE PERCEPTION: 9
+PASSIVE PERCEPTION: 26
 ```
 
 ---
@@ -524,6 +535,23 @@ SPEEDS:
 
 ---
 
+## **SOURCES** (USER)
+**Usage**: List of source books where this monster appears
+**Type**: List of strings (source abbreviations)
+**Common Sources**: MM (Monster Manual), VGtM (Volo's Guide), MTF (Mordenkainen's Tome of Foes), etc.
+**Examples**:
+```yaml
+SOURCES:
+  - MM
+  - VGtM
+SOURCES:
+  - MM
+  - LMoP
+  - PotA
+```
+
+---
+
 ## **STR** (USER)
 **Usage**: Strength ability score
 **Type**: Number
@@ -620,6 +648,20 @@ TRAITS:
 VILLAIN ACTIONS:
   - name: Command Minions
     description: Up to 3 allies within 60 ft can use reactions to move or attack.
+```
+
+---
+
+## **VARIANT** (USER)
+**Usage**: Variant rules or alternative abilities for the monster
+**Type**: List of objects with `name` and `description`
+**Examples**:
+```yaml
+VARIANT:
+  - name: Customizing Dragons
+    description: You can customize any dragon's stat block to reflect the dragon's unique character.
+  - name: Spellcasting
+    description: The creature is a 5th-level spellcaster. Its spellcasting ability is Intelligence.
 ```
 
 ---
