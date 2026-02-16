@@ -560,9 +560,11 @@ local magic_property = {
   enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
   ritual = 'the spell may be cast as a ritual',
   duration = 'how long the spell lasts, if more than one action',
+  abbrev = "short description for GM's spell list",
   concentration = 'the spell requires concentration',
   name = 'Name of the spell',
   description = 'How the spell works',
+  long = 'Long description',
 }
 
 
@@ -1041,6 +1043,10 @@ end
 
 
 
+local function description(thing)
+  return thing.description or thing.long or thing.abbrev
+end
+
 function render.struct_list (key, list)
   vprintf('rendering struct for %s\n', key)
   local out = {}
@@ -1058,14 +1064,14 @@ function render.struct_list (key, list)
       else
         outf(out, [[\spellslevellabel{%s}{%s}]], do_not_escape(elem.level), 0)
       end
-    elseif elem.name and elem.description and not elem.ATTACK
+    elseif elem.name and description(elem) and not elem.ATTACK
         or key == 'MAGIC'
     then
       local suffix =
         (elem.attack or elem.offense or elem.offensive or elem.save or elem.enemy)
         and 'Colored{attacks}' or ''
       outf(out, [[\described%s{%s}{%s}]], suffix,
-           do_not_escape(elem.name or ''), do_not_escape(elem.description or ''))
+           do_not_escape(elem.name or ''), do_not_escape(description(elem) or ''))
     elseif false and elem.ATTACK then
       vprintf('rendering an attack\n')
       table.insert(out, render.attack_record(elem))
@@ -2014,8 +2020,13 @@ function scripts.gmspells(arg)
       end
     end
     for _, feature in ipairs(doc.FEATURES or nothing) do
-      if feature['GM note'] then
+      local inserted = nil
+      if feature['GM note'] ~= false then
         table.insert(spells, feature)
+        inserted = 'YES'
+      end
+      if feature.name:find 'Mask' or feature.name:find 'Ability' then
+      require 'inspect'.show { name = feature.name, note = feature['GM note'], inserted = inserted }
       end
     end
   end
