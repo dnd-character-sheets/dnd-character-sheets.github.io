@@ -2036,7 +2036,12 @@ function scripts.gmspells(arg)
   remove_duplicates(spells)
   for _, spell in ipairs(spells) do
     local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
-    latexf([[\spell{%s}{%s%s}]], escape(spell.name), escape(spell.description), note)
+    local description = spell.abbrev or spell.description or spell.long
+    local name = escape(spell.name)
+    if spell.components then
+      name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
+    end
+    latexf([[\spell{%s}{%s%s}]], name, escape(description), note)
   end
 
   local layout = fields.layout or default_layout
