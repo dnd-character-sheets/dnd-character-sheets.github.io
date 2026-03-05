@@ -1627,6 +1627,9 @@ local function extend(doc)
             string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
           table.insert(bonuses, stringf([[\bonus{%s}]], description))
         end
+        if type(thing.save) == 'string' and thing.save:find '^%u%u%u$' then
+          thing.save = stringf([[\textsc{%s}]], thing.save:lower())
+        end
       end
     end
     doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
