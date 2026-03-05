@@ -584,7 +584,7 @@ In addition, each spell may be labeled with any or all of the following keys:
 - `bonus`: true (the spell may be cast as a bonus action)
 - `reaction`: true (the spell may be cast as a reaction)
 - `attack`: true (casting the spell requires an attack roll)
-- `save`: true (casting the spell requires an enemy to make a saving throw)
+- `save`: stat (casting the spell requires an enemy to make a saving throw)
 - `enemy`: true (the spell targets an enemy [implied by `attack` or `save`])
 - `ritual`: true (the spell may be cast as a ritual)
 - `duration`: String (how long the spell lasts, if more than one action)
