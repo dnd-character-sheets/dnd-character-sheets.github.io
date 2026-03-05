@@ -1930,7 +1930,10 @@ function scripts.gmsheet(arg)
   end
 
   local function firstname(doc)
-    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+'
+    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+' or ''
+    if first == '' then
+      first = doc.CLASS or '?'
+    end
     return first
   end
 
