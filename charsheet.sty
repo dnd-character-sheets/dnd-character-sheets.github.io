@@ -1155,6 +1155,12 @@
 \newcommand\whenDNDplayer[2]{%
   \@ifundefined{dnd@player@#1}{}{#2}%
 }
+\newcommand\unlessDNDplayer[2]{%
+  \@ifundefined{dnd@player@#1}{#2}{}%
+}
+\newcommand\ifDNDplayer[3]{%
+  \@ifundefined{dnd@player@#1}{#3}{#2}%
+}
 
 \newcommand\useDNDplayer[1]{%
   \csname dnd@player@#1\endcsname
