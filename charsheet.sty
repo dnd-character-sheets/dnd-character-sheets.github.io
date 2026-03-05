@@ -2139,6 +2139,12 @@
     {}%
 }
 
+\newcommand\spellattack{%
+  \ifDNDnonempty{SPELL ATTACK MODIFIER}%
+    {\getDND{SPELL ATTACK MODIFIER}}%
+    {}%
+}
+
 \newcommand\spelldc{%
   \ifDNDdefined{SPELL DC}{DC~\getDND*{SPELL DC}}{}%
 }
