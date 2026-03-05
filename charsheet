@@ -99,6 +99,18 @@ local function sorted_keys(t, lt)
   return u
 end
 
+local function rmdups(xs, eq)
+  eq = eq or function(a, b) return a == b end
+  local i = 1
+  while i < #xs do
+    if eq(xs[i+1], xs[i]) then
+      table.remove(xs, i)
+    else
+      i = i + 1
+    end
+  end
+  return xs
+end
 
 local lyaml  = require "lyaml"
 local function isnull(v) return v == lyaml.null end
@@ -1850,6 +1862,7 @@ local function plus_newline(s)
 end
 
 local function namelt (t1, t2) return t1.name < t2.name end
+local function nameeq (t1, t2) return t1.name == t2.name end
 
 local function docs_of_paths(arg)
   return docs
@@ -1885,6 +1898,7 @@ function scripts.gmsheet(arg)
       end
     end
     table.sort(durables, namelt)
+    rmdups(durables, nameeq)
     local code = {}
     local function outdurable(thing)
       local duration = stringf([[\?%s]], thing.duration):gsub([[%\%?(%d%d)]], '%1')
@@ -1897,11 +1911,22 @@ function scripts.gmsheet(arg)
       end
       outf(code, ' }')
     end
-    outf(code, [[\def\durables{]])
-    local mid = math.ceil(#durables/2.0)
-    outdurables(1, mid)
-    outdurables(mid+1, #durables)
-    outf(code, '}')
+    do
+      outf(code, [[\def\durables{]])
+      local mid = math.ceil(#durables/2.0)
+      outdurables(1, mid)
+      outdurables(mid+1, #durables)
+      outf(code, '}%% \\durables\n')
+    end
+    do
+      outf(code, [[\def\durablestriple{]])
+      local second = math.ceil(#durables/3.0)
+      outdurables(1, second)
+      local third = second + math.ceil((#durables-second) / 2.0)
+      outdurables(second+1, third)
+      outdurables(third+1, #durables)
+      outf(code, '}%% triple\n')
+    end
 
     table.insert(latexes, table.concat(code, ''))
   end
@@ -1919,6 +1944,7 @@ function scripts.gmsheet(arg)
     for i, attack in ipairs(attacks) do
       attacks[i] = stringf([[\attack{%s}]], attack.name)
     end
+    rmdups(attacks)
     table.insert(latexes,
                  stringf([[\def\spellattacks]] .. '{%%\n  %s%%\n}%%\n',
                          table.concat(attacks, '%\n  ')))
