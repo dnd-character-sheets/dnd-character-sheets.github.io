@@ -181,8 +181,9 @@
     \hline
     \X
     \whenDNDnonempty{SENSES}{\regexpVar\endwithperiod{SENSES} }%
-    \whenDNDnonempty{SPELL DC}{Spell~DC~\getDND{SPELL DC}. }%
     \whenDNDnonempty{ARMOR CLASS}{AC~\getDND{ARMOR CLASS}. }%
+    \whenDNDnonempty{SPELL DC}{Spell~DC~\getDND{SPELL DC}. }%
+    \whenDNDnonempty{MAGIC}{Spell attack \psam. }%
     \whenDNDnonempty{BACKGROUND}{\getDND{BACKGROUND}. }%
     \\
     \whenDNDnonempty{BONUS ACTIONS}{%
@@ -226,17 +227,73 @@
   }%
 }
 
-\showpassive{Perception}
-\showpassive{Insight}
+\unlessDNDplayer6{
+  \showpassive{Perception}
+  \showpassive{Insight}
 
+  \newpage
+}
 
-\newpage
 
 \whenDNDplayer3{\showplayer3}
 
 \whenDNDplayer4{\showplayer4}
 
-\bigskip
+\whenDNDplayer5{\showplayer5}
+
+\whenDNDplayer6{\showplayer6}
+
+\whenDNDplayer7{\showplayer7}
+
+\whenDNDplayer8{\showplayer8}
+
+\ifDNDplayer6{\onecolumn   \vbox to \dimexpr\textheight-\topskip-4\baselineskip\relax \bgroup\vss}{\bigskip}
+%\ifDNDplayer6{\onecolumn  \vbox to \vsize \bgroup\vss}{\bigskip}
+
+\newcommand\offensesection{%
+  \emph{\large Offensive Spells and Features}
+  \par
+  \medskip
+  \noindent
+  \begingroup
+    \def\attack##1{##1\\}%
+    \def\savespell##1##2{##1 \upshape(##2)\\}%
+    \begin{tabular}{@{}c@{}}
+    \toprule
+    \begin{tabular}[t]{@{}e}
+    \upshape{Attack roll}\\
+    \midrule
+    \spellattacks
+    \end{tabular}%
+    \begin{tabular}[t]{e}
+    \upshape{Saving throw}\\
+    \midrule
+    \spellsaves
+    \end{tabular}\\
+    \bottomrule
+    \end{tabular}
+  \endgroup
+}
+
+\whenDNDplayer6{
+
+\noindent
+\begin{tabular}{@{}p{0.4\hsize}p{0.55\hsize}@{}}
+\begin{minipage}{\hsize}
+\showpassive{Perception}
+\showpassive{Insight}
+\end{minipage}
+&
+\begin{minipage}{\hsize}
+\offensesection
+\end{minipage}
+\\
+\end{tabular}
+
+  \bigskip
+}
+
+
 
 \newcommand\C{\/\upshape{[C]}}
 
@@ -263,31 +320,16 @@
 \medskip
 \expandafter\durablestable\durables % \durables set in stats, two columns
 
-\bigskip
+\unlessDNDplayer6{
+  \bigskip
 
-\emph{\large Offensive Spells and Features}
-\par
-\medskip
-\noindent
-\begingroup
-  \def\attack#1{#1\\}%
-  \def\savespell#1#2{#1 \upshape(#2)\\}%
-  \begin{tabular}{@{}c@{}}
-  \toprule
-  \begin{tabular}[t]{@{}e}
-  \upshape{Attack roll}\\
-  \midrule
-  \spellattacks
-  \end{tabular}%
-  \begin{tabular}[t]{e}
-  \upshape{Saving throw}\\
-  \midrule
-  \spellsaves
-  \end{tabular}\\
-  \bottomrule
-  \end{tabular}
-\endgroup
+  \offensesection
+}
 
+\whenDNDplayer6{
+  \unskip
+  \egroup % for \vbox
+}
 
 \begingroup
 \medskip
