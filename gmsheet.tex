@@ -313,12 +313,38 @@
   \endgroup
 }
 
+\newcommand\durablestripletable[3]{%
+  \begingroup
+    \def\durable##1##2{##1&##2\\}%
+    \begin{tabular}{@{}lll@{}}
+      \begin{tabular}[t]{@{}el@{}}
+         #1
+      \end{tabular}
+      &
+      \begin{tabular}[t]{@{}el@{}}
+         #2
+      \end{tabular}
+      &
+      \begin{tabular}[t]{@{}el@{}}
+         #3
+      \end{tabular}
+      \\
+    \end{tabular}
+  \endgroup
+}
+
 \newcommand\?{\phantom{1}}
 
 \emph{\Large Durable Effects}
 \par
 \medskip
-\expandafter\durablestable\durables % \durables set in stats, two columns
+
+
+\ifDNDplayer6{%
+  \expandafter\durablestripletable\durablestriple % \durables set in stats, 3 columns
+}{%
+  \expandafter\durablestable\durables % \durables set in stats, two % columns
+}
 
 \unlessDNDplayer6{
   \bigskip
@@ -328,6 +354,7 @@
 
 \whenDNDplayer6{
   \unskip
+  \vspace*{-4\baselineskip}
   \egroup % for \vbox
 }
 
