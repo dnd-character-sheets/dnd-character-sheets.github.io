@@ -1751,6 +1751,7 @@ if [[ -r "$dir/sheet.pdf" ]]; then
   cp "$dir/sheet.pdf" "$output"
 else
   rm -f "$output"
+  exit 1
 fi
 ]=]
 
