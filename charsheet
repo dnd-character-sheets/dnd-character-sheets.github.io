@@ -1,4 +1,4 @@
-#!/usr/bin/env lua5.1
+#!/usr/bin/env lua5.2
 --------------------------------------------------------------------------
 -- yaml-to-dndtex.lua   ‒  Convert character-sheet YAML to LaTeX macros
 -- Usage:   lua yaml-to-dndtex.lua  file.yaml   > file.tex
@@ -1728,10 +1728,13 @@ local function fill_template(assignments, layout)
     eprintf('%s\n', msg)
     os.exit(1)
   else
-    local bracketed_splash = stringf('{%s/splash.png}', fields.templates)
-    return (template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
-                    :gsub('%{splash.png%}', bracketed_splash)
-           )
+    local images = { 'splash.png', 'angry-custom-1.pdf' }
+    local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
+    for _, image in ipairs(images) do 
+      local bracketed = stringf('{%s/%s}', fields.templates, image)
+      filled = filled:gsub('%{' .. image .. '%}', bracketed)
+    end
+    return filled
   end
 end
 
@@ -1788,7 +1791,10 @@ local function process(output)
                             :gsub('%$OUTPUT', shell_quote(fields.output))
     local fd = assert(io.popen(stringf('bash -c %s', shell_quote(command)), 'w'))
     fd:write(output)
-    fd:close()
+    local ok, termination, code = fd:close()
+    if not ok then
+      os.exit(termination == 'exit' and code or 1)
+    end
     do -- check success
       local fd = io.open(fields.output)
       if fd then
