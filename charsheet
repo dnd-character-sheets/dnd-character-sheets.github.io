@@ -104,7 +104,7 @@ local function rmdups(xs, eq)
   local i = 1
   while i < #xs do
     if eq(xs[i+1], xs[i]) then
-      table.remove(xs, i)
+      table.remove(xs, i+1)
     else
       i = i + 1
     end
@@ -1867,7 +1867,13 @@ local function plus_newline(s)
   return s .. '\n'
 end
 
-local function namelt (t1, t2) return t1.name < t2.name end
+local function namelt (t1, t2)
+  if t1.name == t2.name then
+    return t1.abbrev and not t2.abbrev
+  else
+    return t1.name < t2.name
+  end
+end
 local function nameeq (t1, t2) return t1.name == t2.name end
 
 local function docs_of_paths(arg)
@@ -2034,17 +2040,6 @@ function scripts.gmsheet(arg)
   process(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
 
-local function remove_duplicates(spells)
-  local i = 2 -- next candidate for removal
-  while i <= #spells do
-    if spells[i].name ~= spells[i-1].name then
-      i = i + 1
-    else
-      table.remove(spells, i)
-    end
-  end
-end
-
 function scripts.gmspells(arg)
   local latexes = { }
   local docs = { }
@@ -2072,7 +2067,7 @@ function scripts.gmspells(arg)
   latexes = { }
   function latexf(...) table.insert(latexes, stringf(...)) end
   table.sort(spells, namelt)
-  remove_duplicates(spells)
+  rmdups(spells, nameeq)
   for _, spell in ipairs(spells) do
     local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
     local description = spell.abbrev or spell.description or spell.long
