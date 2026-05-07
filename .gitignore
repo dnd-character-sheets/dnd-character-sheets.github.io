@@ -17,3 +17,4 @@ miriel*.tex
 node_modules/
 package-lock.json
 /package.json
+/custom-grid.pdf

@@ -1,0 +1,89 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0pt]{geometry}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes}
+\usepgflibrary{intersections}
+%\usetikzlibrary{fit}
+%\usepackage{amsmath}
+\colorlet{grayed out}{white!70!black}
+
+\newcommand\scrm[1]{\textrm{\textsc{#1}}}
+
+\newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
+
+\usepackage{pgfkeys}
+
+% Incomplete character support
+
+
+
+\newdimen\textmargin % amount subtracted from each side to get `text width`
+\textmargin=8pt
+
+\newdimen\mynodedistance
+\mynodedistance=7pt
+
+\tikzset{%
+  every label node part/.style={
+     text width=,
+     font=\sffamily\footnotesize,
+  },
+  widecolumn/.style={
+    labeled decorated stub rectangle,
+    text width=134mm-2\textmargin,
+    inner xsep=8pt,
+    align=justify,
+    font={\rightskip=0pt plus 2em},
+    inner ysep=6pt,
+    outer xsep=0pt, % x placement is happening by hand
+    draw, line width=1.2pt,
+    stub radius=2.3mm,
+  },
+  narrowcolumn/.style={
+    widecolumn,
+    text width=36mm-2\textmargin,
+  },
+  initiative/.style={
+    labeled decorated clipped rectangle,
+%    minimum width=\hpwidth/3-10pt,
+    draw, line width=1.2pt,
+    fill=white,
+%    yseparated,
+    outer xsep=3pt,
+    minimum height=17mm,
+  },
+  dnd hit dice/.style={
+    dnd max hp,
+%    labeled decorated clipped rectangle,
+%    yseparated,
+%    minimum width=\hpwidth/2-5pt,
+    minimum height=18mm,
+    font=\footnotesize,
+  }
+}
+
+  
+
+\newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
+
+
+\begin{document}
+
+\vbox to \textheight{%
+ \vss
+
+\begin{tikzpicture}[x=1mm,y=1mm]
+
+\node (custom1) {\includegraphics[height=\paperheight]{angry-custom-1.pdf}};
+
+\end{tikzpicture}
+
+ \vss
+}
+
+\end{document}
