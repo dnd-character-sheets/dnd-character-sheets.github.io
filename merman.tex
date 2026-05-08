@@ -18,6 +18,9 @@
   \hbox{\vrule height 0pt depth 0.8pt width #1}%
 }
 
+\newcommand\expandArg[2]{\expandafter\applyExpanded\expandafter{#2}{#1}}
+\newcommand\applyExpanded[2]{#2{#1}}
+
 
 \newdimen\textmargin % amount subtracted from each side to get `text width`
 \textmargin=8pt
@@ -115,49 +118,70 @@
    }
 };
 
-\draw [opacity=0.7,fill=white] (merman.south west) rectangle (merman.north east);
+\path [opacity=0.57,fill=white] (merman.south west) rectangle (merman.north east);
 
 % Grid overlay: thin line every 1mm, heavy every 10mm, labels every 10mm.
 % Grid is anchored to the image's SW corner so labels align with gridlines.
 % NB: charsheet env uses x=1cm,y=1cm, so step must be given with explicit mm
 % units (otherwise step=1 means 1cm and the thin grid coincides with the heavy).
-\begin{scope}
-  \clip (merman.south west) rectangle (merman.north east);
-  \draw[blue!40, line width=0.1pt]
-    (merman.south west) grid[step=1mm] (merman.north east);
-  \draw[blue!60, line width=0.8pt]
-    (merman.south west) grid[step=10mm] (merman.north east);
-  \foreach \x in {0,10,...,300} {
-    \node[anchor=south west, font=\tiny\sffamily\bfseries,
-          text=blue, inner sep=1pt]
-      at ([xshift=\x mm]merman.south west) {\x};
-  }
-  \foreach \x in {0,10,...,300} {
-    \path ([xshift=\x mm]merman.south west) ++(0,180mm) 
-       node [anchor=north west, font=\tiny\sffamily\bfseries,
-             text=blue, inner sep=1pt]
-       {\x}
-       ;
-  }
-  \foreach \y in {10,20,...,300} {
-    \node[anchor=south west, font=\tiny\sffamily\bfseries,
-          text=blue, inner sep=1pt]
-      at ([yshift=\y mm]merman.south west) {\y};
-  }
-\end{scope}
+
+\iffalse
+
+    \begin{scope}
+      \clip (merman.south west) rectangle (merman.north east);
+      \draw[blue!40, line width=0.1pt]
+        (merman.south west) grid[step=1mm] (merman.north east);
+      \draw[blue!60, line width=0.8pt]
+        (merman.south west) grid[step=10mm] (merman.north east);
+      \foreach \x in {0,10,...,300} {
+        \node[anchor=south west, font=\tiny\sffamily\bfseries,
+              text=blue, inner sep=1pt]
+          at ([xshift=\x mm]merman.south west) {\x};
+      }
+      \foreach \x in {0,10,...,300} {
+        \path ([xshift=\x mm]merman.south west) ++(0,180mm) 
+           node [anchor=north west, font=\tiny\sffamily\bfseries,
+                 text=blue, inner sep=1pt]
+           {\x}
+           ;
+      }
+      \foreach \y in {10,20,...,300} {
+        \node[anchor=south west, font=\tiny\sffamily\bfseries,
+              text=blue, inner sep=1pt]
+          at ([yshift=\y mm]merman.south west) {\y};
+      }
+    \end{scope}
+
+\fi
+
 
 \LARGE
 \sffamily
 \bfseries
-\color{blue!20!black}
+\color{blue!60!black}
 
-\path (41,169.5) node (STR) {\getDND*{STR}}
+\path (41,169.5) node (STR)  {\dndmodifier{STR}}
+    ++(0, -15.5)  node (DEX) {\dndmodifier{DEX}}
+    ++(0, -15.5)  node (CON) {\dndmodifier{CON}}
+    ++(0, -15.7)  node (INT) {\dndmodifier{INT}}
+    ++(0, -15.5)  node (WIS) {\dndmodifier{WIS}}
+    ++(0, -15.5)  node (CHA) {\dndmodifier{CHA}}
+;
+
+
+\begin{scope}
+\large
+\tikzset{anchor=north}
+
+\path (21,163) node (STR)  {\getDND*{STR}}
     ++(0, -15.5)  node (DEX) {\getDND*{DEX}}
     ++(0, -15.5)  node (CON) {\getDND*{CON}}
     ++(0, -15.7)  node (INT) {\getDND*{INT}}
     ++(0, -15.5)  node (WIS) {\getDND*{WIS}}
     ++(0, -15.5)  node (CHA) {\getDND*{CHA}}
 ;
+
+\end{scope}
 
 \normalsize
 
@@ -217,6 +241,7 @@
     \whenDNDnonempty{PROFICIENCIES}\profstrue
 %    \whenDNDnonempty{SECONDARY PROFICIENCIES}\profstrue
     \begin{proflist}
+    \raggedright
     \getDND*{PROFICIENCIES}
 %    \whenDNDnonempty{PROFICIENCIES}{%
 %        \whenDNDnonempty{SECONDARY PROFICIENCIES}{\profskip}}
@@ -392,12 +417,12 @@
 
 \end{charsheet}
 
-\whenDNDtrue{VALIDATION ERRORS}
-{
-\section{Validation errors}
-\begin{itemize}
-\getDND{VALIDATION ERRORS}
-\end{itemize}
-}
-
+%\whenDNDtrue{VALIDATION ERRORS}
+%{
+%\section{Validation errors}
+%\begin{itemize}
+%\getDND{VALIDATION ERRORS}
+%\end{itemize}
+%}
+%
 \end{document}
