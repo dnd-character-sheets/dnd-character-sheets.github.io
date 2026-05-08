@@ -1205,21 +1205,34 @@ end
 -- Process structured equipment and generate LaTeX output
 local function emit_structured_equipment(structured_equipment, lines)
   local flattened_equipment = {}
-  
-  -- Process all categories
-  for category, items in pairs(structured_equipment) do
-    if type(items) == "table" and #items > 0 then
-      if category ~= "UNCATEGORIZED" then
-        -- Categorized items get \addDNDitem commands
-        for _, equipment_item in ipairs(items) do
-          add_equipment_item(category, equipment_item, lines, flattened_equipment)
-        end
-      else
-        -- Uncategorized items only go to flattened list
-        for _, equipment_item in ipairs(items) do
-          table.insert(flattened_equipment, render.as_item(equipment_item))
-        end
+
+  -- The flat EQUIPMENT list must follow `category_order` (user request),
+  -- so iterate canonical categories first, then sweep up anything left over
+  -- (UNCATEGORIZED, plus any unrecognized categories).
+  local processed = {}
+  local function process(category)
+    processed[category] = true
+    local items = structured_equipment[category]
+    if type(items) ~= "table" or #items == 0 then return end
+    if category ~= "UNCATEGORIZED" then
+      -- Categorized items get \addDNDitem commands
+      for _, equipment_item in ipairs(items) do
+        add_equipment_item(category, equipment_item, lines, flattened_equipment)
       end
+    else
+      -- Uncategorized items only go to flattened list
+      for _, equipment_item in ipairs(items) do
+        table.insert(flattened_equipment, render.as_item(equipment_item))
+      end
+    end
+  end
+
+  for _, category in ipairs(category_order) do
+    process(category)
+  end
+  for category in pairs(structured_equipment) do
+    if not processed[category] then
+      process(category)
     end
   end
   
