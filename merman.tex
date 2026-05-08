@@ -212,11 +212,11 @@
 
 \path (hp baseline) ++(0,2) coordinate (ac baseline);
 
-\path (144.5,0 |- ac baseline) node {\getDND*{ARMOR CLASS}};
+\path (144.5,0 |- ac baseline) ++(0,1) node {\large\getDND*{ARMOR CLASS}};
 
-\path (161.5,0 |- ac baseline) node {\whenDNDdefined{INITIATIVE}{\signed{\rawgetDND{INITIATIVE}}}};
+\path (161.0,0 |- ac baseline) ++(0,-0.5) node {\whenDNDdefined{INITIATIVE}{\signed{\rawgetDND{INITIATIVE}}}};
 
-\path (190,0 |- hp baseline) node {\getDND*{SPEED}};
+\path (189.7,0 |- hp baseline) ++(0,-1) node {\getDND*{SPEED}};
 
 \tikzset{anchor=north}
 
@@ -241,6 +241,7 @@
     \whenDNDnonempty{PROFICIENCIES}\profstrue
 %    \whenDNDnonempty{SECONDARY PROFICIENCIES}\profstrue
     \begin{proflist}
+    \let\profskip=\smallskip
     \raggedright
     \getDND*{PROFICIENCIES}
 %    \whenDNDnonempty{PROFICIENCIES}{%
@@ -271,8 +272,8 @@
       \par\smallskip
       \advance\baselineskip by 2pt \selectfont
       \def\spellslevellabel#1#2{\ignorespaces\relax}%
-      \def\describedColored#1#2#3{#2\\}%
-      \def\described#1#2{#1\\}%
+      \def\describedColored#1#2#3{\emph{#2}\\}%
+      \def\described#1#2{\emph{#1}\\}%
       \rawgetDND{MAGIC}%
      }
      \end{merman attacks}
