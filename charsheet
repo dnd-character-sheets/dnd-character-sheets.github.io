@@ -1759,8 +1759,9 @@ local function fill_template(assignments, layout)
     local images = { 'splash.png', 'angry-custom-1.pdf' }
     local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
     for _, image in ipairs(images) do 
+      local pattern = image:gsub('%W', '%%%1')
       local bracketed = stringf('{%s/%s}', fields.templates, image)
-      filled = filled:gsub('%{' .. image .. '%}', bracketed)
+      filled = filled:gsub('%{' .. pattern .. '%}', bracketed)
     end
     return filled
   end
