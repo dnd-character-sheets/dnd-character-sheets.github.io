@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 \usepackage{charsheet}
 \usepackage{multicol}
 \usepackage{amsmath}
@@ -14,6 +14,9 @@
 
 % Incomplete character support
 
+\newcommand\fillin[1]{%
+  \hbox{\vrule height 0pt depth 0.8pt width #1}%
+}
 
 
 \newdimen\textmargin % amount subtracted from each side to get `text width`
@@ -63,6 +66,32 @@
 }
 
   
+\newenvironment{merman attacks}
+  {\begin{minipage}{\linewidth}
+   \raggedright
+   \scriptsize
+   \let\dndkeys=\mermanattackkeys
+  }
+  {\par\end{minipage}}
+
+\makeatletter
+\newcommand\mermanattackkeys[1]{%
+  \gdef\@attackname{}%
+  \gdef\@attackattack{}%
+  \gdef\@attackdamage{}%
+  \gdef\@attacktype{}%
+  \gdef\@attackrange{}%
+  \gdef\@attackammotype{}%
+  \gdef\@attackammocount{}%
+%  {\def\statdc{\protect\statdc}\typeout{attack keys: #1}}%
+  \pgfkeys{/attacks/.cd, #1}%
+  \hangindent=2em \hangafter=1
+  \@attackname~\signed{\@attackattack}, \@attackdamage~\@attacktype (\@attackrange)\par
+}
+\makeatother
+
+
+
 
 \newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
 
@@ -72,10 +101,10 @@
 
 
 
-%\input{stats}
+\input{stats}
 
 \noindent
-\begin{charsheet}
+\begin{charsheet}[x=1mm,y=1mm,inner sep=0pt]
   \tikzset{node distance=\mynodedistance}
 
 \node [anchor=south west] (merman) at (0,0) {
@@ -86,18 +115,29 @@
    }
 };
 
+\draw [opacity=0.7,fill=white] (merman.south west) rectangle (merman.north east);
+
 % Grid overlay: thin line every 1mm, heavy every 10mm, labels every 10mm.
 % Grid is anchored to the image's SW corner so labels align with gridlines.
+% NB: charsheet env uses x=1cm,y=1cm, so step must be given with explicit mm
+% units (otherwise step=1 means 1cm and the thin grid coincides with the heavy).
 \begin{scope}
   \clip (merman.south west) rectangle (merman.north east);
   \draw[blue!40, line width=0.1pt]
-    (merman.south west) grid[step=1] (merman.north east);
-  \draw[blue, line width=0.8pt]
-    (merman.south west) grid[step=10] (merman.north east);
+    (merman.south west) grid[step=1mm] (merman.north east);
+  \draw[blue!60, line width=0.8pt]
+    (merman.south west) grid[step=10mm] (merman.north east);
   \foreach \x in {0,10,...,300} {
     \node[anchor=south west, font=\tiny\sffamily\bfseries,
           text=blue, inner sep=1pt]
       at ([xshift=\x mm]merman.south west) {\x};
+  }
+  \foreach \x in {0,10,...,300} {
+    \path ([xshift=\x mm]merman.south west) ++(0,180mm) 
+       node [anchor=north west, font=\tiny\sffamily\bfseries,
+             text=blue, inner sep=1pt]
+       {\x}
+       ;
   }
   \foreach \y in {10,20,...,300} {
     \node[anchor=south west, font=\tiny\sffamily\bfseries,
@@ -106,238 +146,156 @@
   }
 \end{scope}
 
+\LARGE
+\sffamily
+\bfseries
+\color{blue!20!black}
 
-%%%%      \begingroup\sffamily
-%%%%    
-%%%%      \newcommand\namestrut{\vrule width 0pt depth 1pt\relax}
-%%%%    
-%%%%      \path ($(splash.south west)+(88mm,18.75mm)$) coordinate  (class field sw);
-%%%%      \path ($(splash.south west)+(88mm,9.7mm)$) coordinate  (race field sw);
-%%%%      \path ($(splash.south west)+(48mm,16mm)$) coordinate  (charname center);
-%%%%      \path ($(splash.south west)+(40mm,24mm)$) coordinate  (pregen left);
-%%%%     
-%%%%    
-%%%%      \ifDNDfalse{PREGENERATED}%
-%%%%        {\node [fill=splashgray,width=42mm,height=5mm,anchor=south west,at=(pregen left)] {};}
-%%%%        {}
-%%%%    
-%%%%    
-%%%%      \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(class field sw)] {};
-%%%%      \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(race field sw)] {};
-%%%%    
-%%%%      \path (class field sw) +(0mm,0.6mm) coordinate (class sw);
-%%%%      \path (race field sw) +(0mm,0.6mm) coordinate (race sw);
-%%%%    
-%%%%      \writesplash[at=(class sw)]{34mm}{CLASS + LEVEL}
-%%%%      \writesplash[right of base=1mm of CLASS + LEVEL]{28mm}{BACKGROUND}
-%%%%      \writesplash[right of base=1mm of BACKGROUND]{34mm}{PLAYER NAME}
-%%%%    
-%%%%      \writesplash[at=(race sw)]{34mm}{RACE}
-%%%%      \writesplash[right of base=1mm of RACE]{34mm}{ALIGNMENT}
-%%%%      \writesplash[right of base=1mm of ALIGNMENT]{34mm}{EXPERIENCE POINTS}
-%%%%    
-%%%%      \ifDNDdefined{CHARACTER NAME}
-%%%%    {\node[at=(charname center),font={\rmfamily\LARGE\itshape},anchor=center]
-%%%%          {\getDND{CHARACTER NAME}\ifDNDnonempty{AGE}{ \Large (\getDND{AGE})}{}}
-%%%%          ;
-%%%%        }
-%%%%        {}
-%%%%    
-%%%%    \Large
-%%%%    
-%%%%        \setnodeheight\sectionheight[dnd max hp]
-%%%%        \setnodeheight\tmpheight[dnd hit dice]
-%%%%        \advance\sectionheight by \tmpheight
-%%%%        \advance\sectionheight by 3\mynodedistance
-%%%%        \def\hdwidth{20mm}
-%%%%        \def\chpwidth{72mm}
-%%%%        \setlength\sectionwidth{\hdwidth+\chpwidth+3\mynodedistance}
-%%%%    
-%%%%          \node (hpbackground) 
-%%%%            [outer sep=0pt,stub rectangle,fill=hit points background,below right corner=of splash,
-%%%%             width=\sectionwidth, height=\sectionheight] 
-%%%%           { };
-%%%%    
-%%%%          \node (hitdice)
-%%%%                 [dnd hit dice,labeled decorated clipped rectangle,width=\hdwidth,inside south east corner=of hpbackground,
-%%%%                 font=\Large] 
-%%%%             {\nodepart{label}HIT DICE\nodepart{ctext}
-%%%%                \vrule height 8mm width 0pt\getDND*{HIT DICE}}
-%%%%             ;
-%%%%    
-%%%%         \ifDNDdefined{LEVEL}{
-%%%%             \node [at=(hitdice.north),anchor=north] 
-%%%%                  {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-%%%%         }{}
-%%%%    
-%%%%          \node (curhp)
-%%%%                [dnd hit dice,labeled decorated clipped rectangle,fill=white,width=\chpwidth,left=of hitdice,
-%%%%                 ] 
-%%%%             { \nodepart{label}CURRENT HIT POINTS }
-%%%%             ;
-%%%%    
-%%%%          \node [dnd max hp,above left corner=of curhp] 
-%%%%             (maxhp)
-%%%%             {\nodepart{label}MAX HP\nodepart{ctext}\getDND*{MAX HP}}
-%%%%             ;
-%%%%    
-%%%%          \node (initiative)
-%%%%                [dnd max hp,right=of maxhp] 
-%%%%             {\nodepart{label}INITIATIVE\nodepart{ctext}\getDND*{INITIATIVE}}
-%%%%             ;
-%%%%    
-%%%%    %\node [draw,above=of initiative] % {\slotsliteral7};
-%%%%    %              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-%%%%    
-%%%%    
-%%%%          \node (speed)
-%%%%                [dnd max hp,right=of initiative] 
-%%%%             {\nodepart{label}SPEED\nodepart{ctext}\getDND*{SPEED}}
-%%%%             ;
-%%%%    
-%%%%    
-%%%%           \node (ac) [dnd max hp,shield,inner shield,draw,ultra thick,right=of speed,width=15mm,
-%%%%                       font=\Large,
-%%%%                ]
-%%%%          {\getDND*{ARMOR CLASS}}
-%%%%          ;
-%%%%          \node [above=3pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}}
-%%%%          ;
-%%%%    
-%%%%    
-%%%%      \endgroup
-%%%%    
-%%%%     \node (attacks) [widecolumn,fill=attacks,below right corner=of hpbackground]
-%%%%        {\nodepart{label}ATTACKS\nodepart{text}
-%%%%        \centering
-%%%%        \useDNDfont*{ATTACKS}
-%%%%        \noindent
-%%%%        \begin{attackstab}
-%%%%        \gdef\notesheader{\cline{2-4}}%
-%%%%        \gdef\notesheader{}%
-%%%%        \gdef\attacknote#1#2{}%  Just don't
-%%%%        \getDND{ATTACKS}%
-%%%%        \end{attackstab}%
-%%%%        \renewenvironment{attacknotes}{\small\begin{multicols}{2}}{\end{multicols}}%
-%%%%        \renewcommand\attacknote[2]{%
-%%%%          {{\raggedright\smallskip\noindent\emph{#1:} {#2}\hangindent=1.5em \hangafter=1\par}}%
-%%%%        }%
-%%%%        \DNDattacknotes
-%%%%    }
-%%%%      ;
-%%%%    
-%%%%    
-%%%%    
-%%%%    
-%%%%    % \node (attacks) at (hpbackground.south west) {A};
-%%%%    
-%%%%    \ifDNDdefined{MAGIC}
-%%%%    {
-%%%%      \node (magic) [widecolumn,below=of attacks,fill=magic]
-%%%%        {\nodepart{label}MAGIC\nodepart{text}
-%%%%         \featurespostspace=0pt
-%%%%         \centering
-%%%%         \useDNDfont{MAGIC}
-%%%%         \newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
-%%%%         \begin{featurestab}
-%%%%         \rawgetDND{MAGIC}
-%%%%         \end{featurestab}
-%%%%        }
-%%%%      ;
-%%%%    }
-%%%%    {\path (attacks.south east) coordinate (magic);} % anchor is to east
-%%%%    
-%%%%    \ifDNDdefined{FEATURES}{
-%%%%      \ifDNDdefined{MAGIC}
-%%%%         {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}
-%%%%          \featurespostspace=3pt
-%%%%         }
-%%%%         {\def\where{below right corner=of attacks}%
-%%%%          \advance\featurespostspace by 2pt
-%%%%         }%
-%%%%       \expandafter\node\expandafter[\where,widecolumn,fill=features] 
-%%%%         (features)
-%%%%         {\nodepart{label}FEATURES\nodepart{text}
-%%%%          \let\described=\feature
-%%%%          \let\describedColored=\featureColored
-%%%%          \useDNDfont*{FEATURES}
-%%%%          \begin{featurestab}
-%%%%          \getDND{FEATURES}
-%%%%          \end{featurestab}
-%%%%         };
-%%%%    }{}
-%%%%    
-%%%%    \setnodewidth\sectionwidth[statbox]
-%%%%    \setnodeheight\sectionheight[statbox]
-%%%%    \node (stats background) 
-%%%%          [stub rectangle,stub radius=6pt,fill=stats,width=\sectionwidth+2\mynodedistance+0.5\savingshieldwidth,
-%%%%           height=6\sectionheight+7\mynodedistance+24mm+5mm, % % * 4mm, ellipses
-%%%%           below left corner=of splash
-%%%%          ] { };
-%%%%    
-%%%%    \newcommand\nextstatloc{inside north west corner=5mm and \mynodedistance of stats background}
-%%%%    
-%%%%    \dndstat{STRENGTH}{STR}
-%%%%    \dndstat{DEXTERITY}{DEX}
-%%%%    \dndstat{CONSTITUTION}{CON}
-%%%%    \dndstat{INTELLIGENCE}{INT}
-%%%%    \dndstat{WISDOM}{WIS}
-%%%%    \dndstat{CHARISMA}{CHA}
-%%%%    
-%%%%    \path (stats background.north -| attacks.west) ++(-\mynodedistance,0)
-%%%%       coordinate (prof ne);
-%%%%    
-%%%%    
-%%%%    % \draw [red,thick] (prof circle west) circle [radius=3pt];
-%%%%    
-%%%%    
-%%%%    
-%%%%    % slots OK here
-%%%%    
-%%%%    \setnodeheight\tmpheight[coin]
-%%%%    \setlength\sectionheight{4\tmpheight+5\mynodedistance}
-%%%%       % make room for four coin boxes
-%%%%    
-%%%%    \ifDNDdefined{EQUIPMENT}{%
-%%%%       \setnodewidth\sectionwidth[widecolumn]
-%%%%       \ifDNDdefined{MAGIC}
-%%%%            {\def\where{left of lower corner=of features}
-%%%%             \setdeltax\sectionwidth{magic.west}{stats background.west}
-%%%%             \advance\sectionwidth by -\mynodedistance
-%%%%            }
-%%%%            {\def\where{below right corner=of features}}
-%%%%       \multicolsep=0pt
-%%%%       \expandafter\node\expandafter
-%%%%           [\where,widecolumn,fill=equipment,decorated labeled clipped rectangle,
-%%%%            minimum height=\sectionheight,
-%%%%            text width=\sectionwidth-2\textmargin,
-%%%%           ]
-%%%%           (equipment)
-%%%%         {
-%%%%           \nodepart{label}EQUIPMENT\nodepart{text}
-%%%%    %       \medskip
-%%%%           \noindent
-%%%%           \hspace*{21mm-5pt}%  leave room for coins on left
-%%%%           \begin{minipage}{\hsize-21mm-5pt}
-%%%%           \ifnum\rawgetDND{EQUIPMENT COLS}=1
-%%%%           \else
-%%%%              \begin{multicols}{\rawgetDND{EQUIPMENT COLS}}
-%%%%           \fi
-%%%%           \small
-%%%%           \useDNDfont{EQUIPMENT}%
-%%%%            \begin{eqlist}%
-%%%%           \ifDNDnonempty{EQUIPMENT}
-%%%%              {\getDND{EQUIPMENT}}
-%%%%              {\item (Placeholder: Equipment will go here.)}%
-%%%%           \end{eqlist}
-%%%%           \ifnum\rawgetDND{EQUIPMENT COLS}=1
-%%%%           \else
-%%%%             \end{multicols}
-%%%%           \fi
-%%%%           \end{minipage}%
-%%%%         }
-%%%%        ;
-%%%%    }{
+\path (41,169.5) node (STR) {\getDND*{STR}}
+    ++(0, -15.5)  node (DEX) {\getDND*{DEX}}
+    ++(0, -15.5)  node (CON) {\getDND*{CON}}
+    ++(0, -15.7)  node (INT) {\getDND*{INT}}
+    ++(0, -15.5)  node (WIS) {\getDND*{WIS}}
+    ++(0, -15.5)  node (CHA) {\getDND*{CHA}}
+;
+
+\normalsize
+
+\path (168,0) coordinate (right center);
+\path (45,0) coordinate (left center);
+\path (105,0) coordinate (center);
+
+\path(0,250) coordinate (top baseline);
+
+\begin{scope}
+\tikzset{anchor=south}
+\node [anchor=south] (race/class) at (top baseline -| left center) {\getDND*{CHARACTER NAME}};
+
+\node [anchor=south] (race/class) at (top baseline -| center) {\getDND*{RACE}/\getDND*{CLASS}};
+
+\node [anchor=south] (level/xp) at (top baseline -| right center)
+         {\getDND*{LEVEL} / \fillin{1in}}
+  ;
+
+\path (0,183) coordinate (hp baseline);
+
+ \node [anchor=south] (proficiency bonus) at (left center |- hp baseline)
+       {+\arabic{proficiency bonus}}
+    ;
+
+\node [anchor=south] (hp/max) at (center |- hp baseline)
+ {\fillin{2cm} / \getDND*{MAX HP}\hspace*{1cm}};
+
+\path (hp baseline) ++(0,2) coordinate (ac baseline);
+
+\path (144.5,0 |- ac baseline) node {\getDND*{ARMOR CLASS}};
+
+\path (161.5,0 |- ac baseline) node {\whenDNDdefined{INITIATIVE}{\signed{\rawgetDND{INITIATIVE}}}};
+
+\path (190,0 |- hp baseline) node {\getDND*{SPEED}};
+
+\tikzset{anchor=north}
+
+\path (0, 230) coordinate (bg top);
+
+\node (background) at (bg top -| left center) {\getDND*{BACKGROUND}};
+
+\node (motivation) at (bg top -| center) {\getDND*{MOTIVATION}};
+
+
+\end{scope}
+
+ \node (proficiencies)
+     [text width=4.2cm,
+      anchor=north,
+     ]
+   at (72, 160)
+  { \useDNDfont*{PROFICIENCIES}
+    \newif\ifprofs
+    \scriptsize
+    \profsfalse
+    \whenDNDnonempty{PROFICIENCIES}\profstrue
+%    \whenDNDnonempty{SECONDARY PROFICIENCIES}\profstrue
+    \begin{proflist}
+    \getDND*{PROFICIENCIES}
+%    \whenDNDnonempty{PROFICIENCIES}{%
+%        \whenDNDnonempty{SECONDARY PROFICIENCIES}{\profskip}}
+%    \getDND*{SECONDARY PROFICIENCIES}
+    \relax
+    \ifprofs\else \item (No proficiencies listed.)\fi
+    \end{proflist}
+  }
+;
+
+
+
+\node (attacks etc) [anchor=north, text width=4.3cm] at (124, 153)
+     {
+     \centering
+     \useDNDfont*{ATTACKS}
+     \noindent
+    \let\small=\tiny
+     \begin{merman attacks}
+     \gdef\notesheader{\cline{2-4}}%
+     \gdef\notesheader{}%
+     \gdef\attacknote#1#2{}%  Just don't
+     \getDND{ATTACKS}%
+
+     \whenDNDdefined{MAGIC}
+     {
+      \par\smallskip
+      \advance\baselineskip by 2pt \selectfont
+      \def\spellslevellabel#1#2{\ignorespaces\relax}%
+      \def\describedColored#1#2#3{#2\\}%
+      \def\described#1#2{#1\\}%
+      \rawgetDND{MAGIC}%
+     }
+     \end{merman attacks}
+  }
+  ;
+  
+
+  \whenDNDdefined{FEATURES}{
+      \node[text width=4.3cm, anchor=north] 
+       (features)
+        at (173, 0 |- attacks etc.north)
+       {\def\described#1#2{%
+           \hangindent=2em \hangafter=1
+           \scriptsize #1: \tiny #2 \par
+        }
+        \def\describedColored#1{\described}%
+        \begin{merman attacks}
+        \parskip=2.5pt
+        \let\rlap=\relax
+        \getDND{FEATURES}
+        \end{merman attacks}
+       };
+  }
+
+\path (right center) coordinate (bottom right center);
+\path (42,0) coordinate (bottom left center);
+\path (center) coordinate (bottom center);
+
+\path (0, 68) coordinate (equipment top);
+
+  \whenDNDdefined{EQUIPMENT}{%
+      \node[text width=4.3cm, anchor=north] 
+       (equipment)
+        at (bottom left center |- equipment top)
+        {
+          \begin{minipage}{\linewidth}
+          \scriptsize
+          \begin{eqlist}%
+         \ifDNDnonempty{EQUIPMENT}
+            {\getDND{EQUIPMENT}}
+            {\item (Placeholder: Equipment will go here.)}%
+         \end{eqlist}
+         \end{minipage}%
+       }
+      ;
+  }
+
+
 %%%%      \node (equipment) [draw=none,fill=none,left of lower corner=of features] {};
 %%%%    }
 %%%%    
@@ -349,15 +307,6 @@
 %%%%    \coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
 %%%%      
 %%%%    \setdeltax\sectionwidth{attacks.west}{stats background.east}
-%%%%    \node (proficiency bonus)
-%%%%          [proficiencies,decorated stub rectangle,
-%%%%           width=\sectionwidth-2\mynodedistance-5mm+2mm, % room for circle
-%%%%           height=8mm,
-%%%%           anchor=north east,
-%%%%           at=(prof ne),
-%%%%          ]
-%%%%       {}
-%%%%       ;
 %%%%    \path (stats background.east) ++(\mynodedistance,0) ++(-2.5pt,0) coordinate (prof circle west);
 %%%%    \node (proficiency circle) [anchor=west,proficiencies,circle,
 %%%%           width=10mm,height=10mm,line width=1.5pt,draw]
@@ -368,11 +317,6 @@
 %%%%    
 %%%%    % center the text in the visible space
 %%%%    \setdeltax\tmpwidth{proficiency bonus.east}{proficiency circle.east}
-%%%%    
-%%%%    \path (proficiency circle.east) ++(0.5\tmpwidth,0)
-%%%%          ++(-1.1mm,0) % for inset
-%%%%          node {\tiny\textsf{PROFICIENCY BONUS}}
-%%%%          ;
 %%%%    
 %%%%    % proficiencies bottom should be stats background bottom or equipment
 %%%%    % top, whatever is higher
@@ -387,32 +331,6 @@
 %%%%        \setdeltay\sectionheight{proficiency bonus.south}{equipment.north}
 %%%%        \advance\sectionheight by -2\mynodedistance
 %%%%      \fi
-%%%%    
-%%%%    
-%%%%      \node (proficiencies)
-%%%%          [widecolumn,fill=proficiencies,
-%%%%           text width=\sectionwidth-2\mynodedistance-2\textmargin,
-%%%%           height=\sectionheight,
-%%%%           below right corner=of proficiency bonus,
-%%%%          ]
-%%%%       {\nodepart{label}PROFICIENCIES\nodepart{text}
-%%%%         \vspace*{-2pt} % too much inner ysep at the top
-%%%%         \useDNDfont*{PROFICIENCIES}
-%%%%         \newif\ifprofs
-%%%%         \profsfalse
-%%%%         \whenDNDnonempty{PROFICIENCIES}\profstrue
-%%%%         \whenDNDnonempty{SECONDARY PROFICIENCIES}\profstrue
-%%%%         \begin{proflist}
-%%%%         \getDND*{PROFICIENCIES}
-%%%%         \whenDNDnonempty{PROFICIENCIES}{%
-%%%%             \whenDNDnonempty{SECONDARY PROFICIENCIES}{\profskip}}
-%%%%         \getDND*{SECONDARY PROFICIENCIES}
-%%%%         \relax
-%%%%         \ifprofs\else \item (No proficiencies listed.)\fi
-%%%%         \end{proflist}
-%%%%       }
-%%%%     ;
-%%%%    
 %%%%    
 %%%%    
 %%%%    
