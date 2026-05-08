@@ -1120,6 +1120,21 @@ local category_map = {
   ["stored"] = "STORED ITEMS",
 }
 
+local category_order = {
+ "SHIELDS",
+ "LIGHT WEAPONS",
+ "NORMAL WEAPONS",
+ "HEAVY WEAPONS",
+ "LIGHT ARMOR",
+ "MEDIUM ARMOR",
+ "HEAVY ARMOR",
+ "HEAVY ITEMS",
+ "SLOTTED ITEMS",
+ "SMALL ITEMS",
+ "STORED ITEMS"
+}
+
+
 -- Extract valid equipment categories from category_map (single point of truth)
 valid_equipment_categories = {}
 for _, category in pairs(category_map) do
