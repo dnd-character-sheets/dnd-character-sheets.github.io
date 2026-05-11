@@ -144,10 +144,12 @@
             \vrule height 8mm width 0pt\getDND*{HIT DICE}}
          ;
 
-     \ifDNDdefined{LEVEL}{
-         \node [at=(hitdice.north),anchor=north] 
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-     }{}
+     \whenDNDdefined{LEVEL}{
+         \expandafter\ifnum\rawgetDND{LEVEL}<5
+           \node [at=(hitdice.north),anchor=north] 
+                {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+         \fi
+     }
 
       \node (curhp)
             [dnd hit dice,labeled decorated clipped rectangle,fill=white,width=\chpwidth,left=of hitdice,
@@ -234,6 +236,7 @@
      {\def\where{below right corner=of attacks}%
       \advance\featurespostspace by 2pt
      }%
+   \whenDNDdefined{FEATURES SPACE}{\featurespostspace=\rawgetDND{FEATURES SPACE}}
    \expandafter\node\expandafter[\where,widecolumn,fill=features] 
      (features)
      {\nodepart{label}FEATURES\nodepart{text}
@@ -284,7 +287,13 @@
          \setdeltax\sectionwidth{magic.west}{stats background.west}
          \advance\sectionwidth by -\mynodedistance
         }
-        {\def\where{below right corner=of features}}
+        {\ifDNDnonempty{EQUIPMENT LEFT}
+            {\def\where{left of lower corner=of features}
+             \setdeltax\sectionwidth{features.west}{stats background.west}
+             \advance\sectionwidth by -\mynodedistance
+            }
+            {\def\where{below right corner=of features}}
+        }
    \multicolsep=0pt
    \expandafter\node\expandafter
        [\where,widecolumn,fill=equipment,decorated labeled clipped rectangle,
