@@ -19,6 +19,8 @@
 \newcommand\@expandArg[2]{\expandafter\@applyExpanded\expandafter{#2}{#1}}
 \newcommand\@applyExpanded[2]{#2{#1}}
 
+\let\expandArg=\@expandArg
+
 
 % Define colors for different sections
 \colorlet{stats}{blue!10!white}
@@ -2085,8 +2087,10 @@
 \newDND{EQUIPMENT}
 \newDND{EQUIPMENT COLS}
 \setDND{EQUIPMENT COLS}{2} % default
+\newDND{EQUIPMENT LEFT} % put equipment left of features, even if no magic
 \newDND{EXPERIENCE POINTS}
 \newDND{FEATURES}
+\newDND{FEATURES SPACE}
 \newDND{GM NOTES}
 \newDND{GP}
 \newDND{HIT DICE}
