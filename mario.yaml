@@ -1,0 +1,213 @@
+CHARACTER NAME: Mario Greymist
+CLASS: Rogue
+LEVEL: 20
+PLAYER NAME: Steve
+RACE: Dragaeran 
+ALIGNMENT: Chaotic good
+
+STR: 10
+DEX: 20
+CON: 14
+INT: 12
+WIS: 15
+CHA: 16
+
+PROFICIENCIES:
+  - Perception
+  - Sleight of Hand
+  - Acrobatics
+  - Deception
+  - Insight
+  - Investigation
+  - Persuasion
+  - Stealth
+  - proficiencies_skip: true
+  - Thieves' Tools
+  - Disguise Kit
+  - Forgery Kit
+  - Poisoner's Kit
+  - proficiencies_skip: true
+  - Daggers
+  - Hand Crossbows
+  - Longswords
+  - Rapiers
+  - Shortswords
+  - proficiencies_skip: true
+  - Common
+  - Dragaeran
+  - Eastern
+  - Thieves' Cant
+
+AGE: 400
+LEVEL: 20
+SPEED: 30
+
+SPECIALTY: '{\footnotesize Mastermind}'
+BACKGROUND: Criminal
+PASSIVE PERCEPTION: 12
+
+MOTIVATION: >-
+  Avenge insults to his beloved.
+
+# PROFICIENCY BONUS: "+6"
+
+ARMOR CLASS: 17
+INITIATIVE: "+11"
+SPEED: 30
+
+MAX HP: 143
+CURRENT HIT POINTS: ""
+
+HIT DICE: d8
+
+SENSES: "Darkvision 60 ft."
+
+GP: 320
+SP: 15
+CP: 8
+PP: 12
+
+ATTACKS:
+  - NAME: Black-hilt Rapier
+    ATTACK: "+11"
+    DAMAGE: "1d8+5"
+    TYPE: piercing
+    RANGE: "5 ft."
+    NOTES: "Magical"
+
+  - NAME: Throwing Dagger
+    ATTACK: "+11"
+    DAMAGE: "1d4+5"
+    TYPE: piercing
+    RANGE: "20/60 ft."
+    AMMO TYPE: daggers
+    AMMO COUNT: 6
+
+  - NAME: Hand Crossbow
+    ATTACK: "+11"
+    DAMAGE: "1d6+5"
+    TYPE: piercing
+    RANGE: "30/120 ft."
+    AMMO TYPE: bolts
+    AMMO COUNT: 20
+
+FEATURES FONT: \footnotesize
+FEATURES SPACE: 3pt
+
+FEATURES:
+  - name: Sneak Attack
+    description: >-
+      Once per turn, Mario deals an extra 10d6 damage to a creature
+      he hits with a finesse or ranged weapon attack when he has
+      advantage or an ally threatens the target.
+    attack: true
+    enemy: true
+
+  - name: Cunning Action
+    description: >-
+      Mario may Dash, Disengage, or Hide as a bonus action.
+    bonus: true
+
+  - name: Uncanny Dodge
+    description: >-
+      When an attacker Mario can see hits him with an attack,
+      he may halve the attack's damage.
+    reaction: true
+
+  - name: Evasion
+    description: >-
+      When subjected to an effect allowing a Dexterity saving throw
+      for half damage, Mario instead takes no damage on a success
+      and only half damage on a failure.
+
+  - name: Reliable Talent
+    description: >-
+      Any ability check using a proficient skill or tool treats
+      rolls lower than 10 as a 10.
+
+  - name: Blindsense
+    description: >-
+      Mario is aware of hidden or invisible creatures within 10 feet.
+
+  - name: Slippery Mind
+    description: >-
+      Mario gains proficiency in Wisdom saving throws.
+
+  - name: Elusive
+    description: >-
+      No attack roll has advantage against Mario while he is conscious.
+
+  - name: Stroke of Luck
+    description: >-
+      Once per short rest, Mario may turn a missed attack into a hit
+      or treat a failed ability check as a natural 20.
+    attack: true
+
+  - name: Master of Intrigue
+    description: >-
+      Mario mimics speech patterns and accents easily and excels at
+      maintaining false identities.
+
+  - name: Master of Tactics
+    description: >-
+      Mario may use the Help action as a bonus action at a range
+      of 30 feet.
+    bonus: true
+
+  - name: Insightful Manipulator
+    description: >-
+      After observing or conversing with someone for one minute,
+      Mario can assess whether the creature surpasses him in
+      Intelligence, Wisdom, Charisma, or class levels.
+
+  - name: Misdirection
+    description: >-
+      When targeted by an attack while another creature is nearby,
+      Mario may cause the attack to target the other creature instead.
+    reaction: true
+    enemy: true
+
+  - name: Soul of Deceit
+    description: >-
+      Mario's thoughts cannot be read by telepathy unless he allows it,
+      and he presents false thoughts when magically compelled.
+
+EQUIPMENT COLS: 2
+
+EQUIPMENT FONT: \scriptsize
+
+EQUIPMENT:
+  LIGHT ARMOR:
+    - Glamoured Studded Leather Armor
+    - Cloak of Protection
+    - Boots of Elvenkind
+
+  NORMAL WEAPONS:
+    - Black-hilt Rapier
+    - Hand Crossbow
+
+  LIGHT WEAPONS:
+    - Throwing Daggers
+
+  SLOTTED ITEMS:
+    - Crossbow Bolts
+    - Potion of Invisibility
+    - Fine Clothes
+    - Forged Papers
+    - Poison Vials (3)
+    - Marked Cards
+    - Thieves' Tools
+    - Disguise Kit
+    - Forgery Kit
+
+  SMALL ITEMS:
+    - Ring of Mind Shielding
+    - Sending Stone
+    - Blackmail Ledger
+
+# MAGIC: []
+
+EQUIPMENT LEFT: true
+
+COLOR: true
+SHEET ORIGIN: ChatGPT (edited)
