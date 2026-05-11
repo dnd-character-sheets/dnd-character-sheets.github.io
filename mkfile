@@ -14,6 +14,7 @@ KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 KINGYAMLS=${KINGS:%=king-%.yaml}
 SILVERKINGYAMLS=${KINGS:%=silver-king-%.yaml}
 
+CODE=charsheet charsheet.sty caster.tex 3col.tex
 
 
 all:V: bundle samples.pdf
@@ -110,3 +111,8 @@ ssamples.pdf: ${KINGS:%=king-%.s.pdf}
 	pdftk $prereq cat output $target
 
 
+mario.pdf: $CODE mario.yaml
+	charsheet -o $target mario.yaml
+
+mario-preview.png: mario.pdf
+	convert -density 50 $prereq $target
