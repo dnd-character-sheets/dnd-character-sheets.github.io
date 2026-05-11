@@ -36,10 +36,12 @@ PROFICIENCIES:
 # ... and so on
 ```
 
-The software can then produce [a PDF suitable for printing and using at the table](sample-rogue.pdf).\
+The software can then produce [a PDF suitable for printing and using at the table](mario.pdf).\
 Preview:
 
-[![not actually Mario's character sheet](sample-rogue.png)](sample-rogue.pdf).
+<a href="mario.pdf">
+<img src="mario-preview.png" height=300 alt="Not actually Mario's character sheet">
+</a>
 
 The software runs on Linux---the Angry GM uses Linux now, you know---but for those who don't wish to fool around with installing it and getting it to work, I provide [a web service](https://dnd-character-sheets.github.io).
 
