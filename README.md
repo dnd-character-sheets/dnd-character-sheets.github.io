@@ -11,7 +11,7 @@ But when my character levels up or prepares new spells,
 updating a paper sheet is a nuisance, and so is copying out my character to a new sheet.
 This project tries to provide the best of both worlds.
 
-This project works with a "digital character sheet" that is plain text and is meant to be edited and maintained with a simple, ordinary text editor like Emacs, vim, or Notepad.  The text of the character sheet is a form of [YAML]() ([decent beginner tutorial](https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started)), which I consider decently user-friendly while still being machine-readable.  A character sheet might start something like this:
+This project works with a "digital character sheet" that is plain text and is meant to be edited and maintained with a simple, ordinary text editor like Emacs, vim, or Notepad.  The text of the character sheet is a form of [YAML](https://en.wikipedia.org/wiki/YAML) ([decent beginner tutorial](https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started)), which I consider reasonably user-friendly while still being machine-readable.  A character sheet might start something like this:
 
 ```
 CHARACTER NAME: Mario Greymist
@@ -80,7 +80,7 @@ and blank lines are necessarily lost.
 
 Markdown, colons
 
-## Yaml for this project
+## YAML for this project
 
 AI doco :-(
 
@@ -97,6 +97,8 @@ bespoke macros
 
 ## All the YAML keys
 
+A D&D character sheet contains many pieces of information, and each one has its own YAML key. [HOW MANY TOTAL, ROUGHLY].
+
 YAML.md
 
 ## Standard YAML you can use with your own characters
@@ -105,28 +107,32 @@ I have yamls.
 
 ## Getting YAML from other digital character sheets
 
-ChatGPT can help.
+There are eight million ~~stories~~ digital character sheets in the ~~naked city~~ various corners of the Web.
+Trying to create software to convert from one to the other is a mug's game.  But if you are willing to use a large language model, the popular chatbots can do a pretty good job extracting the right YAML from a web page or PDF.
+You can show the bot an example YAML sheet or the user documentation and then ask it to convert.
 
 
 # Deliberate omissions
 
-No traits, bonds, etc.  I don't believe in them.
-No electrum pieces
+The layouts and YAML forms do not support all of the options available in D&D 5e (2014).
 
+  - Traits, bonds, ideals, and so on are aspects of a D&D character that are best developed during play, not decided beforehand at character-creation time.  Accordingly, they are not found on the character sheet.
+  
+  - Electrum pieces clutter the character sheet and tend to confuse players because unlike the other coins, they are not ten times as valuable as the next most valuable coin.  Copper, silver, gold, and platinum provide plenty of variety to work with.
 
 # Character-sheet layouts
 
-i am not a graphic designer.
-Thanks to "Alyssa."
-
-3col
-silverpine
-
-hoping for more
+Although I have some training in information design,
+I am not a graphic designer.
+If you want to recommend support for another layout, please open an issue.
 
 # Notes on sources
 
 AI used.  Link to Nox, Silverpine W, Alyssa sheets
+
+Thanks to "Alyssa" for the two-column character-sheet layout (`silverpine`) that is used in _The Fall of Silverpine Watch_.
+Thanks to NoxAeternus for the three-column (`3col`) style.
+Thanks to French Rice Merman for the `tropical` style.
 
 
 
