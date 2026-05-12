@@ -1,3 +1,5 @@
+% Tropical character sheet by French Rice Merman
+
 \documentclass[12pt]{article}
 \usepackage{charsheet}
 \usepackage{multicol}
@@ -17,9 +19,6 @@
 \newcommand\fillin[1]{%
   \hbox{\vrule height 0pt depth 0.8pt width #1}%
 }
-
-\newcommand\expandArg[2]{\expandafter\applyExpanded\expandafter{#2}{#1}}
-\newcommand\applyExpanded[2]{#2{#1}}
 
 
 \newdimen\textmargin % amount subtracted from each side to get `text width`
@@ -113,7 +112,7 @@
 \node [anchor=south west] (merman) at (0,0) {
    \vbox{
     \vspace*{15mm}
-   \includegraphics[height=\paperheight]{angry-custom-1.pdf}
+   \includegraphics[height=\paperheight]{merman.pdf}
     \vspace*{-15mm}
    }
 };
@@ -186,7 +185,7 @@
 \normalsize
 
 \path (168,0) coordinate (right center);
-\path (45,0) coordinate (left center);
+\path (44,0) coordinate (left center);
 \path (105,0) coordinate (center);
 
 \path(0,250) coordinate (top baseline);
@@ -222,9 +221,10 @@
 
 \path (0, 230) coordinate (bg top);
 
-\node (background) at (bg top -| left center) {\getDND*{BACKGROUND}};
+\node [anchor=north] (background) at (bg top -| left center) {\getDND*{BACKGROUND}};
 
-\node (motivation) at (bg top -| center) {\getDND*{MOTIVATION}};
+\node (motivation) at (bg top -| center)
+      {\begin{minipage}{4cm}\centering\getDND*{MOTIVATION}\end{minipage}};
 
 
 \end{scope}
