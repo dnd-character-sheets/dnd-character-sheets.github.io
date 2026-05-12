@@ -11,8 +11,8 @@ CHARSHEET_DIR=/h/nr/www
 HALLIGANNAME=render-charsheet.cgi
 
 KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
-KINGYAMLS=${KINGS:%=king-%.yaml}
-SILVERKINGYAMLS=${KINGS:%=silver-king-%.yaml}
+KINGYAMLS=${KINGS:%=yaml/king-%.yaml}
+SILVERKINGYAMLS=${KINGS:%=yaml/silver-king-%.yaml}
 
 CODE=charsheet charsheet.sty caster.tex 3col.tex
 
@@ -79,11 +79,11 @@ homework/render.cgi: halligan-prefix.sh render.cgi
 homework/charsheet.css:	docs/charsheet.css
 	/bin/cp $prereq $target
 
-silver-king-%.yaml:D: king-%.yaml un3ify
-	un3ify king-$stem.yaml > $target
+yaml/silver-king-%.yaml:D: yaml/king-%.yaml un3ify
+	un3ify yaml/king-$stem.yaml > $target
 
-king-%.s.pdf: silver-king-%.yaml charsheet caster.tex charsheet.sty
-	charsheet -t silverpine -o $target silver-king-$stem.yaml
+yaml/king-%.s.pdf: yaml/silver-king-%.yaml charsheet caster.tex charsheet.sty
+	charsheet -t silverpine -o $target yaml/silver-king-$stem.yaml
 
 %.3.pdf: %.yaml charsheet 3col.tex charsheet.sty
 	charsheet -t 3col -o $target $stem.yaml
