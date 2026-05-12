@@ -47,8 +47,8 @@ The software runs on Linux---the Angry GM uses Linux now, you know---but for th
 
 # Using the web service
 
-Most of the web service is just a big web form that you fill in with the values that describe your character.
-The service does a little calculation (modifiers from your stats, proficiency bonus from your level), but most of the grunt work is left to you (how many spell slots your character has at each level, for example).
+Most of the web service is a form that describes your character.
+The service does a little calculation (modifiers from your stats, proficiency bonus from your level), but most work is left to you (how many spell slots your character has at each level, for example).
 
 The key bits are at the top.  When you are first getting started you might try something like this:
 
@@ -60,6 +60,7 @@ The key bits are at the top.  When you are first getting started you might try s
  
  4. Click the "Download _name_`.yaml`" button to save your work.
 
+The web form is intended primarily for demo purposes—and not merely because I am a crap web designer.
 In the long term, you will
 ideally use the service something like this:
 
