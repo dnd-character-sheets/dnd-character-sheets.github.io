@@ -1,27 +1,30 @@
 MKSHELL=/bin/ksh
+
 PUBLISH=/usr/local/charsheet
-REMOTE=corylea
-RHOST=corylea.com
-REMOTE=dreamhost
-RHOST=build-prove-compare.net
-BPCHOME=/home/dh_q745m7
-REMOTE=homework
-RHOST=/h/nr/www
+REMOTEHOST=homework
+REMOTE=$REMOTEHOST-clone
+REMOTEWEBPATH=/h/nr/www
 CHARSHEET_DIR=/h/nr/www
-HALLIGANNAME=render-charsheet.cgi
+REMOTECGINAME=render-charsheet.cgi
 
 KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 KINGYAMLS=${KINGS:%=yaml/king-%.yaml}
 SILVERKINGYAMLS=${KINGS:%=yaml/silver-king-%.yaml}
 
-CODE=charsheet charsheet.sty caster.tex 3col.tex
+TEMPLATES=silverpine 3col tropical
+TEMPLATES_TEX=${TEMPLATES:%=templates/%.tex}
+BGBASES=splash.png splash-nocolor.png merman.pdf
+BGS=${BGBASES:%=templates/%}
 
+CODE=bin/charsheet $TEMPLATES_TEX
 
-all:V: bundle samples.pdf
-samples:V: samples.pdf
-demo:V: wizard.pdf
+S=samples
 
-wizard.pdf: king-wizard.3.pdf king-wizard.s.pdf
+all:V: bundle samples
+samples:V: $S/samples.pdf demo
+demo:V: $S/wizard.pdf
+
+$S/wizard.pdf: $S/king-wizard.3.pdf $S/king-wizard.s.pdf
 	pdftk $prereq cat output $target
 
 LUAUTIL=flags inspect osutil tabutil
@@ -33,19 +36,19 @@ local-cgi:V: /usr/lib/cgi-bin/render.cgi
 /usr/lib/cgi-bin/render.cgi: render.cgi
 	sudo cp $prereq $target
 
-docs/index.html:D: $KINGYAMLS $SILVERKINGYAMLS insert-pregen-yamls character-form.html
-	./insert-pregen-yamls -html character-form.html -o $target $KINGYAMLS $SILVERKINGYAMLS
+docs/index.html:D: $KINGYAMLS $SILVERKINGYAMLS bin/insert-pregen-yamls www/character-form.html
+	bin/insert-pregen-yamls -html www/character-form.html -o $target $KINGYAMLS $SILVERKINGYAMLS
 
 bundle:V: docs/index.html docs/charsheet.css
-	cp -auvL splash.png splash-nocolor.png charsheet charsheet.sty silverpine.tex 3col.tex $LUAFILES $PUBLISH
+	cp -auvL $BGS bin/charsheet templates/charsheet.sty $TEMPLATES_TEX $LUAFILES $PUBLISH
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
-	rsync -avP $PUBLISH $REMOTE:$CHARSHEET_DIR
-	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $REMOTE:$RHOST/charsheet/
-	rsync -avP $REMOTE/render.cgi $REMOTE:$RHOST/cgi-bin/render-charsheet.cgi
-	if [[ $REMOTE = homework ]]; then rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$HALLIGANNAME; fi
+	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
+	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $REMOTEHOST:$REMOTEWEBPATH/charsheet/
+	rsync -avP $REMOTE/render.cgi $REMOTEHOST:$REMOTEWEBPATH/cgi-bin/render-charsheet.cgi
+	rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$REMOTECGINAME
 
 GITDOCS=index.html README.html YAML.html QUICKSTART.html
 github:V: ${GITDOCS:%=docs/%}
@@ -57,26 +60,14 @@ push:V: ${GITDOCS:%=docs/%}
 	git commit -m 'updated web page' -- $prereq
 	git push
 
-corylea/index.html: character-form.html
-	cat $prereq > $target
-corylea/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
-	cat $prereq > $target
-	chmod +x $target
-
-dreamhost/index.html: character-form.html
-	cat $prereq > $target
-dreamhost/render.cgi: corylea-prefix.sh /usr/lib/cgi-bin/render.cgi
-	sed "s@/home/corylea@$BPCHOME@g" $prereq > $target
-	chmod +x $target
-
-homework/index.html: docs/index.html mkfile
+$REMOTE/index.html: docs/index.html mkfile
 	cat docs/index.html > $target
 
-homework/render.cgi: halligan-prefix.sh render.cgi
+$REMOTE/render.cgi: halligan-prefix.sh render.cgi
 	cat $prereq > $target
         chmod 755 $target 
 
-homework/charsheet.css:	docs/charsheet.css
+$REMOTE/charsheet.css:	docs/charsheet.css
 	/bin/cp $prereq $target
 
 yaml/silver-king-%.yaml:D: yaml/king-%.yaml un3ify
@@ -111,8 +102,8 @@ ssamples.pdf: ${KINGS:%=king-%.s.pdf}
 	pdftk $prereq cat output $target
 
 
-mario.pdf: $CODE mario.yaml
-	charsheet -o $target mario.yaml
+mario.pdf: bin/charsheet $TEMPLATES_TEX
+	bin/charsheet -o $target mario.yaml
 
 mario-preview.png: mario.pdf
 	convert -density 50 $prereq $target
