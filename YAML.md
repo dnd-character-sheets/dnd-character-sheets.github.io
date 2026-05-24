@@ -502,35 +502,73 @@ The number is used to calculate the character's proficiency bonus.
 
 
 #### `MAGIC`
-**Usage**: Character's spells and magical abilities
-**Type**: List of mixed objects or empty list
-**Template Usage**: Displayed in magic section when present
-**Structure**: Can contain:
-- Level indicators: A single table entry with `level` (required) and `slots` (required for level ≥ 1, omitted for cantrips)
-  - For cantrips: `level: 0`
-  - For spell levels: `level: 1` with `slots: 2` (or appropriate slot count)
-- Spell entries with `name` and `description`
-In addition, each spell may be labeled with any or all of the following keys:
-- `bonus`: true (the spell may be cast as a bonus action)
-- `reaction`: true (the spell may be cast as a reaction)
-- `attack`: true (casting the spell requires an attack roll)
-- `save`: stat (casting the spell requires an enemy to make a saving throw)
-- `enemy`: true (the spell targets an enemy [implied by `attack` or `save`])
-- `ritual`: true (the spell may be cast as a ritual)
-- `duration`: String (how long the spell lasts, if more than one action)
-- `concentration`: true (the spell requires concentration)
 
-**Examples**:
+A list of spells, separated by level markers.
+A level marker is a table with a `level` key and possibly a `slots` key.
+The `slots` key is forbidden for level 0 spells (cantrips) and mandatory for spells of level 1 and up.
+
+A spell is a structured key-value table, which *must* have at
+least two keys:
+
+- `name`: The name of the spell, formatted to take up very little space
+- `description`: A description that is modeled on the description in
+  the rulebook but is typically condensed to take up less space on the
+  character sheet. The `description` field should contain just enough
+  information to cast the spell at the table.
+
+The `description` is the default description, but the spell may also
+include an `abbrev` description, which is as short as possible, or a
+`long` description, which may contain more verbiage.
+
+In addition, each spell may be labeled with any or all of the following properties:
+
+- `ritual`: Made `true` if the spell can be cast as a ritual
+- `concentration`: Made `true` if the spell requires concentration
+- `components`: A string containing one or more of the letters VSM
+- `material`: A description of material components
+- `bonus`: Made `true` if the spell is cast as a bonus action
+- `reaction`: Made `true` if the spell may be cast as a reaction
+- `attack`: Made `true` if using the spell involves an attack roll
+- `save`: Made `true` if using the spell requires an enemy to make a saving throw
+- `enemy`: Made `true` if using the spell involves targeting an enemy
+- `duration`: A string describing how long the effect of the spell lasts
+
+If a spell has the `attack`, `save`, or `enemy` property, that
+spell will be displayed using an "attack color."  (Provided the
+template supports colors.)
+The other properties are used by the `gmsheet` and `gmspells` scripts
+in this repository, which create summaries for the Game Master to
+refer to at the table. 
+
+A very similar format is also used in
+the `FEATURES` list.
+
 ```yaml
 MAGIC:
   - level: 0
   - name: "Fire Bolt"
     description: "Make a ranged spell attack (+5) to deal 1d10 fire damage"
+
   - level: 1
     slots: 2
+
   - name: "Magic Missile"
     description: "Create 3 darts that each deal 1d4+1 force damage"
 
+  - name: Cure Wounds
+    components: VS
+    description: A touched creature regains 1d8\psam HP.
+
+  - name: Thorn Whip
+    components: VSM
+    material: the stem of a plant with thorns
+    description: >-
+        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\satk,
+        1d6 piercing damage.  When hitting Large or smaller,
+        pull up to 10 feet toward yourself.
+    attack: true
+    abbrev: >-
+      Melee spell attack 30 ft, 1d6 pierce.  Pull \(\le\)Large 10 ft.
 
   - name: Shield
     description: >-
@@ -538,50 +576,24 @@ MAGIC:
       No damage from \emph{magic missile}.
     reaction: true
     duration: 1 round
-
-
-
 ```
-
-**Non-caster example**:
-```yaml
-MAGIC: []
-```
-
-
-
-#### `MAGIC FONT`
-**Usage**: Controls font size for the magic section rendering
-**Type**: String (LaTeX font command)
-**Template Usage**: When specified, changes the font size of the entire magic section
-**Examples**:
-- `MAGIC FONT: \small` (renders magic section in small font)
-- `MAGIC FONT: \normalsize` (renders magic section in normal font, explicit)
-- `MAGIC FONT: \tiny` (renders magic section in tiny font)
-
-**Note**: If not specified, magic section renders at normal size. The value should include LaTeX font size commands.
-
 
 
 #### `MAGIC SEPARATE`
-**Usage**: Controls whether magic section appears on a separate page
-**Type**: Boolean
-**Template Usage**: When true (using \ifDNDfalse semantics), renders magic section on its own page
-**Examples**:
+
+If `true` or similar value, the rendering engine puts the magic section on its own page.
+Otherwise the magic section goes with the other sections.
+(This feature is not yet implemented.)
+
 - `MAGIC SEPARATE: true` (magic on separate page)
 - `MAGIC SEPARATE: 1` (magic on separate page)
 - `MAGIC SEPARATE: false` (magic inline, default behavior)
 - `MAGIC SEPARATE: 0` (magic inline, default behavior)
 
-**Note**: Follows \ifDNDfalse semantics: undefined, empty, "0", or "false" are considered false. Any other value is true.
-
-
-
 #### `MAX HP`
-**Usage**: Character's maximum hit points
-**Type**: Number
-**Template Usage**: Displayed prominently in max HP box
-**Examples**:
+
+The character's maximum hit points, which is displayed prominently in a box.
+
 - `"MAX HP": 11`
 - `"MAX HP": 32`
 - `MAX HP: 28`
@@ -590,17 +602,17 @@ MAGIC: []
 
 
 #### `MOTIVATION`
-**Usage**: Character's personal motivation
-**Type**: String
-**Template Usage**: Displayed in italic text near character info
-**Examples**:
+
+An optional, short string displayed in italic text near the character's name.
+
 - `MOTIVATION: "Kylane wants to harness her newfound power"`
 - `MOTIVATION: "Miriel is trying to prove herself"`
-- `MOTIVATION: "Motivation: find family"`
+- `MOTIVATION: "Find family"`
 
+#### `PASSIVE PERCEPTION` (calculated by the system)
 
+May be displayed with the character's other information, and is also used on the GM's sheet.
 
-#### `PASSIVE PERCEPTION` (USER/CALCULATED)
 **Usage**: Character's passive Perception score
 **Type**: Number
 **Template Usage**: May be displayed in senses area or separate box
