@@ -108,8 +108,8 @@ ssamples.pdf: ${KINGS:%=king-%.s.pdf}
 	pdftk $prereq cat output $target
 
 
-mario.pdf: bin/charsheet $TEMPLATES_TEX
-	bin/charsheet -o $target mario.yaml
+mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX
+	bin/charsheet -o $target yaml/mario.yaml
 
 mario-preview.png: mario.pdf
 	convert -density 50 $prereq $target
