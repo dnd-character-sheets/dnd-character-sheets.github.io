@@ -141,10 +141,14 @@ Trying to create software to convert from one to the other is a mug's game.  But
 Show the bot an example YAML sheet or the [user documentation](YAML.md) and then ask it to convert whatever format you have to the YAML format.
 
 
-## Prewritten YAML you can use with your own characters
+## You don't have to type everything yourself
 
-I have yamls. XXX FIX ME
-
+To see more examples or get fragments of YAML that you can use,
+check out the <yaml> directory.
+For example, if you want to roll up a ranger, you can include <yaml/ranger-class.yaml>.
+Or if your druid is about to specialize, try
+<yaml/circle-of-the-land-forest.yaml>.
+Nothing in the <yaml> directory is comprehensive—if you find it useful, we're both surprised and pleased.
 
 
 
