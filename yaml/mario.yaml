@@ -2,7 +2,7 @@ CHARACTER NAME: Mario Greymist
 CLASS: Rogue
 LEVEL: 20
 PLAYER NAME: Steve
-RACE: Dragaeran 
+RACE: Dragaeran
 ALIGNMENT: Chaotic good
 
 STR: 10
@@ -39,8 +39,6 @@ PROFICIENCIES:
   - Thieves' Cant
 
 AGE: 400
-LEVEL: 20
-SPEED: 30
 
 SPECIALTY: '{\footnotesize Mastermind}'
 BACKGROUND: Criminal
@@ -205,9 +203,15 @@ EQUIPMENT:
     - Sending Stone
     - Blackmail Ledger
 
+DESCRIPTION: >-
+  A nondescript Dragaeran male who can blend into any crowd.  Has a round face
+  like a Teckla but does have a noble's point.  Resembles a friendly and
+  somewhat elderly merchant.
+
 # MAGIC: []
 
 EQUIPMENT LEFT: true
 
 COLOR: true
-SHEET ORIGIN: ChatGPT (edited)
+SHEET ORIGIN: Mario Greymist (Jhereg assassin)
+LAYOUT: silverpine
