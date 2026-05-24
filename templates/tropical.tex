@@ -321,6 +321,18 @@
       ;
   }
 
+  \whenDNDdefined{DESCRIPTION}{%
+      \node[text width=4.3cm, anchor=north] 
+       (equipment)
+        at (bottom center |- equipment top)
+        {
+          \begin{minipage}{\linewidth}
+          \getDND{DESCRIPTION}
+          \end{minipage}%
+       }
+      ;
+  }
+
 
 %%%%      \node (equipment) [draw=none,fill=none,left of lower corner=of features] {};
 %%%%    }
