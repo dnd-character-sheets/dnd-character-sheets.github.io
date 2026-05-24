@@ -13,14 +13,14 @@ You might be able to get a character sheet with as little as `CLASS` and `LEVEL`
 ## Keys for specifying class, level, and specialty
 
 The recommended way to specify class, level, and specialty is with
-separate keys CLASS, LEVEL, and SPECIALTY.
+separate keys `CLASS`, `LEVEL`, and `SPECIALTY`.
 However, it is possible to define a single key 
-`"CLASS & LEVEL"`, which may also include a specialty, as in
+`CLASS & LEVEL`, which may also include a specialty, as in
 ```yaml
 "CLASS & LEVEL": "Cleric (Life Domain) 3"
 ```
 This option is not recommended, but it may be useful when using AI to convert an existing character sheet to YAML format.
-When both approaches are used in the same file, the individual keys take precedence over `"CLASS & LEVEL"`.
+When both approaches are used in the same file, the individual keys take precedence over `CLASS & LEVEL`.
 
 ## Keys for changing font size
 
@@ -41,21 +41,21 @@ The following keys are automatically calculated rendering engine.
 Unless you want to override the calculated values, do not include them
 in a YAML file:
 
-- Saving-throw modifiers STR SAVING, DEX SAVING, CON SAVING, INT SAVING, WIS SAVING, and CHA SAVING are calculated automatically based on the CLASS.  (The class determines the character's saving-throw proficiencies.)
-- **SPELL ATTACK MODIFIER** and **SPELLCASTING ABILITY MODIFIER**: are calculated automatically for spellcasters.
-- PROFICIENCY BONUS is calculated automatically based on LEVEL.
+- Saving-throw modifiers `STR SAVING`, `DEX SAVING`, `CON SAVING`, `INT SAVING`, `WIS SAVING`, and `CHA SAVING` are calculated automatically based on the `CLASS`.  (The class determines the character's saving-throw proficiencies.)
+- `SPELL ATTACK MODIFIER` and `SPELLCASTING ABILITY MODIFIER` are calculated automatically for spellcasters.
+- `PROFICIENCY BONUS` is calculated automatically based on LEVEL.
 
 Other calculated keys may be included, but when they are absent, the rendering engine calculates them:
 
-- **PASSIVE PERCEPTION** (Calculation attempts to account for Expertise)
-- **SPELL DC**
+- `PASSIVE PERCEPTION` (the rendering engine attempts to account for Expertise)
+- `SPELL DC`
 
 
 # Alphabetical Reference
 
 ---
 
-## **ALIGNMENT** (USER)
+## `ALIGNMENT` (USER)
 **Usage**: Character's moral and ethical alignment
 **Type**: String
 **Template Usage**: Always displayed in character info section
@@ -66,7 +66,7 @@ Other calculated keys may be included, but when they are absent, the rendering e
 
 ---
 
-## **AGE** (USER)
+## `AGE` (USER)
 **Usage**: Character's age category or life stage
 **Type**: String
 **Template Usage**: Displayed in parentheses after character name when present and non-empty
@@ -79,7 +79,7 @@ Other calculated keys may be included, but when they are absent, the rendering e
 ---
 
 
-## **ARMOR CLASS** (USER)
+## `ARMOR CLASS` (USER)
 **Usage**: Character's Armor Class value
 **Type**: Number
 **Template Usage**: Displayed prominently in shield-shaped box
@@ -90,7 +90,7 @@ Other calculated keys may be included, but when they are absent, the rendering e
 
 ---
 
-## **ATTACKS** (USER)
+## `ATTACKS` (USER)
 **Usage**: List of character's attack options
 **Type**: List of structured objects
 **Template Usage**: Displayed in attacks section table
@@ -141,7 +141,7 @@ ATTACKS:
 
 ---
 
-## **BACKGROUND** (USER)
+## `BACKGROUND` (USER)
 **Usage**: Character's background
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -153,7 +153,7 @@ ATTACKS:
 
 ---
 
-## **CHA** (USER)
+## `CHA` (USER)
 **Usage**: Charisma ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -164,7 +164,7 @@ ATTACKS:
 
 ---
 
-## **CHA SAVING** (CALCULATED)
+## `CHA SAVING` (CALCULATED)
 **Usage**: Charisma saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Charisma save
@@ -173,7 +173,7 @@ ATTACKS:
 
 ---
 
-## **COLOR** (USER)
+## `COLOR` (USER)
 **Usage**: Controls whether to use colored backgrounds in the character sheet
 **Type**: Boolean
 **Template Usage**: Determines if background colors are applied to various sections
@@ -184,7 +184,7 @@ ATTACKS:
 
 ---
 
-## **CHARACTER NAME** (USER)
+## `CHARACTER NAME` (USER)
 **Usage**: Character's name
 **Type**: String
 **Template Usage**: Large italic display in splash area
@@ -196,7 +196,7 @@ ATTACKS:
 
 ---
 
-## **CLASS** (USER/CALCULATED)
+## `CLASS` (USER/CALCULATED)
 **Usage**: Character's class
 **Type**: String
 **Template Usage**: Used for save proficiency calculations and combined with SPECIALTY/LEVEL for display
@@ -210,7 +210,7 @@ ATTACKS:
 
 ---
 
-## **CLASS & LEVEL** (USER)
+## `CLASS & LEVEL` (USER)
 **Usage**: Character's class and level information
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -221,7 +221,7 @@ ATTACKS:
 
 ---
 
-## **CLASS + LEVEL** (LEGACY)
+## `CLASS + LEVEL` (LEGACY)
 **Usage**: Legacy internal system field (alternative format for class and level)
 **Type**: String
 **Template Usage**: System internal use
@@ -229,7 +229,7 @@ ATTACKS:
 
 ---
 
-## **CON** (USER)
+## `CON` (USER)
 **Usage**: Constitution ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -240,7 +240,7 @@ ATTACKS:
 
 ---
 
-## **CON SAVING** (CALCULATED)
+## `CON SAVING` (CALCULATED)
 **Usage**: Constitution saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Constitution save
@@ -249,7 +249,7 @@ ATTACKS:
 
 ---
 
-## **CP** (USER)
+## `CP` (USER)
 **Usage**: Copper pieces
 **Type**: String or Number
 **Template Usage**: Displayed in coin section
@@ -259,7 +259,7 @@ ATTACKS:
 
 ---
 
-## **CURRENT HIT POINTS** (USER)
+## `CURRENT HIT POINTS` (USER)
 **Usage**: Character's current hit points
 **Type**: String
 **Template Usage**: Large empty box for writing current HP
@@ -268,7 +268,7 @@ ATTACKS:
 
 ---
 
-## **DESCRIPTION** (USER)
+## `DESCRIPTION` (USER)
 **Usage**: Physical description of the character
 **Type**: String (can be multi-line)
 **Template Usage**: Available on web form only, not rendered in PDF
@@ -280,7 +280,7 @@ ATTACKS:
 
 ---
 
-## **DEX** (USER)
+## `DEX` (USER)
 **Usage**: Dexterity ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -291,7 +291,7 @@ ATTACKS:
 
 ---
 
-## **DEX SAVING** (CALCULATED)
+## `DEX SAVING` (CALCULATED)
 **Usage**: Dexterity saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Dexterity save
@@ -300,7 +300,7 @@ ATTACKS:
 
 ---
 
-## **DOMAIN SPELLS** (USER)
+## `DOMAIN SPELLS` (USER)
 **Usage**: Number of domain spells (clerics)
 **Type**: Number
 **Template Usage**: May be used in spell tracking
@@ -309,7 +309,7 @@ ATTACKS:
 
 ---
 
-## **EP** (USER)
+## `EP` (USER)
 **Usage**: Electrum pieces
 **Type**: String
 **Template Usage**: Displayed in coin section
@@ -320,7 +320,7 @@ ATTACKS:
 
 ---
 
-## **EQUIPMENT** (USER)
+## `EQUIPMENT` (USER)
 **Usage**: Character's equipment list
 **Type**: List of strings OR structured object with categorized sub-keys
 **Template Usage**: Displayed in equipment section, may be multi-column  
@@ -396,7 +396,7 @@ You can freely mix both styles in the same equipment list. Category names are ca
 
 ---
 
-## **EQUIPMENT COLS** (USER)
+## `EQUIPMENT COLS` (USER)
 **Usage**: Number of columns for equipment display
 **Type**: Number
 **Template Usage**: Controls equipment section layout
@@ -408,7 +408,7 @@ You can freely mix both styles in the same equipment list. Category names are ca
 
 ---
 
-## **EXPERIENCE POINTS** (USER)
+## `EXPERIENCE POINTS` (USER)
 **Usage**: Character's experience points
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -418,7 +418,7 @@ You can freely mix both styles in the same equipment list. Category names are ca
 
 ---
 
-## **FEATURES** (USER)
+## `FEATURES` (USER)
 **Usage**: Character's class features, racial traits, etc.
 **Type**: List of structured objects
 **Template Usage**: Displayed in features section
@@ -446,7 +446,7 @@ FEATURES:
 
 ---
 
-## **GM NOTES** (USER)
+## `GM NOTES` (USER)
 **Usage**: Private notes for the game master
 **Type**: String (can be multi-line)
 **Template Usage**: Not rendered in PDF or web form (GM only)
@@ -457,7 +457,7 @@ FEATURES:
 
 ---
 
-## **GP** (USER)
+## `GP` (USER)
 **Usage**: Gold pieces
 **Type**: String or Number
 **Template Usage**: Displayed in coin section
@@ -468,7 +468,7 @@ FEATURES:
 
 ---
 
-## **HIT DICE** (USER)
+## `HIT DICE` (USER)
 **Usage**: Character's hit die type
 **Type**: String
 **Template Usage**: Displayed in hit dice section
@@ -480,7 +480,7 @@ FEATURES:
 
 ---
 
-## **INITIATIVE** (USER)
+## `INITIATIVE` (USER)
 **Usage**: Character's initiative modifier
 **Type**: String (with sign)
 **Template Usage**: Displayed in initiative box
@@ -491,7 +491,7 @@ FEATURES:
 
 ---
 
-## **INT** (USER)
+## `INT` (USER)
 **Usage**: Intelligence ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -502,7 +502,7 @@ FEATURES:
 
 ---
 
-## **INT SAVING** (CALCULATED)
+## `INT SAVING` (CALCULATED)
 **Usage**: Intelligence saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Intelligence save
@@ -511,7 +511,7 @@ FEATURES:
 
 ---
 
-## **LAYOUT** (USER)
+## `LAYOUT` (USER)
 **Usage**: Defines the character sheet layout style
 **Type**: String
 **Template Usage**: Controls which template layout is used for PDF generation
@@ -525,7 +525,7 @@ FEATURES:
 
 ---
 
-## **LEVEL** (USER/CALCULATED)
+## `LEVEL` (USER/CALCULATED)
 **Usage**: Character's level
 **Type**: Number
 **Template Usage**: Used for spell slot calculations and other level-dependent features
@@ -538,7 +538,7 @@ FEATURES:
 
 ---
 
-## **MAGIC** (USER)
+## `MAGIC` (USER)
 **Usage**: Character's spells and magical abilities
 **Type**: List of mixed objects or empty list
 **Template Usage**: Displayed in magic section when present
@@ -576,7 +576,7 @@ MAGIC: []
 
 ---
 
-## **MAGIC FONT** (USER)
+## `MAGIC FONT` (USER)
 **Usage**: Controls font size for the magic section rendering
 **Type**: String (LaTeX font command)
 **Template Usage**: When specified, changes the font size of the entire magic section
@@ -589,7 +589,7 @@ MAGIC: []
 
 ---
 
-## **MAGIC SEPARATE** (USER)
+## `MAGIC SEPARATE` (USER)
 **Usage**: Controls whether magic section appears on a separate page
 **Type**: Boolean
 **Template Usage**: When true (using \ifDNDfalse semantics), renders magic section on its own page
@@ -603,7 +603,7 @@ MAGIC: []
 
 ---
 
-## **MAX HP** (USER)
+## `MAX HP` (USER)
 **Usage**: Character's maximum hit points
 **Type**: Number
 **Template Usage**: Displayed prominently in max HP box
@@ -615,7 +615,7 @@ MAGIC: []
 
 ---
 
-## **MOTIVATION** (USER)
+## `MOTIVATION` (USER)
 **Usage**: Character's personal motivation
 **Type**: String
 **Template Usage**: Displayed in italic text near character info
@@ -626,7 +626,7 @@ MAGIC: []
 
 ---
 
-## **PASSIVE PERCEPTION** (USER/CALCULATED)
+## `PASSIVE PERCEPTION` (USER/CALCULATED)
 **Usage**: Character's passive Perception score
 **Type**: Number
 **Template Usage**: May be displayed in senses area or separate box
@@ -640,7 +640,7 @@ MAGIC: []
 
 ---
 
-## **PLAYER NAME** (USER)
+## `PLAYER NAME` (USER)
 **Usage**: Name of the player (not character)
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -652,7 +652,7 @@ MAGIC: []
 
 ---
 
-## **PP** (USER)
+## `PP` (USER)
 **Usage**: Platinum pieces
 **Type**: String
 **Template Usage**: Displayed in coin section
@@ -663,7 +663,7 @@ MAGIC: []
 
 ---
 
-## **PREGENERATED** (USER)
+## `PREGENERATED` (USER)
 **Usage**: Marks template/pregenerated characters
 **Type**: Boolean
 **Template Usage**: Controls display of template-specific elements
@@ -672,7 +672,7 @@ MAGIC: []
 
 ---
 
-## **PROFICIENCIES** (USER)
+## `PROFICIENCIES` (USER)
 **Usage**: Character's skill, tool, language, and other proficiencies
 **Type**: List of strings with special entries
 **Template Usage**: Displayed in proficiencies section
@@ -695,7 +695,7 @@ PROFICIENCIES:
 
 ---
 
-## **PROFICIENCY BONUS** (USER)
+## `PROFICIENCY BONUS` (USER)
 **Usage**: Character's proficiency bonus
 **Type**: String (with + sign)
 **Template Usage**: Displayed in circular proficiency bonus box
@@ -706,7 +706,7 @@ PROFICIENCIES:
 
 ---
 
-## **RACE** (USER)
+## `RACE` (USER)
 **Usage**: Character's race and subrace
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -718,7 +718,7 @@ PROFICIENCIES:
 
 ---
 
-## **SENSES** (USER)
+## `SENSES` (USER)
 **Usage**: Character's special senses
 **Type**: String
 **Template Usage**: May be displayed in senses box if present
@@ -729,7 +729,7 @@ PROFICIENCIES:
 
 ---
 
-## **SHEET ORIGIN** (USER)
+## `SHEET ORIGIN` (USER)
 **Usage**: Metadata indicating where the character sheet originated from
 **Type**: String
 **Template Usage**: Informational metadata, may be used for tracking or attribution
@@ -740,7 +740,7 @@ PROFICIENCIES:
 
 ---
 
-## **SORCERY POINTS** (USER)
+## `SORCERY POINTS` (USER)
 **Usage**: Sorcerer's sorcery points
 **Type**: Number
 **Template Usage**: Displayed as slots if character has this feature
@@ -749,7 +749,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPECIALTY** (USER)
+## `SPECIALTY` (USER)
 **Usage**: Character's class specialty (subclass, domain, archetype, etc.)
 **Type**: String
 **Template Usage**: When present, displayed in "CLASS & LEVEL" field in parentheses between class and level
@@ -766,7 +766,7 @@ PROFICIENCIES:
 
 ---
 
-## **SP** (USER)
+## `SP` (USER)
 **Usage**: Silver pieces
 **Type**: String or Number
 **Template Usage**: Displayed in coin section
@@ -777,7 +777,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPEED** (USER)
+## `SPEED` (USER)
 **Usage**: Character's movement speed
 **Type**: String
 **Template Usage**: Displayed in speed box
@@ -789,7 +789,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPELL ATTACK MODIFIER** (CALCULATED)
+## `SPELL ATTACK MODIFIER` (CALCULATED)
 **Usage**: Character's spell attack modifier
 **Type**: String
 **Template Usage**: Used for spell attack calculations
@@ -801,7 +801,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPELL DC** (USER/CALCULATED)
+## `SPELL DC` (USER/CALCULATED)
 **Usage**: Character's spell save DC
 **Type**: Number
 **Template Usage**: May be displayed in upper info area
@@ -813,7 +813,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPELLCASTING ABILITY MODIFIER** (CALCULATED)
+## `SPELLCASTING ABILITY MODIFIER` (CALCULATED)
 **Usage**: Character's spellcasting ability modifier
 **Type**: Number
 **Template Usage**: Used for spellcasting calculations
@@ -825,7 +825,7 @@ PROFICIENCIES:
 
 ---
 
-## **SPELLS KNOWN** (USER)
+## `SPELLS KNOWN` (USER)
 **Usage**: Number of spells known (certain classes)
 **Type**: Number
 **Template Usage**: May be used for spell tracking
@@ -834,7 +834,7 @@ PROFICIENCIES:
 
 ---
 
-## **STR** (USER)
+## `STR` (USER)
 **Usage**: Strength ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -846,7 +846,7 @@ PROFICIENCIES:
 
 ---
 
-## **STR SAVING** (CALCULATED)
+## `STR SAVING` (CALCULATED)
 **Usage**: Strength saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Strength save
@@ -855,7 +855,7 @@ PROFICIENCIES:
 
 ---
 
-## **TRAITS** (USER)
+## `TRAITS` (USER)
 **Usage**: Character personality traits, ideals, bonds, flaws
 **Type**: List of structured objects
 **Template Usage**: *Not used by any known template at present*
@@ -874,7 +874,7 @@ TRAITS:
 
 ---
 
-## **VALIDATION ERRORS** (SYSTEM)
+## `VALIDATION ERRORS` (SYSTEM)
 **Usage**: System-generated validation error messages
 **Type**: String
 **Template Usage**: Used internally for error reporting
@@ -882,7 +882,7 @@ TRAITS:
 
 ---
 
-## **WIS** (USER)
+## `WIS` (USER)
 **Usage**: Wisdom ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -893,7 +893,7 @@ TRAITS:
 
 ---
 
-## **WIS SAVING** (CALCULATED)
+## `WIS SAVING` (CALCULATED)
 **Usage**: Wisdom saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Wisdom save
