@@ -17,12 +17,18 @@ BGBASES=splash.png splash-nocolor.png merman.pdf
 BGS=${BGBASES:%=templates/%}
 
 CODE=bin/charsheet $TEMPLATES_TEX
+CSS=https://www.cs.tufts.edu/cs/106/course.css
 
 S=samples
 
 all:V: bundle samples
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
+draft:V: /tmp/README.html
+
+
+/tmp/&.html: &.md
+	pandoc -c $CSS -f gfm -s -o $target $prereq
 
 $S/wizard.pdf: $S/king-wizard.3.pdf $S/king-wizard.s.pdf
 	pdftk $prereq cat output $target
