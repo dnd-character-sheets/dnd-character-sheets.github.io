@@ -49,6 +49,8 @@ Preview:
 The software runs on Linux—the Angry GM uses Linux now, you know—but for those who don't wish to fool around with installing it and getting it to work, I provide [a web service](https://dnd-character-sheets.github.io).
 If you are curious, the web service is the best way to explore.
 
+If you do get the software to run on Linux, it can also create a [one-page summary of characters' important abilities and stats, for use by the GM at the table](gmsheet.pdf).
+
 # Using the web service
 
 The web service starts with a form that describes your character.
