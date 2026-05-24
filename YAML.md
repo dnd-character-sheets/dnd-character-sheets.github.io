@@ -367,78 +367,95 @@ Depending on the template, the default value may be one column or two.
 
 
 #### `EXPERIENCE POINTS`
-**Usage**: Character's experience points
-**Type**: String
-**Template Usage**: Displayed in character info section
-**Examples**:
+
+For display, usually suggesting what's needed to reach the next level.
+
 - `"EXPERIENCE POINTS": "0/300"`
 - `"EXPERIENCE POINTS": ""`
 
 
 
 #### `FEATURES`
-**Usage**: Character's class features, racial traits, etc.
-**Type**: List of structured objects
-**Template Usage**: Displayed in features section
-**Structure**: Each feature contains:
-- `name`: String (feature name)
-- `description`: String (feature description)
-In addition, each feature may be labeled with any or all of the following keys:
-- `bonus`: true (the feature involves a bonus action)
-- `reaction`: true (the feature involves a reaction)
-- `attack`: true (the feature involves an attack roll)
-- `save`: true (the feature requires an enemy's to make a saving throw)
-- `enemy`: true (the feature targets an enemy)
-- `duration`: String (when the feature causes an effect that lasts for more than one action action)
 
+A list of class features, racial traits, and so on.
+Each feature is a structured key-value table, which *must* have at
+least two keys:
 
+- `name`: The name of the feature, formatted to take up very little space
+- `description`: A description that is modeled on the description in
+  the rulebook but is typically condensed to take up less space on the
+  character sheet. The `description` field should contain just enough
+  information to use the feature at the table.
 
-**Examples**:
+The `description` is the default description, but the feature may also
+include an `abbrev` description, which is as short as possible, or a
+`long` description, which may contain more verbiage.
+
+In addition, each feature may be labeled with any or all of the following properties:
+
+- `bonus`: Made `true` if the feature involves a bonus action
+- `reaction`: Made `true` if the feature involves a reaction
+- `attack`: Made `true` if using the feature involves an attack roll
+- `save`: Made `true` if using the feature requires an enemy to make a saving throw
+- `enemy`: Made `true` if using the feature involves targeting an enemy
+- `duration`: A string describing how long the effect of the feature lasts
+
+If a feature has the `attack`, `save`, or `enemy` property, that
+feature will be displayed using an "attack color."  (Provided the
+template supports colors.)
+The other properties are used by the `gmsheet` and `gmspells` scripts
+in this repository, which create summaries for the Game Master to
+refer to at the table. 
+
+A very similar format is also used in
+the `MAGIC` list.
+
 ```yaml
 FEATURES:
+  - name: Cunning Action
+    description: Dash, Disengage, or Hide as a bonus action.
+    abbrev: Bonus Dash, Disengage, or Hide
+    bonus: true
+
+  - name: Sneak Attack
+    description: Add 1d6 damage to finesse or ranged weapon.  Needs Advantage,
+      or straight roll w/target threatened.  1/turn.
+    abbrev: >-
+      +1d6 dmg finesse, ranged. Need Adv or target threatened (no Dis). 1/turn.
+    attack: true
+
   - name: "Fey Ancestry"
     description: "You have advantage to save against charms and you can't be magically put to sleep."
-  - name: "Bardic Inspiration 2/day"  
+
+  - name: "Bardic Inspiration 2/day"
     description: "Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes."
 ```
 
 
 
 #### `GM NOTES`
-**Usage**: Private notes for the game master
-**Type**: String (can be multi-line)
-**Template Usage**: Not rendered in PDF or web form (GM only)
-**Examples**:
-- `GM NOTES: "Player tends to be cautious in combat"`
-- `GM NOTES: "Has strong connection to the local thieves' guild"`
-- `GM NOTES: "Secretly searching for their missing sister"`
+
+These private notes for the game master may be used by the `gmsheet`
+script.
+
+- `GM NOTES: Favored enemy: undead.  Favored terrain: forest.`
+- `GM NOTES: The dagger is cursed, but player doesn't know it yet.`
 
 
-
-#### `CP`
-
-Number of copper pieces in the character's inventory.
-May also be left blank.
-
-- `CP: 10`
-- `CP: ""`
 
 #### `GP`
-**Usage**: Gold pieces
-**Type**: String or Number
-**Template Usage**: Displayed in coin section
-**Examples**:
+
+Number of gold pieces in the character's inventory.
+May also be left blank.
+
 - `GP: 10`
 - `GP: ""`
-- `GP: 150`
-
 
 
 #### `HIT DICE`
-**Usage**: Character's hit die type
-**Type**: String
-**Template Usage**: Displayed in hit dice section
-**Examples**:
+
+A string showing the type of the character's hit dice.
+
 - `"HIT DICE": "d8"`
 - `"HIT DICE": "d12"`
 - `HIT DICE: d6`
@@ -447,72 +464,41 @@ May also be left blank.
 
 
 #### `INITIATIVE`
-**Usage**: Character's initiative modifier
-**Type**: String (with sign)
-**Template Usage**: Displayed in initiative box
-**Examples**:
+
+The character's initiative modifier.
+
 - `"INITIATIVE": "+2"`
 - `"INITIATIVE": "-1"`
 - `INITIATIVE: '+3'`
 
 
 
-#### `CON`
+#### `INT`
 
-The Constitution ability score, a number, as in `CON: 15`.
+The Intelligence ability score, a number, as in `INT: 15`.
 
 
-#### `CON SAVING` (calculated by the system)
+#### `INT SAVING` (calculated by the system)
 
 If the character `CLASS` indicates saving-throw proficiency in
-Constitution,
-the rendering engine defines `CON SAVING` to be `true`.
-Otherwise `CON SAVING` is left undefined.
-#### `INT`
-**Usage**: Intelligence ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `INT: 15`
-- `INT: 8`
-- `INT: 13`
-
-
-
-#### `INT SAVING` (CALCULATED)
-**Usage**: Intelligence saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Intelligence save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Intelligence save proficiency (Druid, Rogue, Wizard). Do not include in YAML files.
-
-
+Intelligence,
+the rendering engine defines `INT SAVING` to be `true`.
+Otherwise `INT SAVING` is left undefined.
 
 #### `LAYOUT`
-**Usage**: Defines the character sheet layout style
-**Type**: String
-**Template Usage**: Controls which template layout is used for PDF generation
-**Valid Options**:
-- `silverpine` - Silverpine Watch style (one narrow column, one wide)
-- `3col` - Three narrow columns
-**Default**: If omitted, uses default layout (handled by charsheet script)
-**Examples**:
-- `LAYOUT: silverpine`
-- `LAYOUT: 3col`
+
+An optional key recommending a layout template.
+The system currently supports three templates:
+
+- `silverpine`: Silverpine Watch style (one narrow column, one wide)
+- `3col`: Three narrow columns
+- `tropical`: A tropical theme with mostly three columns and no colors.
 
 
+#### `LEVEL`
 
-#### `LEVEL` (USER/CALCULATED)
-**Usage**: Character's level
-**Type**: Number
-**Template Usage**: Used for spell slot calculations and other level-dependent features
-**Examples**:
-- `LEVEL: 1`
-- `LEVEL: 3`
-- `LEVEL: 20`
-
-**Note**: Can be provided directly by user or auto-extracted from "CLASS & LEVEL" by `extend()` function
-
+A number giving the character's level.
+The number is used to calculate the character's proficiency bonus.
 
 
 #### `MAGIC`
@@ -544,6 +530,17 @@ MAGIC:
     slots: 2
   - name: "Magic Missile"
     description: "Create 3 darts that each deal 1d4+1 force damage"
+
+
+  - name: Shield
+    description: >-
+      Reaction; +5 AC until start of next turn, including triggering attack.
+      No damage from \emph{magic missile}.
+    reaction: true
+    duration: 1 round
+
+
+
 ```
 
 **Non-caster example**:
