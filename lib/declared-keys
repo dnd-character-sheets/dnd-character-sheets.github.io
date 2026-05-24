@@ -1,0 +1,9 @@
+#!/usr/bin/env lua5.1
+
+require 'ioutil'
+
+local style = io.stdin:read '*a'
+
+for key in style:gmatch [[\newDND{([%u%s]+)}]] do
+  io.stdout:write(key, '\n')
+end
