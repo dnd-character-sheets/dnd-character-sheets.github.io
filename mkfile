@@ -24,7 +24,7 @@ S=samples
 all:V: bundle samples
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
-draft:V: /tmp/README.html
+draft:V: /tmp/README.html /tmp/YAML.html
 
 
 /tmp/&.html: &.md
