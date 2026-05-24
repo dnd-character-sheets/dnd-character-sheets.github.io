@@ -10,6 +10,9 @@ But a few fields deserve special commentary.
 Also, it is not documented which fields are required—but by design it is as few as possible.
 You might be able to get a character sheet with as little as `CLASS` and `LEVEL`.
 
+Finally, you will see examples with and without quotation marks.
+Most quotation marks are optional.
+
 ## Keys for specifying class, level, and specialty
 
 The recommended way to specify class, level, and specialty is with
@@ -53,58 +56,56 @@ Other calculated keys may be included, but when they are absent, the rendering e
 
 # Alphabetical Reference
 
----
+Each key is described briefly; most are followed by examples.
+Unless otherwise specified, a key expects to be associated with a string value.
 
-## `ALIGNMENT` (USER)
-**Usage**: Character's moral and ethical alignment
-**Type**: String
-**Template Usage**: Always displayed in character info section
-**Examples**:
+#### `ALIGNMENT`
+
+A string.
+
 - `"ALIGNMENT": "Chaotic Good"`
 - `"ALIGNMENT": ""`
 - `ALIGNMENT: Lawful Good`
 
----
 
-## `AGE` (USER)
-**Usage**: Character's age category or life stage
-**Type**: String
-**Template Usage**: Displayed in parentheses after character name when present and non-empty
-**Examples**:
+
+#### `AGE`
+
+Could be a number or just a string describing a life stage.
+The age is displayed in parentheses after the character's name.
+
 - `AGE: "young adult"`
 - `AGE: "late middle age"`
 - `AGE: "elderly"`
-- `AGE: 35 [young]` (from arana.yaml)
-
----
+- `AGE: 35 [young]`
 
 
-## `ARMOR CLASS` (USER)
-**Usage**: Character's Armor Class value
-**Type**: Number
-**Template Usage**: Displayed prominently in shield-shaped box
-**Examples**:
+
+
+#### `ARMOR CLASS`
+
+A number, which is  displayed prominently in a shield-shaped box.
+
 - `"ARMOR CLASS": 13`
 - `"ARMOR CLASS": 18`
 - `ARMOR CLASS: 14` (unquoted form)
 
----
 
-## `ATTACKS` (USER)
-**Usage**: List of character's attack options
-**Type**: List of structured objects
-**Template Usage**: Displayed in attacks section table
-**Structure**: Each attack contains:
-- `NAME`: String (weapon/attack name)
-- `ATTACK`: String (attack bonus with +/-)
-- `DAMAGE`: String (damage dice/formula)
-- `TYPE`: String (damage type)
-- `RANGE`: String (range information)
-- `AMMO TYPE`: String (type of ammunition, optional)
-- `AMMO COUNT`: Number (amount of ammunition, optional)
-- `NOTES`: String (optional additional notes)
 
-**Ammunition Rules**: AMMO TYPE can be present without AMMO COUNT, but AMMO COUNT requires AMMO TYPE to be specified.
+#### `ATTACKS`
+
+A list of attack possibilities, each of which is described by a table with these fields:
+
+- `NAME`: Names the weapon or the attack, as in `Dagger`
+- `ATTACK`: Attack bonus, as in `+5`
+- `DAMAGE`: Damage dice or formula, as in `2d4+2`
+- `TYPE`: Damage type, as in `Piercing`
+- `RANGE`: optional string, as in `80/320 ft`
+- `AMMO TYPE`: Describes ammunition, as in `bolts` or `sling bullets`
+- `AMMO COUNT`: An optional number giving the amount of ammunition available
+- `NOTES`: Optional additional notes
+
+If `AMMO COUNT` is given, `AMMO TYPE` must also be given.
 
 **Examples**:
 ```yaml
@@ -115,6 +116,7 @@ ATTACKS:
     TYPE: piercing
     RANGE: "5 ft."
     # No ammo fields for melee weapons
+
   - NAME: Light Crossbow
     ATTACK: "+4"
     DAMAGE: "1d8+2"
@@ -123,6 +125,7 @@ ATTACKS:
     AMMO TYPE: "bolts"
     AMMO COUNT: 20
     NOTES: "Loading property"
+
   - NAME: Dagger (thrown)
     ATTACK: "+4"
     DAMAGE: "1d4+2"
@@ -130,6 +133,7 @@ ATTACKS:
     RANGE: "20/60 ft."
     AMMO COUNT: 3
     AMMO TYPE: daggers
+
   - NAME: Sling
     ATTACK: "+4"
     DAMAGE: "1d4+2"
@@ -139,216 +143,179 @@ ATTACKS:
     # Count omitted when not tracked
 ```
 
----
 
-## `BACKGROUND` (USER)
-**Usage**: Character's background
-**Type**: String
-**Template Usage**: Displayed in character info section
-**Examples**:
+
+#### `BACKGROUND`
+
+A string that is displayed in the character-information section.
+
 - `"BACKGROUND": "Scholar"`
-- `"BACKGROUND": "Hermit (Custom)"`
+- `"BACKGROUND": "Hermit"`
 - `BACKGROUND: Acolyte`
 - `BACKGROUND: Town Watch`
 
----
 
-## `CHA` (USER)
-**Usage**: Charisma ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `CHA: 15`
-- `CHA: 8`
-- `CHA: 16`
 
----
+#### `CHA`
 
-## `CHA SAVING` (CALCULATED)
-**Usage**: Charisma saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Charisma save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Charisma save proficiency (Bard, Cleric, Paladin, Sorcerer, Warlock). Do not include in YAML files.
+The Charisma ability score, a number, as in `CHA: 15`.
 
----
 
-## `COLOR` (USER)
-**Usage**: Controls whether to use colored backgrounds in the character sheet
-**Type**: Boolean
-**Template Usage**: Determines if background colors are applied to various sections
-**Default**: If omitted, defaults to true (colored backgrounds enabled)
-**Examples**:
+#### `CHA SAVING` (calculated by the system)
+
+If the character `CLASS` indicates saving-throw proficiency in
+Charisma,
+the rendering engine defines `CHA SAVING` to be `true`.
+Otherwise `CHA SAVING` is left undefined.
+
+
+#### `COLOR`
+
+A Boolean; if true, the rendering engine uses colored backgrounds in
+those templates that support color.
+(The colored backgrounds are primarily a teaching tool.)
+Defaults to `true`.
+
 - `COLOR: true`
 - `COLOR: false`
 
----
 
-## `CHARACTER NAME` (USER)
-**Usage**: Character's name
-**Type**: String
-**Template Usage**: Large italic display in splash area
-**Examples**:
+
+#### `CHARACTER NAME`
+
+The character's name, which is displayed prominently.
+
 - `"CHARACTER NAME": "Miriel"`
-- `"CHARACTER NAME": ""` (for templates)
 - `CHARACTER NAME: Arana Alewind`
-- `CHARACTER NAME: Test Warrior`
 
----
 
-## `CLASS` (USER/CALCULATED)
-**Usage**: Character's class
-**Type**: String
-**Template Usage**: Used for save proficiency calculations and combined with SPECIALTY/LEVEL for display
-**Examples**:
+
+#### `CLASS`
+
+The character's class.
+It is used to determine saving-throw proficiencies, and it is displayed.
+
 - `CLASS: "Cleric"`
 - `CLASS: "Fighter"`
-- `CLASS: "Sorcerer"`
 - `CLASS: Rogue`
 
-**Note**: Can be provided directly by user or auto-extracted from "CLASS & LEVEL" by `extend()` function
+#### `CLASS & LEVEL` (use discouraged)
 
----
+A string showing the character's class, level, and possibly
+background.
+It is meant primarily for use in scraping YAML off of other character sheets.
 
-## `CLASS & LEVEL` (USER)
-**Usage**: Character's class and level information
-**Type**: String
-**Template Usage**: Displayed in character info section
-**Examples**:
 - `"CLASS & LEVEL": "Bard 1"`
 - `"CLASS & LEVEL": "Cleric (Life Domain) 3"`
 - `"CLASS & LEVEL": Sorcerer 3`
 
----
+#### `CON`
 
-## `CLASS + LEVEL` (LEGACY)
-**Usage**: Legacy internal system field (alternative format for class and level)
-**Type**: String
-**Template Usage**: System internal use
-**Note**: This is a legacy field declared in charsheet.sty for backward compatibility. Do not use in new YAML files. Use "CLASS & LEVEL" instead.
+The Constitution ability score, a number, as in `CON: 15`.
 
----
 
-## `CON` (USER)
-**Usage**: Constitution ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `CON: 14`
-- `CON: 8`
-- `CON: 15`
+#### `CON SAVING` (calculated by the system)
 
----
+If the character `CLASS` indicates saving-throw proficiency in
+Constitution,
+the rendering engine defines `CON SAVING` to be `true`.
+Otherwise `CON SAVING` is left undefined.
 
-## `CON SAVING` (CALCULATED)
-**Usage**: Constitution saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Constitution save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Constitution save proficiency (Barbarian, Fighter, Sorcerer). Do not include in YAML files.
 
----
+#### `CP`
 
-## `CP` (USER)
-**Usage**: Copper pieces
-**Type**: String or Number
-**Template Usage**: Displayed in coin section
-**Examples**:
+Number of copper pieces in the character's inventory.
+May also be left blank.
+
 - `CP: 10`
 - `CP: ""`
 
----
+#### `CURRENT HIT POINTS`
 
-## `CURRENT HIT POINTS` (USER)
-**Usage**: Character's current hit points
-**Type**: String
-**Template Usage**: Large empty box for writing current HP
-**Examples**:
-- `"CURRENT HIT POINTS": ""`
+Not actually used.  It changes too frequently.
 
----
 
-## `DESCRIPTION` (USER)
-**Usage**: Physical description of the character
-**Type**: String (can be multi-line)
-**Template Usage**: Available on web form only, not rendered in PDF
-**Examples**:
-- `DESCRIPTION: "Tall with dark hair and piercing blue eyes"`
-- `DESCRIPTION: >-
-    Bleached blonde pulled to one side; piercing eyes. Leather armor,
-    rapier, shortbow, black cloak. Very young.`
+#### `DESCRIPTION`
 
----
+A physical description of the character.
 
-## `DEX` (USER)
-**Usage**: Dexterity ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `DEX: 15`
-- `DEX: 8`
-- `DEX: 16`
+  - ```yaml
+    DESCRIPTION: "Tall with dark hair and piercing blue eyes"`
+    ```
 
----
+  - ```yaml
+    DESCRIPTION: >-
+      Bleached blonde pulled to one side; piercing eyes. Leather armor,
+      rapier, shortbow, black cloak. Very young.`
+    ```
 
-## `DEX SAVING` (CALCULATED)
-**Usage**: Dexterity saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Dexterity save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Dexterity save proficiency (Bard, Monk, Ranger, Rogue). Do not include in YAML files.
 
----
 
-## `DOMAIN SPELLS` (USER)
-**Usage**: Number of domain spells (clerics)
-**Type**: Number
-**Template Usage**: May be used in spell tracking
-**Examples**:
-- `DOMAIN SPELLS: 2`
+#### `DEX`
 
----
+The Dexterity ability score, a number, as in `DEX: 15`.
 
-## `EP` (USER)
-**Usage**: Electrum pieces
-**Type**: String
-**Template Usage**: Displayed in coin section
-**Examples**:
+
+#### `DEX SAVING` (calculated by the system)
+
+If the character `CLASS` indicates saving-throw proficiency in
+Dexterity,
+the rendering engine defines `DEX SAVING` to be `true`.
+Otherwise `DEX SAVING` is left undefined.
+
+
+#### `CP`
+
+Number of electrum pieces in the character's inventory.
+May also be left blank.
+
+*Warning:* The templates I made don't show electrum pieces.
+
 - `EP: ""`
 
-**Note**: Always empty in current character files
 
----
 
-## `EQUIPMENT` (USER)
-**Usage**: Character's equipment list
-**Type**: List of strings OR structured object with categorized sub-keys
-**Template Usage**: Displayed in equipment section, may be multi-column  
+#### `EQUIPMENT`
 
-**Categorized Equipment Sub-keys** (optional, can be mixed with flat list):
-- `HEAVY WEAPONS`: List of heavy weapons
-- `NORMAL WEAPONS`: List of normal weapons  
-- `LIGHT WEAPONS`: List of light weapons
-- `SHIELDS`: List of shields
-- `HEAVY ARMOR`: List of heavy armor
-- `NORMAL ARMOR`: List of normal armor
-- `LIGHT ARMOR`: List of light armor
-- `HEAVY ITEMS`: List of heavy items (include stone weight in parentheses, e.g., "Meteor iron (4 stones)")
-- `SLOTTED ITEMS`: List of slotted items (identical items can be bundled into units of up to 20, bundle takes one slot)
-- `SMALL ITEMS`: List of items that don't count against encumbrance
-- `STORED ITEMS`: List of items that are stored (see arana.yaml)
+(Multicolumn?)
 
-**Examples**:
+May be a simple list of items, or a list of categories with items in
+each category.
+The categories are useful if the party is using the [Alexandrian
+system of encumbrance by
+stones](https://thealexandrian.net/wordpress/46824/roleplaying-games/5e-encumbrance-by-stone)
+to track encumbrance.
+
+The categories are as follows:
+
+- `HEAVY WEAPONS`
+- `NORMAL WEAPONS`
+- `LIGHT WEAPONS`
+- `SHIELDS`
+- `HEAVY ARMOR`
+- `MEDIUM ARMOR`
+- `LIGHT ARMOR`
+- `HEAVY ITEMS` (items in this category may include a weight in the Alexandrian stone
+  system, as in `- "Meteor iron (4 stones)"`
+- `SLOTTED ITEMS` (items the consume a slot in the Alexandrian stone system)
+- `SMALL ITEMS` (items that don't count against encumbrance)
+- `STORED ITEMS` (items the character owns or controls but does not
+  keep on their person.)
+
+The simple list style looks like this:
+
 ```yaml
-# Flat list style (traditional)
 EQUIPMENT:
   - "Leather Armor"
   - "Shortsword"
   - "Light Crossbow"
   - "Backpack"
   - "Bedroll"
+```
 
-# Categorized style
+The categorized style looks like this:
+
+```yaml
 EQUIPMENT:
   NORMAL WEAPONS:
     - "Longsword"
@@ -364,8 +331,21 @@ EQUIPMENT:
     - "Anvil (8 stones)"
 ```
 
-It is also possible to code the structured object using a list of strings.
-Assuming the strings are originally written one per line, the format
+It is also possible to code the structured equipment list
+using a list of strings.  This interpretation is used when rendering a
+structured equipment list on the web form.
+Each line can optionally start with a category name followed by a colon, then the item name:
+
+ - `"Longsword"` (no category, will be auto-categorized)
+ - `"NORMAL WEAPONS: Longsword"` (explicitly categorized)
+ - `"light armor: Leather Armor"` (categories can be singular or plural)
+
+You can mix both styles in the same equipment list (see the
+[Quick-Start Guide](QUICKSTART.md). Category names are
+case-insensitive and can be singular or plural (e.g., "light armor" or
+"light armors"). The rendering engine maps these forms to the standard category names.
+
+For experts: the list-of-strings format, with one string per line,
 is defined by this EBNF grammar:
 
     <equipment> ::= { [<category>:] <item> NL
@@ -374,41 +354,19 @@ is defined by this EBNF grammar:
     <category>  ::= light armor | medium armor | ...
                  |  <category>s
 
-**String List Format (Informal Description):**
 
-When using a list of strings for equipment, you can mix two styles:
+#### `EQUIPMENT COLS`
 
-1. **Inline Category Format**: Each line can optionally start with a category name followed by a colon, then the item name:
-   - `"Longsword"` (no category, will be auto-categorized)
-   - `"NORMAL WEAPONS: Longsword"` (explicitly categorized)
-   - `"light armor: Leather Armor"` (categories can be singular or plural)
+The number of columns used to display equipment in the equipment
+section.
 
-2. **Block Category Format**: A category header line followed by bulleted items:
-   - `"NORMAL WEAPONS:"` (category header line ending with colon)
-   - `"- Longsword"` (item line starting with dash and space)
-   - `"- Shortbow"` (additional items in same category)
-
-You can freely mix both styles in the same equipment list. Category names are case-insensitive and can be singular or plural (e.g., "light armor" or "light armors"). The system will automatically map them to the standard category names.
-
-**Note**: See QUICKSTART.md for examples of this format in use.
-
-
-
----
-
-## `EQUIPMENT COLS` (USER)
-**Usage**: Number of columns for equipment display
-**Type**: Number
-**Template Usage**: Controls equipment section layout
-**Examples**:
 - `EQUIPMENT COLS: 2`
 - `EQUIPMENT COLS: 3`
 
-**Note**: Depending on layout the default value is one or two columns.
+Depending on the template, the default value may be one column or two.
 
----
 
-## `EXPERIENCE POINTS` (USER)
+#### `EXPERIENCE POINTS`
 **Usage**: Character's experience points
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -416,9 +374,9 @@ You can freely mix both styles in the same equipment list. Category names are ca
 - `"EXPERIENCE POINTS": "0/300"`
 - `"EXPERIENCE POINTS": ""`
 
----
 
-## `FEATURES` (USER)
+
+#### `FEATURES`
 **Usage**: Character's class features, racial traits, etc.
 **Type**: List of structured objects
 **Template Usage**: Displayed in features section
@@ -444,9 +402,9 @@ FEATURES:
     description: "Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes."
 ```
 
----
 
-## `GM NOTES` (USER)
+
+#### `GM NOTES`
 **Usage**: Private notes for the game master
 **Type**: String (can be multi-line)
 **Template Usage**: Not rendered in PDF or web form (GM only)
@@ -455,9 +413,17 @@ FEATURES:
 - `GM NOTES: "Has strong connection to the local thieves' guild"`
 - `GM NOTES: "Secretly searching for their missing sister"`
 
----
 
-## `GP` (USER)
+
+#### `CP`
+
+Number of copper pieces in the character's inventory.
+May also be left blank.
+
+- `CP: 10`
+- `CP: ""`
+
+#### `GP`
 **Usage**: Gold pieces
 **Type**: String or Number
 **Template Usage**: Displayed in coin section
@@ -466,9 +432,9 @@ FEATURES:
 - `GP: ""`
 - `GP: 150`
 
----
 
-## `HIT DICE` (USER)
+
+#### `HIT DICE`
 **Usage**: Character's hit die type
 **Type**: String
 **Template Usage**: Displayed in hit dice section
@@ -478,9 +444,9 @@ FEATURES:
 - `HIT DICE: d6`
 - `HIT DICE: d10`
 
----
 
-## `INITIATIVE` (USER)
+
+#### `INITIATIVE`
 **Usage**: Character's initiative modifier
 **Type**: String (with sign)
 **Template Usage**: Displayed in initiative box
@@ -489,9 +455,20 @@ FEATURES:
 - `"INITIATIVE": "-1"`
 - `INITIATIVE: '+3'`
 
----
 
-## `INT` (USER)
+
+#### `CON`
+
+The Constitution ability score, a number, as in `CON: 15`.
+
+
+#### `CON SAVING` (calculated by the system)
+
+If the character `CLASS` indicates saving-throw proficiency in
+Constitution,
+the rendering engine defines `CON SAVING` to be `true`.
+Otherwise `CON SAVING` is left undefined.
+#### `INT`
 **Usage**: Intelligence ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -500,18 +477,18 @@ FEATURES:
 - `INT: 8`
 - `INT: 13`
 
----
 
-## `INT SAVING` (CALCULATED)
+
+#### `INT SAVING` (CALCULATED)
 **Usage**: Intelligence saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Intelligence save
 **Calculated By**: `extend()` function based on class
 **Note**: Automatically set to `true` for classes with Intelligence save proficiency (Druid, Rogue, Wizard). Do not include in YAML files.
 
----
 
-## `LAYOUT` (USER)
+
+#### `LAYOUT`
 **Usage**: Defines the character sheet layout style
 **Type**: String
 **Template Usage**: Controls which template layout is used for PDF generation
@@ -523,9 +500,9 @@ FEATURES:
 - `LAYOUT: silverpine`
 - `LAYOUT: 3col`
 
----
 
-## `LEVEL` (USER/CALCULATED)
+
+#### `LEVEL` (USER/CALCULATED)
 **Usage**: Character's level
 **Type**: Number
 **Template Usage**: Used for spell slot calculations and other level-dependent features
@@ -536,9 +513,9 @@ FEATURES:
 
 **Note**: Can be provided directly by user or auto-extracted from "CLASS & LEVEL" by `extend()` function
 
----
 
-## `MAGIC` (USER)
+
+#### `MAGIC`
 **Usage**: Character's spells and magical abilities
 **Type**: List of mixed objects or empty list
 **Template Usage**: Displayed in magic section when present
@@ -574,9 +551,9 @@ MAGIC:
 MAGIC: []
 ```
 
----
 
-## `MAGIC FONT` (USER)
+
+#### `MAGIC FONT`
 **Usage**: Controls font size for the magic section rendering
 **Type**: String (LaTeX font command)
 **Template Usage**: When specified, changes the font size of the entire magic section
@@ -587,9 +564,9 @@ MAGIC: []
 
 **Note**: If not specified, magic section renders at normal size. The value should include LaTeX font size commands.
 
----
 
-## `MAGIC SEPARATE` (USER)
+
+#### `MAGIC SEPARATE`
 **Usage**: Controls whether magic section appears on a separate page
 **Type**: Boolean
 **Template Usage**: When true (using \ifDNDfalse semantics), renders magic section on its own page
@@ -601,9 +578,9 @@ MAGIC: []
 
 **Note**: Follows \ifDNDfalse semantics: undefined, empty, "0", or "false" are considered false. Any other value is true.
 
----
 
-## `MAX HP` (USER)
+
+#### `MAX HP`
 **Usage**: Character's maximum hit points
 **Type**: Number
 **Template Usage**: Displayed prominently in max HP box
@@ -613,9 +590,9 @@ MAGIC: []
 - `MAX HP: 28`
 - `MAX HP: 15`
 
----
 
-## `MOTIVATION` (USER)
+
+#### `MOTIVATION`
 **Usage**: Character's personal motivation
 **Type**: String
 **Template Usage**: Displayed in italic text near character info
@@ -624,9 +601,9 @@ MAGIC: []
 - `MOTIVATION: "Miriel is trying to prove herself"`
 - `MOTIVATION: "Motivation: find family"`
 
----
 
-## `PASSIVE PERCEPTION` (USER/CALCULATED)
+
+#### `PASSIVE PERCEPTION` (USER/CALCULATED)
 **Usage**: Character's passive Perception score
 **Type**: Number
 **Template Usage**: May be displayed in senses area or separate box
@@ -638,9 +615,9 @@ MAGIC: []
 
 **Note**: If not provided, the script will calculate this automatically. If provided, the script will validate the value against the calculated result.
 
----
 
-## `PLAYER NAME` (USER)
+
+#### `PLAYER NAME`
 **Usage**: Name of the player (not character)
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -650,9 +627,17 @@ MAGIC: []
 - `PLAYER NAME: Katie`
 - `PLAYER NAME: Web Test User`
 
----
 
-## `PP` (USER)
+
+#### `CP`
+
+Number of copper pieces in the character's inventory.
+May also be left blank.
+
+- `CP: 10`
+- `CP: ""`
+
+#### `PP`
 **Usage**: Platinum pieces
 **Type**: String
 **Template Usage**: Displayed in coin section
@@ -661,18 +646,18 @@ MAGIC: []
 
 **Note**: Always empty in current character files
 
----
 
-## `PREGENERATED` (USER)
+
+#### `PREGENERATED`
 **Usage**: Marks template/pregenerated characters
 **Type**: Boolean
 **Template Usage**: Controls display of template-specific elements
 **Examples**:
 - `PREGENERATED: true`
 
----
 
-## `PROFICIENCIES` (USER)
+
+#### `PROFICIENCIES`
 **Usage**: Character's skill, tool, language, and other proficiencies
 **Type**: List of strings with special entries
 **Template Usage**: Displayed in proficiencies section
@@ -693,9 +678,9 @@ PROFICIENCIES:
 
 **Note**: Language format varies between files
 
----
 
-## `PROFICIENCY BONUS` (USER)
+
+#### `PROFICIENCY BONUS`
 **Usage**: Character's proficiency bonus
 **Type**: String (with + sign)
 **Template Usage**: Displayed in circular proficiency bonus box
@@ -704,9 +689,9 @@ PROFICIENCIES:
 - `"PROFICIENCY BONUS": "+3"`
 - `PROFICIENCY BONUS: +2`
 
----
 
-## `RACE` (USER)
+
+#### `RACE`
 **Usage**: Character's race and subrace
 **Type**: String
 **Template Usage**: Displayed in character info section
@@ -716,9 +701,9 @@ PROFICIENCIES:
 - `RACE: Human`
 - `RACE: Wood Elf`
 
----
 
-## `SENSES` (USER)
+
+#### `SENSES`
 **Usage**: Character's special senses
 **Type**: String
 **Template Usage**: May be displayed in senses box if present
@@ -727,9 +712,9 @@ PROFICIENCIES:
 - `"SENSES": ""`
 - `SENSES: Darkvision 60 ft.`
 
----
 
-## `SHEET ORIGIN` (USER)
+
+#### `SHEET ORIGIN`
 **Usage**: Metadata indicating where the character sheet originated from
 **Type**: String
 **Template Usage**: Informational metadata, may be used for tracking or attribution
@@ -738,18 +723,18 @@ PROFICIENCIES:
 - `"SHEET ORIGIN": "Manual YAML Creation"`
 - `"SHEET ORIGIN": "D&D Beyond Import"`
 
----
 
-## `SORCERY POINTS` (USER)
+
+#### `SORCERY POINTS`
 **Usage**: Sorcerer's sorcery points
 **Type**: Number
 **Template Usage**: Displayed as slots if character has this feature
 **Examples**:
 - `SORCERY POINTS: 3`
 
----
 
-## `SPECIALTY` (USER)
+
+#### `SPECIALTY`
 **Usage**: Character's class specialty (subclass, domain, archetype, etc.)
 **Type**: String
 **Template Usage**: When present, displayed in "CLASS & LEVEL" field in parentheses between class and level
@@ -764,9 +749,17 @@ PROFICIENCIES:
 - If both `SPECIALTY` and specialty in `"CLASS & LEVEL"` parentheses exist, `SPECIALTY` field takes precedence
 - The system can extract specialty from existing `"CLASS & LEVEL"` format like "Cleric (Life Domain) 3"
 
----
 
-## `SP` (USER)
+
+#### `CP`
+
+Number of copper pieces in the character's inventory.
+May also be left blank.
+
+- `CP: 10`
+- `CP: ""`
+
+#### `SP`
 **Usage**: Silver pieces
 **Type**: String or Number
 **Template Usage**: Displayed in coin section
@@ -775,9 +768,9 @@ PROFICIENCIES:
 - `SP: ""`
 - `SP: 10`
 
----
 
-## `SPEED` (USER)
+
+#### `SPEED`
 **Usage**: Character's movement speed
 **Type**: String
 **Template Usage**: Displayed in speed box
@@ -787,9 +780,9 @@ PROFICIENCIES:
 - `SPEED: '35'`
 - `SPEED: 30 ft`
 
----
 
-## `SPELL ATTACK MODIFIER` (CALCULATED)
+
+#### `SPELL ATTACK MODIFIER` (CALCULATED)
 **Usage**: Character's spell attack modifier
 **Type**: String
 **Template Usage**: Used for spell attack calculations
@@ -799,9 +792,9 @@ PROFICIENCIES:
 
 **Note**: Do not include in YAML files. Automatically calculated based on class, level, and spellcasting ability score.
 
----
 
-## `SPELL DC` (USER/CALCULATED)
+
+#### `SPELL DC` (USER/CALCULATED)
 **Usage**: Character's spell save DC
 **Type**: Number
 **Template Usage**: May be displayed in upper info area
@@ -811,9 +804,9 @@ PROFICIENCIES:
 
 **Note**: If not provided, the script will calculate this automatically for spellcasters. If provided, the script will validate the value against the calculated result.
 
----
 
-## `SPELLCASTING ABILITY MODIFIER` (CALCULATED)
+
+#### `SPELLCASTING ABILITY MODIFIER` (CALCULATED)
 **Usage**: Character's spellcasting ability modifier
 **Type**: Number
 **Template Usage**: Used for spellcasting calculations
@@ -823,18 +816,18 @@ PROFICIENCIES:
 
 **Note**: Do not include in YAML files. Automatically calculated from the appropriate ability score (CHA for Bard/Sorcerer/Warlock, WIS for Cleric/Druid/Ranger, INT for Wizard).
 
----
 
-## `SPELLS KNOWN` (USER)
+
+#### `SPELLS KNOWN`
 **Usage**: Number of spells known (certain classes)
 **Type**: Number
 **Template Usage**: May be used for spell tracking
 **Examples**:
 - `SPELLS KNOWN: 5`
 
----
 
-## `STR` (USER)
+
+#### `STR`
 **Usage**: Strength ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -844,18 +837,18 @@ PROFICIENCIES:
 - `STR: 9`
 - `STR: 16`
 
----
 
-## `STR SAVING` (CALCULATED)
+
+#### `STR SAVING` (CALCULATED)
 **Usage**: Strength saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Strength save
 **Calculated By**: `extend()` function based on class
 **Note**: Automatically set to `true` for classes with Strength save proficiency (Barbarian, Fighter, Monk, Paladin, Ranger). Do not include in YAML files.
 
----
 
-## `TRAITS` (USER)
+
+#### `TRAITS`
 **Usage**: Character personality traits, ideals, bonds, flaws
 **Type**: List of structured objects
 **Template Usage**: *Not used by any known template at present*
@@ -872,17 +865,31 @@ TRAITS:
     description: "Logic above all else."
 ```
 
----
 
-## `VALIDATION ERRORS` (SYSTEM)
-**Usage**: System-generated validation error messages
-**Type**: String
-**Template Usage**: Used internally for error reporting
-**Note**: This is a system-generated field and should not be included in user YAML files
 
----
+#### `VALIDATION ERRORS` (generated by the rendering engine)
 
-## `WIS` (USER)
+A list of strings.
+
+If the rendering engine detects a badly formatted value or a value
+that is inconsistent with a calculated value, it adds an error message
+to the list.
+
+
+
+#### `CON`
+
+The Constitution ability score, a number, as in `CON: 15`.
+
+
+#### `CON SAVING` (calculated by the system)
+
+If the character `CLASS` indicates saving-throw proficiency in
+Constitution,
+the rendering engine defines `CON SAVING` to be `true`.
+Otherwise `CON SAVING` is left undefined.
+
+#### `WIS`
 **Usage**: Wisdom ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -891,9 +898,9 @@ TRAITS:
 - `WIS: 12`
 - `WIS: 11`
 
----
 
-## `WIS SAVING` (CALCULATED)
+
+#### `WIS SAVING` (CALCULATED)
 **Usage**: Wisdom saving throw proficiency indicator
 **Type**: Boolean
 **Template Usage**: Shows proficiency marker on Wisdom save
