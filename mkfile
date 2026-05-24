@@ -43,7 +43,7 @@ local-cgi:V: /usr/lib/cgi-bin/render.cgi
 	sudo cp $prereq $target
 
 docs/index.html:D: $KINGYAMLS $SILVERKINGYAMLS bin/insert-pregen-yamls www/character-form.html
-	bin/insert-pregen-yamls -html www/character-form.html -o $target $KINGYAMLS $SILVERKINGYAMLS yaml/mario.yaml
+	bin/insert-pregen-yamls -html www/character-form.html -o $target yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS
 
 bundle:V: docs/index.html docs/charsheet.css
 	cp -auvL $BGS bin/charsheet templates/charsheet.sty $TEMPLATES_TEX $LUAFILES $PUBLISH
