@@ -143,35 +143,52 @@ Show the bot an example YAML sheet or the [user documentation](YAML.md) and then
 
 ## Prewritten YAML you can use with your own characters
 
-I have yamls.
+I have yamls. XXX FIX ME
 
 
 
 
-# Deliberate omissions
+# Limitations and caveats
+
+## Limitations
 
 The layouts and YAML forms do not support all of the options available in D&D 5e (2014).
 
   - Traits, bonds, ideals, and so on are aspects of a D&D character that are best developed during play, not decided beforehand at character-creation time.  Accordingly, they are not found on the character sheet.
+
+    If this is something you want, sketch the layout you are looking for and open a Github issue.
   
   - Electrum pieces clutter the character sheet and tend to confuse players because unlike the other coins, they are not ten times as valuable as the next most valuable coin.  Copper, silver, gold, and platinum provide plenty of variety to work with.
 
-# Character-sheet layouts
+## Character-sheet layouts
 
 Although I have some training in information design,
 I am not a graphic designer.
 If you want to recommend support for another layout, please open an issue.
 
-# Notes on sources
+## Offline use
+
+If you have access to a Linux machine and are comfortable with software,
+I encourage you to dispense with the web service and generate character sheets on your own machine.
+The code is at <https://github.com/dnd-character-sheets/dnd-character-sheets.github.io>, and I will provide help on request.
+
+## AI
+
+I made a principled decision to use AI to help with this project.
+I do not love the theft of intellectual property or the likelihood of AI putting creative artists out of work.  (I believe AI is going to create *more* work for programmers.)
+But the popular models are trained on my work—I have been putting much of my code on the public internet for over 35 years—and given my contributions, I wish to reap some of the benefits.
+
+I have not used AI blindly; except for parts of the JavaScript,
+I have reviewed every line of AI-generated code, and I have edited lots of it.
+
+# Acknowledgments
+
+The pregenerated characters and the bones of the three-column template were supplied by
+[NoxAeternus](https://ko-fi.com/noxaeturnus/).
+
+The two-column template is taken from the module [_The Fall of Silverpine Watch_](https://theangrygm.com/the-fall-of-silverpine-watch/) by [The Angry GM](https://theangrygm.com/).
+The template was originally designed by Alyssa.
 
 AI used.  Link to Nox, Silverpine W, Alyssa sheets
 
-Thanks to "Alyssa" for the two-column character-sheet layout (`silverpine`) that is used in _The Fall of Silverpine Watch_.
-Thanks to NoxAeternus for the three-column (`3col`) style.
-Thanks to French Rice Merman for the `tropical` style.
-
-
-
-
-
-
+The tropical template was designed by French Rice Meɹman.
