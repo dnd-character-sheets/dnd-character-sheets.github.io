@@ -612,88 +612,61 @@ An optional, short string displayed in italic text near the character's name.
 #### `PASSIVE PERCEPTION` (calculated by the system)
 
 May be displayed with the character's other information, and is also used on the GM's sheet.
-
-**Usage**: Character's passive Perception score
-**Type**: Number
-**Template Usage**: May be displayed in senses area or separate box
-**Calculated By**: `extend()` function calculates as 10 + WIS modifier + proficiency bonus (if character doesn't have Expertise in Perception)
-**Examples**:
-- `"PASSIVE PERCEPTION": 13`
-- `"PASSIVE PERCEPTION": 9`
-- `PASSIVE PERCEPTION: 15`
-
-**Note**: If not provided, the script will calculate this automatically. If provided, the script will validate the value against the calculated result.
-
+`PASSIVE PERCEPTION` is worth including explicitly, just in case something goes wrong with the calculation.
 
 
 #### `PLAYER NAME`
-**Usage**: Name of the player (not character)
-**Type**: String
-**Template Usage**: Displayed in character info section
-**Examples**:
-- `"PLAYER NAME": "Katie"`
+
+Name of the person playing the character.
+
+- `"PLAYER NAME": "Dave"`
+- `PLAYER NAME: Gary`
 - `"PLAYER NAME": ""` (for templates)
-- `PLAYER NAME: Katie`
-- `PLAYER NAME: Web Test User`
 
 
-
-#### `CP`
-
-Number of copper pieces in the character's inventory.
-May also be left blank.
-
-- `CP: 10`
-- `CP: ""`
 
 #### `PP`
-**Usage**: Platinum pieces
-**Type**: String
-**Template Usage**: Displayed in coin section
-**Examples**:
+
+Number of platinum pieces in the character's inventory.
+May also be left blank.
+
+- `PP: 10`
 - `PP: ""`
-
-**Note**: Always empty in current character files
-
 
 
 #### `PREGENERATED`
-**Usage**: Marks template/pregenerated characters
-**Type**: Boolean
-**Template Usage**: Controls display of template-specific elements
-**Examples**:
-- `PREGENERATED: true`
+
+A Boolean field that marks pregenerated characters.
+Some templates will label such characters.
 
 
 
 #### `PROFICIENCIES`
-**Usage**: Character's skill, tool, language, and other proficiencies
-**Type**: List of strings with special entries
-**Template Usage**: Displayed in proficiencies section
-**Special Entries**:
-- `proficiencies_skip: true` - Creates visual separator in proficiencies section
 
-**Examples**:
+A list of the character's skill, tool, language, and other proficiencies.
+A completely blank list element is interpreted as a separator between
+groups of related proficiencies. 
+(Only the first two groups are shown on the GM's summary sheet.)
+The separator can also be written as `proficiencies_skip: true`.
+
 ```yaml
 PROFICIENCIES:
   - "Acrobatics"
   - "Arcana"
+  - 
+  - Dwarvish
   - "Language (Common)"
   - "Languages: Elvish"  # alternate format
-  - proficiencies_skip: true
+  - 
   - "Simple Weapons"
   - "All Armor"
 ```
 
-**Note**: Language format varies between files
-
-
-
 #### `PROFICIENCY BONUS`
-**Usage**: Character's proficiency bonus
-**Type**: String (with + sign)
-**Template Usage**: Displayed in circular proficiency bonus box
-**Examples**:
+
+The character's proficiency bonus, which is displayed near the proficiencies.
+This value can be calculated by the system.
+
 - `"PROFICIENCY BONUS": "+2"`
 - `"PROFICIENCY BONUS": "+3"`
 - `PROFICIENCY BONUS: +2`
@@ -701,10 +674,9 @@ PROFICIENCIES:
 
 
 #### `RACE`
-**Usage**: Character's race and subrace
-**Type**: String
-**Template Usage**: Displayed in character info section
-**Examples**:
+
+Character's race and (optionally) subrace.
+
 - `"RACE": "Elf (High)"`
 - `"RACE": "Human (Sunderland)"`
 - `RACE: Human`
@@ -713,21 +685,19 @@ PROFICIENCIES:
 
 
 #### `SENSES`
-**Usage**: Character's special senses
-**Type**: String
-**Template Usage**: May be displayed in senses box if present
-**Examples**:
+
+Special senses that may be displayed on the character sheet.
+
 - `"SENSES": "Darkvision 60 ft."`
 - `"SENSES": ""`
-- `SENSES: Darkvision 60 ft.`
-
+- `SENSES: Blindsight 25 ft.`
 
 
 #### `SHEET ORIGIN`
-**Usage**: Metadata indicating where the character sheet originated from
-**Type**: String
-**Template Usage**: Informational metadata, may be used for tracking or attribution
-**Examples**:
+
+Metadata indicating where the character sheet came from.
+
+- `"SHEET ORIGIN": "Wizard by NoxAeternus"`
 - `"SHEET ORIGIN": "Character Builder Web Form"`
 - `"SHEET ORIGIN": "Manual YAML Creation"`
 - `"SHEET ORIGIN": "D&D Beyond Import"`
@@ -735,55 +705,41 @@ PROFICIENCIES:
 
 
 #### `SORCERY POINTS`
-**Usage**: Sorcerer's sorcery points
-**Type**: Number
-**Template Usage**: Displayed as slots if character has this feature
-**Examples**:
+
+The total number of sorcery points available to the character.
+May be displayed using circles that can be marked.
+
 - `SORCERY POINTS: 3`
 
 
 
 #### `SPECIALTY`
-**Usage**: Character's class specialty (subclass, domain, archetype, etc.)
-**Type**: String
-**Template Usage**: When present, displayed in "CLASS & LEVEL" field in parentheses between class and level
-**Examples**:
+
+The character's class specialty (subclass, domain, archetype, etc.).
+
 - `SPECIALTY: "Life Domain"` (for clerics)
 - `SPECIALTY: "Champion"` (for fighters)
 - `SPECIALTY: "Draconic Bloodline"` (for sorcerers)
 - `SPECIALTY: ""` (empty/not specified)
 - `SPECIALTY: Champion`
 
-**Compatibility**:
-- If both `SPECIALTY` and specialty in `"CLASS & LEVEL"` parentheses exist, `SPECIALTY` field takes precedence
-- The system can extract specialty from existing `"CLASS & LEVEL"` format like "Cleric (Life Domain) 3"
 
-
-
-#### `CP`
-
-Number of copper pieces in the character's inventory.
-May also be left blank.
-
-- `CP: 10`
-- `CP: ""`
 
 #### `SP`
-**Usage**: Silver pieces
-**Type**: String or Number
-**Template Usage**: Displayed in coin section
-**Examples**:
-- `SP: 5`
-- `SP: ""`
+
+Number of silver pieces in the character's inventory.
+May be left blank.
+
 - `SP: 10`
+- `SP: ""`
 
 
 
 #### `SPEED`
-**Usage**: Character's movement speed
-**Type**: String
-**Template Usage**: Displayed in speed box
-**Examples**:
+
+Character's normal movement speed.
+(The system does not yet track specialized speeds like climbing, swimming, and so on.)
+
 - `"SPEED": "30 ft."`
 - `"SPEED": "25"`
 - `SPEED: '35'`
@@ -791,52 +747,46 @@ May also be left blank.
 
 
 
-#### `SPELL ATTACK MODIFIER` (CALCULATED)
-**Usage**: Character's spell attack modifier
-**Type**: String
-**Template Usage**: Used for spell attack calculations
-**Calculated By**: `extend()` function calculates as proficiency bonus + spellcasting ability modifier (for characters with MAGIC)
-**Examples**:
-- `SPELL ATTACK MODIFIER: "+5"`
+#### `SPELL ATTACK MODIFIER` (calculated by the system)
 
-**Note**: Do not include in YAML files. Automatically calculated based on class, level, and spellcasting ability score.
+This modifier is calculated using the character's proficiency bonus
+and spellcasting ability modifier.
 
+#### `SPELL DC`
 
+A number that is normally calculated by the system, but can also be
+written explicitly.
+If it is written explicitly the system will validate it.
 
-#### `SPELL DC` (USER/CALCULATED)
-**Usage**: Character's spell save DC
-**Type**: Number
-**Template Usage**: May be displayed in upper info area
-**Calculated By**: `extend()` function calculates as 8 + proficiency bonus + spellcasting ability modifier (for characters with MAGIC)
-**Examples**:
 - `SPELL DC: 13`
 
-**Note**: If not provided, the script will calculate this automatically for spellcasters. If provided, the script will validate the value against the calculated result.
+#### `SPELLCASTING ABILITY MODIFIER` (calculated by the system)
 
-
-
-#### `SPELLCASTING ABILITY MODIFIER` (CALCULATED)
-**Usage**: Character's spellcasting ability modifier
-**Type**: Number
-**Template Usage**: Used for spellcasting calculations
-**Calculated By**: `extend()` function calculates from the spellcasting ability score (for characters with MAGIC)
-**Examples**:
-- `SPELLCASTING ABILITY MODIFIER: 3`
-
-**Note**: Do not include in YAML files. Automatically calculated from the appropriate ability score (CHA for Bard/Sorcerer/Warlock, WIS for Cleric/Druid/Ranger, INT for Wizard).
+A modifier that is  calculated from the appropriate ability score (`CHA` for Bard/Sorcerer/Warlock, `WIS` for Cleric/Druid/Ranger, `INT` for Wizard).
 
 
 
 #### `SPELLS KNOWN`
-**Usage**: Number of spells known (certain classes)
-**Type**: Number
-**Template Usage**: May be used for spell tracking
-**Examples**:
+
+A number that may be used for spell tracking.
+May appear only on the GM's sheet.
+
 - `SPELLS KNOWN: 5`
 
 
 
 #### `STR`
+
+The Strength ability score, a number, as in `STR: 15`.
+
+
+#### `STR SAVING` (calculated by the system)
+
+If the character `CLASS` indicates saving-throw proficiency in
+Strength,
+the rendering engine defines `STR SAVING` to be `true`.
+Otherwise `STR SAVING` is left undefined.
+
 **Usage**: Strength ability score
 **Type**: Number
 **Template Usage**: Displayed in stats column with calculated modifier
@@ -848,33 +798,12 @@ May also be left blank.
 
 
 
-#### `STR SAVING` (CALCULATED)
-**Usage**: Strength saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Strength save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Strength save proficiency (Barbarian, Fighter, Monk, Paladin, Ranger). Do not include in YAML files.
-
-
-
 #### `TRAITS`
-**Usage**: Character personality traits, ideals, bonds, flaws
-**Type**: List of structured objects
-**Template Usage**: *Not used by any known template at present*
-**Structure**: Each trait contains:
-- `name`: String (trait type: "Trait", "Ideal", "Bond", "Flaw")
-- `description`: String (trait description)
 
-**Examples**:
-```yaml
-TRAITS:
-  - name: "Trait"
-    description: "Listens to all sides of argument."
-  - name: "Ideal"
-    description: "Logic above all else."
-```
-
-
+A list of tables each containing a `name` and `description` key.
+May be used for the character's personality traits, ideals, bonds, and
+flaws.
+Not used by any of the current templates.
 
 #### `VALIDATION ERRORS` (generated by the rendering engine)
 
@@ -883,36 +812,18 @@ A list of strings.
 If the rendering engine detects a badly formatted value or a value
 that is inconsistent with a calculated value, it adds an error message
 to the list.
+Some templates render this list as an additional error page.
 
 
-
-#### `CON`
-
-The Constitution ability score, a number, as in `CON: 15`.
-
-
-#### `CON SAVING` (calculated by the system)
-
-If the character `CLASS` indicates saving-throw proficiency in
-Constitution,
-the rendering engine defines `CON SAVING` to be `true`.
-Otherwise `CON SAVING` is left undefined.
 
 #### `WIS`
-**Usage**: Wisdom ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `WIS: 16`
-- `WIS: 12`
-- `WIS: 11`
+
+The Wisdom ability score, a number, as in `WIS: 15`.
 
 
+#### `WIS SAVING` (calculated by the system)
 
-#### `WIS SAVING` (CALCULATED)
-**Usage**: Wisdom saving throw proficiency indicator
-**Type**: Boolean
-**Template Usage**: Shows proficiency marker on Wisdom save
-**Calculated By**: `extend()` function based on class
-**Note**: Automatically set to `true` for classes with Wisdom save proficiency (Cleric, Druid, Monk, Paladin, Warlock, Wizard). Do not include in YAML files.
-
+If the character `CLASS` indicates saving-throw proficiency in
+Wisdom,
+the rendering engine defines `WIS SAVING` to be `true`.
+Otherwise `WIS SAVING` is left undefined.
