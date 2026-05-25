@@ -4,7 +4,7 @@ title: 'Quick-Start Guide to YAML Character Sheets'
 
 <article>
 
-To create a D&D character sheet using YAML, 
+To create a D&D character sheet using YAML,
 follow this guide.
 The guide is organized around the colored sections of character sheets
 generated in
@@ -13,14 +13,14 @@ The guide uses examples from [Zanogh the Barbarian](zanogh.pdf) and
 [Miriel the Cleric](miriel.pdf).
 Comprehensive, alphabetical documentation of the YAML is found in [`YAML.md`](YAML.md).
 
-To build your character, 
-go through each section of the guide, copy the YAML, and 
+To build your character,
+go through each section of the guide, copy the YAML, and
 fill in just the basics.  You can add detail later.
 You can also explore the many examples in the [`yaml` directory](yaml).
 If you have installed the software on Linux, you can try
 
     charsheet -o mycharacter.pdf mycharacter.yaml
-    
+
 Or just upload your YAML to [the web
 form](https://dnd-character-sheets.github.io) and try it there.
 
@@ -44,7 +44,7 @@ RACE: Half-Orc
 BACKGROUND: Hermit
 ALIGNMENT: ""
 EXPERIENCE POINTS: ""
-MOTIVATION: Get in touch with her orcish side # optional
+MOTIVATION: Get in touch with her orcish side  # optional
 ```
 
 Notes:
@@ -101,7 +101,7 @@ instead of a simple number or string, `PROFICIENCIES` are a list:
 ```yaml zanogh
 PROFICIENCIES:
   - Animal Handling
-  - Athletics 
+  - Athletics
   - Perception
   - Intimidation
   - Survival
@@ -175,10 +175,10 @@ The attacks are specified using our most complex YAML yet:
 
   - The `ATTACKS` field is a list.
   - Instead of a string as in the proficiencies, each list element is a table of key-value pairs.
-  
+
 Not all table fields are required for all attacks.
 For example, the `AMMO TYPE` and `AMMO COUNT` fields are used only for
-weapons that require ammunition. 
+weapons that require ammunition.
 (And if your table doesn't track ammunition, you can leave them out.)
 
 
@@ -234,22 +234,22 @@ SPELL DC: 13
 Just like attacks, spells are specified by a list of tables.
 Each spell has a `name` and a `description`.
 
-Spells are segregated by level, and 
+Spells are segregated by level, and
 each level is headed by a table that specifies the level and the number of
 slots.
 (Cantrips, at level 0, have unlimited slots, so `slots` is omitted.)
 
-In addition to `name` and `description`, 
+In addition to `name` and `description`,
 spells may have other properties,
 including
-`duration`, 
-`concentration`, 
-`ritual`, 
-`bonus`, 
-`reaction`, 
-`attack`, 
+`duration`,
+`concentration`,
+`ritual`,
+`bonus`,
+`reaction`,
+`attack`,
 and
-`save`, 
+`save`,
 among others.
 The full list, with explanations, can be found in the [`MAGIC` section](YAML.md#magic)
 of the [alphabetical reference](YAML.md#magic).
@@ -263,7 +263,7 @@ MAGIC:
   - name: Sacred Flame
     description: Target one creature; DEX save or 1d8 radiant damage.
     save: true  # target must make a saving throw
-    
+
   - name: Spare the Dying
     description: One unconscious creature you touch is stabilized.
 
@@ -352,7 +352,7 @@ FEATURES:
 
   - name: Savage Attacks
     description: >-
-       When you score a critical hit with a melee attack, 
+       When you score a critical hit with a melee attack,
        add one extra weapon damage die to the total.
 ```
 
@@ -376,7 +376,7 @@ EQUIPMENT:
   - Scale Mail Armor
   - Shield (+2 AC)
   - Backpack
-  - Bedroll 
+  - Bedroll
   - Mess Kit
   - Tinderbox
   - Torches (10)
@@ -402,13 +402,13 @@ Here's a small example for a 1st-level Fighter;
 the player has yet to choose some features and proficiencies:
 
 ```yaml fighter
-CHARACTER NAME: 
-PLAYER NAME: 
+CHARACTER NAME:
+PLAYER NAME:
 CLASS & LEVEL: Fighter 1
 RACE: Human
 BACKGROUND: Soldier
-ALIGNMENT: 
-EXPERIENCE POINTS: 
+ALIGNMENT:
+EXPERIENCE POINTS:
 
 STR: 16
 DEX: 13
@@ -419,7 +419,7 @@ CHA: 8
 
 PROFICIENCY BONUS: +2
 MAX HP: 12
-CURRENT HIT POINTS: 
+CURRENT HIT POINTS:
 HIT DICE: d10
 INITIATIVE: +1
 SPEED: 30
@@ -429,7 +429,7 @@ PASSIVE PERCEPTION: 11
 PROFICIENCIES:
   - Athletics
   - Intimidation
-  - 
+  -
   - Common
   - All Armor
   - Shield
@@ -459,10 +459,10 @@ EQUIPMENT:
   - Bedroll
   - Rations (10)
 
-CP: 
-SP: 
-GP: 
-PP: 
+CP:
+SP:
+GP:
+PP:
 ```
 
 
@@ -520,7 +520,9 @@ FEATURES:
   - name: Disciple of Life
     description: Healing spells restore an additional 2 HP + spell's level.
   - name: Channel Divinity
-    description: "Turn Undead; Preserve Life (HP = 5\\(\\times\\)level). 1\_per\_rest until level\_6."
+    description: >-
+       Turn Undead; Preserve Life (HP = 5\(\times\)level).
+       1 per rest until level 6.
 
 EQUIPMENT:
   - Cleric's Vestments
@@ -535,6 +537,5 @@ EQUIPMENT:
   - Tinderbox
   - Rations (10)
   - Waterskin
-
 ```
 -->
