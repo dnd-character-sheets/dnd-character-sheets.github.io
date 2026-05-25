@@ -24,8 +24,18 @@ S=samples
 all:V: bundle samples
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
-draft:V: /tmp/README.html /tmp/YAML.html
+draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html
+test:V: QUICKSTART.test /tmp/zanogh-test.pdf
 
+
+&.test:V: /tmp/&-test.pdf /tmp/&.yaml
+	yamllint /tmp/$stem.yaml
+
+/tmp/QUICKSTART.yaml /tmp/zanogh.yaml: QUICKSTART.md extract-yaml
+	extract-yaml QUICKSTART.md > /tmp/QUICKSTART.yaml
+
+/tmp/&-test.pdf: /tmp/&.yaml
+	charsheet -o $target $prereq
 
 /tmp/&.html: &.md
 	pandoc -c $CSS -f gfm -s -o $target $prereq
