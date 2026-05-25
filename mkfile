@@ -20,19 +20,25 @@ CODE=bin/charsheet $TEMPLATES_TEX
 CSS=https://www.cs.tufts.edu/cs/106/course.css
 
 S=samples
+QCHARS=`extract-yaml -keys QUICKSTART.md`
+QPDFS=${QCHARS:%=/tmp/%-test.pdf}
+QYAMLS=${QCHARS:%=/tmp/%.yaml}
 
-all:V: bundle samples
+all:V: bundle zanogh.pdf miriel.pdf
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html
-test:V: QUICKSTART.test /tmp/zanogh-test.pdf
+test:V: QUICKSTART.test ${QCHARS:%=%.test} zanogh.pdf miriel.pdf fighter.pdf
 
 
 &.test:V: /tmp/&-test.pdf /tmp/&.yaml
 	yamllint /tmp/$stem.yaml
 
-/tmp/QUICKSTART.yaml /tmp/zanogh.yaml: QUICKSTART.md extract-yaml
+/tmp/QUICKSTART.yaml $QYAMLS: QUICKSTART.md extract-yaml
 	extract-yaml QUICKSTART.md > /tmp/QUICKSTART.yaml
+
+&.pdf: /tmp/&.yaml
+	charsheet -o $target $prereq
 
 /tmp/&-test.pdf: /tmp/&.yaml
 	charsheet -o $target $prereq

@@ -10,6 +10,10 @@ local function errorf(...) return error(stringf(...)) end
 local function runf(...) return os.execute(stringf(...)) end
 ----------------------------------------------------------------
 
+local fields = require 'flags'.parser()
+  :bool 'keys'
+  :parse(arg)
+
 local default = { }
 local lines = { [default] = { } }
 
@@ -42,10 +46,18 @@ local function dump(fd, lines)
   end
 end
 
-for k, lines in pairs(lines) do
-  if k == default then
-    dump(io.stdout, lines)
-  else
-    dump(assert(io.open(stringf('/tmp/%s.yaml', k), 'w')), lines)
+if fields.keys then
+  for k in pairs(lines) do
+    if k ~= default then
+      printf('%s\n', k)
+    end
+  end
+else
+  for k, lines in pairs(lines) do
+    if k == default then
+      dump(io.stdout, lines)
+    else
+      dump(assert(io.open(stringf('/tmp/%s.yaml', k), 'w')), lines)
+    end
   end
 end

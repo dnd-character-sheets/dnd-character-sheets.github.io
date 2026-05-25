@@ -4,331 +4,411 @@ title: 'Quick-Start Guide to YAML Character Sheets'
 
 <article>
 
-This guide walks you through creating a D&D character sheet using YAML, following the visual order and colored sections of the generated character sheet. Use examples from `zanogh.pdf` (Barbarian) and `miriel.pdf` (Cleric) as reference.
+To create a D&D character sheet using YAML, 
+follow this guide.
+The guide is organized around the colored sections of character sheets
+generated in
+two-column PDF.
+The guide uses examples from [Zanogh the Barbarian](zanogh.pdf) and
+[Miriel the Cleric](miriel.pdf).
+Comprehensive, alphabetical documentation of the YAML is found in [`YAML.md`](YAML.md).
 
-## Character Info Section
+To build your character, 
+go through each section of the guide, copy the YAML, and 
+fill in just the basics.  You can add detail later.
+You can also explore the many examples in the [`yaml` directory](yaml).
+If you have installed the software on Linux, you can try
+
+    charsheet -o mycharacter.pdf mycharacter.yaml
+    
+Or just upload your YAML to [the web
+form](https://dnd-character-sheets.github.io) and try it there.
+
+
+## Basic character identity (light green)
 
 <div class="playername">
 
-This banner section at the top contains the core character identity information.
+Your character's basic identity appears in the colored banner at the
+top of the character sheet.
 
-### Character Name and Identity
-Start with your character's basic identity:
-
-```yaml
-"CHARACTER NAME": "Zanogh Greyfist"
-"PLAYER NAME": "Amelia"
-AGE: "young adult"  # Optional: age category or life stage
-DESCRIPTION: "Tall half-orc with gray skin and fierce amber eyes"  # Optional: physical description
-CLASS: "Barbarian"
+```yaml zanogh
+CHARACTER NAME: Zanogh Greyfist
+PLAYER NAME: Carolyn
+AGE: young adult  # Optional: age category or life stage
+DESCRIPTION: Tall half-orc with gray skin and fierce amber eyes  # optional
+CLASS: Barbarian
 LEVEL: 3
-SPECIALTY: ""  # Optional: subclass, domain, archetype, etc.
-"RACE": "Half-Orc"
-"BACKGROUND": "Hermit"
-"ALIGNMENT": ""
-"EXPERIENCE POINTS": ""
+SPECIALTY: ""  # optional subclass, domain, archetype, etc.
+RACE: Half-Orc
+BACKGROUND: Hermit
+ALIGNMENT: ""
+EXPERIENCE POINTS: ""
+MOTIVATION: Get in touch with her orcish side # optional
 ```
 
-**Key Notes:**
-- `"CHARACTER NAME"` appears prominently in large italic text
-- `CLASS` and `LEVEL` are separate fields for better form usability
-- `SPECIALTY` is optional - use for subclass, domain, archetype (e.g., "Life Domain", "Champion")
-- All keys with spaces must be quoted
-- Leave `"ALIGNMENT"` and `"EXPERIENCE POINTS"` empty if not yet determined
+Notes:
 
-### Character Motivation
-Optionally add a personal motivation that appears in italics:
+- `SPECIALTY` is optional—use it for subclass, domain, archetype, and so on (e.g., "Life Domain", "Champion").
+- Empty fields are fine, but empty strings need to be written with double quotes. (Quoting strings is otherwise mostly optional.)
+
+If you are using GM sheets, you can add a note to go on that sheet.
+Here I've added a note about a new player who does not always remember how to roll an attack.
+The note helps me keep things moving during combat.
 
 ```yaml
-MOTIVATION: "Zanogh wants to get in touch with her orcish side"
-GM NOTES: "Player is new to D&D - help with tactical decisions"  # Optional: GM-only notes
+GM NOTES: Scimitar attack +5, 1d6+3 slashing.
 ```
 
 </div>
 
-## Stats Section
+## Ability scores (warm blue)
 
 <div class="stats">
 
-The ability scores appear in the left column with blue background. These are the foundation of your character.
+Your ability scores appear in the left column with blue background.
+Fill in all six scores with the raw numbers.
+(The system calculates modifiers for ability checks and saving throws.)
 
-### The Six Ability Scores
-```yaml
+```yaml zanogh
 STR: 17
-DEX: 14  
+DEX: 14
 CON: 14
 INT: 8
 WIS: 12
 CHA: 10
 ```
 
-### Proficiency Bonus
-```yaml
-"PROFICIENCY BONUS": "+2"
-```
-
-**Key Notes:**
-- Ability scores are just the raw numbers (8-20 typically)
-- The system automatically calculates modifiers and saving throw proficiencies
-- Proficiency bonus should include the + sign
-- Based on your class, saving throw proficiencies are auto-generated
-
 </div>
 
-## Combat Stats Section
-
-<div class="hpetc">
-
-This section contains hit points, initiative, speed, and armor class.
-
-### Hit Points and Combat Info
-```yaml
-"MAX HP": 32
-"CURRENT HIT POINTS": ""
-"HIT DICE": "d12"
-"INITIATIVE": "+2"
-"SPEED": "30"
-"ARMOR CLASS": 14
-```
-
-**Key Notes:**
-- `"CURRENT HIT POINTS"` is typically left empty for filling during play
-- `"HIT DICE"` should match your class (d6, d8, d10, d12)
-- Initiative should include the + or - sign
-- Speed can include "ft." but it's not required
-
-### Senses and Spell Information
-Additional combat-relevant info may appear in this area:
-
-```yaml
-"SENSES": "Darkvision 60 ft."
-"PASSIVE PERCEPTION": 13
-SPELL DC: 13  # For spellcasters only
-```
-
-</div>
-
-## Proficiencies Section
+## Proficiencies (yellow)
 
 <div class="proficiencies">
 
-Lists all your character's proficiencies, organized by type.
+Proficiencies appear in the yellow column immediately to the right of
+the blue ability scores.
+The section starts with the proficiency bonus.
+You can include it, or you can let the system calculate it.
 
-### Skills, Languages, and Equipment Proficiencies
-```yaml
-PROFICIENCIES:
-  - "Animal Handling"
-  - "Athletics" 
-  - "Perception"
-  - "Intimidation"
-  - "Survival"
-  -   # Blank entry creates visual separator
-  - "Herbalism Kit"
-  - proficiencies_skip: true  # Alternative separator syntax
-  - "Common"
-  - "Orcish"
-  - "Dwarvish"
-  - "Light Armor"
-  - "Medium Armor"
-  - "Shield"
-  - "Simple Weapons"
-  - "Martial Weapons"
+
+```yaml zanogh
+PROFICIENCY BONUS: +2
 ```
 
-**Key Notes:**
-- Use `-` (blank list entry) or `proficiencies_skip: true` to create visual separators between sections
-- Languages can be formatted as just the name (e.g., "Common") 
-- Armor and weapon proficiencies follow D&D categorizations
+Writing the proficiencies themselves requires something new:
+instead of a simple number or string, `PROFICIENCIES` are a list:
+
+```yaml zanogh
+PROFICIENCIES:
+  - Animal Handling
+  - Athletics 
+  - Perception
+  - Intimidation
+  - Survival
+  -
+  - Herbalism Kit
+  -
+  - Common
+  - Orcish
+  - Dwarvish
+  - Light Armor
+  - Medium Armor
+  - Shield
+  - Simple Weapons
+  - Martial Weapons
+```
+
+The blank list elements provide a useful visual separator.
+They also divide proficiencies into groups; only the first two or
+three groups are shown on the GM's sheet.
 
 </div>
 
-## Attacks Section
+
+## Senses and passive abilities (white)
+
+Next to the proficiencies are a couple of white boxes, on a white background.
+These boxes hold information that varies by character class and race.
+For Zanogh the barbarian it is her darkvision and her passive Perception.
+
+
+```yaml zanogh
+SENSES: Darkvision 60 ft.
+PASSIVE PERCEPTION: 13
+```
+
+Notes:
+
+  - The space in `60 ft.` is actually a non-breaking space (`U+00A0`).  That looks better on the character sheet.
+
+
+
+## Combat statistics (white on gray)
+
+<div class="hpetc">
+
+To the right of senses and spells,
+below the green banner at the top of the sheet,
+ is the information you will use in combat.
+It appears in white boxes on a gray background.
+
+
+```yaml zanogh
+MAX HP: 32
+INITIATIVE: +2
+SPEED: 30 ft
+ARMOR CLASS: 14
+HIT DICE: d12  # should match the class
+```
+
+
+</div>
+
+## Attacks (orange)
 
 <div class="attacks">
 
-Your character's weapon attacks and combat options.
+Below the white boxes is an orange section that
+shows
+your character's weapon attacks.
+The attacks are specified using our most complex YAML yet:
+
+  - The `ATTACKS` field is a list.
+  - Instead of a string as in the proficiencies, each list element is a table of key-value pairs.
+  
+Not all table fields are required for all attacks.
+For example, the `AMMO TYPE` and `AMMO COUNT` fields are used only for
+weapons that require ammunition. 
+(And if your table doesn't track ammunition, you can leave them out.)
+
 
 ### Attack Entries
-```yaml
+```yaml zanogh
 ATTACKS:
-  - NAME: "Greataxe"
-    ATTACK: "+5"
-    DAMAGE: "1d12+3"
-    TYPE: "slashing"
-    RANGE: "5 ft."
-    # No ammo fields for melee weapons
-  - NAME: "Hand Axe"
-    ATTACK: "+5"
-    DAMAGE: "1d6+3"
-    TYPE: "slashing"
-    RANGE: "5ft, 20/60 ft."
+
+  - NAME: Greataxe
+    ATTACK: +5
+    DAMAGE: 1d12+3
+    TYPE: slashing
+    RANGE: 5 ft.
+
+  - NAME: Hand Axe
+    ATTACK: +5
+    DAMAGE: 1d6+3
+    TYPE: slashing
+    RANGE: 5ft, 20/60 ft.
     AMMO COUNT: 2
     AMMO TYPE: axes
-  - NAME: "Light Crossbow"
-    ATTACK: "+4"
-    DAMAGE: "1d8+2"
-    TYPE: "piercing"
-    RANGE: "80/320 ft."
-    AMMO TYPE: "bolts"
+
+  - NAME: Light Crossbow
+    ATTACK: +4
+    DAMAGE: 1d8+2
+    TYPE: piercing
+    RANGE: 80/320 ft.
+    AMMO TYPE: bolts
     AMMO COUNT: 20
 ```
 
-**Key Notes:**
-- Each attack needs core fields: NAME, ATTACK, DAMAGE, TYPE, RANGE
-- Attack bonus should include + or - sign
-- AMMO TYPE and AMMO COUNT are optional: either both missing/empty, or type is string and count is number
-- RANGE can include multiple ranges for thrown weapons
+Notes:
+
+  - If `AMMO COUNT` is present, `AMMO TYPE` must also be present.
+  - If a weapon can be used in melee and also thrown, `RANGE` should include multiple ranges.
 
 </div>
 
-## Magic Section
+## Magic (pale magenta)
 
 <div class="magic">
 
-Spells and magical abilities. This section only appears for spellcasters.
+If your character is a spellcaster, you will list spells in
+a `MAGIC` section.
+On the character sheet, this section appears right below the attacks.
 
-### Spell Structure
-```yaml
+Although the system will check, it's a good idea to specify your
+spell DC explicitly.
+
+```yaml miriel
+SPELL DC: 13
+```
+
+Just like attacks, spells are specified by a list of tables.
+Each spell has a `name` and a `description`.
+
+Spells are segregated by level, and 
+each level is headed by a table that specifies the level and the number of
+slots.
+(Cantrips, at level 0, have unlimited slots, so `slots` is omitted.)
+
+In addition to `name` and `description`, 
+spells may have other properties,
+including
+`duration`, 
+`concentration`, 
+`ritual`, 
+`bonus`, 
+`reaction`, 
+`attack`, 
+and
+`save`, 
+among others.
+The full list, with explanations, can be found in the [`MAGIC` section](YAML.md#magic)
+of the [alphabetical reference](YAML.md#magic).
+
+
+```yaml miriel
 MAGIC:
+
   - level: 0  # Cantrips
-  - name: "Sacred Flame"
-    description: "Target one creature; DEX save or 1d8 radiant damage."
-  - name: "Spare the Dying"
-    description: "One unconscious creature you touch is stabilized."
-  - level: 1  # 1st level spells
-  - name: "Cure Wounds"
-    description: "A touched creature regains 1d8+3 HP, +3 more (DoL)."
-  - name: "Bless [C]"
-    description: "Up to three allies within 30 ft gain +1d4 to attacks and saves for 1 minute [Life domain]."
+
+  - name: Sacred Flame
+    description: Target one creature; DEX save or 1d8 radiant damage.
+    save: true  # target must make a saving throw
+    
+  - name: Spare the Dying
+    description: One unconscious creature you touch is stabilized.
+
+  - level: 1
+    slots: 2
+
+  - name: Bane
+    concentration: true  # requires concentration
+    save: true           # target must make a saving throw
+    description: >-
+        Up to three targets within 30 ft gain \textminus 1d4 to attacks and
+        saves for 1 minute (CHA saving throw).
+    duration: 1 min
+
+  - name: Cure Wounds
+    description: A touched creature regains 1d8+3 HP, +3 more [Life domain]
+
+  - name: Bless
+    description: >-
+       Up to three allies within 30 ft gain +1d4 to
+       attacks and saves for 1 minute [Life domain].
+    concentration: true
+    duration: 1 min
+
+  - name: Guiding Bolt
+    attack: true  # requires a spell attack roll
+    description: >-
+       Ranged spell attack \psam, 120 ft, 4d6 radiant damage;
+       next attack against the target has advantage.
 ```
 
-### Advanced Spell Slot Tracking
-For classes with spell slots:
+Notes:
+
+  - In the description of Bane, `\textminus` is supposed to produce a good-looking minus sign, instead of the usual hyphen.
+  - In the description of Guiding Bolt, `\psam` stands for "plus spell attack modifier," and it asks the system to calculate the modifier.
+
+Spell lists can take up a lot of room.
+At need, you can shrink the font as follows:
 ```yaml
-MAGIC:
-  - level: {number: 1, slots: 4}  # 1st level with 4 slots
-  - name: "Magic Missile"
-    description: "Create 3 darts that each deal 1d4+1 force damage"
-  - level: {number: 2, slots: 2}  # 2nd level with 2 slots
+MAGIC FONT: \small         # Render magic section in smaller font
+MAGIC FONT: \footnotesize  # Even smaller
+MAGIC FONT: \scriptsize    # Smaller yet
 ```
 
-**Key Notes:**
-- Use `level: 0` for cantrips
-- Spell descriptions can include formatting markers like [C] for concentration, [B] for bonus action
-- For non-casters, use `MAGIC: []` (empty list)
-
-### Magic Rendering Options
-
-**Font Size Control:**
-For dense spell lists, control font size:
+If spells won't fit even with a small font, move magic to its own page:
 ```yaml
-MAGIC FONT: \small      # Render magic section in smaller font
-MAGIC FONT: \normalsize # Explicit normal size (default behavior)  
+MAGIC SEPARATE: true    # Magic section on separate page (not yet implemented)
 ```
 
-**Separate Page:**
-For characters with extensive spell lists, move magic to its own page:
+A sorcerer will have not only spells but also sorcery points:
+
 ```yaml
-MAGIC SEPARATE: true    # Magic section appears on separate page
+SORCERY POINTS: 3
 ```
 
-These options can be combined with any magic content and help manage space on the character sheet.
+Sorcery points are shown in the white section along with senses and passive abilities.
+
 
 </div>
 
-## Features Section
+## Features (warm pink)
 
 <div class="features">
 
-Class features, racial traits, and special abilities.
+Class features, racial traits, and special abilities are found in the
+right-hand column below `ATTACKS` (or `MAGIC`, if present)
+The `FEATURES` section is structured like a simplified version of the `MAGIC` section: there are no levels or slots, and there are few properties.
+Each feature has a `name` and a `description`, and maybe a property like `bonus` or `duration`.
 
-### Feature Structure
-```yaml
+
+
+```yaml zanogh
 FEATURES:
-  - name: "Rage"
-    description: "Start/stop as a bonus action. Lasts 1 minute or until you are unconscious or fail to attack or take damage for 1 turn. Can't concentrate. While raging: • Advantage on Str checks & saves. • Melee Str attacks deal +2 damage. • You take half damage from bludgeoning, piercing, and slashing damage. • At 3rd level, 3 times per long rest."
-  - name: "Unarmored Defense"  
-    description: "If you wear no armor, your AC = 10 + Dex + Con."
-  - name: "Savage Attacks"
-    description: "When you score a critical hit with a melee attack, add one extra weapon damage die to the total."
-```
+  - name: Rage
+    bonus: true
+    duration: 1 min
+    description: >-
+      Start/stop as a bonus action. Lasts 1 minute or until you are
+      unconscious or fail to attack or take damage for 1 turn. Can't
+      concentrate. While raging: • Advantage on Str checks & saves. • Melee
+      Str attacks deal +2 damage. • You take half damage from bludgeoning,
+      piercing, and slashing damage. • At 3rd level, 3 times per long rest.
 
-**Key Notes:**
-- Each feature needs a `name` and `description`
-- Descriptions can be quite long and include formatting
-- Include both class and racial features
+  - name: Unarmored Defense
+    description: If you wear no armor, your AC is 10 + Dex + Con.
+
+  - name: Savage Attacks
+    description: >-
+       When you score a critical hit with a melee attack, 
+       add one extra weapon damage die to the total.
+```
 
 </div>
 
-## Equipment Section
+## Equipment (light green)
 
 <div class="equipment">
 
-Character's gear, items, and currency.
+The equipment section appears at the bottom of the character sheet.
+
+- Equipment section may display in multiple columns for non-casters
+
+
+It includes the character's armor, weapons, and gear.
+These things are listed under `EQUIPMENT`.
 
 ### Equipment List
-```yaml
+```yaml zanogh
 EQUIPMENT:
-  - "Scale Mail Armor"
-  - "Shield (+2 AC)"
-  - "Backpack"
-  - "Bedroll" 
-  - "Mess Kit"
-  - "Tinderbox"
-  - "Torches (10)"
-  - "Rations (10)"
-  - "Waterskin"
+  - Scale Mail Armor
+  - Shield (+2 AC)
+  - Backpack
+  - Bedroll 
+  - Mess Kit
+  - Tinderbox
+  - Torches (10)
+  - Rations (10)
+  - Waterskin
 ```
 
-### Currency
-```yaml
-CP: ""  # Copper pieces
-SP: ""  # Silver pieces  
-EP: ""  # Electrum pieces
-GP: ""  # Gold pieces
-PP: ""  # Platinum pieces
+The equipment section also includes the contents of the character's purse.
+
+```yaml zanogh
+CP:     # Copper pieces
+SP:     # Silver pieces
+GP: 10  # Gold pieces
+PP:     # Platinum pieces
 ```
 
-**Key Notes:**
-- Equipment is a simple list of strings
-- Include important details like "+2 AC" for shields
-- Currency can be numbers or empty strings
-- Equipment section may display in multiple columns for non-casters
 
 </div>
 
-## Class-Specific Keys
-
-Some keys are specific to certain classes or character types:
-
-### Clerics
-```yaml
-DOMAIN SPELLS: 2  # Number of domain spells
-SPELLS KNOWN: 5   # Total spells known
-```
-
-### Sorcerers  
-```yaml
-SORCERY POINTS: 3  # Sorcery points available
-```
-
-### Pregenerated Characters
-```yaml
-PREGENERATED: true  # Marks template characters
-```
-
 ## Complete Example: Basic Fighter
 
-Here's a minimal example for a 1st-level Fighter:
+Here's a small example for a 1st-level Fighter;
+the player has yet to choose some features and proficiencies:
 
-```yaml
-"CHARACTER NAME": ""
-"PLAYER NAME": ""
-"CLASS & LEVEL": "Fighter 1"
-"RACE": "Human"
-"BACKGROUND": "Soldier"
-"ALIGNMENT": ""
-"EXPERIENCE POINTS": ""
+```yaml fighter
+CHARACTER NAME: 
+PLAYER NAME: 
+CLASS & LEVEL: Fighter 1
+RACE: Human
+BACKGROUND: Soldier
+ALIGNMENT: 
+EXPERIENCE POINTS: 
 
 STR: 16
 DEX: 13
@@ -337,75 +417,124 @@ INT: 10
 WIS: 12
 CHA: 8
 
-"PROFICIENCY BONUS": "+2"
-"MAX HP": 12
-"CURRENT HIT POINTS": ""
-"HIT DICE": "d10"
-"INITIATIVE": "+1"
-"SPEED": "30"
-"ARMOR CLASS": 16
-"PASSIVE PERCEPTION": 11
+PROFICIENCY BONUS: +2
+MAX HP: 12
+CURRENT HIT POINTS: 
+HIT DICE: d10
+INITIATIVE: +1
+SPEED: 30
+ARMOR CLASS: 16
+PASSIVE PERCEPTION: 11
 
 PROFICIENCIES:
-  - "Athletics"
-  - "Intimidation"
-  -   # Separator
-  - "Common"
-  - "All Armor"
-  - "Shield"
-  - "Simple Weapons"
-  - "Martial Weapons"
+  - Athletics
+  - Intimidation
+  - 
+  - Common
+  - All Armor
+  - Shield
+  - Simple Weapons
+  - Martial Weapons
 
 ATTACKS:
-  - NAME: "Longsword"
-    ATTACK: "+5"
-    DAMAGE: "1d8+3"
-    TYPE: "slashing"
-    RANGE: "5 ft."
-    # No ammo fields for melee weapons
+  - NAME: Longsword
+    ATTACK: +5
+    DAMAGE: 1d8+3
+    TYPE: slashing
+    RANGE: 5 ft.
 
-MAGIC: []
 
 FEATURES:
-  - name: "Fighting Style"
-    description: "Choose a fighting style that grants combat benefits."
-  - name: "Second Wind"
-    description: "Regain 1d10+1 hit points as a bonus action. Once per rest."
+  - name: Fighting Style
+    description: Choose a fighting style that grants combat benefits.
+
+  - name: Second Wind
+    description: Regain 1d10+1 hit points as a bonus action. Once per rest.
 
 EQUIPMENT:
-  - "Chain Mail"
-  - "Shield"
-  - "Longsword"
-  - "Backpack"
-  - "Bedroll"
-  - "Rations (10)"
+  - Chain Mail
+  - Shield
+  - Longsword
+  - Backpack
+  - Bedroll
+  - Rations (10)
 
-CP: ""
-SP: ""
-EP: ""
-GP: ""
-PP: ""
+CP: 
+SP: 
+GP: 
+PP: 
 ```
 
-## Tips for Success
-
-1. **Start Simple**: Begin with basic required fields, then add details
-2. **Check Examples**: Reference `zanogh.yaml` and `miriel.yaml` for complex characters
-3. **Mind the Quotes**: Keys with spaces need quotes, values usually don't
-4. **Test Early**: Generate a PDF frequently to see how your YAML renders
-5. **Use Separators**: Add `-` (blank entry) to organize proficiencies visually
-6. **Empty vs Missing**: Use empty strings `""` for fields you want to fill in later
-
-## Next Steps
-
-Once you have a basic character sheet working:
-
-1. Generate a PDF: `./charsheet -o mycharacter.pdf mycharacter.yaml`
-2. Refine the details based on the visual output
-3. Add class-specific features and spells
-4. Customize font sizes if needed
-5. Create additional characters using the same structure
-
-The character sheet system is flexible—start with the essentials and build up your character's complexity over time.
 
 </article>
+
+<!--
+```yaml miriel
+CHARACTER NAME: Miriel
+PLAYER NAME: Michelle
+CLASS & LEVEL: Cleric 3
+RACE: Human
+BACKGROUND: Acolyte
+MOTIVATION: Miriel is trying to prove herself
+STR: 9
+DEX: 15
+CON: 14
+INT: 11
+WIS: 16
+CHA: 13
+PROFICIENCY BONUS: '2'
+MAX HP: 29
+HIT DICE: d8
+INITIATIVE: '+2'
+SPEED: '30'
+ARMOR CLASS: 18
+PASSIVE PERCEPTION: 13
+PROFICIENCIES:
+  - Insight
+  - Medicine
+  - Persuasion
+  - Religion
+  - Nature
+  - null
+  - Common
+  - Celestial
+  - Abyssal
+  - Infernal
+  - All Armor
+  - Shield
+  - Simple Weapons
+ATTACKS:
+  - NAME: Frost brand scimitar
+    ATTACK: '+2'
+    DAMAGE: 1d6+2/1d6
+    TYPE: slashing/cold
+    RANGE: 5 ft.
+    AMMO: '---'
+  - NAME: Light Crossbow
+    ATTACK: '+4'
+    DAMAGE: 1d8+2
+    TYPE: piercing
+    RANGE: 80/320 ft.
+    AMMO: ''
+FEATURES:
+  - name: Disciple of Life
+    description: Healing spells restore an additional 2 HP + spell's level.
+  - name: Channel Divinity
+    description: "Turn Undead; Preserve Life (HP = 5\\(\\times\\)level). 1\_per\_rest until level\_6."
+
+EQUIPMENT:
+  - Cleric's Vestments
+  - Holy Symbol
+  - Scale Mail Armor
+  - Shield (+2 AC)
+  - Backpack
+  - Blanket
+  - Candles (10)
+  - Incense Sticks (2)
+  - Censer
+  - Tinderbox
+  - Rations (10)
+  - Waterskin
+
+```
+-->
