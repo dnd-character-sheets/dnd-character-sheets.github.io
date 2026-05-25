@@ -62,7 +62,7 @@ The web form actually starts with bureaucracy: load a character, save
 a character, choose the format for the PDF, and so on.
 To get started, try something like this:
 
- 1. Go to <https://dnd-character-sheets.github.io> and choose a pregenerated character from one of the dropdowns.  Then click "Load this character."
+ 1. Go to [`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io) and choose a pregenerated character from one of the dropdowns.  Then click "Load this character."
  
  2. Fill in a couple of missing fields, edit what's there, and otherwise tinker with the form.
  
@@ -85,8 +85,11 @@ ideally use the service something like this:
 
 ## Yaml for beginners
 
-By far the best way to get started with YAML is to download one of the pregenerated characters from <https://dnd-character-sheets.github.io>.
-The downloaded file contains key-value pairs in the form
+The best way to get started with YAML is
+work through the [Quick-Start Guide](QUICKSTART.md).
+Or you can download one of the pregenerated characters from [`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io).
+
+Any YAML character sheet contains key-value pairs in the form
 
 ```
 KEY: value
@@ -108,7 +111,7 @@ Finally, blank lines are not visible to the YAML parser, so they are lost.
 
 A character sheet may have over 60 properties, each of which has its own YAML key.
 The set of valid keys is ultimately determined by low-level key-declaration code in 
-<templates/charsheet.sty>.
+[the `charsheet` LaTeX package](templates/charsheet.sty).
 And their meaning is determined by their usage in the various `.tex` template files.
 But I do provide an AI-generated [alphabetical list of keys](YAML.md) and their usage.
 
@@ -146,11 +149,11 @@ Show the bot an example YAML sheet or the [user documentation](YAML.md) and then
 ## You don't have to type everything yourself
 
 To see more examples or get fragments of YAML that you can use,
-check out the <yaml> directory.
-For example, if you want to roll up a ranger, you can include <yaml/ranger-class.yaml>.
+check out the [`yaml`](yaml) directory.
+For example, if you want to roll up a ranger, you can include [`yaml/ranger-class.yaml`](yaml/ranger-class.yaml).
 Or if your druid is about to specialize, try
-<yaml/circle-of-the-land-forest.yaml>.
-Nothing in the <yaml> directory is comprehensive—if you find it useful, we're both surprised and pleased.
+[`yaml/circle-of-the-land-forest.yaml`](yaml/circle-of-the-land-forest.yaml).
+Nothing in the [`yaml`](yaml) directory is comprehensive—if you find it useful, we're both surprised and pleased.
 
 
 
@@ -176,7 +179,7 @@ If you want to recommend support for another layout, please open an issue.
 
 If you have access to a Linux machine and are comfortable with software,
 I encourage you to dispense with the web service and generate character sheets on your own machine.
-The code is at <https://github.com/dnd-character-sheets/dnd-character-sheets.github.io>, and I will provide help on request.
+The code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io), and I will provide help on request.
 
 ## AI
 
