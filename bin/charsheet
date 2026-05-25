@@ -601,6 +601,7 @@ local function add_magic_markers(name, thing)
       end
     end
     if #tags > 0 then
+      table.sort(tags)
       return stringf('%s [%s]', name, table.concat(tags, ','))
     else
       return name
