@@ -579,6 +579,36 @@ local magic_property = {
   long = 'Long description',
 }
 
+local magic_markers = {
+  concentration = 'C',
+  ritual = 'R',
+  bonus = 'B',
+}
+
+local function false_yaml(v)
+  return v == nil or v == false or v == 'false' or v == '0' or v == 0
+end
+
+local function add_magic_markers(name, thing)
+  local tags = name:match '%b[]'
+  if tags and tags:find '^.[%u,]+.$' then
+    return name
+  else
+    tags = { }
+    for property, tag in pairs(magic_markers) do
+      if not false_yaml(thing[property]) then
+        table.insert(tags, tag)
+      end
+    end
+    if #tags > 0 then
+      return stringf('%s [%s]', name, table.concat(tags, ','))
+    else
+      return name
+    end
+  end
+end
+
+
 
 local function validate_magic_entry(entry)
   if not can_be 'table'(entry) then
@@ -1696,6 +1726,17 @@ local function extend(doc)
     end
     doc.REACTIONS = table.concat(reactions, '\\relax\n')
   end
+
+  for _, section in ipairs {'MAGIC', 'FEATURES'} do
+    local things = doc[section] or nothing
+    for _, thing in ipairs(things) do
+      if thing.name then -- could be level table
+        thing.name = add_magic_markers(thing.name, thing)
+      end
+    end
+  end
+
+    
 
 
   return doc
