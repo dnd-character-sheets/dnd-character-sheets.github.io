@@ -1,0 +1,51 @@
+#!/usr/bin/env lua5.2
+
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function printf(...) return io.stdout:write(stringf(...)) end
+local function fprintf(fd, ...) return fd:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) return error(stringf(...)) end
+local function runf(...) return os.execute(stringf(...)) end
+----------------------------------------------------------------
+
+local default = { }
+local lines = { [default] = { } }
+
+local function key_of_info(line)
+  local language, key = line:match '^````*%s*(%S+)%s+(%S+)'
+  key = key or default
+  lines[key] = lines[key] or { }
+  return key
+end
+
+require 'catpattern'.run(arg,
+function(fd)
+  local key = default
+  local in_yaml = false
+  for line in fd:lines() do
+    if line:find '^````*%s*yaml' then
+      in_yaml = true
+      key = key_of_info(line)
+    elseif in_yaml and line:find '^```' then
+      in_yaml = false
+    elseif in_yaml then
+      table.insert(lines[key], line)
+    end
+  end
+end)
+
+local function dump(fd, lines)
+  for _, line in ipairs(lines) do
+    fd:write(line, '\n')
+  end
+end
+
+for k, lines in pairs(lines) do
+  if k == default then
+    dump(io.stdout, lines)
+  else
+    dump(assert(io.open(stringf('/tmp/%s.yaml', k), 'w')), lines)
+  end
+end
