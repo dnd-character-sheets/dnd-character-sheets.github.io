@@ -10,11 +10,14 @@
 </head>
 <body>
     <h1>D&D Character Sheet Creator</h1>
-    <div style="text-align: center; font-size: 0.8em; color: #666; margin-bottom: 1em;">
-        Version: garlic
-    </div>
     
     <div style="text-align: center; margin: 1em 0; padding: 1em; background-color: #f4f4f4; border-radius: 4px;">
+    <div style="text-align: center; font-size: 0.8em; color: #555; margin-bottom: 1em;">
+        <A style="padding: 2em;" HREF="https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/blob/main/README.md">(Read about the project)</A>
+        
+        <span style="padding: 2em;">Version: haricot</span>
+    </div>
+
         <div style="margin-bottom: 0.5em;">
             <input type="file" id="yaml-file" accept=".yaml,.yml" style="display: none;" onchange="loadYAMLFile(event)">
             <button type="button" class="add-button" onclick="document.getElementById('yaml-file').click()">Load YAML File</button>
