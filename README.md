@@ -7,7 +7,7 @@ title: D&D Character Sheets using YAML
 Paper character sheets are great.
 A paper sheet puts
 everything I need to know right in front of me; 
-I don't have to mouse, click, tap, or fiddle with devices.
+I don't have to mouse, click, tap, or fiddle with any device.
 But when my character levels up or prepares new spells, 
 a paper sheet is a pain to update.
 So I created software that
