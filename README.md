@@ -10,24 +10,47 @@ everything I need to know right in front of me;
 I don't have to mouse, click, tap, or fiddle with any device.
 But when my character levels up or prepares new spells, 
 a paper sheet is a pain to update.
-So I created software that
-produces well-designed paper sheets from 
-a digital format.
-The format is readable and easy to update,
-and you can use the software without any kind of subscription or even a
-cloud service.
+So I created a digital format is readable and easy to update,
+plus software that
+produces well-designed paper sheets.
+As an example, 
+here's a fictitious character sheet in a format that I admire (click to embiggen):
 
-A character sheet is written using
-[YAML](https://en.wikipedia.org/wiki/YAML) ([beginner
-tutorial](https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started)).
+<div align="center">
+  <a href="mario.pdf">
+    <img src="mario-preview.png"
+         style="width:35%; height:auto;"
+         alt="Not actually Mario's character sheet">
+  </a>
+</div>
+
+This character sheet, designed by Alyssa, is readable and yet dense
+with information.
+With my software, 
+you can create character sheets just like this.
+You don't need any kind of subscription;
+just go to 
+[`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io)
+and explore.
+
+
+# An open, archival digital character sheet
+
+A web service is great,
+but a web form disappears when the browser closes,
+and your character needs to last as long as your campaign.
+You can store your character in archival form in a plain-text format
+called
+[YAML](https://en.wikipedia.org/wiki/YAML).
 YAML is
-a common,
-machine-readable, plain-text format,
-and it is reasonably user-friendly.
+a common, format,
+and it is reasonably user-friendly ([beginner
+tutorial](https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started)).
 YAML character sheets are meant to be edited and maintained with a simple,
-ordinary text editor like Emacs, vim, or Notepad.
+ordinary text editor.
 
-A character sheet might start something like this:
+
+A YAML character sheet might start something like this:
 
 ```
 CHARACTER NAME: Mario Greymist
@@ -52,60 +75,58 @@ PROFICIENCIES:
 # ... and so on
 ```
 
-From a sheet in this format, my software can produce [a PDF suitable for
-printing and using at the table](mario.pdf);
-here's a thumbnail:
+You can download Mario's complete character sheet from [the web site](https://dnd-character-sheets.github.io).
 
-<a href="mario.pdf">
-<img src="mario-preview.png" height=300 alt="Not actually Mario's character sheet">
-</a>
-
-The software runs on Linux—the Angry GM uses Linux now, you know—but
-if you don't care to install it, it is
-available as [a web service](https://dnd-character-sheets.github.io).
-Just go explore.
-
-(Bonus:
-If you do get the software to run on Linux, it can also create a [one-page summary of characters' important abilities and stats, for use by a GM at the table](gmsheet.pdf).)
 
 # Using the web service
 
-The web service offers a form that you can use to describe your character.
-The form can be rendered as PDF at the click of a button;
-you choose a layout from a small menu.
-But a web form disappears when the browser closes,
-and your character needs to last as long as your campaign.
-Once you download your character sheet as a YAML file,
-it lasts as long as you want to keep it.
-To support YAML,
-the web form begins with "load" and "download" buttons,
-which move YAML between the web form and your machine.
-Once you have loaded your YAML, just hit the big "Generate PDF" button.
+The web services has two parts: a form that you can use to describe your character,
+and a back end that renders your sheet as PDF.
+Once you have a character in the form,
+you can download it as a YAML file,
+and it lasts as long as you want to keep it.
+When you want to edit it, or generate new PDF,
+you can upload it again.
+Or just upload a version you have edited locally.
+All the important buttons ("upload", "download", and "generate PDF")
+are found at the beginning of the form.
 
 To help you get started, I have provided some pregenerated characters to play with.
 
  1. Go to
     [`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io).
     From the first dropdown ("best at 2 columns"), choose a
-    pregenerated character, perhaps Mario Greymist.  Then click "Load this
+    pregenerated character, perhaps Mario.  Then click "Load this
     character" on the right.
  
- 2. Click the "Generate PDF" button.  After an interval, your browser should show the PDF in a new tab.
+ 2. Click the "Generate PDF" button.  After a few seconds, your browser should show the PDF in a new tab.
  
  3. Go back to the web form and look for
     a "Download `mario-greymist.yaml`" button.
     Click to save Mario's sheet on your machine.
     (By default, a YAML file that you download is named for the character, or if there is no character name, for the character's class.)
 
-The web form is mostly for demo purposes.
-In the long term, you will
-likely edit your YAML character sheet on your own machine, 
-using the text editor of your choice.
+The web form works just fine,
+but if you are an experienced computer user, 
+you may prefer to edit your YAML character sheet on your own machine, 
+using a text editor like Emacs, vim, or Notepad.
 You will still use the web service to generate PDF:
 
- 4. Go to [the web service](https://dnd-character-sheets.github.io) and use the "Load YAML file" button to load your character sheet into the web form.
+ 4. Go to [the web service](https://dnd-character-sheets.github.io) and use the "Upload YAML file" button to load your character sheet into the web form.
  
  5. Click "Generate PDF."
+
+# Using the software on your own machine (with bonus!)
+
+If you have Linux and are comfortable with software,
+you can try dispensing with the web service and generating PDF on your own machine.
+The code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io), and I will provide help on request.
+
+If you do install the software locally, you get a couple of other goodies.
+In particular, you also create a [one-page summary of characters' important abilities and stats, for use by a  GM at the table](gmsheet.pdf).
+
+
+
 
 # Working with YAML
 
@@ -149,18 +170,46 @@ Most of the keys are described in an [alphabetical
 reference](YAML.md),
 but you are probably better off using the 
 [Quick-Start Guide](QUICKSTART.md).
-And if something goes wrong, you can find the ultimate truth in the
+<!--And if something goes wrong, you can find the ultimate truth in the
 `.sty` and `.tex` files in the [templates directory](templates).
+-->
 
-## What you can write in text
+## Getting YAML from other digital character sheets
 
-The character sheets are rendered into PDF using the LaTeX typesetting
-system; their graphic design is programmed using LaTeX's [TikZ
+There are eight million ~~stories~~ digital character sheets in ~~the naked city~~ various corners of the Web.
+If you are willing to use a large language model, the popular chatbots can extract pretty good YAML from a web page or PDF.
+Show the bot an example YAML sheet or the [user documentation](YAML.md), then ask it to convert whatever format you have to the YAML format.
+
+
+## There's more YAML to play with
+
+To see more examples of YAML, including useful fragments,
+check out the [`yaml`](yaml) directory.
+For example, if you want to roll up a ranger, you can include [`yaml/ranger-class.yaml`](yaml/ranger-class.yaml).
+Or if your druid is about to specialize, try
+[`yaml/circle-of-the-land-forest.yaml`](yaml/circle-of-the-land-forest.yaml).
+
+The snippets in the [`yaml`](yaml) directory don't claim to be comprehensive; they are just fragments I put together for my own game.  If you find them useful, we're surprised and pleased.
+
+## Going beyond plain text
+
+YAML is a good fit for this project because it handles plain text well and does not impose a ton of bureaucracy like special quote marks and so on.
+But sometimes you want more then plain text,
+and PDF is more than capable of rendering not only multiple fonts but also graphic-design elements.
+My system provides the full power of computerized typography
+by using the LaTeX typesetting
+system.
+Although it can be intimidating, LaTeX is very powerful,
+and it provides not only traditional typesetting but also 
+graphic-design tools, using its [TikZ
 package](https://tikz.dev).
-The text that you write is interpreted by LaTeX, which treats the `\`,
+
+You don't need to be a LaTeX expert to get some of the benefits.
+All you really need to know is that
+the text that you write is interpreted by LaTeX, which treats the `\`,
 `{`, and `}` characters specially.
-(If you already know LaTeX, you will need to know that LaTeX's other
-special characters are escaped by the rendering engine.)
+(If you *are* an expert, you will also want to know that LaTeX's other
+special characters are escaped by the back end.)
 
 The `\` character marks a
 LaTeX macro, and you will sometimes want to use macros in your text:
@@ -181,33 +230,18 @@ I have defined a handful of custom macros:
 - `\statdc{XXX}` calculates a DC from a stat modifier, as in `\statdc{CON}`.
 - `\spelldc` calculates a DC using the spellcasting modifier for the class, from the `SPELL DC` field.
 
-## Getting YAML from other digital character sheets
-
-There are eight million ~~stories~~ digital character sheets in ~~the naked city~~ various corners of the Web.
-If you are willing to use a large language model, the popular chatbots can extract pretty good YAML from a web page or PDF.
-Show the bot an example YAML sheet or the [user documentation](YAML.md), then ask it to convert whatever format you have to the YAML format.
-
-
-## There's more YAML to play with
-
-To see more examples of YAML, including useful fragments,
-check out the [`yaml`](yaml) directory.
-For example, if you want to roll up a ranger, you can include [`yaml/ranger-class.yaml`](yaml/ranger-class.yaml).
-Or if your druid is about to specialize, try
-[`yaml/circle-of-the-land-forest.yaml`](yaml/circle-of-the-land-forest.yaml).
-
-The snippets in the [`yaml`](yaml) directory don't claim to be comprehensive; they are just fragments I put together for my own game.  If you find them useful, we're surprised and pleased.
-
 
 
 # Limitations and caveats
 
 ## Limitations
 
-My YAML don't support all of D&D 5e.
+My YAML doesn't support all of D&D 5e.
 
-  - Traits, bonds, ideals, and so on are aspects of a D&D character that are best developed during play, not decided beforehand at character-creation time.  Accordingly, they are not found on the character sheet.
-
+  - The character sheets are meant to be used at the table, and
+    getting everything on one page was a major goal.  There's no
+    support for such properties as traits, bonds, ideals—they're not
+    immediately useful during play, and I could not find room for them.
     If these are things that you want, sketch the layout you are looking for and open [a Github issue](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues).
   
   - Electrum pieces clutter the character sheet, and they tend to confuse players: unlike the other coins, they are not ten times as valuable as the next most valuable coin.  Electrum pieces do have a dedicated YAML key, but they do not display on any of the existing layouts.
@@ -218,20 +252,16 @@ Although I have some training in information design,
 I am not a graphic designer.
 If you want to recommend another layout, please open [a Github issue](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues).
 
-## Offline use
-
-If you have Linux and are comfortable with software,
-you can dry dispensing with the web service and generating PDF on your own machine.
-The code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io), and I will provide help on request.
-
 ## AI
 
-I used AI for help.
+I used AI for help with code.
 I do not love theft of intellectual property or the likelihood of AI putting creative artists out of work.
 But the popular models are trained on my work—I have been putting code on the public internet for over 35 years—and given my contributions, I wish to reap some of the benefits.
 
 I have not used AI blindly; except for parts of the JavaScript,
 I have reviewed every line of AI-generated code, and I have rewritten most of it.
+
+This README is all me.
 
 # Acknowledgments
 
