@@ -7,10 +7,10 @@ title: D&D Character Sheets using YAML
 Paper character sheets are great.
 A paper sheet puts
 everything I need to know right in front of me; 
-I don't have to mouse, click, tap, or fiddle with any device.
+I don't have to mouse, click, tap, or fiddle with a device.
 But when my character levels up or prepares new spells, 
 a paper sheet is a pain to update.
-So I created a digital format is readable and easy to update,
+So I created a digital format is easy to read and update,
 plus software that
 produces well-designed paper sheets.
 As an example, 
@@ -26,8 +26,8 @@ here's a fictitious character sheet in a format that I admire (click to embiggen
 
 This character sheet, designed by Alyssa, is readable and yet dense
 with information.
-With my software, 
-you can create character sheets just like this.
+Use my software, and
+you can create character sheets just like it.
 You don't need any kind of subscription;
 just go to 
 [`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io)
@@ -39,11 +39,12 @@ and explore.
 A web service is great,
 but a web form disappears when the browser closes,
 and your character needs to last as long as your campaign.
-You can store your character in archival form in a plain-text format
+My web service can save your character in archival form;
+it uses a plain-text format
 called
 [YAML](https://en.wikipedia.org/wiki/YAML).
 YAML is
-a common, format,
+a common format,
 and it is reasonably user-friendly ([beginner
 tutorial](https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started)).
 YAML character sheets are meant to be edited and maintained with a simple,
@@ -80,16 +81,15 @@ You can download Mario's complete character sheet from [the web site](https://dn
 
 # Using the web service
 
-The web services has two parts: a form that you can use to describe your character,
+The web service has two parts: a form that you can use to describe your character,
 and a back end that renders your sheet as PDF.
 Once you have a character in the form,
 you can download it as a YAML file,
 and it lasts as long as you want to keep it.
 When you want to edit it, or generate new PDF,
 you can upload it again.
-Or just upload a version you have edited locally.
 All the important buttons ("upload", "download", and "generate PDF")
-are found at the beginning of the form.
+are found at the beginning of the web form.
 
 To help you get started, I have provided some pregenerated characters to play with.
 
@@ -123,7 +123,7 @@ you can try dispensing with the web service and generating PDF on your own machi
 The code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io), and I will provide help on request.
 
 If you do install the software locally, you get a couple of other goodies.
-In particular, you also create a [one-page summary of characters' important abilities and stats, for use by a  GM at the table](gmsheet.pdf).
+In particular, you can create a [one-page summary of characters' important abilities and stats, for use by a  GM at the table](gmsheet.pdf).
 
 
 
@@ -239,8 +239,8 @@ I have defined a handful of custom macros:
 My YAML doesn't support all of D&D 5e.
 
   - The character sheets are meant to be used at the table, and
-    getting everything on one page was a major goal.  There's no
-    support for such properties as traits, bonds, ideals—they're not
+    getting everything on one page was a major goal.  So my format doesn't
+    support such properties as traits, bonds, ideals—they're not
     immediately useful during play, and I could not find room for them.
     If these are things that you want, sketch the layout you are looking for and open [a Github issue](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues).
   
@@ -261,14 +261,14 @@ But the popular models are trained on my work—I have been putting code on the
 I have not used AI blindly; except for parts of the JavaScript,
 I have reviewed every line of AI-generated code, and I have rewritten most of it.
 
-This README is all me.
+And AI doesn't write for me; this README is all mine.
 
 # Acknowledgments
 
 The pregenerated characters and the bones of the three-column template were supplied by
 [NoxAeternus](https://ko-fi.com/noxaeturnus/).
 
-The two-column template is taken from the module [_The Fall of Silverpine Watch_](https://theangrygm.com/the-fall-of-silverpine-watch/) by [The Angry GM](https://theangrygm.com/).
+The two-column template is taken from the module [_The Fall of Silverpine Watch_](https://theangrygm.com/the-fall-of-silverpine-watch/) by [The Angry GM](https://theangrygm.com/) (who uses Linux now, by the way).
 The template was originally designed by Alyssa.
 
 The tropical template was designed by French Rice Meɹman.
