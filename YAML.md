@@ -1,29 +1,68 @@
 ---
-title: YAML Key Reference (D&D Character Sheets)
+title: YAML Reference for D&D Character Sheets
 ---
 
 # Introduction
 
-The bulk of this document is an alphabetical reference of all the keys that can define fields in a YAML character sheet.
-But a few fields deserve special commentary.
+This document specifies what you can put in a YAML character sheet.
+Most of the document is taken up with an alphabetical list of all the keys, 
+but this reference also
+provides some details about what you can put in your text,
+and it mentions some keys that are special.
 
-Also, it is not documented which fields are required—but by design it is as few as possible.
-You might be able to get a character sheet with as little as `CLASS` and `LEVEL`.
+As you perused the guide, you will see examples both with and without quotation marks.
+YAML's rules for quotation are actually fairly involved, but for the character sheets, 
+most quotation marks are optional.
 
-Finally, you will see examples with and without quotation marks.
-Most quotation marks are optional.
+Finally, I have not yet documented exactly how few keys you can get away with.
+I have tried to require as few as possible.
+You might be able to get a character sheet with as little as `CLASS` and `LEVEL`.
 
-## Keys for specifying class, level, and specialty
+# What you can write: Beyond plain text
 
-The recommended way to specify class, level, and specialty is with
-separate keys `CLASS`, `LEVEL`, and `SPECIALTY`.
-However, it is possible to define a single key 
-`CLASS & LEVEL`, which may also include a specialty, as in
-```yaml
-"CLASS & LEVEL": "Cleric (Life Domain) 3"
-```
-This option is not recommended, but it may be useful when using AI to convert an existing character sheet to YAML format.
-When both approaches are used in the same file, the individual keys take precedence over `CLASS & LEVEL`.
+YAML handles plain text well and does not hit you with a ton of
+bureaucracy (special quote marks and so on).
+But sometimes you want more than plain text.
+And I provide a hook:
+the back end exploits the full power of the LaTeX typesetting
+system.
+LaTeX can be intimidating, but it is very powerful,
+and it provides not only traditional typesetting but also 
+graphic-design tools.
+(Much of the graphic design has been done using the [TikZ
+package](https://tikz.dev).)
+
+You can benefit from LaTeX without being an expert.
+You just need to know that
+the text that you write is interpreted by LaTeX,
+and that LaTeX treats the `\`,
+`{`, and `}` characters specially.
+(If you *are* an expert, you will also want to know that LaTeX's other
+special characters are escaped by the back end.)
+
+The `\` character marks a
+LaTeX macro, and you will sometimes want to use macros in your text:
+
+  - To get text to fit on a single page, you may have to change font size.  Specify a size using macros `\large`, `\normalsize`, `\small`, `\footnotesize`, `\scriptsize`, and `\tiny`.
+
+  - You can write `\textbf{`**bold text**`}`, `\emph{`_emphasis_`}`, and `\textsc{`<span style="font-size: 80%;">SMALL CAPS</span>`}`.
+  
+  - You can write math between `\(` ... `\)` macros, which support symbols like `\ge` (≥), `\le` (≤), and `\times` (×).  Also `+`, `<`, `>`, `=`, and so on.
+
+To help you write numbers like spell
+attack modifiers or spell DCs, which may change as your character evolves,
+I have defined a handful of custom macros
+In any text field you can write any of the following:
+
+- `\psam` is "plus spell attack modifier" rendered as "+N."
+- `\satk` is "spell attack modifier," preceded by a hard space.
+- `\spellattack` is the spell attack modifier *without* the hard space.
+- `\statdc{XXX}` calculates a DC from a stat modifier, as in `\statdc{CON}`.
+- `\spelldc` calculates a DC using the spellcasting modifier for the class, from the `SPELL DC` field.
+
+
+
+# Special YAML keys
 
 ## Keys for changing font size
 
@@ -53,11 +92,10 @@ Other calculated keys may be included, but when they are absent, the rendering e
 - `PASSIVE PERCEPTION` (the rendering engine attempts to account for Expertise)
 - `SPELL DC`
 
-
-# Alphabetical Reference
+# Alphabetical list of keys
 
 Each key is described briefly; most are followed by examples.
-Unless otherwise specified, a key expects to be associated with a string value.
+Unless otherwise specified, a key expects to be associated with text.
 
 #### `ALIGNMENT`
 
