@@ -7,60 +7,23 @@
 
 ------------------ classic print functions ---------------------
 local stringf = string.format
-local function printf(...) return io.stdout:write(stringf(...)) end
 local function eprintf(...) return io.stderr:write(stringf(...)) end
-local function fprintf(fd, ...) return fd:write(stringf(...)) end
 local function dief(...) eprintf(...); os.exit(1) end
-local function luaerrorf(...) return error(stringf(...)) end
-local function runf(...) return os.execute(stringf(...)) end
-local function warnf(...)
-  io.stderr:write 'Warning: '; eprintf(...); io.stderr:write '\n'
-end
 local function outf(out, ...)
   table.insert(out, stringf(...))
   return out
 end
 
-local nothing = { }
-
--- Global validation errors list
-local global_validation_errors = {}
-
-local curfile, last_file_announced
-
-local function verrorf(...)
-  local msg = stringf(...)
-  table.insert(global_validation_errors, msg)
-  if last_file_announced ~= curfile then
-    eprintf('Validation error in %s: %s\n', curfile, msg)
-    last_file_announced = curfile
-  else
-    eprintf('Validation error: %s\n', msg)
-  end
-end
-
-function string.lfind(self, ...)
-  return self:lower():find(...)
-end  
-
-----------------------------------------------------------------
+------------ basename and option processing ------------------------------------------
 
 local basename = arg[0]:gsub('^.*/', '')
+  -- basename determines behavior
 
-local function charoptions(parser)
-  return parser
-  :numarg(1)
-end
-
-local function gmoptions(parser)
-  return parser:minarg(1)
-end
-
-local options = {
-  charsheet = charoptions,
-  gmsheet = gmoptions,
-  gmspells = gmoptions,
+local options = { -- specialized for different scripts
+  charsheet = function(parser) return parser:numarg(1) end,
+  gmsheet   = function(parser) return parser:minarg(1) end,
 }
+options.gmspells = options.gmsheet
 
 local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
@@ -71,9 +34,11 @@ local fields = require 'flags'.parser()
   :bool('standalone as s'):help('emit just definitions, not full file')
   :string('layout as t as l'):help('template for character sheet')
   :string('templates', os.getenv 'CHARSHEETS' or '/home/nr/etc/dnd/resources/character-sheets/templates')
-         :help('directory where character-sheet templates live') 
+         :help('directory where character-sheet templates live')
   :wrap(assert(options[basename]))
   :parse(arg)
+
+local nothing = { }
 
 local default_layouts = {
   charsheet = 'silverpine',
@@ -90,7 +55,7 @@ local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
     or 'pdflatex -interaction=scrollmode -halt-on-error -no-shell-escape'
 
-----------------------------------------------------------------
+----------------- table utilities -----------------------------------------------
 
 local function sorted_keys(t, lt)
   local u = { }
@@ -99,7 +64,7 @@ local function sorted_keys(t, lt)
   return u
 end
 
-local function rmdups(xs, eq)
+local function rmdups(xs, eq) -- remove duplicates from xs, return xs
   eq = eq or function(a, b) return a == b end
   local i = 1
   while i < #xs do
@@ -112,8 +77,49 @@ local function rmdups(xs, eq)
   return xs
 end
 
+local function scalarvalues(list)
+  return coroutine.wrap(function()
+      local function process(values)
+        for _, value in pairs(values) do
+          if type(value) == "table" then
+            process(value)
+          else
+            coroutine.yield(value)
+          end
+        end
+      end
+      process(list)
+    end)
+end
+
+-- Local recursive table equality comparison
+local function table_eq(t1, t2)
+  if t1 == t2 then
+    return true
+  elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
+    return false
+  else
+    for k, v in pairs(t1) do
+      if not table_eq(v, t2[k]) then
+        return false
+      end
+    end
+    for k in pairs(t2) do
+      if t1[k] == nil then
+        return false
+      end
+    end
+    return true
+  end
+end
+
+
+----------------- yaml utilities --------------------
+
 local lyaml  = require "lyaml"
 local function isnull(v) return v == lyaml.null end
+
+local function nonnull(v) if v ~= nil and v ~= lyaml.null then return v end end
 
 assert(lyaml.dump)
 local function image(v)
@@ -121,12 +127,12 @@ local function image(v)
                         :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]])
 end
 
-
+-- return a string with unbalanced {}, if any
 local function unbalanced_yaml_string(doc)
   if type(doc) == 'string' then
     local d = doc:gsub('%b{}', '')
     if d:find '[{}]' then return doc end
-  elseif type(doc) == 'table' then
+  elseif type(doc) == 'table' then -- search values
     for _, v in pairs(doc) do
       local d = unbalanced_yaml_string(v)
       if d then return d end
@@ -140,6 +146,36 @@ assert(unbalanced_yaml_string([[\documentclass[10pt]{article]]) ~= nil)
 assert(unbalanced_yaml_string([[\documentclass[10pt]}article{]]) ~= nil)
 
 assert(unbalanced_yaml_string { FOOT = "} ASDF {" } == "} ASDF {")
+
+
+------------------------- infrastructure for validation errors
+
+-- Global validation errors list
+local global_validation_errors = {}
+
+local curfile -- name of the file currently being validated
+
+local verrorf -- save validation error
+do
+  local last_file_announced
+
+  verrorf = function(...)
+    local msg = stringf(...)
+    table.insert(global_validation_errors, msg)
+    if last_file_announced ~= curfile then
+      eprintf('Validation error in %s: %s\n', curfile, msg)
+      last_file_announced = curfile
+    else
+      eprintf('Validation error: %s\n', msg)
+    end
+  end
+end
+local function report_missing(missing, what)
+  if missing and #missing > 0 then
+    verrorf('%s is missing these fields: %s', what, table.concat(missing, ", "))
+  end
+end
+
 
 local bad_input_tex = [[
 \documentclass[12pt]{article}
@@ -157,9 +193,9 @@ $BAD
 ]]
 
 
----------------------
+--------------------- sandboxing
 
-local bad_control_sequences = { }
+local bad_control_sequences = { } -- do not allow in documents
 do
   for cs in ([[
 catcode
@@ -249,24 +285,9 @@ end
 
 
 
---------- generator
+--------- document (charsheet) utilities
 
-local function scalarvalues(list)
-  return coroutine.wrap(function()
-      local function process(values)
-        for _, value in pairs(values) do
-          if type(value) == "table" then
-            process(value)
-          else
-            coroutine.yield(value)
-          end
-        end
-      end
-      process(list)
-    end)
-end
-
-local function named_things(doc)
+local function named_things(doc) -- anything in MAGIC or FEATURES with a .name field
   return coroutine.wrap(function()
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
       local things = doc[section] or nothing
@@ -280,17 +301,11 @@ local function named_things(doc)
 end
 
 
--------------------------------------------------
----
--- 
-  
-
-
 ------------------------------------------------------------------------
 --
--- Field validation
+-- Validation predicates
 
-local function wrap(p)
+local function wrap(p) -- on failure, produces the offending field (XXX name)
   return function(v)
     if p(v) then return true else return false, v end
   end
@@ -304,14 +319,18 @@ end
 
 assert(type(inrange(1,10)) == 'function')
 
-local isnumber = inrange(-math.huge, math.huge)
+local isnumber = inrange(-math.huge, math.huge) -- luacheck: no unused
+local positive = inrange(1, math.huge)
 
-local function anyvalue(v)
+
+local function anyvalue(_) -- luacheck: no unused
   return true
 end
 
+-- Higher-order validator functions
+
 local optional = function(p)
-  return wrap(function (v) 
+  return wrap(function (v)
     -- Handle YAML null, nil, and empty string as valid "empty" values
     if v == '' or v == nil or isnull(v) then
       return true
@@ -322,20 +341,9 @@ local optional = function(p)
 end
 
 assert(type(optional(positive)) == 'function')
-
-local function orp(p1, p2)
-  return function(v)
-    local ok, msg = p1(v)
-    if ok then
-      return ok
-    else
-      return p2(v)
-    end
-  end
-end
-
--- Higher-order validator functions
-local positive = inrange(1, math.huge)
+assert(optional(positive)(nil))
+assert(optional(positive)(3))
+assert(not optional(positive)(0))
 
 local function all(p, list)
   for _, v in ipairs(list) do
@@ -358,6 +366,10 @@ local function any(p, list)
   return false, msg
 end
 
+-------------------
+
+-- predicate `can_be(tau1, tau2, ...)(v)` knows about type conversions
+
 local can_be_tab = {
   string = wrap(function(v)
              return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
@@ -376,6 +388,8 @@ end
 assert(can_be 'string'('hello'))
 assert(can_be 'string'(7))
 
+-----
+
 local empty = wrap(function(v)
   return v == nil
       or type(v) == 'table' and next(v) == nil
@@ -383,9 +397,15 @@ local empty = wrap(function(v)
       or false
 end)
 
+local nonempty_string = wrap(function (v)
+  return can_be 'string'(v) and tostring(v):find('%S')
+end)
+
+assert(nonempty_string 'Arborist')
+
 local is_singleton_table = wrap(function(t)
   if type(t) == 'table' then
-    local k, v = next(t)
+    local k = next(t)
     return k ~= nil and next(t, k) == nil
   end
 end)
@@ -405,7 +425,9 @@ local function listof(predicate)
   end
 end
 
-local function validate_foreach(name, validator)
+--------- Side-effecting validation functions ----------------------
+
+local function validate_foreach(name, validator) -- : value list -> void
   if validator == nil then
     name, validator = '?', name
   end
@@ -420,16 +442,17 @@ local function validate_foreach(name, validator)
   end
 end
 
-local nonempty_string = wrap(function (v)
-  return can_be 'string'(v) and tostring(v):find('%S')
-end)
 
+-------------------- Normalizing YAML ---------------------------------
 
-assert(nonempty_string 'Arborist')
-
+-- Colon conversion
+--
+-- YAML interprets, e.g., `Language: Common` as a singleton table,
+-- but we want it to be a string.
 
 local function convert_colon_tables(v)
---require 'inspect'.show { v = v, single = is_singleton_table(v) }
+  -- returns converted version of v, while converting any internal
+  -- colon tables
   if islist(v) then
     for i, e in ipairs(v) do
       v[i] = convert_colon_tables(e)
@@ -442,34 +465,22 @@ local function convert_colon_tables(v)
     if k == 'proficiencies_skip' and tostring(e) == 'true' then
       return [[\profskip{}]]
     elseif type(k) == 'string' then
---      if k:find 'skip' then require 'inspect'.show({ entry = entry}) end
-      if isnull(e) then
+      if isnull(e) then -- singleton table
         return stringf('%s:', k)
       elseif can_be 'string'(e) then
         return stringf('%s: %s', k, tostring(e))
---      elseif listof(can_be 'string')(e) then
---        -- we want to do this conversion if commas are used but not
---        -- if newlines and dashes are used.  But yaml can't tell the difference.
---        local items = { }
---        for _, item in ipairs(e) do
---          table.insert(items, tostring(item))
---        end
---        return stringf('%s: %s', k, table.concat(items, ', '))
       else
         v[k] = convert_colon_tables(e)
       end
     end
     return v
   end
-  assert(false)
+  assert(false) -- luacheck: ignore
 end
-  
 
 
-
--- Extract valid equipment categories from category_map (single point of truth)
--- This will be updated after category_map is defined
-local valid_equipment_categories
+-------------------------------------------------------------------------
+--- Attacks
 
 -- Attack field specifications - table-driven approach
 local attack_field_specs = {
@@ -483,56 +494,54 @@ local attack_field_specs = {
   { field = 'NOTES',      predicate = can_be 'string' }
 }
 
--- Structure-specific validators
+local function robust_name(thing)
+  return can_be 'string'(thing.name) and tostring(thing.name) or image(thing)
+end
+
 local function validate_attack_entry(attack)
   if not can_be 'table'(attack) then
     verrorf('Attack %s is not a table with attack fields', image(attack))
-    return
-  end
-  
-  -- Check each field according to its specification
-  local missing = {}
+  else
+    local missing = {} -- list of missing fields
 
-  local name = can_be 'string'(attack.name) and tostring(attack.name) or image(attack)
-  
-  for _, spec in ipairs(attack_field_specs) do
-    local field = spec.field
-    if not attack[field] or attack[field] == lyaml.null then
-      if spec.required then
+    for _, spec in ipairs(attack_field_specs) do
+      local field = spec.field
+      if nonnull(attack[field]) then
+        if not spec.predicate(attack[field]) then
+          verrorf('Bad field %s in attack %q: expected a %s; got %s',
+                  field, robust_name(attack), spec.what or 'string', image(attack[field]))
+        end
+      elseif spec.required then
         table.insert(missing, field)
       end
-    else
-      local valid, msg = spec.predicate(attack[field])
-      if not valid then
-        verrorf('Bad field %s in attack %q: expected a %s; got %s',
-                field, name, spec.what or 'string', image(attack[field]))
-      end
     end
-  end
 
-  if not empty(attack['AMMO COUNT']) and empty(attack['AMMO TYPE']) then
-    verrorf('Attack %s specifies AMMO COUNT without an AMMO TYPE', name)
-  end
+    if not empty(attack['AMMO COUNT']) and empty(attack['AMMO TYPE']) then
+      verrorf('Attack %s specifies AMMO COUNT without an AMMO TYPE', robust_name(attack))
+    end
 
-  -- Combine all error messages
-  if #missing > 0 then
-    verrorf('Attack %q is missing these fields: %s', name, table.concat(missing, ", "))
+    report_missing(missing, robust_name(attack))
   end
 end
 
+--------------------------------------------------------------------------
+
+-- Extract valid equipment categories from category_map (single point of truth)
+-- This will be updated after category_map is defined
+local valid_equipment_categories
+
+-- Structure-specific validators
+
 local function validate_feature_entry(feature)
-  local required_fields = {'name', 'description'}
   if not can_be 'table'(feature) then
     verrorf('feature %q is not a table with name and description', image(feature))
-  else
-    if not nonempty_string(feature.name) then
-      verrorf('feature%s is missing a name',
-              not empty(feature.description)
-              and stringf(' described as %q', tostring(feature.description):sub(1,12)..'...')
-              or '')
-    elseif not nonempty_string(feature.description) then
-      verrorf('feature %q has no description', tostring(feature.name))
-    end
+  elseif not nonempty_string(feature.name) then
+    verrorf('feature%s is missing a name',
+            not empty(feature.description)
+            and stringf(' described as %q', tostring(feature.description):sub(1,12)..'...')
+            or '')
+  elseif not nonempty_string(feature.description) then
+    verrorf('feature %q has no description', tostring(feature.name))
   end
 end
 
@@ -645,7 +654,7 @@ local function validate_equipment_structure(equipment)
   elseif listof(can_be 'string')(equipment) then
     -- flat list; no further validation
   else
-    -- Structured format (object-style) 
+    -- Structured format (object-style)
     for category, items in pairs(equipment) do
       if not can_be'string'(category)
       or not valid_equipment_categories[tostring(category):upper()]
@@ -680,7 +689,7 @@ local function validate_proficiency_entry(entry)
     if not empty(entry.proficiencies_skip)
       and
       not can_be 'boolean'(entry.proficiencies_skip)
-    then 
+    then
         verrorf("proficiencies_skip entry %s is not boolean",
                 image(entry.proficiencies_skip))
     end
@@ -689,10 +698,10 @@ local function validate_proficiency_entry(entry)
     if can_be'string'(v) and islist(k) then
       validate_proficiency_entry(k)
     else
-      verrorf("proficiency %q is neither string nor empty nor list of proficiencies: %s", image(entry))
+      verrorf("proficiency %q is %s; expect string or proficiency list", image(entry), type(entry))
     end
   else
-    verrorf("proficiency %q is neither string nor empty nor list of proficiencies: %s", image(entry), require 'inspect'.image(entry))
+    verrorf("proficiency %q is %s; expect string or proficiency list", image(entry), type(entry))
   end
 end
 
@@ -710,88 +719,73 @@ local casting_modifier = {
   Wizard    = 'INT',
 }
 
-local function get_class_from_doc(doc)
-  -- Try CLASS & first LEVEL
-  if not empty(doc['CLASS & LEVEL']) then
-    local class = doc['CLASS & LEVEL']:match('%a+')
-    return class
-  end
-  
-  -- Fall back to CLASS field
-  if not empty(doc.CLASS) then
-    return doc.CLASS:match('%a+')
-  end
-  
-  return nil
-end
-
 -- Validate CLASS & LEVEL requirement and parsing
 local function validate_class_level_requirement(doc)
   local has_class_level = doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:find('%S')
   local has_separate = doc.CLASS and doc.CLASS:find('%S') and doc.LEVEL
-  
+
   if not has_class_level and not has_separate then
     return false, "must have either 'CLASS & LEVEL' field or both 'CLASS' and 'LEVEL' fields"
   end
-  
+
   -- If CLASS & LEVEL exists, validate it can be parsed
   if has_class_level then
     local class_level = doc['CLASS & LEVEL']
     local class = class_level:match('%a+')
     local level = class_level:match('%d+%s*$')
-    
+
     if not class then
       return false, "CLASS & LEVEL must contain a valid class name"
     end
     if not level then
       return false, "CLASS & LEVEL must end with a valid level number"
     end
-    
+
     local level_num = tonumber(level)
     if not level_num or level_num < 1 or level_num > 20 then
       return false, string.format("level in CLASS & LEVEL must be 1-20, got %s", level)
     end
   end
-  
+
   return true
 end
 
 local field_specs = {
   -- Each entry has: p (predicate), fs (field list), m (message), required (boolean)
-  
+
   -- Required ability scores (1-20)
   { vd = inrange(1, 20),
     fs = {'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'} },
-  
+
   -- Required basic character info
   { vd = optional(nonempty_string),
     fs = {'CHARACTER NAME', 'PLAYER NAME', 'RACE', 'BACKGROUND'} },
-  
+
   -- Required numeric stats
   { vd = positive,
     fs = {'MAX HP', 'ARMOR CLASS', 'PASSIVE PERCEPTION'} },
-  
+
   -- Required structured data
   { vd = optional(validate_equipment),
     fs = {'EQUIPMENT'} },
   { vd = optional(validate_attacks),
     fs = {'ATTACKS'} },
-  { vd = optional(validate_features),  
+  { vd = optional(validate_features),
     fs = {'FEATURES'} },
   { vd = optional(validate_magic),
     fs = {'MAGIC'} },
   { vd = optional(validate_proficiencies),
     fs = {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'} },
-    
+
   -- Optional fields that can be present
   { vd = optional(inrange(1, 20)),
     fs = {'LEVEL'} },
-  { vd = optional(positive),  
+  { vd = optional(positive),
     fs = {'SPELL DC', 'DOMAIN SPELLS', 'SPELLS KNOWN', 'SORCERY POINTS'} },
   { vd = optional(can_be('string', 'number')),
     fs = {'ALIGNMENT', 'HIT DICE', 'INITIATIVE', 'SPEED', 'EXPERIENCE POINTS',
           'CURRENT HIT POINTS', 'SENSES', 'PROFICIENCY BONUS', 'CP', 'SP', 'EP', 'GP', 'PP'} },
-  { vd = optional(can_be 'string'),  
+  { vd = optional(can_be 'string'),
     fs = {'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES'} },
   { vd = optional(can_be 'boolean'),
     fs = {'PREGENERATED', 'MAGIC SEPARATE'} },
@@ -802,7 +796,7 @@ local field_specs = {
 local string_list_fields = {
   'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
   'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
-}  
+}
 
 
 local validator = { }
@@ -824,12 +818,12 @@ local function table_string(t)
   -- Use Lua's unified syntax: show array elements first, then non-array keys
   local items = {}
   local max_n = table.maxn and table.maxn(t) or 0
-  
+
   -- Add array elements 1, 2, 3, ..., max_n
   for i = 1, max_n do
     table.insert(items, value_string(t[i]))
   end
-  
+
   -- Add non-array keys (keys that are not integers in range 1..max_n)
   local extra_items = {}
   for k, val in pairs(t) do
@@ -846,12 +840,12 @@ local function table_string(t)
     end
   end
   table.sort(extra_items) -- Sort for consistent output
-  
+
   -- Combine array and key-value elements
   for _, item in ipairs(extra_items) do
     table.insert(items, item)
   end
-  
+
   return "{" .. table.concat(items, ", ") .. "}"
 end
 
@@ -863,15 +857,11 @@ function value_string(v)
     if isnull(v) then
       return "null"
     end
-    
+
     return table_string(v)
   else
     return tostring(v)
   end
-end
-
-local function validation_message(message, field, v)
-  return message:format(stringf('%s [%s]', field, value_string(v)))
 end
 
 local function validate_font(s)
@@ -879,17 +869,17 @@ local function validate_font(s)
     verrorf('%s must be a LaTeX font command', image(s))
   end
 end
-    
-    
 
--- Validation function  
+
+
+-- Validation function
 local function validate_document(doc)
   -- Clear global validation errors from previous documents
   for field_name, value in pairs(doc) do
-    -- Skip system-generated fields that shouldn't be validated  
+    -- Skip system-generated fields that shouldn't be validated
     if not field_name:match(' SAVING$') then
       local thevalidator = validator[field_name]
-      
+
       -- Handle font variants dynamically: if "X FONT" and X is valid, treat as optional LaTeX font command
       if not thevalidator and field_name:match(' FONT$') then
         local base_field = field_name:match('(.*) FONT$')
@@ -897,14 +887,14 @@ local function validate_document(doc)
           thevalidator = optional(validate_font)
         end
       end
-      
+
       if thevalidator then
         -- Handle YAML null and nil as empty values
         local test_value = value
 --        if value == nil or isnull(value) then
 --          test_value = ""
 --        end
-        
+
         thevalidator(test_value)
       elseif fields.strict then
         -- In strict mode, unknown fields are errors
@@ -915,7 +905,7 @@ local function validate_document(doc)
       end
     end
   end
-  
+
   if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
     verrorf('WIS present but PASSIVE PERCEPTION missing')
   end
@@ -953,15 +943,13 @@ local tex_escape_map = {
   ["^"]  = [[\textasciicircum{}]],
 }
 
-local minustab = { ['-'] = [[\textminus]] }
-
 local function escape (s)
   if isnull(s) then
     return ''
   else
     return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
                        :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
-                       :gsub("−", [[\textminus{}]]) 
+                       :gsub("−", [[\textminus{}]])
     )
   end
 end
@@ -975,7 +963,7 @@ end
 
 --- rendering
 ---
---- 
+---
 
 local render = { }
 -- simple_kv (k, string): \setDND{k}{string} or \setDNDfont
@@ -1079,11 +1067,6 @@ function render.generic_record (rec)
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
 
-local function note(elem)
-  return elem.NOTE  and not isnull(elem.NOTE)  and elem.NOTE :find '%S' and elem.NOTE or
-         elem.NOTES and not isnull(elem.NOTES) and elem.NOTES:find '%S' and elem.NOTES
-end
-
 
 
 local function description(thing)
@@ -1093,7 +1076,6 @@ end
 function render.struct_list (key, list)
   vprintf('rendering struct for %s\n', key)
   local out = {}
-  local notes_header_out = false
   for _,elem in ipairs(list) do
     if type(elem) ~= "table" then
       outf(out, [[\item %s]], do_not_escape(tostring(elem)))
@@ -1138,7 +1120,7 @@ local category_map = {
   ["heavy armor"] = "HEAVY ARMOR",
   ["heavy armour"] = "HEAVY ARMOR",
   ["normal armor"] = "MEDIUM ARMOR",
-  ["normal armour"] = "MEDIUM ARMOR", 
+  ["normal armour"] = "MEDIUM ARMOR",
   ["medium armor"] = "MEDIUM ARMOR",
   ["medium armour"] = "MEDIUM ARMOR",
   ["light armor"] = "LIGHT ARMOR",
@@ -1184,7 +1166,7 @@ local function category(s)
   return category_map[strip_s(s:lower())]
 end
 
-local function heuristic_category(s)
+local function heuristic_category(_)
   return 'SLOTTED ITEMS'
 end
 
@@ -1228,7 +1210,7 @@ end
 
 local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
   local weight_arg = extract_weight_arg(category, equipment_item)
-  table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}", 
+  table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}",
     weight_arg, category:gsub('&', '+'), do_not_escape(equipment_item)))
   table.insert(flattened_equipment, render.as_item(equipment_item))
 end
@@ -1266,10 +1248,10 @@ local function emit_structured_equipment(structured_equipment, lines)
       process(category)
     end
   end
-  
+
   -- Emit flattened equipment list
   if #flattened_equipment > 0 then
-    table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}", 
+    table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}",
       table.concat(flattened_equipment, "\n")))
   else
     table.insert(lines, "\\setDND{EQUIPMENT}{}")
@@ -1287,12 +1269,12 @@ local function parse_equipment_strings(lines)
     equipment[category] = equipment[category] or {}
     table.insert(equipment[category], item)
   end
-  
+
   while i <= #lines do
     -- see grammar for EQUIPMENT in YAML.md
     local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
     local block_header = line:match("^(.+):$")
-    
+
     if line == "" then
       -- Skip empty lines
       i = i + 1
@@ -1359,43 +1341,22 @@ local function visualize_table(t, indent)
   return table.concat(result, "\n")
 end
 
--- Local recursive table equality comparison
-local function table_eq(t1, t2)
-  if t1 == t2 then
-    return true
-  elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
-    return false
-  else
-    for k, v in pairs(t1) do
-      if not table_eq(v, t2[k]) then
-        return false
-      end
-    end
-    for k, v in pairs(t2) do
-      if t1[k] == nil then
-        return false
-      end
-    end
-    return true
-  end
-end
-
 -- Convert structured equipment back to string list format
 local function unparse_equipment_structure(structured_equipment)
   local lines = {}
-  
+
   -- Helper to capitalize first letter of each word
   local function capitalize(s)
     return s:gsub("(%a)([%w_']*)", function(first, rest)
       return first:upper() .. rest:lower()
     end)
   end
-  
+
   -- Helper to get singular form and proper capitalization
   local function format_category_name(category)
     return capitalize(category:lower():gsub("s$", ""))
   end
-  
+
   for category, items in pairs(structured_equipment) do
     if type(items) == "table" then
       if #items == 1 then
@@ -1412,7 +1373,7 @@ local function unparse_equipment_structure(structured_equipment)
       end
     end
   end
-  
+
   return lines
 end
 
@@ -1422,27 +1383,36 @@ local function validate_equipment_parsing(structured_equipment)
   if not structured_equipment or (type(structured_equipment) == "table" and next(structured_equipment) == nil) then
     return structured_equipment
   end
-  
+
   -- Skip round-trip validation if equipment structure is invalid
   local valid, _ = validate_equipment(structured_equipment)
   if not valid then
     return structured_equipment  -- Return invalid structure as-is, validation errors already reported
   end
-  
+
   -- Unparse to string list format
   local unparsed_lines = unparse_equipment_structure(structured_equipment)
-  
+
   -- Parse it back
   local reparsed_structure = parse_equipment_strings(unparsed_lines)
-  
+
   -- Compare with original
   if not table_eq(structured_equipment, reparsed_structure) then
-    error(string.format("Equipment round-trip validation failed!\nOriginal:\n%s\n\nUnparsed lines:\n%s\n\nReparsed:\n%s", 
+    error(string.format([[
+Equipment round-trip validation failed!
+Original:
+  %s
+
+Unparsed lines:
+  %s
+
+Reparsed:
+  %s]],
       visualize_table(structured_equipment),
       table.concat(unparsed_lines, "\n"),
       visualize_table(reparsed_structure)))
   end
-  
+
   return structured_equipment
 end
 
@@ -1521,7 +1491,7 @@ local saving_throw_proficiencies = {
 
 
 local function same_values(v1, v2)
-  local s1, s2 = tostring(s1), tostring(s2)
+  local s1, s2 = tostring(v1), tostring(v2)
   return v1 == v2 or
          s1:find '^%d+$' and s2 == '+' .. s1 or
          s2:find '^%d+$' and s1 == '+' .. s2
@@ -1545,7 +1515,7 @@ local function preprocess(doc)
     doc[f] = convert_colon_tables(doc[f])
   end
 
-  -- work around parsing in javascript 
+  -- work around parsing in javascript
   for _, f in ipairs {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'}
   do
     local t = doc[f]
@@ -1583,22 +1553,22 @@ local function extend(doc)
       doc[field] = value
     end
   end
-    
-      
+
+
 
   local class = doc.CLASS or (doc['CLASS & LEVEL'] or ''):match '%a+' or ''
   doc.CLASS = class
-  
+
   -- Extract SPECIALTY from "CLASS & LEVEL" if SPECIALTY is absent
   if not doc.SPECIALTY and doc['CLASS & LEVEL'] then
     doc.SPECIALTY = doc['CLASS & LEVEL']:match '%a+%s*%(([^)]+)%)'
   end
-  
+
   -- Extract LEVEL from "CLASS & LEVEL" if LEVEL is absent
   doc.LEVEL = doc.LEVEL or
               doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:match '%d+%s*$' or
               nil
-  
+
   -- Only build "CLASS & LEVEL" if we have separate CLASS/LEVEL/SPECIALTY fields
   if doc.CLASS and doc.LEVEL and not doc['CLASS & LEVEL'] then
     if doc.SPECIALTY and doc.SPECIALTY:find '%S' then
@@ -1607,7 +1577,7 @@ local function extend(doc)
       doc['CLASS & LEVEL'] = stringf('%s %s', class, doc.LEVEL)
     end
   end
-  
+
   local p = saving_throw_proficiencies[class]
   if p then
     for _, prof in ipairs(p) do
@@ -1624,22 +1594,22 @@ local function extend(doc)
     local cm = casting_modifier[class]
     if not empty(cm) and not empty(doc[cm]) then
       -- Calculate spell DC: 8 + proficiency bonus + ability modifier
-      local ability_score = tonumber(doc[cm])
-      local ability_modifier = math.floor((ability_score - 10) / 2)
-      
-      update('SPELL DC', 8 + prof_bonus + ability_modifier)
-      update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + ability_modifier))
-      update('SPELLCASTING ABILITY MODIFIER', ability_modifier)
+      local mod = ability_modifier(tonumber(doc[cm]))
+      update('SPELL DC', 8 + prof_bonus + mod)
+      update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + mod))
+      update('SPELLCASTING ABILITY MODIFIER', mod)
     end
   end
+
+
+  local has_expertise
 
   -- Handle PASSIVE PERCEPTION calculation and validation
   if not empty(doc.WIS) then
     -- Check if character has Expertise feature (case-insensitive)
-    local has_expertise = false
     if doc.FEATURES and type(doc.FEATURES) == "table" then
       for _, feature in ipairs(doc.FEATURES) do
-        if type(feature) == "table" and feature.name and 
+        if type(feature) == "table" and feature.name and
            type(feature.name) == "string" and feature.name:lower():find('expertise') then
           has_expertise = true
           break
@@ -1647,7 +1617,7 @@ local function extend(doc)
       end
     end
   end
-    
+
   local function set_passive_skill(stat, skill)
     local proficient =
       has_skill(doc.PROFICIENCIES, skill) or
@@ -1658,13 +1628,13 @@ local function extend(doc)
       local stat_score = tonumber(doc[stat])
       local modifier = math.floor((stat_score - 10) / 2)
       local calculated = 10 + modifier + (proficient and prof_bonus or 0)
-    
+
       local passive_skill = stringf('PASSIVE %s', skill:upper())
 
       if not empty(doc[passive_skill]) then
         local existing_skill = tonumber(doc[passive_skill])
         if existing_skill and existing_skill ~= calculated then
-          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %d)', 
+          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %d)',
                   passive_skill, existing_skill, calculated,
                   stat, modifier, prof_bonus)
         end
@@ -1737,7 +1707,7 @@ local function extend(doc)
     end
   end
 
-    
+
 
 
   return doc
@@ -1761,31 +1731,14 @@ local function set_contents(filename, s)
 end
 
 local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what doesn't need quotes
-local strfind = string.find
-
-local function dirname(s) -- also returns basename as second result
-  s = s:gsub('/$', '')
-  local dir, base = s:match '^(.*)/([^/]*)$'
-  if not dir then
-    return '.', s
-  elseif dir == '' then
-    return '/', base
-  else
-    return dir, base
-  end
-end
-
-
-function osquote(s)
-  -- Returns string s with whatever markup is needed to quote it 
-  -- to the POSIX shell.
-
-  if strfind(s, quote_me) or s == '' then
+local function shell_quote(s)
+  if s:find(quote_me) or s == '' then
     return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
   else
     return s
   end
 end
+
 
 local function double_percents(s)
   return (s:gsub('%%', '%%%%'))
@@ -1800,7 +1753,7 @@ local function fill_template(assignments, layout)
   else
     local images = { 'splash.png', 'merman.pdf', 'splash-nocolor.png' }
     local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
-    for _, image in ipairs(images) do 
+    for _, image in ipairs(images) do
       local pattern = image:gsub('%W', '%%%1')
       local bracketed = stringf('{%s/%s}', fields.templates, image)
       filled = filled:gsub('%{' .. pattern .. '%}', bracketed)
@@ -1809,14 +1762,6 @@ local function fill_template(assignments, layout)
   end
 end
 
-local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what doesn't need quotes
-local function shell_quote(s)
-  if s:find(quote_me) or s == '' then
-    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
-  else
-    return s
-  end
-end
 
 
 local runlatex = [=[
@@ -1905,7 +1850,7 @@ local function sheet_of_file(pathname)
       return
     end
   end
-    
+
   local font = doc['DOCUMENT FONT']
   doc['DOCUMENT FONT'] = nil
 
@@ -1946,10 +1891,6 @@ local function namelt (t1, t2)
   end
 end
 local function nameeq (t1, t2) return t1.name == t2.name end
-
-local function docs_of_paths(arg)
-  return docs
-end
 
 function scripts.gmsheet(arg)
   local latexes = { }
@@ -2013,7 +1954,7 @@ function scripts.gmsheet(arg)
 
     table.insert(latexes, table.concat(code, ''))
   end
- 
+
   do -- attack spells
     local attacks = { }
     for _, doc in ipairs(docs) do
@@ -2112,7 +2053,6 @@ function scripts.gmsheet(arg)
 end
 
 function scripts.gmspells(arg)
-  local latexes = { }
   local docs = { }
   for _, path in ipairs(arg) do
     table.insert(docs, sheet_of_file(path))
@@ -2135,8 +2075,9 @@ function scripts.gmspells(arg)
       end
     end
   end
-  latexes = { }
-  function latexf(...) table.insert(latexes, stringf(...)) end
+
+  local latexes = { }
+  local function latexf(...) table.insert(latexes, stringf(...)) end
   table.sort(spells, namelt)
   rmdups(spells, nameeq)
   for _, spell in ipairs(spells) do
