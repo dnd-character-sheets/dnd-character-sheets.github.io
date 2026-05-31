@@ -655,6 +655,8 @@ do
       local next = tokens[i]
       if not next then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
+      elseif next == 'null' then
+        return semantics.null(), i + 1
       elseif next == 's' or next == 'string' then
         return semantics:string(), i + 1
       elseif next == 'n' or next == 'number' then
@@ -735,6 +737,10 @@ do
     else
       return stringf('a number')
     end
+  end
+
+  function show_parse:null()
+    return 'YAML null'
   end
 
   function show_parse:key(name, optional, v)
@@ -965,6 +971,18 @@ do
     }
   end
 
+  function vfactory:null()
+    return
+      { mine = function(_, v) return isnull(v) end,
+        what = 'YAML null',
+        validate = function(_, context, v)
+          if not isnull(v) then
+            verrorf('In %s, expected YAML null but found %s', context, friendly(v))
+          end
+        end,
+      }
+  end
+
   function vfactory:alts(alts)
     local whatnames = { }
     for _, alt in ipairs(alts) do
@@ -1049,6 +1067,7 @@ local doc_validation = ([[
   ?FEATURES:list(feature@{name,description}),
   ?MAGIC:list(spell$spell@{MAGICPROPNAMES}
              |level-spec@{level:n[0..9],?slots:n[1..]}
+             |null
              ),
 
 }
