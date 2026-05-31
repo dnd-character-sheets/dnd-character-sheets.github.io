@@ -56,6 +56,41 @@ local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
     or 'pdflatex -interaction=scrollmode -halt-on-error -no-shell-escape'
 
+----------------- string utilities ---------------
+--
+-- likely for error messages
+
+local function count(n, what, plural)
+  if n == 1 then
+    return stringf('one %s', what)
+  elseif n == 0 then
+    return stringf('no %s', plural or what .. 's')
+  else
+    return stringf('%d %s', n, plural or what .. 's')
+  end
+end
+
+local function plural(count, what, theplural)
+  if count == 1 then
+    return what
+  else
+    return theplural or what .. 's'
+  end
+end
+
+
+local isnull
+local function friendly(v)
+  if isnull(v) then
+    return 'the YAML null (empty entry)'
+  else
+    return require 'inspect'.friendly(v)
+  end
+end
+
+
+
+
 ----------------- table utilities -----------------------------------------------
 
 local function sorted_keys(t, lt)
@@ -115,10 +150,30 @@ local function table_eq(t1, t2)
 end
 
 
+
+local function commafy(t, andword, comma)
+  if t == nil or #t == 0 then return '' end  -- ugly special case
+  andword = andword or 'and'
+  local comma_space = comma and comma .. ' ' or ', '
+  local n = #t
+  assert(n > 0, 'Empty list not handled correctly in string.commafy')
+  if n == 1 then
+    return t[1]
+  elseif n == 2 then
+    return table.concat { t[1], ' ', andword, ' ', t[2] }
+  else
+    local last = t[n]
+    t[n] = andword .. ' ' .. t[n]
+    local answer = table.concat(t, comma_space)
+    t[n] = last
+    return answer
+  end
+end
+
 ----------------- yaml utilities --------------------
 
 local lyaml  = require "lyaml"
-local function isnull(v) return v == lyaml.null end
+function isnull(v) return v == lyaml.null end
 
 local function false_yaml(v)
   return v == nil or v == false or v == 'false' or v == '0' or v == 0
@@ -484,27 +539,20 @@ $ v
 local validators = { }
 
 local show_parse = { }
+
 local parse
 do
   local inspect = require 'inspect'
-
-  local function closer(i, i2, v, j, j2, u)
-    if i and (not j or i < j) then
-      return i, i2, v
-    elseif j and (not i or j < i) then
-      return j, j2, u
-    end
-  end
 
   local function tokenize(s)
     local tokens = { }
     local init = s:find '%S'
     while init do
-      local first, last, found
+      local first, last, found  -- luacheck: no unused
       for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a%w*)' } do
         first, last, found = s:find(pat, init)
         if found then
-          table.insert(tokens, tonumber(found) or found)
+          table.insert(tokens, found)
           break
         end
       end
@@ -520,14 +568,14 @@ do
   function parse(semantics, s)
 
     local tokens = tokenize(s)
-    inspect.show{tokens = tokens}
+--    inspect.show{tokens = tokens}
 
     local function expected(context, wanted, i)
       if tokens[i] ~= wanted then
-        errorf('Error parsing %s; expected %s, got %s', context, wanted,
-             tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream")
+        errorf('Error parsing %s; expected %s, got %s at token %d', context, wanted,
+             tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream", i)
       else
-        eprintf('%s expected %s and found it at %d\n', context, wanted, i)
+        vprintf('%s expected %s and found it at %d\n', context, wanted, i)
       end
     end
 
@@ -539,6 +587,7 @@ do
       while tokens[i] == '|' do
         alts[#alts+1], i = alt(tokens, i + 1)
       end
+      vprintf('found one or more balidators before %d (%s)\n', i, tostring(tokens[i]))
       if #alts > 1 then
         return semantics:alts(alts), i
       else
@@ -547,29 +596,36 @@ do
     end
 
     key = function(tokens, i)
-      local optional = tokens[i] == '?'
-      if optional then i = i + 1 end
-      local nameparts = { }
-      while tokens[i]:find '%w' do
-        table.insert(nameparts, tokens[i])
-        i = i + 1
+      if tokens[i] == '*' then
+        return semantics:any_key(), i + 1
+      else
+        local optional = tokens[i] == '?'
+        if optional then i = i + 1 end
+        local nameparts = { }
+        while tokens[i]:find '%w' do
+          table.insert(nameparts, tokens[i])
+          i = i + 1
+        end
+        local validator
+        if tokens[i] == ':' then
+          validator, i = alts(tokens, i + 1)
+        end
+        vprintf('found a key ending before token %d (%s)\n', i, tostring(tokens[i]))
+        return semantics:key(table.concat(nameparts, ' '), optional, validator), i
       end
-      local validator
-      if tokens[i] == ':' then
-        validator, i = alts(tokens, i + 1)
-      end
-      return semantics:key(table.concat(nameparts, ' '), optional, validator), i
     end
 
     keys = function(tokens, i)
       local keys = { }
       keys[1], i = key(tokens, i)
-      while keys[i] == ',' do
+      vprintf('first key ends before token %d (%s)\n', i, tostring(tokens[i]))
+      while tokens[i] == ',' do
         if tokens[i+1] == '}' then
           i = i + 1
           break
         else
           local thekey, j = key(tokens, i + 1)
+          vprintf('key ends before token %d (%s)\n', j, tostring(tokens[j]))
           table.insert(keys, thekey)
           i = j
         end
@@ -590,10 +646,15 @@ do
         local rg, j = range(tokens, i + 1)
         return semantics:number(rg), j
       elseif next == 'l' or next == 'list' then
-        expected('list type', '(', i + 1)
-        local v, j = alts(tokens, i + 2)
-        expected('end of list type', ')', j + 1)
-        return semantics:list(v), j + 2
+        if tokens[i+1] == '{' then
+          local v, j = keys(tokens, i + 2)
+          return semantics.list(v), j
+        else
+          expected('list type', '(', i + 1)
+          local v, j = alts(tokens, i + 2)
+          expected('end of list type', ')', j)
+          return semantics:list(v), j + 1
+        end
       elseif next == '{' then
         return keys(tokens, i + 1)
       elseif next == '(' then
@@ -621,18 +682,22 @@ do
       if tokens[i] == '[' then
         i = i + 1
         local lo, hi
-        if type(tokens[i]) == 'number' then
-          lo, i = tokens[i], i + 1
+        if tonumber(tokens[i]) then
+          lo, i = tonumber(tokens[i]), i + 1
         end
-        expected('numeric range', '..')
-        assert(tokens[i] == '..')
+        expected('numeric range', '..', i)
         i = i + 1
-        if type(tokens[i]) == 'number' then
-          hi, i = tokens[i], i + 1
+        if tonumber(tokens[i]) then
+          hi, i = tonumber(tokens[i]), i + 1
         end
-        assert(tokens[i] == '..')
+        expected('numeric range', ']', i)
         i = i + 1
         return { lo = lo, hi = hi }, i
+      else
+        -- No '[' range: consume nothing but still return the index, so the
+        -- parsing-function contract (value, i) holds and callers don't get a
+        -- nil i (was leaving alt's number branch returning a nil index).
+        return nil, i
       end
     end
 
@@ -640,14 +705,14 @@ do
 
 
 
-    return alts(tokenize(s), 1)
+    return (alts(tokenize(s), 1))
 
   end
 
 
   local function stringf(...)
     local thing = string.format(...)
-    eprintf('Semantics received %s\n', thing)
+    vprintf('Semantics received %s\n', thing)
     return thing
   end
 
@@ -665,6 +730,10 @@ do
     return stringf('%s%s%s', optional and 'maybe ' or '', name, v and ', ' .. v or '')
   end
 
+  function show_parse:any_key()
+    return 'or any other key'
+  end
+
   function show_parse:table(keys)
     return stringf('a table with these keys: { %s }', table.concat(keys, '; '))
   end
@@ -674,7 +743,7 @@ do
   end
 
   function show_parse:list(v)
-    return string('a list in which each element is %s', v)
+    return stringf('a list in which each element is %s', v)
   end
 
   local function an(s)
@@ -699,9 +768,205 @@ do
 
 end
 
+local vfactory = { }
 
-print(parse(show_parse, '{level:n,?slots:n}'))
-os.exit(2)
+do
+  -- validator : (context, value) -> void
+  -- key       : { name : string, optional : bool, validator = v }
+
+  local function out_of_range(n, rg)
+    if rg then
+      return rg.lo and n < rg.lo or rg.hi and n > rg.hi
+    end
+  end
+
+  local function missing(context, wanted, found)
+    verrorf('In %s, was looking for %s, but found %s', context, wanted, friendly(found))
+  end
+
+  function vfactory:number(rg)
+    local range_string = ''
+    if rg then
+      if rg.lo and rg.hi then
+        range_string = stringf(' in the range %d..%d', rg.lo, rg.hi)
+      elseif rg.lo then
+        range_string = stringf(' at least %d..%d', rg.lo)
+      elseif rg.hi then
+        range_string = stringf(' at most %d', rg.hi)
+      end
+    end
+
+    return function(context, v)
+      if not tonumber(v) or out_of_range(v, rg) then
+        missing(context, stringf('a number%s', range_string), v)
+      end
+    end
+  end
+
+  local any_key = { } -- unique value
+
+  local function text(context, v)
+    if not can_be 'string' (v) then
+      missing(context, 'text', v)
+    end
+  end
+
+  function vfactory:key(name, optional, v)
+    return {name = name, optional = optional, validator = v}
+  end
+
+  function vfactory:any_key()
+    return any_key
+  end
+
+  function vfactory:table(keys)
+    local required, optional, other = { }, { }, false
+    for _, key in ipairs(keys) do
+      if key == any_key then
+        other = true
+      elseif key.optional then
+        table.insert(optional, key.name)
+      else
+        table.insert(required, key.name)
+      end
+    end
+    local also
+    local wanted =
+      #required > 0 and stringf('a table with %s %s', plural(#required, 'key'), commafy(required))
+                     or 'a table without any required keys'
+    if #optional > 0 then
+      also = stringf('%s %s', plural(#optional, 'key'), commafy(optional))
+    end
+    if other and not also then
+      if #required > 0 then
+        wanted = stringf('%s, and possibly other keys', wanted)
+      else
+        wanted = stringf('%s but allowing any key you wish to include', wanted)
+      end
+    elseif other and also then
+      if #required > 0 then
+        wanted = stringf('%s, plus optionally %s, and possibly other keys', wanted, also)
+      else
+        wanted = stringf('a table with optional %s, plus any other key you wish to include', also)
+      end
+    elseif also then
+      local conjunction = #required > 0 and 'and also' or 'but'
+      wanted = stringf('%s %s optionally %s', wanted, conjunction, also)
+    end
+
+    local acceptable
+    if not other then
+      acceptable = { }
+      for _, k in ipairs(keys) do
+        acceptable[k.name] = true
+      end
+    end
+
+    return function(context, v)
+      if type(v) ~= 'table' then
+        missing(context, wanted, v)
+      else
+        for _, key in ipairs(keys) do
+          if key == any_key then
+            -- do nothing
+          elseif v[key.name] == nil and not key.optional then
+            verrorf('In %s, expected to find key %s, but it is missing', context, key.name)
+          elseif v[key.name] ~= nil then
+            (key.validator or text)(stringf('field %s of %s', key.name, context), v[key.name])
+          end
+        end
+        if not other then
+          for k in pairs(v) do
+            if not acceptable[k] then
+              local what = type(k) == 'string' and stringf('%q', k) or tostring(k)
+              verrorf('In %s, found an unexpected key %s', context, what)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  function vfactory:string()
+    return text
+  end
+
+  function vfactory:list(element)
+    return function(context, v)
+      if type(v) ~= 'table' or next(v) ~= nil and not v[1] then
+        missing(context, 'a list', v)
+      else
+        for i, e in ipairs(v) do
+          element(stringf('element %d of %s', i, context), e)
+        end
+      end
+    end
+  end
+
+  function vfactory:named(name, validator)
+    return function(context, v)
+      return validator(stringf('%s, which is %s', name, context), v)
+    end
+  end
+
+  function vfactory:alts(alts)
+
+    return function(context, v)
+      local trouble
+      local overrorf = verrorf
+      verrorf = function() trouble = true end
+      for _, alt in ipairs(alts) do
+        trouble = false
+        alt(context, v)
+        if not trouble then
+          verrorf = overrorf
+          return -- valid
+        end
+      end
+      verrorf = overrorf
+      alts[1](stringf('%s or any other alternative', context), v)
+    end
+  end
+
+  function vfactory:validate(f, validator)
+    return function(context, v)
+      local bad = #global_validation_errors
+      validator(context, v)
+      if #global_validation_errors == bad then
+        assert(validators[f], 'No validation function named ' .. f)(context, v)
+      end
+    end
+  end
+
+end
+
+-- validator: function(context, value) may issue error messages
+
+
+
+print(parse(show_parse, '{level:n[0..9],?slots:n}'))
+
+local function new_validate(context, doc, validation)
+  parse(vfactory, validation)(context, doc)
+end
+
+
+local doc_validation = [[
+{ *,
+  ?ATTACKS:attacks@list(
+     attack@attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT, ?NOTES}),
+}
+]]
+
+function validators.attack(context, v)
+  if v['AMMO COUNT'] and not v['AMMO TYPE'] then
+    verrorf('In %s, AMMO COUNT may not be specified unless there is an AMMO TYPE')
+  end
+end
+
+print(parse(show_parse, doc_validation))
+
+
 
 
 
@@ -890,8 +1155,8 @@ local function validate_magic_entry(entry)
       report_bad_properties(stringf('spell %s', entry.name), entry, magic_property)
     end
   else
-    verrorf('Expected a spell description or a level designation; got %s',
-            designation('MAGIC entry', entry))
+    verrorf('Expected a spell description or a level designation; got MAGIC entry %s',
+            friendly(entry))
   end
 end
 
@@ -2091,7 +2356,8 @@ local function sheet_of_file(pathname)
 
   -- Validate document before processing
   preprocess(doc)
-  validate_document(doc)
+  new_validate('a character sheet', doc, doc_validation)
+--  validate_document(doc)
   extend(doc)
   if #global_validation_errors > 0 then
     if fields.strict then
