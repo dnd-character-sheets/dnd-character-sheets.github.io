@@ -9,6 +9,7 @@
 local stringf = string.format
 local function eprintf(...) return io.stderr:write(stringf(...)) end
 local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) error(stringf(...), 2) end
 local function outf(out, ...)
   table.insert(out, stringf(...))
   return out
@@ -77,7 +78,7 @@ local function rmdups(xs, eq) -- remove duplicates from xs, return xs
   return xs
 end
 
-local function scalarvalues(list)
+local function scalarvalues(list) -- iterator : value list -> value
   return coroutine.wrap(function()
       local function process(values)
         for _, value in pairs(values) do
@@ -118,6 +119,10 @@ end
 
 local lyaml  = require "lyaml"
 local function isnull(v) return v == lyaml.null end
+
+local function false_yaml(v)
+  return v == nil or v == false or v == 'false' or v == '0' or v == 0
+end
 
 local function nonnull(v) if v ~= nil and v ~= lyaml.null then return v end end
 
@@ -303,7 +308,7 @@ end
 
 ------------------------------------------------------------------------
 --
--- Validation predicates
+-- General-purpose validation predicates
 
 local function wrap(p) -- on failure, produces the offending field (XXX name)
   return function(v)
@@ -328,6 +333,10 @@ local function anyvalue(_) -- luacheck: no unused
 end
 
 -- Higher-order validator functions
+
+local function app1(f, arg1) -- partial application
+  return function(...) return f(arg1, ...) end
+end
 
 local optional = function(p)
   return wrap(function (v)
@@ -388,6 +397,19 @@ end
 assert(can_be 'string'('hello'))
 assert(can_be 'string'(7))
 
+local function has(v, ...)
+  if type(v) ~= 'table' then
+    return false
+  else
+    for i = 1, select('#', ...) do
+      if v[select(i, ...)] == nil then
+        return false, select(i, ...)
+      end
+    end
+    return true
+  end
+end
+
 -----
 
 local empty = wrap(function(v)
@@ -424,6 +446,264 @@ local function listof(predicate)
     end
   end
 end
+
+------------ validation grammar
+
+--[=[
+
+  validator v ::= s[tring]
+               |  n[number] [*[*[N]..[M]*]*]
+               |  l[ist](v)
+               |  name@v     -- name may be raw or with double quotes
+               |  v*|*v
+               |  (v)
+               |  *{*{key[,]}*}*
+               |  fname$v
+
+  key         ::= [?]name[:v]   -- type defaults to text
+
+------ LL grammar
+
+  v ::=  alt {| alt}
+
+  alt ::= string
+       |  number
+       |  list (v)
+       |  name [@ v | $ v]
+       |  { keys }
+       |  ( v )
+
+  <alnum>+ (
+$ v
+           | @ v
+           |
+
+
+]=]
+
+local validators = { }
+
+local show_parse = { }
+local parse
+do
+  local inspect = require 'inspect'
+
+  local function closer(i, i2, v, j, j2, u)
+    if i and (not j or i < j) then
+      return i, i2, v
+    elseif j and (not i or j < i) then
+      return j, j2, u
+    end
+  end
+
+  local function tokenize(s)
+    local tokens = { }
+    local init = s:find '%S'
+    while init do
+      local first, last, found
+      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a%w*)' } do
+        first, last, found = s:find(pat, init)
+        if found then
+          table.insert(tokens, tonumber(found) or found)
+          break
+        end
+      end
+      if found then
+        init = s:find('%S', last + 1)
+      else
+        dief('Unrecognized character at position %d in string %q', init, s)
+      end
+    end
+    return tokens
+  end
+
+  function parse(semantics, s)
+
+    local tokens = tokenize(s)
+    inspect.show{tokens = tokens}
+
+    local function expected(context, wanted, i)
+      if tokens[i] ~= wanted then
+        errorf('Error parsing %s; expected %s, got %s', context, wanted,
+             tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream")
+      else
+        eprintf('%s expected %s and found it at %d\n', context, wanted, i)
+      end
+    end
+
+    local alts, alt, range, keys, key -- self == semantics
+
+    alts = function(tokens, i)
+      local alts = { }
+      alts[1], i = alt(tokens, i)
+      while tokens[i] == '|' do
+        alts[#alts+1], i = alt(tokens, i + 1)
+      end
+      if #alts > 1 then
+        return semantics:alts(alts), i
+      else
+        return alts[1], i
+      end
+    end
+
+    key = function(tokens, i)
+      local optional = tokens[i] == '?'
+      if optional then i = i + 1 end
+      local nameparts = { }
+      while tokens[i]:find '%w' do
+        table.insert(nameparts, tokens[i])
+        i = i + 1
+      end
+      local validator
+      if tokens[i] == ':' then
+        validator, i = alts(tokens, i + 1)
+      end
+      return semantics:key(table.concat(nameparts, ' '), optional, validator), i
+    end
+
+    keys = function(tokens, i)
+      local keys = { }
+      keys[1], i = key(tokens, i)
+      while keys[i] == ',' do
+        if tokens[i+1] == '}' then
+          i = i + 1
+          break
+        else
+          local thekey, j = key(tokens, i + 1)
+          table.insert(keys, thekey)
+          i = j
+        end
+      end
+      expected('table keys', '}', i)
+      return semantics:table(keys), i + 1
+    end
+
+
+
+    alt = function(tokens, i)
+      local next = tokens[i]
+      if not next then
+        errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
+      elseif next == 's' or next == 'string' then
+        return semantics:string(), i + 1
+      elseif next == 'n' or next == 'number' then
+        local rg, j = range(tokens, i + 1)
+        return semantics:number(rg), j
+      elseif next == 'l' or next == 'list' then
+        expected('list type', '(', i + 1)
+        local v, j = alts(tokens, i + 2)
+        expected('end of list type', ')', j + 1)
+        return semantics:list(v), j + 2
+      elseif next == '{' then
+        return keys(tokens, i + 1)
+      elseif next == '(' then
+        local v, j = alts(tokens, i + 1)
+        expected('parenthesized validator', ')', j)
+        return v, j + 1
+      elseif next:find '%w' then -- good name
+        local marker = tokens[i+1]
+        if marker == '@' then
+          local v, j = alt(tokens, i+2)
+          return semantics:named(next, v), j
+        elseif marker == '$' then
+          local v, j = alt(tokens, i+2)
+          return semantics:validate(next, v), j
+        else
+          errorf('Unrecognized validation type %q', next)
+        end
+      else
+        errorf('Validation parser found unknown token %q at position %d in %s',
+             next, i, inspect.image(tokens))
+      end
+    end
+
+    range = function(tokens, i)
+      if tokens[i] == '[' then
+        i = i + 1
+        local lo, hi
+        if type(tokens[i]) == 'number' then
+          lo, i = tokens[i], i + 1
+        end
+        expected('numeric range', '..')
+        assert(tokens[i] == '..')
+        i = i + 1
+        if type(tokens[i]) == 'number' then
+          hi, i = tokens[i], i + 1
+        end
+        assert(tokens[i] == '..')
+        i = i + 1
+        return { lo = lo, hi = hi }, i
+      end
+    end
+
+
+
+
+
+    return alts(tokenize(s), 1)
+
+  end
+
+
+  local function stringf(...)
+    local thing = string.format(...)
+    eprintf('Semantics received %s\n', thing)
+    return thing
+  end
+
+  function show_parse:number(rg)
+    if rg then
+      return stringf('a number in range %s..%s',
+                     rg.lo and tostring(rg.lo) or '',
+                     rg.hi and tostring(rg.hi) or '')
+    else
+      return stringf('a number')
+    end
+  end
+
+  function show_parse:key(name, optional, v)
+    return stringf('%s%s%s', optional and 'maybe ' or '', name, v and ', ' .. v or '')
+  end
+
+  function show_parse:table(keys)
+    return stringf('a table with these keys: { %s }', table.concat(keys, '; '))
+  end
+
+  function show_parse:string()
+    return 'a string'
+  end
+
+  function show_parse:list(v)
+    return string('a list in which each element is %s', v)
+  end
+
+  local function an(s)
+    if s:find '^[aeiouAEIOU]' then
+      return 'an ' .. s
+    else
+      return 'a ' .. s
+    end
+  end
+
+  function show_parse:named(name, v)
+    return stringf('%s, which is %s', an(name), v)
+  end
+
+  function show_parse:alts(alts)
+    return stringf('(Any of %s)', table.concat(alts, ' OR '))
+  end
+
+  function show_parse:validate(f, v)
+    return stringf('%s validated by function %s', v, f)
+  end
+
+end
+
+
+print(parse(show_parse, '{level:n,?slots:n}'))
+os.exit(2)
+
+
 
 --------- Side-effecting validation functions ----------------------
 
@@ -480,7 +760,7 @@ end
 
 
 -------------------------------------------------------------------------
---- Attacks
+--- Validating ATTACKS
 
 -- Attack field specifications - table-driven approach
 local attack_field_specs = {
@@ -493,6 +773,11 @@ local attack_field_specs = {
   { field = 'AMMO COUNT', predicate = can_be 'number', what = 'number' },
   { field = 'NOTES',      predicate = can_be 'string' }
 }
+
+validators.attacks = [[
+  l(attack@attack${NAME,ATTACK,DAMAGE,TYPE,?RANGE,?AMMO TYPE,?AMMO COUNT:n,?NOTES})
+]]
+
 
 local function robust_name(thing)
   return can_be 'string'(thing.name) and tostring(thing.name) or image(thing)
@@ -525,51 +810,34 @@ local function validate_attack_entry(attack)
 end
 
 --------------------------------------------------------------------------
+--
+-- Validating FEATURES and MAGIC
+--
+-- Two kinds of entries: { name: ..., description: ... } and spell_slots
 
--- Extract valid equipment categories from category_map (single point of truth)
--- This will be updated after category_map is defined
-local valid_equipment_categories
-
--- Structure-specific validators
-
-local function validate_feature_entry(feature)
-  if not can_be 'table'(feature) then
-    verrorf('feature %q is not a table with name and description', image(feature))
-  elseif not nonempty_string(feature.name) then
-    verrorf('feature%s is missing a name',
-            not empty(feature.description)
-            and stringf(' described as %q', tostring(feature.description):sub(1,12)..'...')
-            or '')
-  elseif not nonempty_string(feature.description) then
-    verrorf('feature %q has no description', tostring(feature.name))
+local function designate(what, thing)
+  if has(thing, 'name') then
+    return stringf('%s named %s', what, thing.name)
+  elseif has(thing, 'description') then
+    return stringf('%s described as %q', what, thing.description)
+  else
+    return stringf('%s %q', what, image(thing))
   end
 end
 
-local function validate_spell_level(level)
-  if not can_be 'number'(level) then
-    verrorf('Spell level %s is not a number', image(level))
-  else
-    level = tonumber(level)
-    if level < 0 or level > 9 then
-      verrorf('spell level %d is out of range 0 to 9', level)
+local function valid_named_thing(what, thing) -- true if valid
+  if not has(thing, 'name', 'description') then
+    if has(thing, 'name') then
+      verrorf('%s has name %q but no description', what, tostring(thing.name))
+    else
+      verrorf('Expected %s with name and description; got %s', what, designate(thing))
     end
-  end
-end
-
-local function validate_spell_slots(level, slots)
-  if level == 0 and slots == nil then
-    -- all is well
-  elseif not slots then
-    verrorf('Number of slots for level %s not given', tostring(level))
-  elseif not can_be 'number'(slots) then
-    verrorf('For level %s, spell-slot count %s is not a number',
-            tostring(level), require 'inspect'.image(slots))
+  elseif not can_be 'string' (thing.name) then
+    verrorf("Found a %s but its name %q can't be a string", what, image(thing.name))
+  elseif not thing.name:find '%S' then
+    verrorf('Found a %s but it has an empty name: %q', what, image(thing))
   else
-    slots = tonumber(slots)
-    if slots <= 0 then
-      verrorf("For level %s, spell-slot count %d isn't big enough",
-              tostring(level), slots)
-    end
+    return true
   end
 end
 
@@ -586,17 +854,56 @@ local magic_property = {
   name = 'Name of the spell',
   description = 'How the spell works',
   long = 'Long description',
+  material = 'Material components',
 }
+
+local function report_bad_properties(what, entry, props)
+  for k in pairs(entry) do
+    if not props[k] then
+      verrorf('%s has unknown property %q', what, k)
+    end
+  end
+end
+
+
+local function validate_magic_entry(entry)
+  if isnull(entry) then
+    -- skip it
+  elseif has(entry, 'level') then
+    -- Level entry
+    if not inrange(0, 9)(entry.level) then
+      verrorf('spell level designation is %q; expected a number from 1 to 9', image(entry.level))
+    elseif tonumber(entry.level) == 0 then
+      if entry.slots then
+        verrorf('cantrips (level 0) list %s slots; expected no slots', tostring(entry.slots))
+      end
+    elseif not entry.slots then
+      verrorf("spell marker for level %d doesn't include a slot count", tonumber(entry.level))
+    elseif tonumber(entry.slots) <= 0 then
+      verrorf("spell marker for level %d doesn't provide any slots", tonumber(entry.level))
+    end
+  elseif has(entry, 'name') then
+    if valid_named_thing('magic spell', entry) then
+      if not nonempty_string(entry.description) then
+        verrorf('spell %s does not have a description', tostring(entry.name))
+      end
+      report_bad_properties(stringf('spell %s', entry.name), entry, magic_property)
+    end
+  else
+    verrorf('Expected a spell description or a level designation; got %s',
+            designation('MAGIC entry', entry))
+  end
+end
+
+-----------------------------------------------------------------------------
+
+--- start here
 
 local magic_markers = {
   concentration = 'C',
   ritual = 'R',
   bonus = 'B',
 }
-
-local function false_yaml(v)
-  return v == nil or v == false or v == 'false' or v == '0' or v == 0
-end
 
 local function add_magic_markers(name, thing)
   local tags = name:match '%b[]'
@@ -620,33 +927,11 @@ end
 
 
 
-local function validate_magic_entry(entry)
-  if not can_be 'table'(entry) then
-    verrorf("MAGIC entry %q is not be a table", image(entry))
-  elseif isnull(entry) then -- skip it
-  elseif entry.level then
-    -- Level entry
-    validate_spell_level(entry.level)
-    if entry.slots then
-      validate_spell_slots (entry.level, entry.slots)
-    end
-  elseif nonempty_string(entry.name) then
-    -- Spell entry
-    if not nonempty_string(entry.description) then
-        verrorf('spell %s does not have a description', tostring(entry.name))
-    end
-    for k in pairs(entry) do
-      if not magic_property[k] then
-        verrorf('spell %s is labeled with the unknown property %q',
-                tostring(entry.name), k)
-      end
-    end
-  elseif empty(entry.name) then
-    verrorf('magic entry %q does not have a name', image(entry))
-  else
-    verrorf('magic entry name %q is not a string', image(entry.name))
-  end
-end
+-- Extract valid equipment categories from category_map (single point of truth)
+-- This will be updated after category_map is defined
+local valid_equipment_categories
+
+-- Structure-specific validators
 
 local function validate_equipment_structure(equipment)
   if not can_be 'table'(equipment) then
@@ -673,7 +958,7 @@ end
 
 local validate_equipment = validate_equipment_structure
 local validate_attacks = validate_foreach('ATTACKS', validate_attack_entry)
-local validate_features = validate_foreach('FEATURES', validate_feature_entry)
+local validate_features = validate_foreach('FEATURES', app1(valid_named_thing, 'feature'))
 local validate_magic = validate_foreach('MAGIC', validate_magic_entry)
 
 -- Validate proficiencies structure (custom logic)
@@ -812,57 +1097,7 @@ do
 end
 
 -- Forward declaration
-local value_string
-
-local function table_string(t)
-  -- Use Lua's unified syntax: show array elements first, then non-array keys
-  local items = {}
-  local max_n = table.maxn and table.maxn(t) or 0
-
-  -- Add array elements 1, 2, 3, ..., max_n
-  for i = 1, max_n do
-    table.insert(items, value_string(t[i]))
-  end
-
-  -- Add non-array keys (keys that are not integers in range 1..max_n)
-  local extra_items = {}
-  for k, val in pairs(t) do
-    if not (type(k) == 'number' and k >= 1 and k <= max_n and k == math.floor(k)) then
-      local key_str
-      if type(k) == 'string' and k:match('^[%a_][%w_]*$') then
-        -- Valid identifier, no quotes needed
-        key_str = k
-      else
-        -- Need to quote or bracket the key
-        key_str = "[" .. value_string(k) .. "]"
-      end
-      table.insert(extra_items, key_str .. "=" .. value_string(val))
-    end
-  end
-  table.sort(extra_items) -- Sort for consistent output
-
-  -- Combine array and key-value elements
-  for _, item in ipairs(extra_items) do
-    table.insert(items, item)
-  end
-
-  return "{" .. table.concat(items, ", ") .. "}"
-end
-
-function value_string(v)
-  if type(v) == 'string' then
-    return stringf('%q', v)
-  elseif type(v) == 'table' then
-    -- Handle special cases
-    if isnull(v) then
-      return "null"
-    end
-
-    return table_string(v)
-  else
-    return tostring(v)
-  end
-end
+local value_string = require 'inspect'.friendly
 
 local function validate_font(s)
   if type(s) ~= 'string' or not s:find [[^\]] then
