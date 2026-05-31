@@ -60,7 +60,11 @@ local pdflatex =
 --
 -- likely for error messages
 
-local function count(n, what, plural)
+local function sq(s)
+  return stringf('%q', s)
+end
+
+local function count(n, what, plural) -- luacheck: no unused
   if n == 1 then
     return stringf('one %s', what)
   elseif n == 0 then
@@ -179,7 +183,7 @@ local function false_yaml(v)
   return v == nil or v == false or v == 'false' or v == '0' or v == 0
 end
 
-local function nonnull(v) if v ~= nil and v ~= lyaml.null then return v end end
+local function nonnull(v) if v ~= nil and v ~= lyaml.null then return v end end -- luacheck: no unused
 
 assert(lyaml.dump)
 local function image(v)
@@ -223,16 +227,11 @@ do
     local msg = stringf(...)
     table.insert(global_validation_errors, msg)
     if last_file_announced ~= curfile then
-      eprintf('Validation error in %s: %s\n', curfile, msg)
+      eprintf('\nValidation error in %s: %s\n', curfile, msg)
       last_file_announced = curfile
     else
-      eprintf('Validation error: %s\n', msg)
+      eprintf('\nValidation error: %s\n', msg)
     end
-  end
-end
-local function report_missing(missing, what)
-  if missing and #missing > 0 then
-    verrorf('%s is missing these fields: %s', what, table.concat(missing, ", "))
   end
 end
 
@@ -538,7 +537,7 @@ $ v
 
 local validators = { }
 
-local show_parse = { }
+local show_parse = { } -- luacheck: no unused
 
 local parse
 do
@@ -701,10 +700,6 @@ do
       end
     end
 
-
-
-
-
     return (alts(tokenize(s), 1))
 
   end
@@ -790,7 +785,7 @@ do
       if rg.lo and rg.hi then
         range_string = stringf(' in the range %d..%d', rg.lo, rg.hi)
       elseif rg.lo then
-        range_string = stringf(' at least %d..%d', rg.lo)
+        range_string = stringf(' at least %d', rg.lo)
       elseif rg.hi then
         range_string = stringf(' at most %d', rg.hi)
       end
@@ -862,25 +857,39 @@ do
       end
     end
 
+-- xxx propagate the kind of thing being validated
     return function(context, v)
       if type(v) ~= 'table' then
         missing(context, wanted, v)
       else
+        local myname = v.name or v.NAME
+        local mycontext = myname and stringf('%q, which is %s', myname, context) or context
+        local omitted = { }
         for _, key in ipairs(keys) do
           if key == any_key then
             -- do nothing
           elseif v[key.name] == nil and not key.optional then
-            verrorf('In %s, expected to find key %s, but it is missing', context, key.name)
+            table.insert(omitted, sq(key.name))
           elseif v[key.name] ~= nil then
-            (key.validator or text)(stringf('field %s of %s', key.name, context), v[key.name])
+            (key.validator or text)(stringf('field %s of %s', key.name, mycontext), v[key.name])
           end
         end
+        if #omitted == 1 then
+          verrorf('In %s, required key %s is missing', mycontext, omitted[1])
+        elseif #omitted > 0 then
+          verrorf('In %s, required keys %s are missing', mycontext, commafy(omitted))
+        end
+
         if not other then
+          local unexpected = { }
           for k in pairs(v) do
             if not acceptable[k] then
-              local what = type(k) == 'string' and stringf('%q', k) or tostring(k)
-              verrorf('In %s, found an unexpected key %s', context, what)
+              table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
             end
+          end
+          if #unexpected > 0 then
+            verrorf('In %s, found unexpected %s %s',
+                    mycontext, plural(#unexpected, 'key'), commafy(unexpected))
           end
         end
       end
@@ -944,48 +953,68 @@ end
 
 
 
-print(parse(show_parse, '{level:n[0..9],?slots:n}'))
+--print(parse(show_parse, '{level:n[0..9],?slots:n}'))
 
 local function new_validate(context, doc, validation)
   parse(vfactory, validation)(context, doc)
 end
 
 
-local doc_validation = [[
+-- XXX some strings are now allowed to be empty
+local magic_property = {
+  bonus = 'the spell may be cast as a bonus action',
+  reaction = 'the spell may be cast as a reaction',
+  attack = 'casting the spell requires an attack roll',
+  save = 'the stat the enemy has to use to make a saving throw',
+  enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
+  ritual = 'the spell may be cast as a ritual',
+  duration = 'how long the spell lasts, if more than one action',
+  abbrev = "short description for GM's spell list",
+  concentration = 'the spell requires concentration',
+  name = 'Name of the spell',
+  description = 'How the spell works',
+  long = 'Long description',
+  material = 'Material components',
+}
+
+local magicpropnames
+do
+  local names = { }
+  for k in pairs(magic_property) do
+    table.insert(names, k == 'name' and k or '?' .. k)
+  end
+  magicpropnames = table.concat(names, ', ')
+end
+
+
+-- XXX validation maybe needs to be an object, so can choose between alts
+
+local doc_validation = ([[
 { *,
   ?ATTACKS:attacks@list(
-     attack@attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT, ?NOTES}),
+     attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
+  ?FEATURES:list(feature${name,description}),
+  ?MAGIC:list(spell$spell@{MAGICPROPNAMES}
+             |level@{level:n[0..9],?slots:n[1..]}
+             ),
+
 }
-]]
+]]):gsub('MAGICPROPNAMES', magicpropnames)
 
 function validators.attack(context, v)
-  if v['AMMO COUNT'] and not v['AMMO TYPE'] then
-    verrorf('In %s, AMMO COUNT may not be specified unless there is an AMMO TYPE')
+  if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
+    verrorf('In %s, AMMO COUNT is specified without an AMMO TYPE', context)
   end
 end
 
-print(parse(show_parse, doc_validation))
-
-
-
-
-
---------- Side-effecting validation functions ----------------------
-
-local function validate_foreach(name, validator) -- : value list -> void
-  if validator == nil then
-    name, validator = '?', name
-  end
-  return function(list)
-    if not islist(list) then
-      verrorf('%s: entry %q is not a list', name, list)
-    else
-      for _, v in ipairs(list) do
-        validator(v)
-      end
-    end
+function validators.spell(context, v)
+  if not (v.description or v.long or v.abbrev) then
+    verrorf(context, 'spell %q has no description', v.name)
   end
 end
+
+--print(parse(show_parse, doc_validation))
+
 
 
 -------------------- Normalizing YAML ---------------------------------
@@ -1024,103 +1053,12 @@ local function convert_colon_tables(v)
 end
 
 
--------------------------------------------------------------------------
---- Validating ATTACKS
-
--- Attack field specifications - table-driven approach
-local attack_field_specs = {
-  { field = 'NAME',       predicate = can_be 'string', required = true },
-  { field = 'ATTACK',     predicate = can_be 'string', required = true },
-  { field = 'DAMAGE',     predicate = can_be 'string', required = true },
-  { field = 'TYPE',       predicate = can_be 'string', required = true },
-  { field = 'RANGE',      predicate = can_be 'string', },
-  { field = 'AMMO TYPE',  predicate = can_be 'string' },
-  { field = 'AMMO COUNT', predicate = can_be 'number', what = 'number' },
-  { field = 'NOTES',      predicate = can_be 'string' }
-}
-
-validators.attacks = [[
-  l(attack@attack${NAME,ATTACK,DAMAGE,TYPE,?RANGE,?AMMO TYPE,?AMMO COUNT:n,?NOTES})
-]]
-
-
-local function robust_name(thing)
-  return can_be 'string'(thing.name) and tostring(thing.name) or image(thing)
-end
-
-local function validate_attack_entry(attack)
-  if not can_be 'table'(attack) then
-    verrorf('Attack %s is not a table with attack fields', image(attack))
-  else
-    local missing = {} -- list of missing fields
-
-    for _, spec in ipairs(attack_field_specs) do
-      local field = spec.field
-      if nonnull(attack[field]) then
-        if not spec.predicate(attack[field]) then
-          verrorf('Bad field %s in attack %q: expected a %s; got %s',
-                  field, robust_name(attack), spec.what or 'string', image(attack[field]))
-        end
-      elseif spec.required then
-        table.insert(missing, field)
-      end
-    end
-
-    if not empty(attack['AMMO COUNT']) and empty(attack['AMMO TYPE']) then
-      verrorf('Attack %s specifies AMMO COUNT without an AMMO TYPE', robust_name(attack))
-    end
-
-    report_missing(missing, robust_name(attack))
-  end
-end
-
 --------------------------------------------------------------------------
 --
 -- Validating FEATURES and MAGIC
 --
 -- Two kinds of entries: { name: ..., description: ... } and spell_slots
 
-local function designate(what, thing)
-  if has(thing, 'name') then
-    return stringf('%s named %s', what, thing.name)
-  elseif has(thing, 'description') then
-    return stringf('%s described as %q', what, thing.description)
-  else
-    return stringf('%s %q', what, image(thing))
-  end
-end
-
-local function valid_named_thing(what, thing) -- true if valid
-  if not has(thing, 'name', 'description') then
-    if has(thing, 'name') then
-      verrorf('%s has name %q but no description', what, tostring(thing.name))
-    else
-      verrorf('Expected %s with name and description; got %s', what, designate(thing))
-    end
-  elseif not can_be 'string' (thing.name) then
-    verrorf("Found a %s but its name %q can't be a string", what, image(thing.name))
-  elseif not thing.name:find '%S' then
-    verrorf('Found a %s but it has an empty name: %q', what, image(thing))
-  else
-    return true
-  end
-end
-
-local magic_property = {
-  bonus = 'the spell may be cast as a bonus action',
-  reaction = 'the spell may be cast as a reaction',
-  attack = 'casting the spell requires an attack roll',
-  save = 'the stat the enemy has to use to make a saving throw',
-  enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
-  ritual = 'the spell may be cast as a ritual',
-  duration = 'how long the spell lasts, if more than one action',
-  abbrev = "short description for GM's spell list",
-  concentration = 'the spell requires concentration',
-  name = 'Name of the spell',
-  description = 'How the spell works',
-  long = 'Long description',
-  material = 'Material components',
-}
 
 local function report_bad_properties(what, entry, props)
   for k in pairs(entry) do
@@ -1221,8 +1159,9 @@ local function validate_equipment_structure(equipment)
 end
 
 
+local function validate_foreach() return function() end end
+
 local validate_equipment = validate_equipment_structure
-local validate_attacks = validate_foreach('ATTACKS', validate_attack_entry)
 local validate_features = validate_foreach('FEATURES', app1(valid_named_thing, 'feature'))
 local validate_magic = validate_foreach('MAGIC', validate_magic_entry)
 
