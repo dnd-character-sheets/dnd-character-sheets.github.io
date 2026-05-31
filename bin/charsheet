@@ -763,11 +763,19 @@ do
 
 end
 
+
 local vfactory = { }
 
 do
-  -- validator : (context, value) -> void
+  -- validator : (context, value) -> void [OLD]
   -- key       : { name : string, optional : bool, validator = v }
+
+  -- NEW:
+  -- validator == object with methods and fields
+  --    self:validate(context, value)
+  --    self:mine(value) returns bool
+  --    self.what : string
+  
 
   local function out_of_range(n, rg)
     if rg then
@@ -949,7 +957,6 @@ do
 
 end
 
--- validator: function(context, value) may issue error messages
 
 
 
