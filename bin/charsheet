@@ -61,7 +61,15 @@ local pdflatex =
 -- likely for error messages
 
 local function sq(s)
-  return stringf('%q', s)
+  if type(s) ~= 'table' then
+    return stringf('%q', s)
+  else
+    local quoted = { }
+    for k, v in pairs(s) do
+      quoted[k] = sq(v)
+    end
+    return quoted
+  end
 end
 
 local function count(n, what, plural) -- luacheck: no unused
@@ -79,6 +87,14 @@ local function plural(count, what, theplural)
     return what
   else
     return theplural or what .. 's'
+  end
+end
+
+local function a(s)
+  if s:find '^[aeiouAEIOU]' then
+    return 'an ' .. s
+  else
+    return 'a ' .. s
   end
 end
 
@@ -548,7 +564,7 @@ do
     local init = s:find '%S'
     while init do
       local first, last, found  -- luacheck: no unused
-      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a%w*)' } do
+      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a[%w%-]*)' } do
         first, last, found = s:find(pat, init)
         if found then
           table.insert(tokens, found)
@@ -741,16 +757,8 @@ do
     return stringf('a list in which each element is %s', v)
   end
 
-  local function an(s)
-    if s:find '^[aeiouAEIOU]' then
-      return 'an ' .. s
-    else
-      return 'a ' .. s
-    end
-  end
-
   function show_parse:named(name, v)
-    return stringf('%s, which is %s', an(name), v)
+    return stringf('%s, which is %s', a(name), v)
   end
 
   function show_parse:alts(alts)
@@ -767,15 +775,11 @@ end
 local vfactory = { }
 
 do
-  -- validator : (context, value) -> void [OLD]
   -- key       : { name : string, optional : bool, validator = v }
-
-  -- NEW:
-  -- validator == object with methods and fields
-  --    self:validate(context, value)
+  -- validator : object with methods and fields
+  --    self:validate(context, value) optionally returns normalized value
   --    self:mine(value) returns bool
   --    self.what : string
-  
 
   local function out_of_range(n, rg)
     if rg then
@@ -799,20 +803,34 @@ do
       end
     end
 
-    return function(context, v)
-      if not tonumber(v) or out_of_range(v, rg) then
-        missing(context, stringf('a number%s', range_string), v)
-      end
-    end
+    local what = stringf('a number%s', range_string)
+
+    return {
+      validate = function(_, context, v)
+        if not tonumber(v) or out_of_range(v, rg) then
+          missing(context, what, v)
+        else
+          return tonumber(v)
+        end
+      end,
+      mine = function(_, v) return can_be 'number'(v) end,
+      what = what,
+    }
   end
 
   local any_key = { } -- unique value
 
-  local function text(context, v)
-    if not can_be 'string' (v) then
-      missing(context, 'text', v)
-    end
-  end
+  local text = {
+    validate = function(_, context, v)
+      if not can_be 'string' (v) then
+        missing(context, 'text', v)
+      else
+        return tostring(v)
+      end
+    end,
+    mine = function(_, v) return can_be 'string'(v) end,
+    what = 'text',
+  }
 
   function vfactory:key(name, optional, v)
     return {name = name, optional = optional, validator = v}
@@ -835,10 +853,10 @@ do
     end
     local also
     local wanted =
-      #required > 0 and stringf('a table with %s %s', plural(#required, 'key'), commafy(required))
+      #required > 0 and stringf('a table with %s %s', plural(#required, 'key'), commafy(sq(required)))
                      or 'a table without any required keys'
     if #optional > 0 then
-      also = stringf('%s %s', plural(#optional, 'key'), commafy(optional))
+      also = stringf('%s %s', plural(#optional, 'key'), commafy(sq(optional)))
     end
     if other and not also then
       if #required > 0 then
@@ -865,43 +883,56 @@ do
       end
     end
 
--- xxx propagate the kind of thing being validated
-    return function(context, v)
-      if type(v) ~= 'table' then
-        missing(context, wanted, v)
-      else
-        local myname = v.name or v.NAME
-        local mycontext = myname and stringf('%q, which is %s', myname, context) or context
-        local omitted = { }
-        for _, key in ipairs(keys) do
-          if key == any_key then
-            -- do nothing
-          elseif v[key.name] == nil and not key.optional then
-            table.insert(omitted, sq(key.name))
-          elseif v[key.name] ~= nil then
-            (key.validator or text)(stringf('field %s of %s', key.name, mycontext), v[key.name])
-          end
-        end
-        if #omitted == 1 then
-          verrorf('In %s, required key %s is missing', mycontext, omitted[1])
-        elseif #omitted > 0 then
-          verrorf('In %s, required keys %s are missing', mycontext, commafy(omitted))
-        end
+    local function has_key(v, keys)
+      return any(function(k) return v[k] ~= nil end, keys)
+    end
 
-        if not other then
-          local unexpected = { }
-          for k in pairs(v) do
-            if not acceptable[k] then
-              table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
+    return {
+      what = wanted,
+      mine = function(_, v) return type(v) == 'table' and has_key(v, required) end,
+      validate = function(_, context, v)
+        if type(v) ~= 'table' then
+          missing(context, wanted, v)
+        else
+          local myname = v.name or v.NAME
+          local mycontext =
+               myname and type(myname) == 'string' and stringf('%q, which is %s', myname, context)
+            or context
+          local omitted = { }
+          for _, key in ipairs(keys) do
+            if key == any_key then
+              -- do nothing
+            elseif v[key.name] == nil and not key.optional then
+              table.insert(omitted, sq(key.name))
+            elseif v[key.name] ~= nil then
+              local val = key.validator or text
+              local u = val:validate(stringf('field %s of %s', key.name, mycontext), v[key.name])
+              if u ~= nil then
+                v[key.name] = u
+              end
             end
           end
-          if #unexpected > 0 then
-            verrorf('In %s, found unexpected %s %s',
-                    mycontext, plural(#unexpected, 'key'), commafy(unexpected))
+          if #omitted == 1 then
+            verrorf('In %s, required key %s is missing', mycontext, omitted[1])
+          elseif #omitted > 0 then
+            verrorf('In %s, required keys %s are missing', mycontext, commafy(omitted))
+          end
+
+          if not other then
+            local unexpected = { }
+            for k in pairs(v) do
+              if not acceptable[k] then
+                table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
+              end
+            end
+            if #unexpected > 0 then
+              verrorf('In %s, found unexpected %s %s',
+                      mycontext, plural(#unexpected, 'key'), commafy(unexpected))
+            end
           end
         end
-      end
-    end
+      end,
+    }
   end
 
   function vfactory:string()
@@ -909,50 +940,65 @@ do
   end
 
   function vfactory:list(element)
-    return function(context, v)
-      if type(v) ~= 'table' or next(v) ~= nil and not v[1] then
-        missing(context, 'a list', v)
-      else
-        for i, e in ipairs(v) do
-          element(stringf('element %d of %s', i, context), e)
+    return {
+      what = stringf('a list of %s', element.what),
+      mine = function(_, v) return type(v) == 'table' and (v[1] ~= nil or next(v) == nil) end,
+      validate = function(_, context, v)
+        if type(v) ~= 'table' or next(v) ~= nil and not v[1] then
+          missing(context, 'a list', v)
+        else
+          for i, e in ipairs(v) do
+            element:validate(stringf('element %d of %s', i, context), e)
+          end
         end
-      end
-    end
+      end,
+    }
   end
 
   function vfactory:named(name, validator)
-    return function(context, v)
-      return validator(stringf('%s, which is %s', name, context), v)
-    end
+    return {
+      mine = function(_, v) return validator:mine(v) end,
+      what = stringf('%s, which is %s', a(name), validator.what),
+      validate = function(_, context, v)
+        return validator:validate(stringf('%s, which is %s', a(name), context), v)
+      end,
+    }
   end
 
   function vfactory:alts(alts)
-
-    return function(context, v)
-      local trouble
-      local overrorf = verrorf
-      verrorf = function() trouble = true end
-      for _, alt in ipairs(alts) do
-        trouble = false
-        alt(context, v)
-        if not trouble then
-          verrorf = overrorf
-          return -- valid
-        end
-      end
-      verrorf = overrorf
-      alts[1](stringf('%s or any other alternative', context), v)
+    local whatnames = { }
+    for _, alt in ipairs(alts) do
+      table.insert(whatnames, alt.what)
     end
+    whatnames = commafy(whatnames, 'or')
+
+    return { mine = function(_, v) return any(function(alt) return alt:mine(v) end, alts) end,
+             what = whatnames,
+             validate = function(_, context, v)
+               for _, alt in ipairs(alts) do
+                 if alt:mine(v) then
+                   return alt:validate(context, v)
+                 end
+               end
+               -- or maybe just the first? XXX
+               verrorf("In %s, expected %s, but didn't find %s of those things.  Found %s",
+                       context, whatnames, #alts == 2 and 'either' or 'any', friendly(v))
+             end,
+    }
   end
 
   function vfactory:validate(f, validator)
-    return function(context, v)
-      local bad = #global_validation_errors
-      validator(context, v)
-      if #global_validation_errors == bad then
-        assert(validators[f], 'No validation function named ' .. f)(context, v)
-      end
-    end
+    return {
+      mine = function(_, v) return validator:mine(v) end,
+      what = validator.what,
+      validate = function(_, context, v)
+        local bad = #global_validation_errors
+        validator:validate(context, v)
+        if #global_validation_errors == bad then
+          assert(validators[f], 'No validation function named ' .. f)(context, v)
+        end
+      end,
+    }
   end
 
 end
@@ -963,7 +1009,7 @@ end
 --print(parse(show_parse, '{level:n[0..9],?slots:n}'))
 
 local function new_validate(context, doc, validation)
-  parse(vfactory, validation)(context, doc)
+  parse(vfactory, validation):validate(context, doc)
 end
 
 
@@ -1000,9 +1046,9 @@ local doc_validation = ([[
 { *,
   ?ATTACKS:attacks@list(
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-  ?FEATURES:list(feature${name,description}),
+  ?FEATURES:list(feature@{name,description}),
   ?MAGIC:list(spell$spell@{MAGICPROPNAMES}
-             |level@{level:n[0..9],?slots:n[1..]}
+             |level-spec@{level:n[0..9],?slots:n[1..]}
              ),
 
 }
@@ -1016,7 +1062,7 @@ end
 
 function validators.spell(context, v)
   if not (v.description or v.long or v.abbrev) then
-    verrorf(context, 'spell %q has no description', v.name)
+    verrorf('In %s, spell %q has no description', context, v.name)
   end
 end
 
@@ -1116,21 +1162,25 @@ local magic_markers = {
 }
 
 local function add_magic_markers(name, thing)
-  local tags = name:match '%b[]'
-  if tags and tags:find '^.[%u,]+.$' then
+  if type(name) ~= 'string' then
     return name
   else
-    tags = { }
-    for property, tag in pairs(magic_markers) do
-      if not false_yaml(thing[property]) then
-        table.insert(tags, tag)
-      end
-    end
-    if #tags > 0 then
-      table.sort(tags)
-      return stringf('%s [%s]', name, table.concat(tags, ','))
-    else
+    local tags = name:match '%b[]'
+    if tags and tags:find '^.[%u,]+.$' then
       return name
+    else
+      tags = { }
+      for property, tag in pairs(magic_markers) do
+        if not false_yaml(thing[property]) then
+          table.insert(tags, tag)
+        end
+      end
+      if #tags > 0 then
+        table.sort(tags)
+        return stringf('%s [%s]', name, table.concat(tags, ','))
+      else
+        return name
+      end
     end
   end
 end
