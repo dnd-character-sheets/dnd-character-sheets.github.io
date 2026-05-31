@@ -1132,14 +1132,6 @@ end
 -- Two kinds of entries: { name: ..., description: ... } and spell_slots
 
 
-local function report_bad_properties(what, entry, props)
-  for k in pairs(entry) do
-    if not props[k] then
-      verrorf('%s has unknown property %q', what, k)
-    end
-  end
-end
-
 
 local function validate_magic_entry(entry)
   if isnull(entry) then
