@@ -1215,7 +1215,7 @@ function validators.spell(context, v)
 end
 
 function validators.level(context, v)
-  if v.level == 0 then
+  if v.level == 0 and v.slots then
     verrorf('In %s, spec for cantrips (level 0) included slots, but cantrips have no slots',
             context)
   elseif v.level > 0 and not v.slots then
