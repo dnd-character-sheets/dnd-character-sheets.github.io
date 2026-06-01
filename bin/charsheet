@@ -1097,7 +1097,7 @@ do
   function vfactory:validate(f, validator)
     return {
       mine = function(_, v) return validator:mine(v) end,
-      what = stringf('a %s validated by function %s', validator.what, f),
+      what = stringf('%s validated by function %s', validator.what, f),
       validate = function(_, context, v)
         local bad = #global_validation_errors
         validator:validate(context, v)
