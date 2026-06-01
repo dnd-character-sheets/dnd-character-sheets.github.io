@@ -874,6 +874,11 @@ do
     what = 'text',
   }
 
+  local function fontkeyname(key)
+    assert(key.fontable)
+    return stringf('%s FONT', key.name)
+  end
+
   function vfactory:key(name, props, v)
     return {name = name, optional = props.optional, validator = v, insensitive = props.insensitive}
   end
@@ -884,7 +889,18 @@ do
 
   function vfactory:table(keys)
     local required, optional, other = { }, { }, false
+    local seen = { }
     for _, key in ipairs(keys) do
+      if key.name then
+        if seen[key.name] then
+          errorf('Duplicate keys %q in validation spec', key.name)
+        else
+          seen[key.name] = true
+        end
+      end
+      if key.fontable then
+        table.insert(optional, fontkeyname(key))
+      end
       if key == any_key then
         other = true
       elseif key.optional then
@@ -893,6 +909,7 @@ do
         table.insert(required, key.name)
       end
     end
+
     local also
     local wanted =
       #required > 0 and stringf('a table with %s %s', plural(#required, 'key'), commafy(sq(required)))
@@ -922,11 +939,20 @@ do
       acceptable = { }
       for _, k in ipairs(keys) do
         acceptable[k.name] = true
+        if k.fontable then
+          acceptable[fontkeyname(k)] = true
+        end
       end
     end
 
     local function has_key(v, keys)
       return any(function(k) return v[k] ~= nil end, keys)
+    end
+
+    local function validate_font(context, s)
+      if type(s) ~= 'string' or not s:find [[^\]] then
+        verrorf('%s text does not contain a LaTeX font command', context, image(s))
+      end
     end
 
     return {
@@ -942,6 +968,9 @@ do
             or context
           local omitted = { }
           for _, key in ipairs(keys) do
+            if key.fontable and v[fontkeyname(key)] then
+              validate_font(fontkeyname(key), v[fontkeyname(key)])
+            end
             if key == any_key then
               -- do nothing
             elseif v[key.name] == nil and not key.optional then
