@@ -1377,42 +1377,6 @@ local casting_modifier = {
 }
 
 -- Validate CLASS & LEVEL requirement and parsing
-local function validate_class_level_requirement(doc)
-  local has_class_level = doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:find('%S')
-  local has_separate = doc.CLASS and doc.CLASS:find('%S') and doc.LEVEL
-
-  if not has_class_level and not has_separate then
-    return false, "must have either 'CLASS & LEVEL' field or both 'CLASS' and 'LEVEL' fields"
-  end
-
-  -- If CLASS & LEVEL exists, validate it can be parsed
-  if has_class_level then
-    local class_level = doc['CLASS & LEVEL']
-    local class = class_level:match('%a+')
-    local level = class_level:match('%d+%s*$')
-
-    if not class then
-      return false, "CLASS & LEVEL must contain a valid class name"
-    end
-    if not level then
-      return false, "CLASS & LEVEL must end with a valid level number"
-    end
-
-    local level_num = tonumber(level)
-    if not level_num or level_num < 1 or level_num > 20 then
-      return false, string.format("level in CLASS & LEVEL must be 1-20, got %s", level)
-    end
-  end
-
-  return true
-end
-
-
-local function validate_font(s)
-  if type(s) ~= 'string' or not s:find [[^\]] then
-    verrorf('%s must be a LaTeX font command', image(s))
-  end
-end
 
 function validators.nonempty(context, v)
   if empty(v) then
