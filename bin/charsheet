@@ -1073,13 +1073,24 @@ local magic_property = {
   description = 'How the spell works',
   long = 'Long description',
   material = 'Material components',
+  components = 'What of MSV is required to cast the spell',
 }
+
+function validators.components(context, v)
+  if not v:find '^[MSV]+$' then
+    verrorf('In %s, expected components to be a subset of MSV, but found %q', context, v)
+  end
+end
 
 local magicpropnames
 do
   local names = { }
   for k in pairs(magic_property) do
-    table.insert(names, k == 'name' and k or '?' .. k)
+    if k == 'components' then
+      table.insert(names, '?components:components$s')
+    else
+      table.insert(names, k == 'name' and k or '?' .. k)
+    end
   end
   magicpropnames = table.concat(names, ', ')
 end
