@@ -890,6 +890,7 @@ do
     return {
       what = wanted,
       mine = function(_, v) return type(v) == 'table' and has_key(v, required) end,
+      maybe_mine = function(_, v) return type(v) == 'table' and has_key(v, optional) end,
       validate = function(_, context, v)
         if type(v) ~= 'table' then
           missing(context, wanted, v)
@@ -1016,6 +1017,11 @@ do
              validate = function(_, context, v)
                for _, alt in ipairs(alts) do
                  if alt:mine(v) then
+                   return alt:validate(context, v)
+                 end
+               end
+               for _, alt in ipairs(alts) do
+                 if alt.maybe_mine and alt:maybe_mine(v) then
                    return alt:validate(context, v)
                  end
                end
