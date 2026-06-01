@@ -450,6 +450,7 @@ local can_be_tab = {
              return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
              end),
   number = wrap(function(v) return tonumber(v) end),
+  boolean = wrap(function(v) return type(v) == 'boolean' or tostring(v):find '^[01]$' end),
 }
 setmetatable(can_be_tab, { __index = function(_, t)
                                        return wrap(function(v) return type(v) == t end)
@@ -518,6 +519,7 @@ end
 --[=[
 
   validator v ::= s[tring]
+               |  b[ool[ean]]
                |  n[number] [*[*[N]..[M]*]*]
                |  l[ist](v)
                |  name@v     -- name may be raw or with double quotes
@@ -614,15 +616,23 @@ do
       end
     end
 
+    local key_prefix_meaning = {
+      ['?'] = 'optional', 
+      ['^'] = 'insensitive', 
+      ['%'] = 'fontable',
+    }
+
     key = function(tokens, i)
       if tokens[i] == '*' then
         return semantics:any_key(), i + 1
       else
         local props = { }
         while tokens[i]:find '^%W' do
-          props.optional = props.optional or tokens[i] == '?'
-          props.insensitive = props.insensitive or tokens[i] == '^'
-          props.fontable = props.fontable or tokens[i] == '%'
+          if key_prefix_meaning[tokens[i]] then
+            props[key_prefix_meaning[tokens[i]]] = true
+          else
+            errorf('Meaningless prefix %q before key name', tokens[i])
+          end
           i = i + 1
         end
         local nameparts = { }
@@ -665,9 +675,13 @@ do
       if not next then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
       elseif next == 'null' then
-        return semantics.null(), i + 1
+        return semantics:null(), i + 1
       elseif next == 's' or next == 'string' then
         return semantics:string(), i + 1
+      elseif next == 'b' or next == 'bool' or next == 'boolean' then
+        return semantics:boolean(), i + 1
+      elseif next == 'empty' then
+        return semantics:empty(), i + 1
       elseif next == 'n' or next == 'number' then
         local rg, j = range(tokens, i + 1)
         return semantics:number(rg), j
@@ -767,6 +781,14 @@ do
 
   function show_parse:string()
     return 'a string'
+  end
+
+  function show_parse:boolean()
+    return 'a boolean'
+  end
+
+  function show_parse:empty()
+    return 'something empty'
   end
 
   function show_parse:list(v)
@@ -955,6 +977,30 @@ do
     return text
   end
 
+  function vfactory:boolean()
+    return {
+      what = 'a Boolean',
+      mine = function(_, v) return can_be 'boolean' (v) end,
+      validate = function(_, context, v)
+        if not can_be 'boolean' (v) then
+          missing(context, 'a Boolean', v)
+        end
+      end,
+    }
+  end
+
+  function vfactory:empty()
+    return {
+      what = 'something empty',
+      mine = function(_, v) return empty(v) or isnull(v) end,
+      validate = function(self, context, v)
+        if not self:mine(v) then
+          missing(context, 'something empty', v)
+        end
+      end,
+    }
+  end
+
   function vfactory:list(element)
     return {
       what = stringf('a list of %s', element.what),
@@ -1018,7 +1064,7 @@ do
   function vfactory:validate(f, validator)
     return {
       mine = function(_, v) return validator:mine(v) end,
-      what = validator.what,
+      what = stringf('a %s validated by function %s', validator.what, f),
       validate = function(_, context, v)
         local bad = #global_validation_errors
         validator:validate(context, v)
@@ -1113,7 +1159,7 @@ local category_order = {
 
 local doc_validation = ([[doc$
 {
-  ?CLASS,
+  ?CLASS:nonempty$s,
   ?LEVEL:n,
   ?CLASS & LEVEL:class_level$s,
 
@@ -1150,7 +1196,7 @@ local doc_validation = ([[doc$
              |level$level-spec@{level:n[0..9],?slots:n[1..]}
              |null
              ),
-  ?%EQUIPMENT:equipment$(list(string)|{CATEGORIES})),
+  ?%EQUIPMENT:equipment$(list(string)|{CATEGORIES}),
   ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
   ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
 
@@ -1186,9 +1232,21 @@ function validators.level(context, v)
   end
 end
 
-function validators.class_level(context, v)
-  assert(false, 'class and level validator not yet implemented', context, v)
+
+
+function validators.class_level(context, class_and_level)
+  local class = class_and_level:match('%a+')
+  local level = tonumber(class_and_level:match('(%d+)%s*$'))
+  if not class then
+    verrorf(context, "CLASS & LEVEL does not contain a valid class name")
+  end
+  if not level then
+    verrorf(context, "CLASS & LEVEL does not end with a level number")
+  elseif not inrange(1, 20)(level) then
+    verrorf('Level %d in CLASS & LEVEL is out of bounds 1..20', level)
+  end
 end
+
 
 --print(parse(show_parse, doc_validation))
 
@@ -1324,6 +1382,12 @@ local function validate_font(s)
   end
 end
 
+function validators.nonempty(context, v)
+  if empty(v) then
+    verrorf('In %s, expected data but found %s', friendly(v))
+  end
+end
+
 
 
 -- Validation function
@@ -1332,16 +1396,14 @@ function validators.doc(context, doc)
     verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
   end
 
-  -- Validate CLASS & LEVEL requirement
-  local class_level_valid, class_level_msg = validate_class_level_requirement(doc)
-  if not class_level_valid then
-    -- Show relevant values for CLASS/LEVEL validation
-    local relevant_values = {
-      ["CLASS & LEVEL"] = doc["CLASS & LEVEL"],
-      CLASS = doc.CLASS,
-      LEVEL = doc.LEVEL
-    }
-    verrorf("CLASS/LEVEL [%s]: %s", value_string(relevant_values), class_level_msg)
+  if not (doc['CLASS & LEVEL'] or doc.CLASS and doc.LEVEL) then
+    if doc.CLASS then
+      verrorf 'The character sheet does not specify LEVEL'
+    elseif doc.LEVEL then
+      verrorf 'The character sheet does not specify CLASS'
+    else
+      verrorf 'The character sheet does not specify CLASS or LEVEL'
+    end
   end
 end
 
@@ -1764,6 +1826,16 @@ local function unparse_equipment_structure(structured_equipment)
 
   return lines
 end
+
+local function validate_equipment()
+  eprintf('validate_equipment not yet ported\n')
+  return true
+end
+local function validate_equipment_parsing(e)
+  eprintf('validate_equipment_parsing not yet ported\n')
+  return e
+end
+
 
 -- Round-trip validation function
 function validators.equipment(context, structured_equipment)
