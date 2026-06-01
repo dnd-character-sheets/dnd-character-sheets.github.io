@@ -1194,7 +1194,8 @@ local doc_validation = ([[doc$
 
 
 }
-]]):gsub('MAGICPROPNAMES', magicpropnames)
+]]):gsub('%-%-.-\n', '')
+   :gsub('MAGICPROPNAMES', magicpropnames)
    :gsub('CATEGORIES', table.concat(catspecs, ', '))
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
         :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:n[1..20], '))
