@@ -464,7 +464,7 @@ end
 assert(can_be 'string'('hello'))
 assert(can_be 'string'(7))
 
-local function has(v, ...)
+local function has(v, ...) -- luacheck: no unused
   if type(v) ~= 'table' then
     return false
   else
@@ -503,7 +503,7 @@ local islist = wrap(function(t)
   return type(t) == 'table' and (empty(t) or t[1] ~= nil)
 end)
 
-local function listof(predicate)
+local function listof(predicate) -- luacheck: no unused
   return function(list)
     if not islist(list) then
       return false, list
@@ -584,166 +584,163 @@ do
 
     local tokens = tokenize(s)
 --    inspect.show{tokens = tokens}
+    local tindex = 1
 
-    local function expected(context, wanted, i)
-      if tokens[i] ~= wanted then
-        local tcontext = { }
-        for j = math.max(1, i-5), math.min(#tokens, i+5) do
-          if j == i then
-            table.insert(tcontext, "·")
-          end
-          table.insert(tcontext, tokens[j])
+    local lastmaybe
+
+    local function maybe(token, ...)
+      lastmaybe = nil
+      if token ~= nil then
+        if tokens[tindex] == token then
+          tindex = tindex + 1
+          lastmaybe = token
+          return lastmaybe
+        else
+          return maybe(...)
         end
-        errorf('Error parsing %s; expected %s, got %s at token %d (%s)', context, wanted,
-               tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream", i,
-               table.concat(tcontext, ' '))
       else
-        vprintf('%s expected %s and found it at %d\n', context, wanted, i)
+        return nil
+      end
+    end
+
+    local function maybe_find(pat)
+      lastmaybe = nil
+      if tokens[tindex]:find(pat) then
+        lastmaybe = tokens[tindex]
+        tindex = tindex + 1
+        return lastmaybe
+      else
+        return nil
+      end
+    end
+
+    local function expected(parsing, wanted)
+      local tcontext = { }
+      for j = math.max(1, tindex-5), math.min(#tokens, tindex+5) do
+        if j == tindex then
+          table.insert(tcontext, "·")
+        end
+        table.insert(tcontext, tokens[j])
+      end
+      errorf('Error parsing %s; expected %s, got %s at token %d ⟨%s⟩', parsing, wanted,
+             tokens[tindex] ~= nil and inspect.image(tokens[tindex]) or "end of stream", tindex,
+             table.concat(tcontext, ' '))
+    end
+
+    local function eat(context, token)
+      if maybe(token) == nil then
+        expected(context, token, tindex)
       end
     end
 
     local alts, alt, range, keys, key -- self == semantics
 
-    alts = function(i)
-      local alts = { }
-      alts[1], i = alt(i)
-      while tokens[i] == '|' do
-        alts[#alts+1], i = alt(i + 1)
+    alts = function()
+      local alts = { alt() }
+      while maybe '|' do
+        table.insert(alts, alt())
       end
-      vprintf('found one or more balidators before %d (%s)\n', i, tostring(tokens[i]))
-      if #alts > 1 then
-        return semantics:alts(alts), i
-      else
-        return alts[1], i
-      end
+      vprintf('found one or more balidators before %d (%s)\n', tindex, tostring(tokens[tindex]))
+      return #alts > 1 and semantics:alts(alts) or alts[1]
     end
 
     local key_prefix_meaning = {
-      ['?'] = 'optional', 
-      ['^'] = 'insensitive', 
+      ['?'] = 'optional',
+      ['^'] = 'insensitive',
       ['%'] = 'fontable',
     }
 
-    key = function(i)
-      if tokens[i] == '*' then
-        return semantics:any_key(), i + 1
+    key = function()
+      if maybe '*' then
+        return semantics:any_key()
       else
         local props = { }
-        while tokens[i]:find '^%W' do
-          if key_prefix_meaning[tokens[i]] then
-            props[key_prefix_meaning[tokens[i]]] = true
-          else
-            errorf('Meaningless prefix %q before key name', tokens[i])
-          end
-          i = i + 1
+        while maybe ('?', '^', '%') do
+          props[key_prefix_meaning[lastmaybe]] = true
         end
         local nameparts = { }
-        while tokens[i]:find '%w' or tokens[i] == '&' do
-          table.insert(nameparts, tokens[i])
-          i = i + 1
+        while maybe_find '%w' or maybe '&' do
+          table.insert(nameparts, lastmaybe)
         end
-        local validator
-        if tokens[i] == ':' then
-          validator, i = alts(i + 1)
+        if #nameparts == 0 then
+          expected('table key', 'name', next)
         end
-        vprintf('found a key ending before token %d (%s)\n', i, tostring(tokens[i]))
-        return semantics:key(table.concat(nameparts, ' '), props, validator), i
+        local validator = maybe ':' and alts() or nil
+        vprintf('found a key ending before token %d (%s)\n', tindex, tostring(tokens[tindex]))
+        return semantics:key(table.concat(nameparts, ' '), props, validator)
       end
     end
 
-    keys = function(i)
-      local keys = { }
-      keys[1], i = key(i)
-      vprintf('first key ends before token %d (%s)\n', i, tostring(tokens[i]))
-      while tokens[i] == ',' do
-        if tokens[i+1] == '}' then
-          i = i + 1
-          break
+    keys = function()
+      local keys = { key() }
+      vprintf('first key ends before token %d (%s)\n', tindex, tostring(tokens[tindex]))
+      while maybe ',' do
+        if maybe '}' then
+          tindex = tindex - 1
         else
-          local thekey, j = key(i + 1)
-          vprintf('key ends before token %d (%s)\n', j, tostring(tokens[j]))
-          table.insert(keys, thekey)
-          i = j
+          table.insert(keys, key())
         end
       end
-      expected('table keys', '}', i)
-      return semantics:table(keys), i + 1
+      eat('table keys', '}')
+      return semantics:table(keys)
     end
 
 
 
-    alt = function(i)
-      local next = tokens[i]
-      if not next then
+    alt = function()
+      if not tokens[tindex] then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
-      elseif next == 'null' then
-        return semantics:null(), i + 1
-      elseif next == 's' or next == 'string' then
-        return semantics:string(), i + 1
-      elseif next == 'b' or next == 'bool' or next == 'boolean' then
-        return semantics:boolean(), i + 1
-      elseif next == 'empty' then
-        return semantics:empty(), i + 1
-      elseif next == 'n' or next == 'number' then
-        local rg, j = range(i + 1)
-        return semantics:number(rg), j
-      elseif next == 'l' or next == 'list' then
-        if tokens[i+1] == '{' then
-          local v, j = keys(i + 2)
-          return semantics.list(v), j
+      elseif maybe 'null' then
+        return semantics:null()
+      elseif maybe('s', 'string') then
+        return semantics:string()
+      elseif maybe('b', 'bool', 'boolean') then
+        return semantics:boolean()
+      elseif maybe 'empty' then
+        return semantics:empty()
+      elseif maybe('n', 'number') then
+        return semantics:number(range())
+      elseif maybe('l', 'list') then
+        if maybe '{' then
+          return semantics.list(keys)
         else
-          expected('list type', '(', i + 1)
-          local v, j = alts(i + 2)
-          expected('end of list type', ')', j)
-          return semantics:list(v), j + 1
+          eat ('list type', '(')
+          local v = alts()
+          eat ('eend of list type', ')')
+          return semantics:list(v)
         end
-      elseif next == '{' then
-        return keys(i + 1)
-      elseif next == '(' then
-        local v, j = alts(i + 1)
-        expected('parenthesized validator', ')', j)
-        return v, j + 1
-      elseif next:find '%w' then -- good name
-        local marker = tokens[i+1]
-        if marker == '@' then
-          local v, j = alt(i+2)
-          return semantics:named(next, v), j
-        elseif marker == '$' then
-          local v, j = alt(i+2)
-          return semantics:validate(next, v), j
+      elseif maybe '{' then
+        return keys()
+      elseif maybe '(' then
+        local v = alts()
+        eat('parenthesized validator', ')')
+        return v
+      elseif maybe_find '%w' then -- good name
+        local name = lastmaybe
+        if maybe '@' then
+          return semantics:named(name, alt())
+        elseif maybe '$' then
+          return semantics:validate(name, alt())
         else
-          errorf('Unrecognized validation type %q', next)
+          errorf('Unrecognized validation type %q', name)
         end
       else
         errorf('Validation parser found unknown token %q at position %d in %s',
-             next, i, inspect.image(tokens))
+             tokens[tindex], tindex, inspect.image(tokens))
       end
     end
 
-    range = function(i)
-      if tokens[i] == '[' then
-        i = i + 1
-        local lo, hi
-        if tonumber(tokens[i]) then
-          lo, i = tonumber(tokens[i]), i + 1
-        end
-        expected('numeric range', '..', i)
-        i = i + 1
-        if tonumber(tokens[i]) then
-          hi, i = tonumber(tokens[i]), i + 1
-        end
-        expected('numeric range', ']', i)
-        i = i + 1
-        return { lo = lo, hi = hi }, i
-      else
-        -- No '[' range: consume nothing but still return the index, so the
-        -- parsing-function contract (value, i) holds and callers don't get a
-        -- nil i (was leaving alt's number branch returning a nil index).
-        return nil, i
+    range = function()
+      if maybe '[' then
+        local lo = tonumber(maybe_find '^%d+$')
+        eat('numeric range', '..')
+        local hi = tonumber(maybe_find '^%d+$')
+        eat('numeric range', ']')
+        return { lo = lo, hi = hi }
       end
     end
 
-    return (alts(1))
+    return alts()
 
   end
 
@@ -1189,7 +1186,7 @@ local doc_validation = ([[doc$
   ?PREGENERATED:b,
   ?MAGIC SEPARATE:b,
 
-
+  bogus:{a,b,c,},
 
   ?%ATTACKS:attacks@list(
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
@@ -1375,9 +1372,6 @@ local function validate_class_level_requirement(doc)
 end
 
 
--- Forward declaration
-local value_string = require 'inspect'.friendly
-
 local function validate_font(s)
   if type(s) ~= 'string' or not s:find [[^\]] then
     verrorf('%s must be a LaTeX font command', image(s))
@@ -1386,7 +1380,7 @@ end
 
 function validators.nonempty(context, v)
   if empty(v) then
-    verrorf('In %s, expected data but found %s', friendly(v))
+    verrorf('In %s, expected data but found %s', context, friendly(v))
   end
 end
 
@@ -1872,7 +1866,7 @@ Reparsed:
   table.concat(unparsed_lines, "\n"),
   visualize_table(reparsed_structure))
     end
-  end  
+  end
 end
 
 local function proficiency_bonus(doc)
