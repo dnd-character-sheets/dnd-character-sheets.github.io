@@ -604,11 +604,11 @@ do
 
     local alts, alt, range, keys, key -- self == semantics
 
-    alts = function(tokens, i)
+    alts = function(i)
       local alts = { }
-      alts[1], i = alt(tokens, i)
+      alts[1], i = alt(i)
       while tokens[i] == '|' do
-        alts[#alts+1], i = alt(tokens, i + 1)
+        alts[#alts+1], i = alt(i + 1)
       end
       vprintf('found one or more balidators before %d (%s)\n', i, tostring(tokens[i]))
       if #alts > 1 then
@@ -624,7 +624,7 @@ do
       ['%'] = 'fontable',
     }
 
-    key = function(tokens, i)
+    key = function(i)
       if tokens[i] == '*' then
         return semantics:any_key(), i + 1
       else
@@ -644,23 +644,23 @@ do
         end
         local validator
         if tokens[i] == ':' then
-          validator, i = alts(tokens, i + 1)
+          validator, i = alts(i + 1)
         end
         vprintf('found a key ending before token %d (%s)\n', i, tostring(tokens[i]))
         return semantics:key(table.concat(nameparts, ' '), props, validator), i
       end
     end
 
-    keys = function(tokens, i)
+    keys = function(i)
       local keys = { }
-      keys[1], i = key(tokens, i)
+      keys[1], i = key(i)
       vprintf('first key ends before token %d (%s)\n', i, tostring(tokens[i]))
       while tokens[i] == ',' do
         if tokens[i+1] == '}' then
           i = i + 1
           break
         else
-          local thekey, j = key(tokens, i + 1)
+          local thekey, j = key(i + 1)
           vprintf('key ends before token %d (%s)\n', j, tostring(tokens[j]))
           table.insert(keys, thekey)
           i = j
@@ -672,7 +672,7 @@ do
 
 
 
-    alt = function(tokens, i)
+    alt = function(i)
       local next = tokens[i]
       if not next then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
@@ -685,31 +685,31 @@ do
       elseif next == 'empty' then
         return semantics:empty(), i + 1
       elseif next == 'n' or next == 'number' then
-        local rg, j = range(tokens, i + 1)
+        local rg, j = range(i + 1)
         return semantics:number(rg), j
       elseif next == 'l' or next == 'list' then
         if tokens[i+1] == '{' then
-          local v, j = keys(tokens, i + 2)
+          local v, j = keys(i + 2)
           return semantics.list(v), j
         else
           expected('list type', '(', i + 1)
-          local v, j = alts(tokens, i + 2)
+          local v, j = alts(i + 2)
           expected('end of list type', ')', j)
           return semantics:list(v), j + 1
         end
       elseif next == '{' then
-        return keys(tokens, i + 1)
+        return keys(i + 1)
       elseif next == '(' then
-        local v, j = alts(tokens, i + 1)
+        local v, j = alts(i + 1)
         expected('parenthesized validator', ')', j)
         return v, j + 1
       elseif next:find '%w' then -- good name
         local marker = tokens[i+1]
         if marker == '@' then
-          local v, j = alt(tokens, i+2)
+          local v, j = alt(i+2)
           return semantics:named(next, v), j
         elseif marker == '$' then
-          local v, j = alt(tokens, i+2)
+          local v, j = alt(i+2)
           return semantics:validate(next, v), j
         else
           errorf('Unrecognized validation type %q', next)
@@ -720,7 +720,7 @@ do
       end
     end
 
-    range = function(tokens, i)
+    range = function(i)
       if tokens[i] == '[' then
         i = i + 1
         local lo, hi
@@ -743,7 +743,7 @@ do
       end
     end
 
-    return (alts(tokenize(s), 1))
+    return (alts(1))
 
   end
 
