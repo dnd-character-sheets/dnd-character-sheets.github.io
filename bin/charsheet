@@ -752,13 +752,18 @@ do
   end
 
   function show_parse:number(rg)
+    -- mirror vfactory:number's .what wording ('in the range', 'at least', 'at most')
+    local range_string = ''
     if rg then
-      return stringf('a number in range %s..%s',
-                     rg.lo and tostring(rg.lo) or '',
-                     rg.hi and tostring(rg.hi) or '')
-    else
-      return stringf('a number')
+      if rg.lo and rg.hi then
+        range_string = stringf(' in the range %d..%d', rg.lo, rg.hi)
+      elseif rg.lo then
+        range_string = stringf(' at least %d', rg.lo)
+      elseif rg.hi then
+        range_string = stringf(' at most %d', rg.hi)
+      end
     end
+    return stringf('a number%s', range_string)
   end
 
   function show_parse:null()
