@@ -1168,11 +1168,6 @@ local category_map = {
   ["stored"] = "STORED ITEMS",
 }
 
-local catspecs = { }
-for _, category in pairs(category_map) do
-  table.insert(catspecs, stringf('?^%s:list(s)', category))
-end
-
 local category_order = {
  "SHIELDS",
  "LIGHT WEAPONS",
@@ -1186,6 +1181,13 @@ local category_order = {
  "SMALL ITEMS",
  "STORED ITEMS"
 }
+
+local catspecs = { }
+for _, category in ipairs(category_order) do
+  table.insert(catspecs, stringf('?^%s:list(s)', category))
+end
+
+
 
 
 -- XXX validation maybe needs to be an object, so can choose between alts
