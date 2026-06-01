@@ -810,7 +810,9 @@ do
   end
 
   function vfactory:key(name, props, v)
-    return {name = name, optional = props.optional, validator = v, insensitive = props.insensitive}
+    local key = { name = name, validator = v }
+    for k, v in pairs(props) do key[k] = v end
+    return key
   end
 
   function vfactory:any_key()
