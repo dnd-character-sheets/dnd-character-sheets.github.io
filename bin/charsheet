@@ -404,10 +404,6 @@ end
 
 -- Higher-order validator functions
 
-local function app1(f, arg1) -- partial application
-  return function(...) return f(arg1, ...) end
-end
-
 local optional = function(p)
   return wrap(function (v)
     -- Handle YAML null, nil, and empty string as valid "empty" values
@@ -564,7 +560,7 @@ do
     local init = s:find '%S'
     while init do
       local first, last, found  -- luacheck: no unused
-      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a[%w%-]*)' } do
+      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a[%w%-_]*)' } do
         first, last, found = s:find(pat, init)
         if found then
           table.insert(tokens, found)
@@ -587,8 +583,16 @@ do
 
     local function expected(context, wanted, i)
       if tokens[i] ~= wanted then
-        errorf('Error parsing %s; expected %s, got %s at token %d', context, wanted,
-             tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream", i)
+        local tcontext = { }
+        for j = math.max(1, i-5), math.min(#tokens, i+5) do
+          if j == i then
+            table.insert(tcontext, "·")
+          end
+          table.insert(tcontext, tokens[j])
+        end
+        errorf('Error parsing %s; expected %s, got %s at token %d (%s)', context, wanted,
+               tokens[i] ~= nil and inspect.image(tokens[i]) or "end of stream", i,
+               table.concat(tcontext, ' '))
       else
         vprintf('%s expected %s and found it at %d\n', context, wanted, i)
       end
@@ -614,10 +618,15 @@ do
       if tokens[i] == '*' then
         return semantics:any_key(), i + 1
       else
-        local optional = tokens[i] == '?'
-        if optional then i = i + 1 end
+        local props = { }
+        while tokens[i]:find '^%W' do
+          props.optional = props.optional or tokens[i] == '?'
+          props.insensitive = props.insensitive or tokens[i] == '^'
+          props.fontable = props.fontable or tokens[i] == '%'
+          i = i + 1
+        end
         local nameparts = { }
-        while tokens[i]:find '%w' do
+        while tokens[i]:find '%w' or tokens[i] == '&' do
           table.insert(nameparts, tokens[i])
           i = i + 1
         end
@@ -626,7 +635,7 @@ do
           validator, i = alts(tokens, i + 1)
         end
         vprintf('found a key ending before token %d (%s)\n', i, tostring(tokens[i]))
-        return semantics:key(table.concat(nameparts, ' '), optional, validator), i
+        return semantics:key(table.concat(nameparts, ' '), props, validator), i
       end
     end
 
@@ -743,8 +752,9 @@ do
     return 'YAML null'
   end
 
-  function show_parse:key(name, optional, v)
-    return stringf('%s%s%s', optional and 'maybe ' or '', name, v and ', ' .. v or '')
+  function show_parse:key(name, props, v)
+    return stringf('%s%s%s%s', props.optional and 'maybe ' or '', name, v and ', ' .. v or '',
+                   props.insensitive and ' (case insensitive)' or '')
   end
 
   function show_parse:any_key()
@@ -838,8 +848,8 @@ do
     what = 'text',
   }
 
-  function vfactory:key(name, optional, v)
-    return {name = name, optional = optional, validator = v}
+  function vfactory:key(name, props, v)
+    return {name = name, optional = props.optional, validator = v, insensitive = props.insensitive}
   end
 
   function vfactory:any_key()
@@ -1057,21 +1067,103 @@ do
   magicpropnames = table.concat(names, ', ')
 end
 
+-- EQUIPMENT
+local category_map = {
+  ["heavy weapon"] = "HEAVY WEAPONS",
+  ["normal weapon"] = "NORMAL WEAPONS",
+  ["light weapon"] = "LIGHT WEAPONS",
+  ["shield"] = "SHIELDS",
+  ["heavy armor"] = "HEAVY ARMOR",
+  ["heavy armour"] = "HEAVY ARMOR",
+  ["normal armor"] = "MEDIUM ARMOR",
+  ["normal armour"] = "MEDIUM ARMOR",
+  ["medium armor"] = "MEDIUM ARMOR",
+  ["medium armour"] = "MEDIUM ARMOR",
+  ["light armor"] = "LIGHT ARMOR",
+  ["light armour"] = "LIGHT ARMOR",
+  ["heavy item"] = "HEAVY ITEMS",
+  ["slotted item"] = "SLOTTED ITEMS",
+  ["free item"] = "SMALL ITEMS",
+  ["small item"] = "SMALL ITEMS",
+  ["stored item"] = "STORED ITEMS",
+  ["stored"] = "STORED ITEMS",
+}
+
+local catspecs = { }
+for _, category in pairs(category_map) do
+  table.insert(catspecs, stringf('?^%s:list(s)', category))
+end
+
+local category_order = {
+ "SHIELDS",
+ "LIGHT WEAPONS",
+ "NORMAL WEAPONS",
+ "HEAVY WEAPONS",
+ "LIGHT ARMOR",
+ "MEDIUM ARMOR",
+ "HEAVY ARMOR",
+ "HEAVY ITEMS",
+ "SLOTTED ITEMS",
+ "SMALL ITEMS",
+ "STORED ITEMS"
+}
+
 
 -- XXX validation maybe needs to be an object, so can choose between alts
 
-local doc_validation = ([[
-{ *,
-  ?ATTACKS:attacks@list(
+local doc_validation = ([[doc$
+{
+  ?CLASS,
+  ?LEVEL:n,
+  ?CLASS & LEVEL:class_level$s,
+
+  ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
+
+  ABILITIES
+
+  ?MAX HP:n[1..],
+  ?ARMOR CLASS:n[1..],
+  ?PASSIVE PERCEPTION:n[1..],
+
+  ?SPELL DC:n,
+  ?DOMAIN SPELLS:n,
+  ?SPELLS KNOWN:n,
+  ?SORCERY POINTS:n,
+
+  ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
+  ?HIT DICE, ?INITIATIVE, ?SPEED, ?EXPERIENCE POINTS,
+  ?CURRENT HIT POINTS, ?PROFICIENCY BONUS,
+
+  ?CP, ?SP, ?EP, ?GP, ?PP,
+
+  ?GM NOTES,
+
+  ?PREGENERATED:b,
+  ?MAGIC SEPARATE:b,
+
+
+
+  ?%ATTACKS:attacks@list(
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-  ?FEATURES:list(feature@{name,description}),
-  ?MAGIC:list(spell$spell@{MAGICPROPNAMES}
-             |level-spec@{level:n[0..9],?slots:n[1..]}
+  ?%FEATURES:list(feature@{name,description}),
+  ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
+             |level$level-spec@{level:n[0..9],?slots:n[1..]}
              |null
              ),
+  ?%EQUIPMENT:equipment$(list(string)|{CATEGORIES})),
+  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+  ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+
+
+
 
 }
 ]]):gsub('MAGICPROPNAMES', magicpropnames)
+   :gsub('CATEGORIES', table.concat(catspecs, ', '))
+   :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
+        :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:n[1..20], '))
+
+--print(doc_validation); os.exit(2)
 
 function validators.attack(context, v)
   if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
@@ -1083,6 +1175,19 @@ function validators.spell(context, v)
   if not (v.description or v.long or v.abbrev) then
     verrorf('In %s, spell %q has no description', context, v.name)
   end
+end
+
+function validators.level(context, v)
+  if v.level == 0 then
+    verrorf('In %s, spec for cantrips (level 0) included slots, but cantrips have no slots',
+            context)
+  elseif v.level > 0 and not v.slots then
+    verrorf('In %s, spec for level %d is missing its slot count', context, v.level)
+  end
+end
+
+function validators.class_level(context, v)
+  assert(false, 'class and level validator not yet implemented', context, v)
 end
 
 --print(parse(show_parse, doc_validation))
@@ -1133,37 +1238,6 @@ end
 
 
 
-local function validate_magic_entry(entry)
-  if isnull(entry) then
-    -- skip it
-  elseif has(entry, 'level') then
-    -- Level entry
-    if not inrange(0, 9)(entry.level) then
-      verrorf('spell level designation is %q; expected a number from 1 to 9', image(entry.level))
-    elseif tonumber(entry.level) == 0 then
-      if entry.slots then
-        verrorf('cantrips (level 0) list %s slots; expected no slots', tostring(entry.slots))
-      end
-    elseif not entry.slots then
-      verrorf("spell marker for level %d doesn't include a slot count", tonumber(entry.level))
-    elseif tonumber(entry.slots) <= 0 then
-      verrorf("spell marker for level %d doesn't provide any slots", tonumber(entry.level))
-    end
-  elseif has(entry, 'name') then
-    if valid_named_thing('magic spell', entry) then
-      if not nonempty_string(entry.description) then
-        verrorf('spell %s does not have a description', tostring(entry.name))
-      end
-      report_bad_properties(stringf('spell %s', entry.name), entry, magic_property)
-    end
-  else
-    verrorf('Expected a spell description or a level designation; got MAGIC entry %s',
-            friendly(entry))
-  end
-end
-
------------------------------------------------------------------------------
-
 --- start here
 
 local magic_markers = {
@@ -1197,73 +1271,6 @@ local function add_magic_markers(name, thing)
 end
 
 
-
--- Extract valid equipment categories from category_map (single point of truth)
--- This will be updated after category_map is defined
-local valid_equipment_categories
-
--- Structure-specific validators
-
-local function validate_equipment_structure(equipment)
-  if not can_be 'table'(equipment) then
-    verrorf('equipment entry %q should be a list of items', image(equipment))
-  elseif listof(can_be 'string')(equipment) then
-    -- flat list; no further validation
-  else
-    -- Structured format (object-style)
-    for category, items in pairs(equipment) do
-      if not can_be'string'(category)
-      or not valid_equipment_categories[tostring(category):upper()]
-      then
-        verrorf("invalid equipment category %q", category)
-      end
-      if not listof(can_be 'string')(items) then
-        local _, bad = listof(can_be 'string')(items)
-        verrorf('item %q in category %s is not a string', bad and image(bad) or '?',
-                tostring(category))
-      end
-    end
-  end
-end
-
-
-local function validate_foreach() return function() end end
-
-local validate_equipment = validate_equipment_structure
-local validate_features = validate_foreach('FEATURES', app1(valid_named_thing, 'feature'))
-local validate_magic = validate_foreach('MAGIC', validate_magic_entry)
-
--- Validate proficiencies structure (custom logic)
-local function validate_proficiency_entry(entry)
-  if empty(entry) then
-    -- does for blank line
-  elseif can_be'string'(entry) then
-    -- all good
-  elseif islist(entry) then
-    validate_foreach('proficiency entry', validate_proficiency_entry)(entry)
-  elseif is_singleton_table(entry) and next(entry) == 'proficiencies_skip' then
-    -- Special entry (like proficiencies_skip)
-    if not empty(entry.proficiencies_skip)
-      and
-      not can_be 'boolean'(entry.proficiencies_skip)
-    then
-        verrorf("proficiencies_skip entry %s is not boolean",
-                image(entry.proficiencies_skip))
-    end
-  elseif is_singleton_table(entry) then -- inner table
-    local v, k = next(entry)
-    if can_be'string'(v) and islist(k) then
-      validate_proficiency_entry(k)
-    else
-      verrorf("proficiency %q is %s; expect string or proficiency list", image(entry), type(entry))
-    end
-  else
-    verrorf("proficiency %q is %s; expect string or proficiency list", image(entry), type(entry))
-  end
-end
-
-local validate_proficiencies =
-  validate_foreach('proficiencies', validate_proficiency_entry)
 
 local casting_modifier = {
   Bard      = 'CHA',
@@ -1307,66 +1314,6 @@ local function validate_class_level_requirement(doc)
   return true
 end
 
-local field_specs = {
-  -- Each entry has: p (predicate), fs (field list), m (message), required (boolean)
-
-  -- Required ability scores (1-20)
-  { vd = inrange(1, 20),
-    fs = {'STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'} },
-
-  -- Required basic character info
-  { vd = optional(nonempty_string),
-    fs = {'CHARACTER NAME', 'PLAYER NAME', 'RACE', 'BACKGROUND'} },
-
-  -- Required numeric stats
-  { vd = positive,
-    fs = {'MAX HP', 'ARMOR CLASS', 'PASSIVE PERCEPTION'} },
-
-  -- Required structured data
-  { vd = optional(validate_equipment),
-    fs = {'EQUIPMENT'} },
-  { vd = optional(validate_attacks),
-    fs = {'ATTACKS'} },
-  { vd = optional(validate_features),
-    fs = {'FEATURES'} },
-  { vd = optional(validate_magic),
-    fs = {'MAGIC'} },
-  { vd = optional(validate_proficiencies),
-    fs = {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'} },
-
-  -- Optional fields that can be present
-  { vd = optional(inrange(1, 20)),
-    fs = {'LEVEL'} },
-  { vd = optional(positive),
-    fs = {'SPELL DC', 'DOMAIN SPELLS', 'SPELLS KNOWN', 'SORCERY POINTS'} },
-  { vd = optional(can_be('string', 'number')),
-    fs = {'ALIGNMENT', 'HIT DICE', 'INITIATIVE', 'SPEED', 'EXPERIENCE POINTS',
-          'CURRENT HIT POINTS', 'SENSES', 'PROFICIENCY BONUS', 'CP', 'SP', 'EP', 'GP', 'PP'} },
-  { vd = optional(can_be 'string'),
-    fs = {'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES'} },
-  { vd = optional(can_be 'boolean'),
-    fs = {'PREGENERATED', 'MAGIC SEPARATE'} },
-  { vd = optional(can_be 'table'),
-    fs = {'DESCRIPTION & PERSONALITY'} },
-}
-
-local string_list_fields = {
-  'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
-  'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
-}
-
-
-local validator = { }
-
-do
-  for _, spec in ipairs(field_specs) do
---require 'inspect'.show(spec)
-    for _, field in ipairs(spec.fs) do
-      assert(type(spec.vd) == 'function')
-      validator[field] = spec.vd
-    end
-  end
-end
 
 -- Forward declaration
 local value_string = require 'inspect'.friendly
@@ -1380,41 +1327,9 @@ end
 
 
 -- Validation function
-local function validate_document(doc)
-  -- Clear global validation errors from previous documents
-  for field_name, value in pairs(doc) do
-    -- Skip system-generated fields that shouldn't be validated
-    if not field_name:match(' SAVING$') then
-      local thevalidator = validator[field_name]
-
-      -- Handle font variants dynamically: if "X FONT" and X is valid, treat as optional LaTeX font command
-      if not thevalidator and field_name:match(' FONT$') then
-        local base_field = field_name:match('(.*) FONT$')
-        if base_field and validator[base_field] then
-          thevalidator = optional(validate_font)
-        end
-      end
-
-      if thevalidator then
-        -- Handle YAML null and nil as empty values
-        local test_value = value
---        if value == nil or isnull(value) then
---          test_value = ""
---        end
-
-        thevalidator(test_value)
-      elseif fields.strict then
-        -- In strict mode, unknown fields are errors
-        verrorf("Unknown field: %s", field_name)
-      elseif fields.verbose then
-        -- In verbose mode, warn about unknown fields
-        eprintf("Warning: Unknown field: %s\n", field_name)
-      end
-    end
-  end
-
+function validators.doc(context, doc)
   if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
-    verrorf('WIS present but PASSIVE PERCEPTION missing')
+    verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
   end
 
   -- Validate CLASS & LEVEL requirement
@@ -1619,44 +1534,9 @@ end
 -- 3.5. Equipment string list parsing
 ---------------------------------------------------------------------------
 
-local category_map = {
-  ["heavy weapon"] = "HEAVY WEAPONS",
-  ["normal weapon"] = "NORMAL WEAPONS",
-  ["light weapon"] = "LIGHT WEAPONS",
-  ["shield"] = "SHIELDS",
-  ["heavy armor"] = "HEAVY ARMOR",
-  ["heavy armour"] = "HEAVY ARMOR",
-  ["normal armor"] = "MEDIUM ARMOR",
-  ["normal armour"] = "MEDIUM ARMOR",
-  ["medium armor"] = "MEDIUM ARMOR",
-  ["medium armour"] = "MEDIUM ARMOR",
-  ["light armor"] = "LIGHT ARMOR",
-  ["light armour"] = "LIGHT ARMOR",
-  ["heavy item"] = "HEAVY ITEMS",
-  ["slotted item"] = "SLOTTED ITEMS",
-  ["free item"] = "SMALL ITEMS",
-  ["small item"] = "SMALL ITEMS",
-  ["stored item"] = "STORED ITEMS",
-  ["stored"] = "STORED ITEMS",
-}
-
-local category_order = {
- "SHIELDS",
- "LIGHT WEAPONS",
- "NORMAL WEAPONS",
- "HEAVY WEAPONS",
- "LIGHT ARMOR",
- "MEDIUM ARMOR",
- "HEAVY ARMOR",
- "HEAVY ITEMS",
- "SLOTTED ITEMS",
- "SMALL ITEMS",
- "STORED ITEMS"
-}
-
 
 -- Extract valid equipment categories from category_map (single point of truth)
-valid_equipment_categories = {}
+local valid_equipment_categories = {}
 for _, category in pairs(category_map) do
   valid_equipment_categories[category] = true
 end
@@ -1714,6 +1594,7 @@ local function extract_weight_arg(category, equipment_item)
   end
   return ""
 end
+
 
 local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
   local weight_arg = extract_weight_arg(category, equipment_item)
@@ -1885,28 +1766,25 @@ local function unparse_equipment_structure(structured_equipment)
 end
 
 -- Round-trip validation function
-local function validate_equipment_parsing(structured_equipment)
-  -- Skip validation for empty structures
-  if not structured_equipment or (type(structured_equipment) == "table" and next(structured_equipment) == nil) then
-    return structured_equipment
-  end
+function validators.equipment(context, structured_equipment)
+  if next(structured_equipment) ~= nil then
 
-  -- Skip round-trip validation if equipment structure is invalid
-  local valid, _ = validate_equipment(structured_equipment)
-  if not valid then
-    return structured_equipment  -- Return invalid structure as-is, validation errors already reported
-  end
+    -- Skip round-trip validation if equipment structure is invalid
+    local valid, _ = validate_equipment(structured_equipment)
+    if not valid then
+      return structured_equipment  -- Return invalid structure as-is, validation errors already reported
+    end
 
-  -- Unparse to string list format
-  local unparsed_lines = unparse_equipment_structure(structured_equipment)
+    -- Unparse to string list format
+    local unparsed_lines = unparse_equipment_structure(structured_equipment)
 
-  -- Parse it back
-  local reparsed_structure = parse_equipment_strings(unparsed_lines)
+    -- Parse it back
+    local reparsed_structure = parse_equipment_strings(unparsed_lines)
 
-  -- Compare with original
-  if not table_eq(structured_equipment, reparsed_structure) then
-    error(string.format([[
-Equipment round-trip validation failed!
+    -- Compare with original
+    if not table_eq(structured_equipment, reparsed_structure) then
+      verrorf([[
+In %s, equipment round-trip validation failed!
 Original:
   %s
 
@@ -1915,12 +1793,12 @@ Unparsed lines:
 
 Reparsed:
   %s]],
-      visualize_table(structured_equipment),
-      table.concat(unparsed_lines, "\n"),
-      visualize_table(reparsed_structure)))
-  end
-
-  return structured_equipment
+  context,
+  visualize_table(structured_equipment),
+  table.concat(unparsed_lines, "\n"),
+  visualize_table(reparsed_structure))
+    end
+  end  
 end
 
 local function proficiency_bonus(doc)
@@ -2018,7 +1896,10 @@ end
 
 
 local function preprocess(doc)
-  for _, f in ipairs(string_list_fields) do
+  for _, f in ipairs { 'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
+                       'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
+                     }
+  do
     doc[f] = convert_colon_tables(doc[f])
   end
 
