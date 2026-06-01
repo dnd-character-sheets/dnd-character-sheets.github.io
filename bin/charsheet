@@ -784,11 +784,11 @@ do
   end
 
   function show_parse:string()
-    return 'a string'
+    return 'text'  -- match the text validator's .what
   end
 
   function show_parse:boolean()
-    return 'a boolean'
+    return 'a Boolean'  -- match vfactory:boolean's .what casing
   end
 
   function show_parse:empty()
