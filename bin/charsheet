@@ -553,8 +553,6 @@ $ v
 
 local validators = { }
 
-local show_parse = { } -- luacheck: no unused
-
 local parse
 do
   local inspect = require 'inspect'
@@ -743,74 +741,6 @@ do
     return alts()
 
   end
-
-
-  local function stringf(...)
-    local thing = string.format(...)
-    vprintf('Semantics received %s\n', thing)
-    return thing
-  end
-
-  function show_parse:number(rg)
-    -- mirror vfactory:number's .what wording ('in the range', 'at least', 'at most')
-    local range_string = ''
-    if rg then
-      if rg.lo and rg.hi then
-        range_string = stringf(' in the range %d..%d', rg.lo, rg.hi)
-      elseif rg.lo then
-        range_string = stringf(' at least %d', rg.lo)
-      elseif rg.hi then
-        range_string = stringf(' at most %d', rg.hi)
-      end
-    end
-    return stringf('a number%s', range_string)
-  end
-
-  function show_parse:null()
-    return 'YAML null'
-  end
-
-  function show_parse:key(name, props, v)
-    return stringf('%s%s%s%s', props.optional and 'maybe ' or '', name, v and ', ' .. v or '',
-                   props.insensitive and ' (case insensitive)' or '')
-  end
-
-  function show_parse:any_key()
-    return 'or any other key'
-  end
-
-  function show_parse:table(keys)
-    return stringf('a table with these keys: { %s }', table.concat(keys, '; '))
-  end
-
-  function show_parse:string()
-    return 'text'  -- match the text validator's .what
-  end
-
-  function show_parse:boolean()
-    return 'a Boolean'  -- match vfactory:boolean's .what casing
-  end
-
-  function show_parse:empty()
-    return 'something empty'
-  end
-
-  function show_parse:list(v)
-    return stringf('a list in which each element is %s', v)
-  end
-
-  function show_parse:named(name, v)
-    return stringf('%s, which is %s', a(name), v)
-  end
-
-  function show_parse:alts(alts)
-    return stringf('(Any of %s)', table.concat(alts, ' OR '))
-  end
-
-  function show_parse:validate(f, v)
-    return stringf('%s validated by function %s', v, f)
-  end
-
 end
 
 
@@ -1113,7 +1043,7 @@ end
 
 
 
---print(parse(show_parse, '{level:n[0..9],?slots:n}'))
+-- print(parse(vfactory, '{level:n[0..9],?slots:n}').what)
 
 local function new_validate(context, doc, validation)
   parse(vfactory, validation):validate(context, doc)
