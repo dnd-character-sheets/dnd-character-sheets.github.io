@@ -518,17 +518,19 @@ end
 
 --[=[
 
-  validator v ::= s[tring]
-               |  b[ool[ean]]
-               |  n[number] [*[*[N]..[M]*]*]
-               |  l[ist](v)
-               |  name@v     -- name may be raw or with double quotes
-               |  v*|*v
+  validator v ::= s⟦tring⟧
+               |  b⟦ool⟦ean⟧⟧
+               |  n⟦number⟧ ⟦[⟦N⟧..⟦M⟧]⟧
+               |  empty
+               |  null
+               |  l⟦ist⟧(v)
+               |  {⦃key,⦄}
+               |  v|v
                |  (v)
-               |  *{*{key[,]}*}*
-               |  fname$v
+               |  name@v     -- identify the thing
+               |  fname$v    -- validate with function fname
 
-  key         ::= [?]name[:v]   -- type defaults to text
+  key         ::= ⦃?|%|^⦄name⟦:v⟧   -- type defaults to text
 
 ------ LL grammar
 
