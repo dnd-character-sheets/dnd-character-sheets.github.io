@@ -1173,7 +1173,11 @@ local doc_validation = ([[doc$
 
   ?%ATTACKS:attacks@list(
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-  ?%FEATURES:list(feature@{name,description}),
+  ?%FEATURES:list(feature@
+         {name,description
+         ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration
+         ,?GM note
+         }),
   ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
              |level$level-spec@{level:n[0..9],?slots:n[1..]}
              |null
