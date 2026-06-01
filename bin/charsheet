@@ -1171,8 +1171,6 @@ local doc_validation = ([[doc$
   ?PREGENERATED:b,
   ?MAGIC SEPARATE:b,
 
-  bogus:{a,b,c,},
-
   ?%ATTACKS:attacks@list(
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
   ?%FEATURES:list(feature@{name,description}),
