@@ -1906,12 +1906,12 @@ local function same_values(v1, v2)
          s2:find '^%d+$' and s1 == '+' .. s2
 end
 
-local function has_skill(t, skill)
+local function has_skill(t, skill) -- also expertise
   local skill = skill:lower()
   if type(t) == 'table' then
     for p in scalarvalues(t) do
       if type(p) == 'string' and p:lower():find(skill) then
-        return true
+        return true, p:find('[E]', 1, true)
       end
     end
   end
@@ -2031,24 +2031,26 @@ local function extend(doc)
   end
 
   local function set_passive_skill(stat, skill)
-    local proficient =
-      has_skill(doc.PROFICIENCIES, skill) or
-      has_skill(doc['SECONDARY PROFICIENCIES'], skill)
+    local proficient, expert = has_skill(doc.PROFICIENCIES, skill)
+    if not proficient then
+      proficient, expert = has_skill(doc['SECONDARY PROFICIENCIES'], skill)
+    end
+    local bonus = expert and 2 * prof_bonus or prof_bonus
 
-    if doc[stat] and not has_expertise then
+    if doc[stat] then
     -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
       local stat_score = tonumber(doc[stat])
       local modifier = math.floor((stat_score - 10) / 2)
-      local calculated = 10 + modifier + (proficient and prof_bonus or 0)
+      local calculated = 10 + modifier + (proficient and bonus or 0)
 
       local passive_skill = stringf('PASSIVE %s', skill:upper())
 
       if not empty(doc[passive_skill]) then
         local existing_skill = tonumber(doc[passive_skill])
         if existing_skill and existing_skill ~= calculated then
-          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %d)',
+          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %s%d)',
                   passive_skill, existing_skill, calculated,
-                  stat, modifier, prof_bonus)
+                  stat, modifier, expert and '2×' or '', prof_bonus)
         end
       else
         -- Set calculated PASSIVE PERCEPTION
