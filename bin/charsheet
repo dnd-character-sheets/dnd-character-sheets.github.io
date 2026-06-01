@@ -2270,7 +2270,7 @@ local function sheet_of_file(pathname)
 
   -- Validate document before processing
   preprocess(doc)
-  new_validate('a character sheet', doc, doc_validation)
+  new_validate(pathname, doc, doc_validation)
 --  validate_document(doc)
   extend(doc)
   if #global_validation_errors > 0 then
