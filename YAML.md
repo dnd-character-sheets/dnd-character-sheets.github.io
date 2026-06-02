@@ -66,15 +66,23 @@ In any text field you can write any of the following:
 
 ## Keys for changing font size
 
-Any key name can have " FONT" appended to control the font used when rendering that section in the character sheet. The value should be a LaTeX font command, as in these examples:
+Some key names
+can have " FONT" appended to control the font used when rendering the named section in the character sheet. The value should be a LaTeX font command, as in these examples:
 
 - `MAGIC FONT: \small`
 - `EQUIPMENT FONT: \footnotesize`
 - `FEATURES FONT: \footnotesize`
 
-If a font-size specification seems not to be having any effect, either
-the key in question does not refer to a section of the character
-sheet, or there is a bug in my code.
+The sections that support `FONT` keys are
+`ATTACKS`,
+`FEATURES`,
+`MAGIC`,
+`EQUIPMENT`,
+and
+`PROFICIENCIES`
+
+If a font-size specification seems not to be having any effect,
+there is a bug in my code.
 Open a Github issue.
 
 ## Keys with calculated values
