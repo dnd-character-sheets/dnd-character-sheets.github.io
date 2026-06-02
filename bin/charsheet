@@ -1296,12 +1296,40 @@ function validators.class_level(context, class_and_level)
   end
 end
 
+-- Validate CLASS & LEVEL requirement and parsing
 
---print(parse(show_parse, doc_validation))
+function validators.nonempty(context, v)
+  if empty(v) then
+    verrorf('In %s, expected data but found %s', context, friendly(v))
+  end
+end
 
 
 
--------------------- Normalizing YAML ---------------------------------
+-- Validation function
+function validators.doc(context, doc)
+  if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
+    verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
+  end
+
+  if not (doc['CLASS & LEVEL'] or doc.CLASS and doc.LEVEL) then
+    if doc.CLASS then
+      verrorf 'The character sheet does not specify LEVEL'
+    elseif doc.LEVEL then
+      verrorf 'The character sheet does not specify CLASS'
+    else
+      verrorf 'The character sheet does not specify CLASS or LEVEL'
+    end
+  end
+end
+
+
+-------------------------------------------------------------------------
+--
+-- Extending and changing the bare YAML
+
+--------------------------------------------------------------------------
+
 
 -- Colon conversion
 --
@@ -1336,21 +1364,13 @@ local function convert_colon_tables(v)
   assert(false) -- luacheck: ignore
 end
 
-
---------------------------------------------------------------------------
---
--- Validating FEATURES and MAGIC
---
--- Two kinds of entries: { name: ..., description: ... } and spell_slots
-
-
-
---- start here
+--- Add tags to the names of spells
 
 local magic_markers = {
   concentration = 'C',
   ritual = 'R',
   bonus = 'B',
+  reaction = 'Rx',
 }
 
 local function add_magic_markers(name, thing)
@@ -1358,7 +1378,7 @@ local function add_magic_markers(name, thing)
     return name
   else
     local tags = name:match '%b[]'
-    if tags and tags:find '^.[%u,]+.$' then
+    if tags and tags:find '^.[%u,x]+.$' then
       return name
     else
       tags = { }
@@ -1389,33 +1409,6 @@ local casting_modifier = {
   Warlock   = 'CHA',
   Wizard    = 'INT',
 }
-
--- Validate CLASS & LEVEL requirement and parsing
-
-function validators.nonempty(context, v)
-  if empty(v) then
-    verrorf('In %s, expected data but found %s', context, friendly(v))
-  end
-end
-
-
-
--- Validation function
-function validators.doc(context, doc)
-  if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
-    verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
-  end
-
-  if not (doc['CLASS & LEVEL'] or doc.CLASS and doc.LEVEL) then
-    if doc.CLASS then
-      verrorf 'The character sheet does not specify LEVEL'
-    elseif doc.LEVEL then
-      verrorf 'The character sheet does not specify CLASS'
-    else
-      verrorf 'The character sheet does not specify CLASS or LEVEL'
-    end
-  end
-end
 
 
 
@@ -1865,6 +1858,10 @@ As Lua object this says an equipment line is one of the following:
 
 -- Round-trip validation function
 function validators.equipment(context, structured_equipment)
+
+  -- should confirm that a structured equipment table can be transformed
+  -- into a string list and back without losing information
+
   if next(structured_equipment) ~= nil then
 
     -- Skip round-trip validation if equipment structure is invalid
@@ -1872,6 +1869,9 @@ function validators.equipment(context, structured_equipment)
     if not valid then
       return structured_equipment  -- Return invalid structure as-is, validation errors already reported
     end
+
+-- DEAD CODE:
+
 
     -- Unparse to string list format
     local unparsed_lines = unparse_equipment_structure(structured_equipment)
