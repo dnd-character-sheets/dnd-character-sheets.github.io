@@ -15,8 +15,8 @@ YAML's rules for quotation are actually fairly involved, but for the character s
 most quotation marks are optional.
 
 Finally, I have not yet documented exactly how few keys you can get away with.
-I have tried to require as few as possible.
-You might be able to get a character sheet with as little as `CLASS` and `LEVEL`.
+I have tried to require as few as possible.  The only one I am sure is required is
+`CLASS`.
 
 # What you can write: Beyond plain text
 
@@ -97,7 +97,6 @@ in a YAML file:
 
 Other calculated keys may be included, but when they are absent, the rendering engine calculates them:
 
-- `PASSIVE PERCEPTION` (the rendering engine attempts to account for Expertise)
 - `SPELL DC`
 
 # Alphabetical list of keys
@@ -299,7 +298,12 @@ the rendering engine defines `DEX SAVING` to be `true`.
 Otherwise `DEX SAVING` is left undefined.
 
 
-#### `CP`
+#### `DOMAIN SPELLS`
+
+The number of spells a Cleric
+gets from their domain.
+
+#### `EP`
 
 Number of electrum pieces in the character's inventory.
 May also be left blank.
@@ -360,7 +364,7 @@ EQUIPMENT:
   SLOTTED ITEMS:
     - "Arrows (20)"
     - "Rations (10 days)"
-  FREE ITEMS:
+  SMALL ITEMS:
     - "Clothes"
   HEAVY ITEMS:
     - "Anvil (8 stones)"
@@ -434,6 +438,7 @@ In addition, each feature may be labeled with any or all of the following proper
 - `save`: Made `true` if using the feature requires an enemy to make a saving throw
 - `enemy`: Made `true` if using the feature involves targeting an enemy
 - `duration`: A string describing how long the effect of the feature lasts
+- `GM note`: A Boolean or a string that governs what appears on the GM's sheet
 
 If a feature has the `attack`, `save`, or `enemy` property, that
 feature will be displayed using an "attack color."  (Provided the
@@ -644,10 +649,11 @@ An optional, short string displayed in italic text near the character's name.
 - `MOTIVATION: "Miriel is trying to prove herself"`
 - `MOTIVATION: "Find family"`
 
-#### `PASSIVE PERCEPTION` (calculated by the system)
+#### `PASSIVE PERCEPTION`
 
 May be displayed with the character's other information, and is also used on the GM's sheet.
-`PASSIVE PERCEPTION` is worth including explicitly, just in case something goes wrong with the calculation.
+This key must be included whenever `WIS` (Wisdom) is present, because I'm not completely
+confident that the calculated value is correct.
 
 
 #### `PLAYER NAME`
@@ -682,7 +688,11 @@ A list of the character's skill, tool, language, and other proficiencies.
 A completely blank list element is interpreted as a separator between
 groups of related proficiencies. 
 (Only the first two groups are shown on the GM's summary sheet.)
-The separator can also be written as `proficiencies_skip: true`.
+It is also permissible to nest proficiencies by including a table that
+maps a category to a list of proficiencies.  Any category is permissible.
+
+See also `SECONDARY PROFICIENCIES`.
+
 
 ```yaml
 PROFICIENCIES:
@@ -695,6 +705,10 @@ PROFICIENCIES:
   - 
   - "Simple Weapons"
   - "All Armor"
+  -
+  - Tools:
+      - Thieves' Tools
+      - Herbalism Kit
 ```
 
 #### `PROFICIENCY BONUS`
@@ -717,6 +731,13 @@ Character's race and (optionally) subrace.
 - `RACE: Human`
 - `RACE: Wood Elf`
 
+### `SECONDARY PROFICIENCIES`
+
+A list just like `PROFICIENCIES`, with two properties:
+
+  - On a character sheet, the `SECONDARY PROFICIENCIES` follow the
+    `PROFICIENCIES`.
+  - The `SECONDARY PROFICIENCIES` do not appear on the GM's sheet.
 
 
 #### `SENSES`
@@ -808,6 +829,12 @@ May appear only on the GM's sheet.
 
 - `SPELLS KNOWN: 5`
 
+
+
+#### `STONES`
+
+A Boolean.  In some layouts, causes an extra page to be added that can be used 
+to track encumbrance using the [Alexandrian stone system](https://thealexandrian.net/wordpress/46824/roleplaying-games/5e-encumbrance-by-stone).
 
 
 #### `STR`
