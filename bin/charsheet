@@ -552,8 +552,6 @@ $ v
 
 ]=]
 
-local validators = { }
-
 local parse
 do
   local inspect = require 'inspect'
@@ -746,6 +744,7 @@ end
 
 
 local vfactory = { }
+local validators, vnames = { }, { }
 
 do
   -- key       : { name : string, optional : bool, validator = v }
@@ -988,7 +987,7 @@ do
 
   function vfactory:list(element)
     return {
-      what = stringf('a list of %s', element.what),
+      what = stringf('a list of (%s)', element.what),
       mine = function(_, v) return type(v) == 'table' and (v[1] ~= nil or next(v) == nil) end,
       validate = function(_, context, v)
         if type(v) ~= 'table' or next(v) ~= nil and not v[1] then
@@ -1003,11 +1002,17 @@ do
   end
 
   function vfactory:named(name, validator)
+    name = vnames[name] or name
     return {
       mine = function(_, v) return validator:mine(v) end,
-      what = stringf('%s, which is %s', a(name), validator.what),
+      what = #validator.what > 30 and a(name) or stringf('%s, which is %s', name, validator.what),
       validate = function(_, context, v)
-        return validator:validate(stringf('%s, which is %s', a(name), context), v)
+        if #context > 30 then
+          context = name
+        else
+          context = stringf('%s, which is %s', a(name), context)
+        end
+        return validator:validate(context, v)
       end,
     }
   end
