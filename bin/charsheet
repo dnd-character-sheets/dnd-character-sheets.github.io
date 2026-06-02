@@ -1266,6 +1266,10 @@ local doc_validation = ([[doc$
 
   ?LAYOUT,
   ?SHEET ORIGIN,
+  ?COLOR:b,
+  ?TRAITS:b,
+  ?SPELL ATTACK MODIFIER:n,
+  ?SPELLCASTING ABILITY MODIFIER:n,
   
   ?OTHER:any,
 
@@ -1475,6 +1479,12 @@ end
 
 local function extend(doc)
 
+  --- options
+  if fields.nocolor then
+    doc.COLOR = false
+  end
+
+  -- confirm existing value or set new one
   local function update(field, value) -- checks for consistency
     local v = doc[field]
     if v and tostring(v):find '%S' and not same_values(v, value) then
@@ -1485,13 +1495,11 @@ local function extend(doc)
     end
   end
 
-  if fields.nocolor then
-    doc.COLOR = false
-  end
-
   local class = assert(doc.CLASS)
   doc.LEVEL = doc.LEVEL or 1
   local level = doc.LEVEL
+
+  ---------- calculated fields -------------
 
   local p = saving_throw_proficiencies[class]
   if p then
