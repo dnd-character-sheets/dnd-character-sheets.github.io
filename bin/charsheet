@@ -493,6 +493,10 @@ end)
 
 assert(nonempty_string 'Arborist')
 
+local function is_empty_table(v)
+  return type(v) == 'table' and next(v) == nil
+end
+
 local is_singleton_table = wrap(function(t)
   if type(t) == 'table' then
     local k = next(t)
@@ -1445,18 +1449,10 @@ local render = { }
 ---------------------------------------------------------------------------
 -- 3. Rendering helpers
 ---------------------------------------------------------------------------
-local function is_empty_table(v)
-  return type(v) == 'table' and next(v) == nil
-end
-
-local function is_list(v)
-  return type(v) == 'table' and (v[1] or next(v) == nil)
-end
-
 local function is_named_list(entry) -- category: [a, b, c, ...]
   if type(entry) == 'table' then
     local k, v = next(entry)
-    return type(k) == 'string' and is_list(v) and next(entry, k) == nil
+    return type(k) == 'string' and islist(v) and next(entry, k) == nil
   end
 end
 
