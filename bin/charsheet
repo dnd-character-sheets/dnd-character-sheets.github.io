@@ -1398,42 +1398,41 @@ local casting_modifier = {
 }
 
 
+--------------------------------------------------------------------------
+---
+--- Help for output
 
+local escape_tex
 
----------------------------------------------------------------------------
--- 1. TeX-escaping utility
----------------------------------------------------------------------------
-local tex_escape_map = {
---  ["\\"] = [[\textbackslash{}]],
---  ["{"]  = [[\{]],
---  ["}"]  = [[\}]],
-  [' '] = '~',
-  ["&"]  = [[\&]],
-  ["%"]  = [[\%]],
-  ["$"]  = [[\$]],
-  ["#"]  = [[\#]],
-  ["_"]  = [[\_]],
-  ["~"]  = [[\textasciitilde{}]],
-  ["^"]  = [[\textasciicircum{}]],
-}
+do
+  
+  local map = {
+  --  ["\\"] = [[\textbackslash{}]],
+  --  ["{"]  = [[\{]],
+  --  ["}"]  = [[\}]],
+    [' '] = '~',
+    ["&"]  = [[\&]],
+    ["%"]  = [[\%]],
+    ["$"]  = [[\$]],
+    ["#"]  = [[\#]],
+    ["_"]  = [[\_]],
+    ["~"]  = [[\textasciitilde{}]],
+    ["^"]  = [[\textasciicircum{}]],
+  }
 
-local function escape (s)
-  if isnull(s) then
-    return ''
-  else
-    return (tostring(s):gsub("[\\&%%$#_{}~^]", tex_escape_map)
-                       :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
-                       :gsub("−", [[\textminus{}]])
-    )
+  escape_tex = function (s)
+    if isnull(s) then
+      return ''
+    else
+      return (tostring(s):gsub("[\\&%%$#_{}~^]", map)
+                         :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
+                         :gsub("−", [[\textminus{}]])
+      )
+    end
   end
 end
 
 local function do_not_escape(s) return tostring(s) end
-
-local function keyformat(key)
-  return (key:gsub('%&', '+'))
-end
-
 
 --- rendering
 ---
@@ -1464,9 +1463,9 @@ end
 function render.simple_kv (key, val)
   local fontbase = key:match('(.*) FONT$')
   if fontbase then
-    return ([[\setDNDfont{%s}{%s}]]):format(keyformat(fontbase), do_not_escape(val))
+    return ([[\setDNDfont{%s}{%s}]]):format(fontbase, do_not_escape(val))
   else
-    return ([[\setDND{%s}{%s}]]):format(keyformat(key), do_not_escape(val))
+    return ([[\setDND{%s}{%s}]]):format(key, do_not_escape(val))
   end
 end
 
@@ -1579,7 +1578,7 @@ function render.struct_list (key, list)
     end
   end
 
-  return ([[\setDND{%s}{%s}]]):format(keyformat(key), table.concat(out, "\n"))
+  return ([[\setDND{%s}{%s}]]):format(key, table.concat(out, "\n"))
 end
 
 ---------------------------------------------------------------------------
@@ -2311,7 +2310,7 @@ local scripts = { }
 function scripts.charsheet(arg)
   local doc = sheet_of_file(arg[1])
   local layout = fields.layout or doc.LAYOUT or default_layout
-  local latex = sanitize_control_sequences(escape(convert_mapping(doc)))
+  local latex = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
   process(wrap_latex(latex, layout, font))
 end
 
@@ -2334,7 +2333,7 @@ function scripts.gmsheet(arg)
   for i, playerfile in ipairs(arg) do
     local doc = sheet_of_file(playerfile)
     table.insert(docs, doc)
-    local defs = sanitize_control_sequences(escape(convert_mapping(doc)))
+    local defs = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
     table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
   end
 
@@ -2519,11 +2518,11 @@ function scripts.gmspells(arg)
   for _, spell in ipairs(spells) do
     local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
     local description = spell.abbrev or spell.description or spell.long
-    local name = escape(spell.name)
+    local name = escape_tex(spell.name)
     if spell.components then
       name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
     end
-    latexf([[\spell{%s}{%s%s}]], name, escape(description), note)
+    latexf([[\spell{%s}{%s%s}]], name, escape_tex(description), note)
   end
 
   local layout = fields.layout or default_layout
