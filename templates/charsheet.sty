@@ -1918,6 +1918,12 @@
 \newcounter{proficiency bonus}
 \newcounter{ptemp}
 
+\newcommand\DNDinit{%
+  \whenDNDdefined{PROFICIENCY BONUS}{%
+     \expandArg{\setcounter{proficiency bonus}}{\rawgetDND{PROFICIENCY BONUS}}%
+  }%
+}
+
 \newcommand\signed[1]{%
   \setcounter{ptemp}{#1}%
   \expandafter\ifnum\value{ptemp}<0
