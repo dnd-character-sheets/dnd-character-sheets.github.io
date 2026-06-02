@@ -363,10 +363,10 @@ end
 
 --------- document (charsheet) utilities
 
-local function named_things(doc) -- anything in MAGIC or FEATURES with a .name field
+local function named_things(sheet) -- anything in MAGIC or FEATURES with a .name field
   return coroutine.wrap(function()
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = doc[section] or nothing
+      local things = sheet[section] or nothing
       for _, thing in ipairs(things) do
         if thing.name then
           coroutine.yield(thing)
@@ -908,10 +908,12 @@ do
       end
     end
 
+    local maybe_my_key = #required > 0 and has_key or other and next or function() end
+
     return {
       what = wanted,
       mine = function(_, v) return type(v) == 'table' and has_key(v, true) end,
-      maybe_mine = function(_, v) return type(v) == 'table' and has_key(v) end,
+      maybe_mine = function(_, v) return type(v) == 'table' and maybe_my_key(v) end,
       validate = function(_, context, v)
         if type(v) ~= 'table' then
           missing(context, wanted, v)
@@ -1096,8 +1098,8 @@ end
 
 -- print(parse(vfactory, '{level:n[0..9],?slots:n}').what)
 
-local function new_validate(context, doc, validation)
-  parse(vfactory, validation):validate(context, doc)
+local function new_validate(context, sheet, validation)
+  parse(vfactory, validation):validate(context, sheet)
 end
 
 
@@ -1212,75 +1214,75 @@ end
 
 vnames.equipment = 'equipment list'
 
-local doc_validation = ([[doc$
-{
-  CLASS:nonempty$s,
-  ?LEVEL:n,
+local sheet_validation = ([[
+  sheet${
+    CLASS:nonempty$s,
+    ?LEVEL:n,
 
-  ?DOCUMENT FONT:docfont$s,
+    ?DOCUMENT FONT:docfont$s,
 
-  ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
+    ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
 
-  ABILITIES
+    ABILITIES
 
-  ?MAX HP:n[1..],
-  ?ARMOR CLASS:n[1..],
-  ?PASSIVE PERCEPTION:n[1..],
+    ?MAX HP:n[1..],
+    ?ARMOR CLASS:n[1..],
+    ?PASSIVE PERCEPTION:n[1..],
 
-  ?SPELL DC:n,
-  ?DOMAIN SPELLS:n[1..],
-  ?SPELLS KNOWN:n,
-  ?SORCERY POINTS:n,
+    ?SPELL DC:n,
+    ?DOMAIN SPELLS:n[1..],
+    ?SPELLS KNOWN:n,
+    ?SORCERY POINTS:n,
 
-  ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
-  ?HIT DICE, ?INITIATIVE, ?SPEED, ?EXPERIENCE POINTS,
-  ?CURRENT HIT POINTS, ?PROFICIENCY BONUS,
+    ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
+    ?HIT DICE, ?INITIATIVE, ?SPEED, ?EXPERIENCE POINTS,
+    ?CURRENT HIT POINTS, ?PROFICIENCY BONUS,
 
-  ?CP, ?SP, ?EP, ?GP, ?PP,
+    ?CP, ?SP, ?EP, ?GP, ?PP,
 
-  ?GM NOTES,
+    ?GM NOTES,
 
-  ?PREGENERATED:b,
-  ?MAGIC SEPARATE:b,
+    ?PREGENERATED:b,
+    ?MAGIC SEPARATE:b,
 
-  ?%ATTACKS:attacks@list(
-     attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-  ?%FEATURES:list(feature@
-         {name,description
-         ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
-         ,?GM note
-         }),
-  ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
-             |level$level-spec@{level:n[0..9],?slots:n[1..]}
-             |null
-             ),
-  ?%EQUIPMENT:equipment@equipment$
-                (etable@EQUIPMENT_TABLE|list(eqline$string|etable@EQUIPMENT_TABLE)),
-  ?EQUIPMENT COLS:n[1..3],
+    ?%ATTACKS:attacks@list(
+       attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
+    ?%FEATURES:list(feature@
+           {name,description
+           ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
+           ,?GM note
+           }),
+    ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
+               |level$level-spec@{level:n[0..9],?slots:n[1..]}
+               |null
+               ),
+    ?%EQUIPMENT:equipment@equipment$
+                  (etable@EQUIPMENT_TABLE|list(eqline$string|etable@EQUIPMENT_TABLE)),
+    ?EQUIPMENT COLS:n[1..3],
 
-  ?STONES:b, -- use Alexandrian stones
+    ?STONES:b, -- use Alexandrian stones
 
---  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
-  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
-  ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
+  --  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+    ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
+    ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
 
-  ?LAYOUT,
-  ?SHEET ORIGIN,
-  ?COLOR:b,
-  ?TRAITS:b,
-  ?SPELL ATTACK MODIFIER:n,
-  ?SPELLCASTING ABILITY MODIFIER:n,
-  
-  ?OTHER:any,
+    ?LAYOUT,
+    ?SHEET ORIGIN,
+    ?COLOR:b,
+    ?TRAITS:b,
+    ?SPELL ATTACK MODIFIER:n,
+    ?SPELLCASTING ABILITY MODIFIER:n,
 
-}
+    ?OTHER:any,
+
+  }
 ]]):gsub('%-%-.-\n', '')
    :gsub('MAGICPROPNAMES', magicpropnames)
    :gsub('EQUIPMENT_TABLE', equipment.tablespec)
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
         :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:b, '))
 
---print(doc_validation); os.exit(2)
+--print(sheet_validation); os.exit(2)
 
 vnames.etable = 'categorized list of equipment'
 
@@ -1328,8 +1330,8 @@ end
 
 
 -- Validation function
-function validators.doc(context, doc)
-  if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
+function validators.sheet(context, sheet)
+  if not empty(sheet.WIS) and empty(sheet['PASSIVE PERCEPTION']) then
     verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
   end
 end
@@ -1351,7 +1353,7 @@ local function same_values(v1, v2) -- same strings, or strings denoting the same
 end
 
 
--- D&D info
+-- D&D info and knowledge
 
 local saving_throw_proficiencies = {
   Barbarian = { "Strength", "Constitution" },
@@ -1383,8 +1385,15 @@ local function ability_modifier(score)
   return math.floor((score - 10) / 2)
 end
 
+local function proficiency_bonus(level)
+  return 2 + math.floor((level - 1) / 4)
+end
 
-
+local function passive_skill(sheet, stat, proficiency, expertise)
+  local prof_bonus = proficiency_bonus(sheet.LEVEL)
+  local skill_bonus = proficiency and (expertise and 2 * prof_bonus or prof_bonus) or 0
+  return 10 + ability_modifier(sheet[stat] or 10) + skill_bonus
+end
 
 
 
@@ -1457,16 +1466,6 @@ end
 
 
 
-local function has_skill_e(t, skill) -- also expertise
-  local skill = skill:lower()
-  if type(t) == 'table' then
-    for p in scalarvalues(t) do
-      if type(p) == 'string' and p:lower():find(skill) then
-        return true, p:find('[E]', 1, true)
-      end
-    end
-  end
-end
 
 
 
@@ -1477,34 +1476,48 @@ local function string_note(thing)
   end
 end
 
-local function extend(doc)
+local function skill_p_e(sheet, skill) -- return proficiency and expertise
+  local skill = skill:lower()
+  for _, t
+  in ipairs { sheet.PROFICIENCIES or nothing, sheet['SECONDARY PROFICIENCIES'] or nothing }
+  do
+    for p in scalarvalues(t) do
+      if type(p) == 'string' and p:lower():find(skill) then
+require 'inspect'.show { p = p }
+        return true, p:find('[E]', 1, true)
+      end
+    end
+  end
+end
+
+local function extend(sheet)
 
   --- options
   if fields.nocolor then
-    doc.COLOR = false
+    sheet.COLOR = false
   end
 
   -- confirm existing value or set new one
   local function update(field, value) -- checks for consistency
-    local v = doc[field]
+    local v = sheet[field]
     if v and tostring(v):find '%S' and not same_values(v, value) then
       verrorf('Value %s computed as %s, but input says %s\n',
               field, tostring(value), tostring(v))
     elseif not tostring(v):find '^%+' then
-      doc[field] = value
+      sheet[field] = value
     end
   end
 
-  local class = assert(doc.CLASS)
-  doc.LEVEL = doc.LEVEL or 1
-  local level = doc.LEVEL
+  local class = assert(sheet.CLASS)
+  sheet.LEVEL = sheet.LEVEL or 1
+  local level = sheet.LEVEL
 
   ---------- calculated fields -------------
 
   local p = saving_throw_proficiencies[class]
   if p then
     for _, prof in ipairs(p) do
-      doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
+      sheet[stringf('%s SAVING', prof:sub(1,3):upper())] = true
     end
   end
 
@@ -1512,49 +1525,27 @@ local function extend(doc)
   update('PROFICIENCY BONUS', prof_bonus)
 
   -- Handle SPELL DC calculation and validation
-  if not empty(doc.MAGIC) then
+  if not empty(sheet.MAGIC) then
     local cm = casting_modifier[class]
-    if not empty(cm) and not empty(doc[cm]) then
+    if not empty(cm) and not empty(sheet[cm]) then
       -- Calculate spell DC: 8 + proficiency bonus + ability modifier
-      local mod = ability_modifier(tonumber(doc[cm]))
+      local mod = ability_modifier(tonumber(sheet[cm]))
       update('SPELL DC', 8 + prof_bonus + mod)
       update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + mod))
       update('SPELLCASTING ABILITY MODIFIER', mod)
     end
   end
 
-  -- passive skills
-  local function set_passive_skill(stat, skill)
-    local proficient, expert = has_skill_e(doc.PROFICIENCIES, skill)
-    if not proficient then
-      proficient, expert = has_skill_e(doc['SECONDARY PROFICIENCIES'], skill)
+
+  do   -- passive skills
+    local function set_passive_skill(stat, skill)
+      update(stringf('PASSIVE %s', skill:upper()),
+             passive_skill(sheet, stat, skill_p_e(sheet, skill)))
     end
-    local bonus = expert and 2 * prof_bonus or prof_bonus
 
-    if doc[stat] then
-    -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
-      local stat_score = tonumber(doc[stat])
-      local modifier = math.floor((stat_score - 10) / 2)
-      local calculated = 10 + modifier + (proficient and bonus or 0)
-
-      local passive_skill = stringf('PASSIVE %s', skill:upper())
-
-      if not empty(doc[passive_skill]) then
-        local existing_skill = tonumber(doc[passive_skill])
-        if existing_skill and existing_skill ~= calculated then
-          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %s%d)',
-                  passive_skill, existing_skill, calculated,
-                  stat, modifier, expert and '2×' or '', prof_bonus)
-        end
-      else
-        -- Set calculated PASSIVE PERCEPTION
-        doc[passive_skill] = calculated
-      end
-    end
+    set_passive_skill('WIS', 'Perception')
+    set_passive_skill('WIS', 'Insight')
   end
-
-  set_passive_skill('WIS', 'Perception')
-  set_passive_skill('WIS', 'Insight')
 
 
   --- GM things.  Not clear to me this should be done with variables
@@ -1567,7 +1558,7 @@ local function extend(doc)
     end
     local bonuses = { }
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = doc[section] or nothing
+      local things = sheet[section] or nothing
       for _, thing in ipairs(things) do
         if thing.name and thing.bonus then
           local name = stripname(thing.name)
@@ -1580,10 +1571,10 @@ local function extend(doc)
         end
       end
     end
-    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
+    sheet['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
   end
 
-  if not doc.REACTIONS then
+  do -- reactions, for GM sheet
     local function stripname(s)
       return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
               :gsub([[\footnotesize%s*]], '')
@@ -1592,7 +1583,7 @@ local function extend(doc)
     end
     local reactions = { }
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = doc[section] or nothing
+      local things = sheet[section] or nothing
       for _, thing in ipairs(things) do
         if thing.name and thing.reaction then
           local name = stripname(thing.name)
@@ -1602,11 +1593,11 @@ local function extend(doc)
         end
       end
     end
-    doc.REACTIONS = table.concat(reactions, '\\relax\n')
+    sheet.REACTIONS = table.concat(reactions, '\\relax\n')
   end
 
   for _, section in ipairs {'MAGIC', 'FEATURES'} do
-    local things = doc[section] or nothing
+    local things = sheet[section] or nothing
     for _, thing in ipairs(things) do
       if thing.name then -- could be level table
         thing.name = add_magic_markers(thing.name, thing)
@@ -1617,7 +1608,7 @@ local function extend(doc)
 
 
 
-  return doc
+  return sheet
 end
 
 
@@ -2131,18 +2122,18 @@ end
 
 
 
-local function preprocess(doc)
+local function preprocess(sheet)
   for _, f in ipairs { 'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
                        'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
                      }
   do
-    doc[f] = convert_colon_tables(doc[f])
+    sheet[f] = convert_colon_tables(sheet[f])
   end
 
   -- work around parsing in javascript
   for _, f in ipairs {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'}
   do
-    local t = doc[f]
+    local t = sheet[f]
     if islist(t) then
       for i, l in ipairs (t) do
         if l == '' then
@@ -2152,7 +2143,7 @@ local function preprocess(doc)
     end
   end
 
-  return doc
+  return sheet
 end
 
 
@@ -2277,15 +2268,15 @@ end
 local function sheet_of_file(pathname)
   curfile = pathname
   local yaml_text = slurp(pathname)
-  local ok, doc, msg = pcall(lyaml.load, yaml_text)
-  if not ok or type(doc) ~= 'table' then
-    eprintf('charsheet load failed %s\n', (not ok and doc) or msg or 'YAML loaded as string')
+  local ok, sheet, msg = pcall(lyaml.load, yaml_text)
+  if not ok or type(sheet) ~= 'table' then
+    eprintf('charsheet load failed %s\n', (not ok and sheet) or msg or 'YAML loaded as string')
     os.exit(1)
   end
-  assert(type(doc) == 'table')
+  assert(type(sheet) == 'table')
 
   do -- look for unbalanced braces (security risk)
-    local bad = unbalanced_yaml_string(doc)
+    local bad = unbalanced_yaml_string(sheet)
     if bad then
       local replace =
         { ['{'] = [[\lbrace{}]], ['}'] = [[\rbrace{}]], ['\\'] = [[\textbackslash{}]] }
@@ -2295,14 +2286,14 @@ local function sheet_of_file(pathname)
     end
   end
 
-  local font = doc['DOCUMENT FONT']
-  doc['DOCUMENT FONT'] = nil
+  local font = sheet['DOCUMENT FONT']
+  sheet['DOCUMENT FONT'] = nil
 
   -- Validate document before processing
-  preprocess(doc)
-  new_validate(pathname, doc, doc_validation)
---  validate_document(doc)
-  extend(doc)
+  preprocess(sheet)
+  new_validate(pathname, sheet, sheet_validation)
+--  validate_document(sheet)
+  extend(sheet)
   if #global_validation_errors > 0 then
     if fields.strict then
       eprintf("Validation failed in strict mode. Exiting.\n")
@@ -2310,17 +2301,17 @@ local function sheet_of_file(pathname)
     else
       eprintf("Validation warnings encountered. Continuing...\n")
       -- In non-strict mode, accumulate validation errors in the document
-      doc['VALIDATION ERRORS'] = global_validation_errors
+      sheet['VALIDATION ERRORS'] = global_validation_errors
     end
   end
-  return doc, font
+  return sheet, font
 end
 
 local scripts = { }
 function scripts.charsheet(arg)
-  local doc, font = sheet_of_file(arg[1])
-  local layout = fields.layout or doc.LAYOUT or default_layout
-  local latex = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
+  local sheet, font = sheet_of_file(arg[1])
+  local layout = fields.layout or sheet.LAYOUT or default_layout
+  local latex = sanitize_control_sequences(escape_tex(convert_mapping(sheet)))
   process(wrap_latex(latex, layout, font))
 end
 
@@ -2342,10 +2333,10 @@ function scripts.gmsheet(arg)
   local docs = { }
   local font
   for i, playerfile in ipairs(arg) do
-    local doc, f = sheet_of_file(playerfile)
+    local sheet, f = sheet_of_file(playerfile)
     font = font or f
-    table.insert(docs, doc)
-    local defs = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
+    table.insert(docs, sheet)
+    local defs = sanitize_control_sequences(escape_tex(convert_mapping(sheet)))
     table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
   end
 
@@ -2361,8 +2352,8 @@ function scripts.gmsheet(arg)
     end
 
     local durables = { }
-    for _, doc in ipairs(docs) do
-      for thing in named_things(doc) do
+    for _, sheet in ipairs(docs) do
+      for thing in named_things(sheet) do
         if thing.duration then
           table.insert(durables, thing)
         end
@@ -2404,8 +2395,8 @@ function scripts.gmsheet(arg)
 
   do -- attack spells
     local attacks = { }
-    for _, doc in ipairs(docs) do
-      for spell in named_things(doc) do
+    for _, sheet in ipairs(docs) do
+      for spell in named_things(sheet) do
         if spell.attack then
           table.insert(attacks, spell)
         end
@@ -2421,15 +2412,15 @@ function scripts.gmsheet(arg)
                          table.concat(attacks, '%\n  ')))
   end
 
-  local function first_initial(doc)
-    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u'
+  local function first_initial(sheet)
+    local first = (sheet['CHARACTER NAME'] or 'Nobody'):match '%u'
     return first
   end
 
-  local function firstname(doc)
-    local first = (doc['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+' or ''
+  local function firstname(sheet)
+    local first = (sheet['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+' or ''
     if first == '' then
-      first = doc.CLASS or '?'
+      first = sheet.CLASS or '?'
     end
     return first
   end
@@ -2437,30 +2428,30 @@ function scripts.gmsheet(arg)
   do -- saving-throw spells
     local savedocs = { } -- map spell name to list of docs
     local savestats = { } -- and to stat
-    for _, doc in ipairs(docs) do
-      for spell in named_things(doc) do
+    for _, sheet in ipairs(docs) do
+      for spell in named_things(sheet) do
         if spell.save then
           local name = spell.name:gsub('%s*%b[]', '')
           savestats[name] = spell.save
           savedocs[name] = savedocs[name] or {}
-          table.insert(savedocs[name], doc)
+          table.insert(savedocs[name], sheet)
         end
       end
     end
     for i, spellname in ipairs(sorted_keys(savedocs)) do
       local dcs = { }
-      for _, doc in ipairs(savedocs[spellname]) do
-        local dc = tonumber(doc['SPELL DC'])
+      for _, sheet in ipairs(savedocs[spellname]) do
+        local dc = tonumber(sheet['SPELL DC'])
         dcs[dc] = dcs[dc] or { }
-        table.insert(dcs[dc], doc)
+        table.insert(dcs[dc], sheet)
       end
       local suffix
       if is_singleton_table(dcs) then
         suffix = stringf([[\textsc{%s}~%d]], savestats[spellname], (next(dcs)))
       else
         local dclist = { }
-        for _, doc in ipairs(savedocs[spellname]) do
-          local s = stringf('%s,~%d', first_initial(doc), tonumber(doc['SPELL DC']))
+        for _, sheet in ipairs(savedocs[spellname]) do
+          local s = stringf('%s,~%d', first_initial(sheet), tonumber(sheet['SPELL DC']))
           table.insert(dclist, s)
         end
         suffix =
@@ -2477,10 +2468,10 @@ function scripts.gmsheet(arg)
     local function gt(v1, v2) return v1 > v2 end
     for _, skill in ipairs { 'Perception', 'Insight' } do
       local players = { } -- map skill to list of players
-      for _, doc in ipairs(docs) do
-        local passive_skill = tonumber(assert(doc['PASSIVE ' .. skill:upper()]))
+      for _, sheet in ipairs(docs) do
+        local passive_skill = tonumber(assert(sheet['PASSIVE ' .. skill:upper()]))
         players[passive_skill] = players[passive_skill] or { }
-        table.insert(players[passive_skill], firstname(doc))
+        table.insert(players[passive_skill], firstname(sheet))
       end
       local rows = { }
       for _, passive in ipairs(sorted_keys(players, gt)) do
@@ -2503,18 +2494,18 @@ function scripts.gmspells(arg)
   local docs = { }
   local font
   for _, path in ipairs(arg) do
-    local doc, f = sheet_of_file(path)
+    local sheet, f = sheet_of_file(path)
     font = font or f
-    table.insert(docs, doc)
+    table.insert(docs, sheet)
   end
   local spells = { } -- need a way to identify features
-  for _, doc in ipairs(docs) do
-    for _, spell in ipairs(doc.MAGIC or nothing) do
+  for _, sheet in ipairs(docs) do
+    for _, spell in ipairs(sheet.MAGIC or nothing) do
       if spell.name then
         table.insert(spells, spell)
       end
     end
-    for _, feature in ipairs(doc.FEATURES or nothing) do
+    for _, feature in ipairs(sheet.FEATURES or nothing) do
       local inserted = nil
       if feature['GM note'] ~= false then
         table.insert(spells, feature)
@@ -2552,7 +2543,7 @@ if fields.fontable then
     end
     return name
   end
-  parse(methods, doc_validation)
+  parse(methods, sheet_validation)
 elseif scripts[basename] then
   scripts[basename](arg)
 else
