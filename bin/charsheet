@@ -28,7 +28,7 @@ options.gmspells = options.gmsheet
 
 local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
-  :bool('fontable as font'):help('dump fontable keys and exit')
+  :bool('fontable'):help('dump fontable keys and exit')
   :bool('verbose as v')
   :bool('nocolor'):help('disable color')
   :bool('quiet as q'):help('suppress stdout from pdflatex')
@@ -2299,12 +2299,12 @@ local function sheet_of_file(pathname)
       doc['VALIDATION ERRORS'] = global_validation_errors
     end
   end
-  return doc
+  return doc, font
 end
 
 local scripts = { }
 function scripts.charsheet(arg)
-  local doc = sheet_of_file(arg[1])
+  local doc, font = sheet_of_file(arg[1])
   local layout = fields.layout or doc.LAYOUT or default_layout
   local latex = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
   process(wrap_latex(latex, layout, font))
@@ -2326,8 +2326,10 @@ local function nameeq (t1, t2) return t1.name == t2.name end
 function scripts.gmsheet(arg)
   local latexes = { }
   local docs = { }
+  local font
   for i, playerfile in ipairs(arg) do
-    local doc = sheet_of_file(playerfile)
+    local doc, f = sheet_of_file(playerfile)
+    font = font or f
     table.insert(docs, doc)
     local defs = sanitize_control_sequences(escape_tex(convert_mapping(doc)))
     table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
@@ -2485,8 +2487,11 @@ end
 
 function scripts.gmspells(arg)
   local docs = { }
+  local font
   for _, path in ipairs(arg) do
-    table.insert(docs, sheet_of_file(path))
+    local doc, f = sheet_of_file(path)
+    font = font or f
+    table.insert(docs, doc)
   end
   local spells = { } -- need a way to identify features
   for _, doc in ipairs(docs) do
