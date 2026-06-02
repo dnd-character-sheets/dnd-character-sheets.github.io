@@ -445,6 +445,7 @@ In addition, each feature may be labeled with any or all of the following proper
 - `enemy`: Made `true` if using the feature involves targeting an enemy
 - `duration`: A string describing how long the effect of the feature lasts
 - `GM note`: A Boolean or a string that governs what appears on the GM's sheet
+- `markers`: If set to false, prevent system from marking `[C]` for concentration, and so on
 
 If a feature has the `attack`, `save`, or `enemy` property, that
 feature will be displayed using an "attack color."  (Provided the
@@ -578,6 +579,9 @@ In addition, each spell may be labeled with any or all of the following properti
 - `save`: Made `true` if using the spell requires an enemy to make a saving throw
 - `enemy`: Made `true` if using the spell involves targeting an enemy
 - `duration`: A string describing how long the effect of the spell lasts
+- `GM note`: A Boolean or a string that governs what appears on the GM's sheet
+- `markers`: If set to false, prevent system from marking `[C]` for concentration, and so on
+- `domain`: The spell is a domain spell
 
 If a spell has the `attack`, `save`, or `enemy` property, that
 spell will be displayed using an "attack color."  (Provided the
@@ -827,10 +831,18 @@ If it is written explicitly the system will validate it.
 
 - `SPELL DC: 13`
 
+#### `SPELLCASTING ABILITY`
+
+The ability your character uses to cast spells, if any.
+The system knows the spellcasting abilities of the core classes
+(`CHA` for Bard, Sorcerer, or Warlock; `WIS` for Cleric, Druid, or
+Ranger;
+and`INT` for Wizard).
+ 
+
 #### `SPELLCASTING ABILITY MODIFIER` (calculated by the system)
 
-A modifier that is  calculated from the appropriate ability score (`CHA` for Bard/Sorcerer/Warlock, `WIS` for Cleric/Druid/Ranger, `INT` for Wizard).
-
+The modifier for your spellcasting ability.
 
 
 #### `SPELLS KNOWN`
