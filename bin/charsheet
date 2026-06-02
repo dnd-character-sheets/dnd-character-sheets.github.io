@@ -1155,12 +1155,20 @@ local category_order = {
  "STORED ITEMS"
 }
 
-local catspecs = { }
-for _, category in ipairs(category_order) do
-  table.insert(catspecs, stringf('?^%s:list(s)', category))
+local equipment_table
+do
+  local catspecs = { }
+  local function catspec(category)
+    return stringf('?^%s:(s|list(s))', category)
+  end
+  for category in pairs(category_map) do
+    table.insert(catspecs, catspec(category))
+    table.insert(catspecs, catspec(category .. 's'))
+  end
+  equipment_table = stringf('{%s}', table.concat(catspecs, ', '))
 end
 
-
+vnames.equipment = 'equipment list'
 
 
 -- XXX validation maybe needs to be an object, so can choose between alts
@@ -1206,7 +1214,7 @@ local doc_validation = ([[doc$
              |level$level-spec@{level:n[0..9],?slots:n[1..]}
              |null
              ),
-  ?%EQUIPMENT:equipment$(list(string)|{CATEGORIES}),
+  ?%EQUIPMENT:equipment@equipment$(etable@EQUIPMENT_TABLE|list(string|etable@EQUIPMENT_TABLE)),
   ?EQUIPMENT COLS:n[1..3],
 
   ?STONES:b, -- use Alexandrian stones
@@ -1220,11 +1228,13 @@ local doc_validation = ([[doc$
 }
 ]]):gsub('%-%-.-\n', '')
    :gsub('MAGICPROPNAMES', magicpropnames)
-   :gsub('CATEGORIES', table.concat(catspecs, ', '))
+   :gsub('EQUIPMENT_TABLE', equipment_table)
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
         :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:n[1..20], '))
 
 --print(doc_validation); os.exit(2)
+
+vnames.etable = 'categorized list of equipment'
 
 if fields.fontable then
   local methods = setmetatable({}, {__index = function() return function() return false end end })
@@ -1825,6 +1835,22 @@ local function validate_equipment_parsing(e)
   return e
 end
 
+--[[
+From doco
+
+    <equipment> ::= { [<category>:] <item> NL
+                    | <category>: NL {- <item> NL}
+                    }
+    <category>  ::= light armor | medium armor | ...
+                 |  <category>s
+
+As Lua object this says an equipment line is one of the following:
+
+  - string
+  - { category |-> string }
+  - { category |-> string list }
+
+]]
 
 -- Round-trip validation function
 function validators.equipment(context, structured_equipment)
