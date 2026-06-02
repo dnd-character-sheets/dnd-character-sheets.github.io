@@ -1321,6 +1321,59 @@ end
 
 --------------------------------------------------------------------------
 
+-- semantic predicates
+
+local function same_values(v1, v2) -- same strings, or strings denoting the same number
+  local s1, s2 = tostring(v1), tostring(v2)
+  return v1 == v2 or
+         s1:find '^%d+$' and s2 == '+' .. s1 or
+         s2:find '^%d+$' and s1 == '+' .. s2
+end
+
+
+-- D&D info
+
+local saving_throw_proficiencies = {
+  Barbarian = { "Strength", "Constitution" },
+  Bard      = { "Dexterity", "Charisma" },
+  Cleric    = { "Wisdom", "Charisma" },
+  Druid     = { "Intelligence", "Wisdom" },
+  Fighter   = { "Strength", "Constitution" },
+  Monk      = { "Strength", "Dexterity" },
+  Paladin   = { "Wisdom", "Charisma" },
+  Ranger    = { "Strength", "Dexterity" },
+  Rogue     = { "Dexterity", "Intelligence" },
+  Sorcerer  = { "Constitution", "Charisma" },
+  Warlock   = { "Wisdom", "Charisma" },
+  Wizard    = { "Intelligence", "Wisdom" }
+}
+
+local casting_modifier = {
+  Bard      = 'CHA',
+  Cleric    = 'WIS',
+  Druid     = 'WIS',
+  Paladin   = 'CHA',
+  Ranger    = 'WIS',
+  Sorcerer  = 'CHA',
+  Warlock   = 'CHA',
+  Wizard    = 'INT',
+}
+
+local function proficiency_bonus(doc) -- UGH, used to emit counter
+                                      -- should attach to level emitter
+  local level = tonumber(doc.LEVEL)
+  local prof = level and (2 + math.floor((level - 1) / 4)) or 2
+  return assert(prof)
+end
+
+local function ability_modifier(score)
+  return math.floor((score - 10) / 2)
+end
+
+
+
+
+
 
 -- Colon conversion
 --
@@ -1390,26 +1443,177 @@ end
 
 
 
-local casting_modifier = {
-  Bard      = 'CHA',
-  Cleric    = 'WIS',
-  Druid     = 'WIS',
-  Paladin   = 'CHA',
-  Ranger    = 'WIS',
-  Sorcerer  = 'CHA',
-  Warlock   = 'CHA',
-  Wizard    = 'INT',
-}
+
+local function has_skill_e(t, skill) -- also expertise
+  local skill = skill:lower()
+  if type(t) == 'table' then
+    for p in scalarvalues(t) do
+      if type(p) == 'string' and p:lower():find(skill) then
+        return true, p:find('[E]', 1, true)
+      end
+    end
+  end
+end
+
+
+
+local function string_note(thing)
+  local n = thing['GM note']
+  if type(n) == 'string' then
+    return n
+  end
+end
+
+
+
+local function extend(doc)
+  local class = assert(doc.CLASS)
+
+  if fields.nocolor then
+    doc.COLOR = false
+  end
+
+  local function update(field, value) -- checks for consistency
+    local v = doc[field]
+    if v and tostring(v):find '%S' and not same_values(v, value) then
+      verrorf('Value %s computed as %s, but input says %s\n',
+              field, tostring(value), tostring(v))
+    elseif not tostring(v):find '^%+' then
+      doc[field] = value
+    end
+  end
+
+  local p = saving_throw_proficiencies[class]
+  if p then
+    for _, prof in ipairs(p) do
+      doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
+    end
+  end
+
+  local level = tonumber(doc.LEVEL) or 1
+  local prof_bonus = 2 + math.floor((level - 1) / 4)
+
+
+  -- Handle SPELL DC calculation and validation
+  if not empty(doc.MAGIC) then
+    local cm = casting_modifier[class]
+    if not empty(cm) and not empty(doc[cm]) then
+      -- Calculate spell DC: 8 + proficiency bonus + ability modifier
+      local mod = ability_modifier(tonumber(doc[cm]))
+      update('SPELL DC', 8 + prof_bonus + mod)
+      update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + mod))
+      update('SPELLCASTING ABILITY MODIFIER', mod)
+    end
+  end
+
+
+  local function set_passive_skill(stat, skill)
+    local proficient, expert = has_skill_e(doc.PROFICIENCIES, skill)
+    if not proficient then
+      proficient, expert = has_skill_e(doc['SECONDARY PROFICIENCIES'], skill)
+    end
+    local bonus = expert and 2 * prof_bonus or prof_bonus
+
+    if doc[stat] then
+    -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
+      local stat_score = tonumber(doc[stat])
+      local modifier = math.floor((stat_score - 10) / 2)
+      local calculated = 10 + modifier + (proficient and bonus or 0)
+
+      local passive_skill = stringf('PASSIVE %s', skill:upper())
+
+      if not empty(doc[passive_skill]) then
+        local existing_skill = tonumber(doc[passive_skill])
+        if existing_skill and existing_skill ~= calculated then
+          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %s%d)',
+                  passive_skill, existing_skill, calculated,
+                  stat, modifier, expert and '2×' or '', prof_bonus)
+        end
+      else
+        -- Set calculated PASSIVE PERCEPTION
+        doc[passive_skill] = calculated
+      end
+    end
+  end
+
+  set_passive_skill('WIS', 'Perception')
+  set_passive_skill('WIS', 'Insight')
+
+  --- GM things.  Not clear to me this should be done with variables
+
+
+  if not doc['BONUS ACTIONS'] then
+    local function stripname(s)
+      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
+              :gsub([[\footnotesize%s*]], '')
+              :gsub('%s*%b[]', '')
+              :gsub('%s+$', '')
+    end
+    local bonuses = { }
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = doc[section] or nothing
+      for _, thing in ipairs(things) do
+        if thing.name and thing.bonus then
+          local name = stripname(thing.name)
+          local description =
+            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
+          table.insert(bonuses, stringf([[\bonus{%s}]], description))
+        end
+        if type(thing.save) == 'string' and thing.save:find '^%u%u%u$' then
+          thing.save = stringf([[\textsc{%s}]], thing.save:lower())
+        end
+      end
+    end
+    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
+  end
+
+  if not doc.REACTIONS then
+    local function stripname(s)
+      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
+              :gsub([[\footnotesize%s*]], '')
+              :gsub('%s*%b[]', '')
+              :gsub('%s+$', '')
+    end
+    local reactions = { }
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = doc[section] or nothing
+      for _, thing in ipairs(things) do
+        if thing.name and thing.reaction then
+          local name = stripname(thing.name)
+          local description =
+            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
+          table.insert(reactions, stringf([[\reaction{%s}]], description))
+        end
+      end
+    end
+    doc.REACTIONS = table.concat(reactions, '\\relax\n')
+  end
+
+  for _, section in ipairs {'MAGIC', 'FEATURES'} do
+    local things = doc[section] or nothing
+    for _, thing in ipairs(things) do
+      if thing.name then -- could be level table
+        thing.name = add_magic_markers(thing.name, thing)
+      end
+    end
+  end
+
+
+
+
+  return doc
+end
+
 
 
 --------------------------------------------------------------------------
 ---
---- Help for output
+--- Help for LaTeX output
 
 local escape_tex
 
 do
-  
+
   local map = {
   --  ["\\"] = [[\textbackslash{}]],
   --  ["{"]  = [[\{]],
@@ -1438,7 +1642,7 @@ end
 
 local function do_not_escape(s) return tostring(s) end
 
---- rendering
+--- rendering, start here
 ---
 ---
 
@@ -1796,10 +2000,6 @@ local function unparse_equipment_structure(structured_equipment)
   return lines
 end
 
-local function validate_equipment()
-  eprintf('validate_equipment not yet ported\n')
-  return true
-end
 local function validate_equipment_parsing(e)
   eprintf('validate_equipment_parsing not yet ported\n')
   return e
@@ -1831,7 +2031,7 @@ function validators.equipment(context, structured_equipment)
   if next(structured_equipment) ~= nil then
 
     -- Skip round-trip validation if equipment structure is invalid
-    local valid, _ = validate_equipment(structured_equipment)
+    local valid = false
     if not valid then
       return structured_equipment  -- Return invalid structure as-is, validation errors already reported
     end
@@ -1865,15 +2065,6 @@ Reparsed:
   end
 end
 
-local function proficiency_bonus(doc)
-  local level = tonumber(doc.LEVEL)
-  local prof = level and (2 + math.floor((level - 1) / 4)) or 2
-  return assert(prof)
-end
-
-local function ability_modifier(score)
-  return math.floor((score - 10) / 2)
-end
 
 
 ---------------------------------------------------------------------------
@@ -1923,39 +2114,6 @@ local function slurp(filename)
   end
 end
 
-local saving_throw_proficiencies = {
-  Barbarian = { "Strength", "Constitution" },
-  Bard      = { "Dexterity", "Charisma" },
-  Cleric    = { "Wisdom", "Charisma" },
-  Druid     = { "Intelligence", "Wisdom" },
-  Fighter   = { "Strength", "Constitution" },
-  Monk      = { "Strength", "Dexterity" },
-  Paladin   = { "Wisdom", "Charisma" },
-  Ranger    = { "Strength", "Dexterity" },
-  Rogue     = { "Dexterity", "Intelligence" },
-  Sorcerer  = { "Constitution", "Charisma" },
-  Warlock   = { "Wisdom", "Charisma" },
-  Wizard    = { "Intelligence", "Wisdom" }
-}
-
-
-local function same_values(v1, v2)
-  local s1, s2 = tostring(v1), tostring(v2)
-  return v1 == v2 or
-         s1:find '^%d+$' and s2 == '+' .. s1 or
-         s2:find '^%d+$' and s1 == '+' .. s2
-end
-
-local function has_skill(t, skill) -- also expertise
-  local skill = skill:lower()
-  if type(t) == 'table' then
-    for p in scalarvalues(t) do
-      if type(p) == 'string' and p:lower():find(skill) then
-        return true, p:find('[E]', 1, true)
-      end
-    end
-  end
-end
 
 
 
@@ -1983,165 +2141,7 @@ local function preprocess(doc)
   return doc
 end
 
-local function string_note(thing)
-  local n = thing['GM note']
-  if type(n) == 'string' then
-    return n
-  end
-end
 
-local function extend(doc)
-
-  local class = assert(doc.CLASS)
-
-  if fields.nocolor then
-    doc.COLOR = false
-  end
-
-  local function update(field, value) -- checks for consistency
-    local v = doc[field]
-    if v and tostring(v):find '%S' and not same_values(v, value) then
-      verrorf('Value %s computed as %s, but input says %s\n',
-              field, tostring(value), tostring(v))
-    elseif not tostring(v):find '^%+' then
-      doc[field] = value
-    end
-  end
-
-  local p = saving_throw_proficiencies[class]
-  if p then
-    for _, prof in ipairs(p) do
-      doc[stringf('%s SAVING', prof:sub(1,3):upper())] = true
-    end
-  end
-
-  local level = tonumber(doc.LEVEL) or 1
-  local prof_bonus = 2 + math.floor((level - 1) / 4)
-
-
-  -- Handle SPELL DC calculation and validation
-  if not empty(doc.MAGIC) then
-    local cm = casting_modifier[class]
-    if not empty(cm) and not empty(doc[cm]) then
-      -- Calculate spell DC: 8 + proficiency bonus + ability modifier
-      local mod = ability_modifier(tonumber(doc[cm]))
-      update('SPELL DC', 8 + prof_bonus + mod)
-      update('SPELL ATTACK MODIFIER', stringf('+%d', prof_bonus + mod))
-      update('SPELLCASTING ABILITY MODIFIER', mod)
-    end
-  end
-
-
-  -- Handle PASSIVE PERCEPTION calculation and validation
-  if not empty(doc.WIS) then
-    -- Check if character has Expertise feature (case-insensitive)
-    if doc.FEATURES and type(doc.FEATURES) == "table" then
-      for _, feature in ipairs(doc.FEATURES) do
-        if type(feature) == "table" and feature.name and
-           type(feature.name) == "string" and feature.name:lower():find('expertise') then
-          has_expertise = true
-          break
-        end
-      end
-    end
-  end
-
-  local function set_passive_skill(stat, skill)
-    local proficient, expert = has_skill(doc.PROFICIENCIES, skill)
-    if not proficient then
-      proficient, expert = has_skill(doc['SECONDARY PROFICIENCIES'], skill)
-    end
-    local bonus = expert and 2 * prof_bonus or prof_bonus
-
-    if doc[stat] then
-    -- Calculate passive perception: 10 + WIS modifier + proficiency bonus
-      local stat_score = tonumber(doc[stat])
-      local modifier = math.floor((stat_score - 10) / 2)
-      local calculated = 10 + modifier + (proficient and bonus or 0)
-
-      local passive_skill = stringf('PASSIVE %s', skill:upper())
-
-      if not empty(doc[passive_skill]) then
-        local existing_skill = tonumber(doc[passive_skill])
-        if existing_skill and existing_skill ~= calculated then
-          verrorf('%s mismatch: got %d, expected %d (10 + %s mod %+d + prof %s%d)',
-                  passive_skill, existing_skill, calculated,
-                  stat, modifier, expert and '2×' or '', prof_bonus)
-        end
-      else
-        -- Set calculated PASSIVE PERCEPTION
-        doc[passive_skill] = calculated
-      end
-    end
-  end
-
-  set_passive_skill('WIS', 'Perception')
-  set_passive_skill('WIS', 'Insight')
-
-  --- GM things.  Not clear to me this should be done with variables
-
-
-  if not doc['BONUS ACTIONS'] then
-    local function stripname(s)
-      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
-              :gsub([[\footnotesize%s*]], '')
-              :gsub('%s*%b[]', '')
-              :gsub('%s+$', '')
-    end
-    local bonuses = { }
-    for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = doc[section] or nothing
-      for _, thing in ipairs(things) do
-        if thing.name and thing.bonus then
-          local name = stripname(thing.name)
-          local description =
-            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
-          table.insert(bonuses, stringf([[\bonus{%s}]], description))
-        end
-        if type(thing.save) == 'string' and thing.save:find '^%u%u%u$' then
-          thing.save = stringf([[\textsc{%s}]], thing.save:lower())
-        end
-      end
-    end
-    doc['BONUS ACTIONS'] = table.concat(bonuses, '\\relax\n  ')
-  end
-
-  if not doc.REACTIONS then
-    local function stripname(s)
-      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
-              :gsub([[\footnotesize%s*]], '')
-              :gsub('%s*%b[]', '')
-              :gsub('%s+$', '')
-    end
-    local reactions = { }
-    for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = doc[section] or nothing
-      for _, thing in ipairs(things) do
-        if thing.name and thing.reaction then
-          local name = stripname(thing.name)
-          local description =
-            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
-          table.insert(reactions, stringf([[\reaction{%s}]], description))
-        end
-      end
-    end
-    doc.REACTIONS = table.concat(reactions, '\\relax\n')
-  end
-
-  for _, section in ipairs {'MAGIC', 'FEATURES'} do
-    local things = doc[section] or nothing
-    for _, thing in ipairs(things) do
-      if thing.name then -- could be level table
-        thing.name = add_magic_markers(thing.name, thing)
-      end
-    end
-  end
-
-
-
-
-  return doc
-end
 
 local function contents(filename)
   local f, msg = io.open(filename, 'r')
