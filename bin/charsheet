@@ -813,6 +813,9 @@ do
   function vfactory:key(name, props, v)
     local key = { name = name, validator = v }
     for k, v in pairs(props) do key[k] = v end
+    if props.insensitive then
+      assert(name == name:lower(), 'case-insensitive key is not all lowercase')
+    end
     return key
   end
 
@@ -867,19 +870,34 @@ do
       wanted = stringf('%s %s optionally %s', wanted, conjunction, also)
     end
 
-    local acceptable
+    local acceptable, insensitive
     if not other then
-      acceptable = { }
+      acceptable, insensitive = { }, { }
       for _, k in ipairs(keys) do
         acceptable[k.name] = true
         if k.fontable then
           acceptable[fontkeyname(k)] = true
         end
+        if k.insensitive then
+          insensitive[k.name] = true
+        end
       end
     end
 
-    local function has_key(v, keys)
-      return any(function(k) return v[k] ~= nil end, keys)
+    local function has_key(v, required_only)
+      return any(function(key)
+                   if not key.insensitive then
+                     return v[key.name] ~= nil and not (key.optional and required_only)
+                   else
+                     local low = key.name:lower()
+                     for h in pairs(v) do
+                       if type(h) == 'string' and h:lower() == low then
+                         return true
+                       end
+                     end
+                   end
+                 end,
+                 keys)
     end
 
     local function validate_font(context, s)
@@ -890,8 +908,8 @@ do
 
     return {
       what = wanted,
-      mine = function(_, v) return type(v) == 'table' and has_key(v, required) end,
-      maybe_mine = function(_, v) return type(v) == 'table' and has_key(v, optional) end,
+      mine = function(_, v) return type(v) == 'table' and has_key(v, true) end,
+      maybe_mine = function(_, v) return type(v) == 'table' and has_key(v) end,
       validate = function(_, context, v)
         if type(v) ~= 'table' then
           missing(context, wanted, v)
@@ -926,7 +944,7 @@ do
           if not other then
             local unexpected = { }
             for k in pairs(v) do
-              if not acceptable[k] then
+              if not (acceptable[k] or insensitive[k:lower()]) then
                 table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
               end
             end
