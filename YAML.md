@@ -298,6 +298,12 @@ the rendering engine defines `DEX SAVING` to be `true`.
 Otherwise `DEX SAVING` is left undefined.
 
 
+### `DOCUMENT FONT`
+
+Controls the overall scale of fonts used to render the character sheet.
+May be `10pt`, `11pt`, or `12pt`.
+
+
 #### `DOMAIN SPELLS`
 
 The number of spells a Cleric
