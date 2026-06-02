@@ -519,36 +519,26 @@ end
 
 --[=[
 
-  validator v ::= s⟦tring⟧
-               |  b⟦ool⟦ean⟧⟧
-               |  n⟦number⟧ ⟦[⟦N⟧..⟦M⟧]⟧
-               |  empty
-               |  null
-               |  l⟦ist⟧(v)
-               |  {⦃key,⦄}
-               |  v|v
-               |  (v)
-               |  name@v     -- identify the thing
-               |  fname$v    -- validate with function fname
+The game here is a little language that can be used to check the
+structure and types of Lua objects that come from YAML.  A "validator"
+is like a type but with a little extra action, including hooks
+for external validation and naming.
+
+  Validator v ::= s⟦tring⟧                -- can be interpreted as text
+               |  b⟦ool⟦ean⟧⟧             --  true, false, 0, or 1
+               |  n⟦number⟧ ⟦[⟦N⟧..⟦M⟧]⟧   -- a number with optional range constraints
+               |  empty                   -- empty string, table, YAML null
+               |  null                    -- YAML null
+               |  l⟦ist⟧(v)               -- list of values of type v
+               |  {⦃key,⦄}                -- a table with the given keys
+               |  v|v                     -- a choice between two validators
+               |  (v)                     -- bracketing
+               |  name@v                  -- names the type
+               |  fname$v                 -- additional, external validation with function fname
 
   key         ::= ⦃?|%|^⦄name⟦:v⟧   -- type defaults to text
 
------- LL grammar
-
-  v ::=  alt {| alt}
-
-  alt ::= string
-       |  number
-       |  list (v)
-       |  name [@ v | $ v]
-       |  { keys }
-       |  ( v )
-
-  <alnum>+ (
-$ v
-           | @ v
-           |
-
+Operators @ and $ associate to the right and bind tighter than |.
 
 ]=]
 
