@@ -2037,8 +2037,6 @@ local function extend(doc)
   end
 
 
-  local has_expertise
-
   -- Handle PASSIVE PERCEPTION calculation and validation
   if not empty(doc.WIS) then
     -- Check if character has Expertise feature (case-insensitive)
