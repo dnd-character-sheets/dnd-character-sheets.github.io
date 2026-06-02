@@ -652,7 +652,8 @@ do
 
     key = function()
       if maybe '*' then
-        return semantics:any_key()
+        local validator = maybe ':' and alts() or nil
+        return semantics:any_key(validator)
       else
         local props = { }
         while maybe ('?', '^', '%') do
@@ -791,8 +792,6 @@ do
     }
   end
 
-  local any_key = { } -- unique value
-
   local text = {
     validate = function(_, context, v)
       if not can_be 'string' (v) then
@@ -819,8 +818,8 @@ do
     return key
   end
 
-  function vfactory:any_key()
-    return any_key
+  function vfactory:any_key(v)  -- XXX unused validator
+    return { any = true, name = '*', validator = v } -- gross hack, but it should work
   end
 
   function vfactory:table(keys)
@@ -837,8 +836,8 @@ do
       if key.fontable then
         table.insert(optional, fontkeyname(key))
       end
-      if key == any_key then
-        other = true
+      if key.any then
+        other = key.validator or true
       elseif key.optional then
         table.insert(optional, key.name)
       else
@@ -914,6 +913,7 @@ do
         if type(v) ~= 'table' then
           missing(context, wanted, v)
         else
+          local validated = { }
           local myname = v.name or v.NAME
           local mycontext =
                myname and type(myname) == 'string' and stringf('%q, which is %s', myname, context)
@@ -922,28 +922,36 @@ do
           for _, key in ipairs(keys) do
             if key.fontable and v[fontkeyname(key)] then
               validate_font(fontkeyname(key), v[fontkeyname(key)])
+              validated[fontkeyname(key)] = true
             end
-            if key == any_key then
-              -- do nothing
+            if key.any then
+              -- validator  is run below
             elseif v[key.name] == nil and not key.optional then
               table.insert(omitted, sq(key.name))
             elseif v[key.name] ~= nil then
               local val = key.validator or text
               local u = val:validate(stringf('field %q of %s', key.name, mycontext), v[key.name])
+              validated[key.name] = true
               if u ~= nil then
                 v[key.name] = u
               end
             end
           end
-          if #omitted == 1 then
-            verrorf('In %s, required key %s is missing', mycontext, omitted[1])
-          elseif #omitted > 0 then
-            verrorf('In %s, required keys %s are missing', mycontext, commafy(omitted))
+          if #omitted > 0 then
+            verrorf('In %s, required %s %s %s missing', mycontext, plural(#omitted, 'key'),
+                    commafy(omitted), #omitted == 1 and 'is' or 'are')
           end
 
-          if not other then
+          if type(other) ~= 'boolean' then
+            -- other is permitted
+            for k, field in pairs(v) do
+              if not validated[k] and not validated[k:lower()] then
+                other:validate(stringf('field %q of %s', k, mycontext), field)
+              end
+            end
+          elseif not other then
             local unexpected = { }
-            for k in pairs(v) do
+            for k, value in pairs(v) do
               if not (acceptable[k] or insensitive[k:lower()]) then
                 table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
               end
