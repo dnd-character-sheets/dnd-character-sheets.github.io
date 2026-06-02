@@ -533,6 +533,7 @@ for external validation and naming.
                |  n⟦number⟧ ⟦[⟦N⟧..⟦M⟧]⟧   -- a number with optional range constraints
                |  empty                   -- empty string, table, YAML null
                |  null                    -- YAML null
+               |  any                     -- any value
                |  l⟦ist⟧(v)               -- list of values of type v
                |  {⦃key,⦄}                -- a table with the given keys
                |  v|v                     -- a choice between two validators
@@ -689,6 +690,8 @@ do
     alt = function()
       if eos() then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
+      elseif maybe 'any' then
+        return semantics:any()
       elseif maybe 'null' then
         return semantics:null()
       elseif maybe('s', 'string') then
@@ -1026,6 +1029,13 @@ do
     }
   end
 
+  function vfactory:any()
+    return { mine = function() return true end,
+             what = 'anything',
+             validate = function() end,
+    }
+  end
+
   function vfactory:null()
     return
       { mine = function(_, v) return isnull(v) end,
@@ -1256,6 +1266,8 @@ local doc_validation = ([[doc$
 
   ?LAYOUT,
   ?SHEET ORIGIN,
+  
+  ?OTHER:any,
 
 }
 ]]):gsub('%-%-.-\n', '')

@@ -649,6 +649,11 @@ An optional, short string displayed in italic text near the character's name.
 - `MOTIVATION: "Miriel is trying to prove herself"`
 - `MOTIVATION: "Find family"`
 
+#### `OTHER`
+
+You can put anything you want here.
+
+
 #### `PASSIVE PERCEPTION`
 
 May be displayed with the character's other information, and is also used on the GM's sheet.
