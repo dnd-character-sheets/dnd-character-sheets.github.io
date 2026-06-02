@@ -1207,6 +1207,8 @@ local doc_validation = ([[doc$
   CLASS:nonempty$s,
   ?LEVEL:n,
 
+  ?DOCUMENT FONT:docfont$s,
+
   ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
 
   ABILITIES
@@ -1266,18 +1268,11 @@ local doc_validation = ([[doc$
 
 vnames.etable = 'categorized list of equipment'
 
-if fields.fontable then
-  local methods = setmetatable({}, {__index = function() return function() return false end end })
-  function methods:key(name, props, _)
-    if props.fontable then
-      io.stdout:write(name, '\n')
-    end
-    return name
+function validators.docfont(_, v)
+  if not v:find '^1[012]pt$' then
+    verrorf('The DOCUMENT FONT must be 10pt, 11pt, or 12pt; found %q', v)
   end
-  parse(methods, doc_validation)
-  os.exit(0)
 end
-
 
 function validators.attack(context, v)
   if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
@@ -1477,7 +1472,6 @@ local function extend(doc)
       doc[field] = value
     end
   end
-
 
   if fields.nocolor then
     doc.COLOR = false
@@ -2531,9 +2525,18 @@ function scripts.gmspells(arg)
   process(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
 
-if scripts[basename] then
+if fields.fontable then
+  local methods = setmetatable({}, {__index = function() return function() return false end end })
+  function methods:key(name, props, _)
+    if props.fontable then
+      io.stdout:write(name, '\n')
+    end
+    return name
+  end
+  parse(methods, doc_validation)
+elseif scripts[basename] then
   scripts[basename](arg)
 else
-  dief('%s: I expected to be called as `charsheet` or `gmsheet`.\n')
+  dief('%s: I expected to be called as `charsheet`, `gmsheet`, or `gmspells`.\n')
 end
 
