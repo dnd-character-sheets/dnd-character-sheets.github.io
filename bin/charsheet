@@ -760,7 +760,7 @@ do
   end
 
   local function missing(context, wanted, found)
-    verrorf('In %s, was looking for %s, but found %s', context, wanted, friendly(found))
+    verrorf('In %s: I was looking for %s, but I found %s', context, wanted, friendly(found))
   end
 
   function vfactory:number(rg)
@@ -910,7 +910,7 @@ do
               table.insert(omitted, sq(key.name))
             elseif v[key.name] ~= nil then
               local val = key.validator or text
-              local u = val:validate(stringf('field %s of %s', key.name, mycontext), v[key.name])
+              local u = val:validate(stringf('field %q of %s', key.name, mycontext), v[key.name])
               if u ~= nil then
                 v[key.name] = u
               end
