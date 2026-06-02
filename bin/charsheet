@@ -1473,14 +1473,7 @@ local function string_note(thing)
   end
 end
 
-
-
 local function extend(doc)
-  local class = assert(doc.CLASS)
-
-  if fields.nocolor then
-    doc.COLOR = false
-  end
 
   local function update(field, value) -- checks for consistency
     local v = doc[field]
@@ -1492,6 +1485,15 @@ local function extend(doc)
     end
   end
 
+
+  if fields.nocolor then
+    doc.COLOR = false
+  end
+
+  local class = assert(doc.CLASS)
+  doc.LEVEL = doc.LEVEL or 1
+  local level = doc.LEVEL
+
   local p = saving_throw_proficiencies[class]
   if p then
     for _, prof in ipairs(p) do
@@ -1499,7 +1501,6 @@ local function extend(doc)
     end
   end
 
-  local level = tonumber(doc.LEVEL) or 1
   local prof_bonus = 2 + math.floor((level - 1) / 4)
 
 
