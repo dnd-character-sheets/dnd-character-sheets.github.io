@@ -245,15 +245,8 @@ It is used to determine saving-throw proficiencies, and it is displayed.
 - `CLASS: "Fighter"`
 - `CLASS: Rogue`
 
-#### `CLASS & LEVEL` (use discouraged)
 
-A string showing the character's class, level, and possibly
-background.
-It is meant primarily for use in scraping YAML off of other character sheets.
 
-- `"CLASS & LEVEL": "Bard 1"`
-- `"CLASS & LEVEL": "Cleric (Life Domain) 3"`
-- `"CLASS & LEVEL": Sorcerer 3`
 
 #### `CON`
 
