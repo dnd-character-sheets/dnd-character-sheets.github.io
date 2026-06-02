@@ -1116,8 +1116,10 @@ do
   magicpropnames = table.concat(names, ', ')
 end
 
+local equipment = { }
+
 -- EQUIPMENT
-local category_map = {
+equipment.canonical_category = {
   ["heavy weapon"] = "HEAVY WEAPONS",
   ["normal weapon"] = "NORMAL WEAPONS",
   ["light weapon"] = "LIGHT WEAPONS",
@@ -1138,7 +1140,7 @@ local category_map = {
   ["stored"] = "STORED ITEMS",
 }
 
-local category_order = {
+equipment.category_order = {
  "SHIELDS",
  "LIGHT WEAPONS",
  "NORMAL WEAPONS",
@@ -1152,30 +1154,41 @@ local category_order = {
  "STORED ITEMS"
 }
 
-local function good_category(c)
+function equipment.good_category(c)
   c = c:lower():gsub('s$', '')
-  if category_map[c] then
+  if equipment.canonical_category[c] then
     return c
   end
 end
 
-local equipment_table
-do
+function equipment.category(s)
+  local function strip_s(s)
+    if s:sub(-1) == 's' then
+      return s:sub(1, -2)
+    else
+      return s
+    end
+  end
+
+  return equipment.canonical_category[strip_s(s:lower())]
+end
+
+
+
+
+do -- set equipment.tablespec
   local catspecs = { }
   local function catspec(category)
     return stringf('?^%s:(s|list(s))', category)
   end
-  for category in pairs(category_map) do
+  for category in pairs(equipment.canonical_category) do
     table.insert(catspecs, catspec(category))
     table.insert(catspecs, catspec(category .. 's'))
   end
-  equipment_table = stringf('{%s}', table.concat(catspecs, ', '))
+  equipment.tablespec = stringf('{%s}', table.concat(catspecs, ', '))
 end
 
 vnames.equipment = 'equipment list'
-
-
--- XXX validation maybe needs to be an object, so can choose between alts
 
 local doc_validation = ([[doc$
 {
@@ -1232,7 +1245,7 @@ local doc_validation = ([[doc$
 }
 ]]):gsub('%-%-.-\n', '')
    :gsub('MAGICPROPNAMES', magicpropnames)
-   :gsub('EQUIPMENT_TABLE', equipment_table)
+   :gsub('EQUIPMENT_TABLE', equipment.tablespec)
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
         :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:n[1..20], '))
 
@@ -1276,7 +1289,7 @@ end
 
 function validators.eqline(context, v)
   local cat = v:match '^(.-):%s'
-  if not good_category(cat) then
+  if not equipment.good_category(cat) then
     verrorf('In %s, equipment line %q uses an unknown category %q', context, v, cat)
   end
 end
@@ -1574,24 +1587,7 @@ end
 ---------------------------------------------------------------------------
 
 
--- Extract valid equipment categories from category_map (single point of truth)
-local valid_equipment_categories = {}
-for _, category in pairs(category_map) do
-  valid_equipment_categories[category] = true
-end
-
-local function strip_s(s)
-  if s:sub(-1) == 's' then
-    return s:sub(1, -2)
-  else
-    return s
-  end
-end
-
-local function category(s)
-  return category_map[strip_s(s:lower())]
-end
-
+-- Extract valid equipment categories from equipment.canonical_category (single point of truth)
 local function heuristic_category(_)
   return 'SLOTTED ITEMS'
 end
@@ -1667,7 +1663,7 @@ local function emit_structured_equipment(structured_equipment, lines)
     end
   end
 
-  for _, category in ipairs(category_order) do
+  for _, category in ipairs(equipment.category_order) do
     process(category)
   end
   for category in pairs(structured_equipment) do
@@ -1689,6 +1685,7 @@ end
 -- Supports both inline format ("NORMAL WEAPONS: Longsword") and
 -- block format ("NORMAL WEAPONS:", "- Longsword", "- Shortbow")
 local function parse_equipment_strings(lines)
+  local category = equipment.category
   local equipment = {}
   local i = 1
 
