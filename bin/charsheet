@@ -951,7 +951,7 @@ do
             end
           elseif not other then
             local unexpected = { }
-            for k, value in pairs(v) do
+            for k in pairs(v) do
               if not (acceptable[k] or insensitive[k:lower()]) then
                 table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
               end
