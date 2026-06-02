@@ -1205,7 +1205,7 @@ vnames.equipment = 'equipment list'
 local doc_validation = ([[doc$
 {
   CLASS:nonempty$s,
-  LEVEL:n,
+  ?LEVEL:n,
 
   ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
 
@@ -1216,7 +1216,7 @@ local doc_validation = ([[doc$
   ?PASSIVE PERCEPTION:n[1..],
 
   ?SPELL DC:n,
-  ?DOMAIN SPELLS:n,
+  ?DOMAIN SPELLS:n[1..],
   ?SPELLS KNOWN:n,
   ?SORCERY POINTS:n,
 
@@ -1235,7 +1235,7 @@ local doc_validation = ([[doc$
      attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
   ?%FEATURES:list(feature@
          {name,description
-         ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration
+         ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
          ,?GM note
          }),
   ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
@@ -1248,18 +1248,19 @@ local doc_validation = ([[doc$
 
   ?STONES:b, -- use Alexandrian stones
 
-  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
-  ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+--  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
+  ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
 
-
-
+  ?LAYOUT,
+  ?SHEET ORIGIN,
 
 }
 ]]):gsub('%-%-.-\n', '')
    :gsub('MAGICPROPNAMES', magicpropnames)
    :gsub('EQUIPMENT_TABLE', equipment.tablespec)
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
-        :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:n[1..20], '))
+        :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:b, '))
 
 --print(doc_validation); os.exit(2)
 
