@@ -1368,13 +1368,6 @@ local casting_modifier = {
   Wizard    = 'INT',
 }
 
-local function proficiency_bonus(doc) -- UGH, used to emit counter
-                                      -- should attach to level emitter
-  local level = tonumber(doc.LEVEL)
-  local prof = level and (2 + math.floor((level - 1) / 4)) or 2
-  return assert(prof)
-end
-
 local function ability_modifier(score)
   return math.floor((score - 10) / 2)
 end
@@ -1502,7 +1495,7 @@ local function extend(doc)
   end
 
   local prof_bonus = 2 + math.floor((level - 1) / 4)
-
+  update('PROFICIENCY BONUS', prof_bonus)
 
   -- Handle SPELL DC calculation and validation
   if not empty(doc.MAGIC) then
@@ -2082,8 +2075,6 @@ end
 ---------------------------------------------------------------------------
 local function convert_mapping (map)
   local lines = {}
-
-  outf(lines, [[\setcounter{proficiency bonus}{%d}]], proficiency_bonus(map))
 
   -- emit keys in predictable order
   local keys = sorted_keys(map)
