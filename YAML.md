@@ -215,18 +215,6 @@ the rendering engine defines `CHA SAVING` to be `true`.
 Otherwise `CHA SAVING` is left undefined.
 
 
-#### `COLOR`
-
-A Boolean; if true, the rendering engine uses colored backgrounds in
-those templates that support color.
-(The colored backgrounds are primarily a teaching tool.)
-Defaults to `true`.
-
-- `COLOR: true`
-- `COLOR: false`
-
-
-
 #### `CHARACTER NAME`
 
 The character's name, which is displayed prominently.
@@ -245,7 +233,15 @@ It is used to determine saving-throw proficiencies, and it is displayed.
 - `CLASS: "Fighter"`
 - `CLASS: Rogue`
 
+#### `COLOR`
 
+A Boolean; if true, the rendering engine uses colored backgrounds in
+those templates that support color.
+(The colored backgrounds are primarily a teaching tool.)
+Defaults to `true`.
+
+- `COLOR: true`
+- `COLOR: false`
 
 
 #### `CON`
