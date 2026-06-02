@@ -569,11 +569,16 @@ do
 
   function parse(semantics, s)
 
+
+
     local tokens = tokenize(s)
---    inspect.show{tokens = tokens}
     local tindex = 1
 
     local lastmaybe
+
+    local function eos()
+      return not tokens[tindex]
+    end
 
     local function maybe(token, ...)
       lastmaybe = nil
@@ -601,6 +606,11 @@ do
       end
     end
 
+    local function backup()
+      assert(tindex > 1)
+      tindex = tindex - 1
+    end
+
     local function expected(parsing, wanted)
       local tcontext = { }
       for j = math.max(1, tindex-5), math.min(#tokens, tindex+5) do
@@ -616,7 +626,7 @@ do
 
     local function eat(context, token)
       if maybe(token) == nil then
-        expected(context, token, tindex)
+        expected(context, token)
       end
     end
 
@@ -627,7 +637,6 @@ do
       while maybe '|' do
         table.insert(alts, alt())
       end
-      vprintf('found one or more balidators before %d (%s)\n', tindex, tostring(tokens[tindex]))
       return #alts > 1 and semantics:alts(alts) or alts[1]
     end
 
@@ -653,17 +662,15 @@ do
           expected('table key', 'name')
         end
         local validator = maybe ':' and alts() or nil
-        vprintf('found a key ending before token %d (%s)\n', tindex, tostring(tokens[tindex]))
         return semantics:key(table.concat(nameparts, ' '), props, validator)
       end
     end
 
     keys = function()
       local keys = { key() }
-      vprintf('first key ends before token %d (%s)\n', tindex, tostring(tokens[tindex]))
       while maybe ',' do
         if maybe '}' then
-          tindex = tindex - 1
+          backup()
         else
           table.insert(keys, key())
         end
@@ -675,7 +682,7 @@ do
 
 
     alt = function()
-      if not tokens[tindex] then
+      if eos() then
         errorf('Ran out of tokens parsing validator: %s', inspect.image(tokens))
       elseif maybe 'null' then
         return semantics:null()
