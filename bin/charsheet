@@ -1152,6 +1152,13 @@ local category_order = {
  "STORED ITEMS"
 }
 
+local function good_category(c)
+  c = c:lower():gsub('s$', '')
+  if category_map[c] then
+    return c
+  end
+end
+
 local equipment_table
 do
   local catspecs = { }
@@ -1268,6 +1275,12 @@ function validators.level(context, v)
   end
 end
 
+function validators.eqline(context, v)
+  local cat = v:match '^(.-):%s'
+  if not good_category(cat) then
+    verrorf('In %s, equipment line %q uses an unknown category %q', context, v, cat)
+  end
+end
 
 
 function validators.class_level(context, class_and_level)
