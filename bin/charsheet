@@ -1293,7 +1293,7 @@ end
 
 function validators.eqline(context, v)
   local cat = v:match '^(.-):%s'
-  if not equipment.good_category(cat) then
+  if cat and not equipment.good_category(cat) then
     verrorf('In %s, equipment line %q uses an unknown category %q', context, v, cat)
   end
 end
