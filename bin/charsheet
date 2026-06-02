@@ -660,7 +660,7 @@ do
           table.insert(nameparts, lastmaybe)
         end
         if #nameparts == 0 then
-          expected('table key', 'name', next)
+          expected('table key', 'name')
         end
         local validator = maybe ':' and alts() or nil
         vprintf('found a key ending before token %d (%s)\n', tindex, tostring(tokens[tindex]))
