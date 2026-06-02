@@ -1179,9 +1179,8 @@ vnames.equipment = 'equipment list'
 
 local doc_validation = ([[doc$
 {
-  ?CLASS:nonempty$s,
-  ?LEVEL:n,
-  ?CLASS & LEVEL:class_level$s,
+  CLASS:nonempty$s,
+  LEVEL:n,
 
   ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
 
@@ -1283,21 +1282,6 @@ function validators.eqline(context, v)
 end
 
 
-function validators.class_level(context, class_and_level)
-  local class = class_and_level:match('%a+')
-  local level = tonumber(class_and_level:match('(%d+)%s*$'))
-  if not class then
-    verrorf(context, "CLASS & LEVEL does not contain a valid class name")
-  end
-  if not level then
-    verrorf(context, "CLASS & LEVEL does not end with a level number")
-  elseif not inrange(1, 20)(level) then
-    verrorf('Level %d in CLASS & LEVEL is out of bounds 1..20', level)
-  end
-end
-
--- Validate CLASS & LEVEL requirement and parsing
-
 function validators.nonempty(context, v)
   if empty(v) then
     verrorf('In %s, expected data but found %s', context, friendly(v))
@@ -1310,16 +1294,6 @@ end
 function validators.doc(context, doc)
   if not empty(doc.WIS) and empty(doc['PASSIVE PERCEPTION']) then
     verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
-  end
-
-  if not (doc['CLASS & LEVEL'] or doc.CLASS and doc.LEVEL) then
-    if doc.CLASS then
-      verrorf 'The character sheet does not specify LEVEL'
-    elseif doc.LEVEL then
-      verrorf 'The character sheet does not specify CLASS'
-    else
-      verrorf 'The character sheet does not specify CLASS or LEVEL'
-    end
   end
 end
 
@@ -2026,6 +2000,8 @@ end
 
 local function extend(doc)
 
+  local class = assert(doc.CLASS)
+
   if fields.nocolor then
     doc.COLOR = false
   end
@@ -2037,30 +2013,6 @@ local function extend(doc)
               field, tostring(value), tostring(v))
     elseif not tostring(v):find '^%+' then
       doc[field] = value
-    end
-  end
-
-
-
-  local class = doc.CLASS or (doc['CLASS & LEVEL'] or ''):match '%a+' or ''
-  doc.CLASS = class
-
-  -- Extract SPECIALTY from "CLASS & LEVEL" if SPECIALTY is absent
-  if not doc.SPECIALTY and doc['CLASS & LEVEL'] then
-    doc.SPECIALTY = doc['CLASS & LEVEL']:match '%a+%s*%(([^)]+)%)'
-  end
-
-  -- Extract LEVEL from "CLASS & LEVEL" if LEVEL is absent
-  doc.LEVEL = doc.LEVEL or
-              doc['CLASS & LEVEL'] and doc['CLASS & LEVEL']:match '%d+%s*$' or
-              nil
-
-  -- Only build "CLASS & LEVEL" if we have separate CLASS/LEVEL/SPECIALTY fields
-  if doc.CLASS and doc.LEVEL and not doc['CLASS & LEVEL'] then
-    if doc.SPECIALTY and doc.SPECIALTY:find '%S' then
-      doc['CLASS & LEVEL'] = stringf('%s (%s) %s', class, doc.SPECIALTY, doc.LEVEL)
-    else
-      doc['CLASS & LEVEL'] = stringf('%s %s', class, doc.LEVEL)
     end
   end
 
