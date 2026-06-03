@@ -1753,6 +1753,8 @@ function render.OTHER(k, v)
   return setDND(k, any(v))
 end
 
+render.table = render.OTHER
+
 do -- defend against invalid inputs breaking rendering
   for k, v in pairs(render) do
     if type(v) == 'function' then
