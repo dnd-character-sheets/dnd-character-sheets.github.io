@@ -2229,7 +2229,7 @@ end
 --  end
 --end
 
-local function convert_mapping (map)
+local function render_sheet (map)
   local lines = {}
 
   -- emit keys in predictable order
@@ -2460,7 +2460,7 @@ local scripts = { }
 function scripts.charsheet(arg)
   local sheet, font = sheet_of_file(arg[1])
   local layout = fields.layout or sheet.LAYOUT or default_layout
-  local latex = sanitize_control_sequences(escape_tex(convert_mapping(sheet)))
+  local latex = sanitize_control_sequences(escape_tex(render_sheet(sheet)))
   process(wrap_latex(latex, layout, font))
 end
 
@@ -2485,7 +2485,7 @@ function scripts.gmsheet(arg)
     local sheet, f = sheet_of_file(playerfile)
     font = font or f
     table.insert(docs, sheet)
-    local defs = sanitize_control_sequences(escape_tex(convert_mapping(sheet)))
+    local defs = sanitize_control_sequences(escape_tex(render_sheet(sheet)))
     table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
   end
 
