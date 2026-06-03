@@ -1885,6 +1885,10 @@ local function unparse_equipment_structure(structured_equipment)
   return lines
 end
 
+render['VALIDATION ERRORS'] = function(k, v)
+  return setDND(k, render.ipairs(render.item, v))
+end
+
 
 local function validate_equipment_parsing(_)
   eprintf 'equipment parsing not validated \n'
