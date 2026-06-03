@@ -64,7 +64,7 @@ local pdflatex =
 --
 -- likely for error messages
 
-local function sq(s)
+local function sq(s) -- string quote
   if type(s) ~= 'table' then
     return stringf('%q', s)
   else
@@ -141,8 +141,6 @@ local function scalarvalues(list) -- iterator : value list -> value
       process(list)
     end)
 end
-
-
 
 local function commafy(t, andword, comma)
   if t == nil or #t == 0 then return '' end  -- ugly special case
@@ -222,6 +220,7 @@ do
   end
 end
 
+--------------------- sandboxing ------------------------
 
 local bad_input_tex = [[
 \documentclass[12pt]{article}
@@ -237,9 +236,6 @@ $BAD
 \end{quote}
 \end{document}
 ]]
-
-
---------------------- sandboxing
 
 local bad_control_sequences = { } -- do not allow in documents
 do
@@ -365,7 +361,7 @@ end
 
 assert(type(inrange(1,10)) == 'function')
 
-local function any(p, list)
+local function any(p, list) -- existential quantifier
   local ok, msg
   for _, v in ipairs(list) do
     ok, msg = p(v)
@@ -375,8 +371,6 @@ local function any(p, list)
   end
   return false, msg
 end
-
--------------------
 
 -- predicate `can_be(tau1, tau2, ...)(v)` knows about type conversions
 
@@ -423,14 +417,14 @@ local islist = wrap(function(t)
   return type(t) == 'table' and (empty(t) or t[1] ~= nil)
 end)
 
------------- validation grammar
+------------ validation infrastructure -------------------------
 
 --[=[
 
-The game here is a little language that can be used to check the
-structure and types of Lua objects that come from YAML.  A "validator"
-is like a type but with a little extra action, including hooks
-for external validation and naming.
+Valid inputs are specified by a little language that can be used to
+check the structure and types of Lua objects that come from YAML.
+A "validator" is like a type but with a little extra action, including
+hooks for external validation and naming.
 
   Validator v ::= s⟦tring⟧                -- can be interpreted as text
                |  b⟦ool⟦ean⟧⟧             --  true, false, 0, or 1
@@ -451,7 +445,7 @@ Operators @ and $ associate to the right and bind tighter than |.
 
 ]=]
 
-local parse
+local parse_validation
 do
   local inspect = require 'inspect'
 
@@ -476,7 +470,7 @@ do
     return tokens
   end
 
-  function parse(semantics, s)
+  function parse_validation(semantics, s)
 
 
 
@@ -1000,10 +994,10 @@ end
 
 
 
--- print(parse(vfactory, '{level:n[0..9],?slots:n}').what)
+-- print(parse_validation(vfactory, '{level:n[0..9],?slots:n}').what)
 
 local function validate(context, sheet, validation)
-  parse(vfactory, validation):validate(context, sheet)
+  parse_validation(vfactory, validation):validate(context, sheet)
 end
 
 
@@ -2238,7 +2232,7 @@ if fields.fontable then
     end
     return name
   end
-  parse(methods, sheet_validation)
+  parse_validation(methods, sheet_validation)
 elseif scripts[basename] then
   scripts[basename](arg)
 else
