@@ -1798,7 +1798,50 @@ local function preprocess(sheet)
   return sheet
 end
 
+local write_output -- forward declaration
 
+local function sheet_of_file(pathname)
+  curfile = pathname
+  local yaml_text = slurp(pathname)
+  local ok, sheet, msg = pcall(lyaml.load, yaml_text)
+  if not ok or type(sheet) ~= 'table' then
+    eprintf('charsheet load failed %s\n', (not ok and sheet) or msg or 'YAML loaded as string')
+    os.exit(1)
+  end
+  assert(type(sheet) == 'table')
+
+  do -- look for unbalanced braces (security risk)
+    local bad = unbalanced_yaml_string(sheet)
+    if bad then
+      local replace =
+        { ['{'] = [[\lbrace{}]], ['}'] = [[\rbrace{}]], ['\\'] = [[\textbackslash{}]] }
+      local display = bad:gsub([=[[{}\]]=], replace)
+      write_output(bad_input_tex:gsub("%$BAD", display))
+      eprintf('Unbalanced braces in %s; not continuing\n', pathname)
+      os.exit(1)
+    end
+  end
+
+  -- Validate document before processing
+  preprocess(sheet)
+  validate(pathname, sheet, sheet_validation)
+  extend(sheet)
+  normalize(sheet)
+  if #global_validation_errors > 0 then
+    if fields.strict then
+      eprintf("Validation failed in strict mode. Exiting.\n")
+      os.exit(1)
+    else
+      eprintf("Validation warnings encountered. Continuing...\n")
+      -- In non-strict mode, accumulate validation errors in the document
+      sheet['VALIDATION ERRORS'] = global_validation_errors
+    end
+  end
+  return sheet, sheet['DOCUMENT FONT']
+end
+
+
+-------------- I/O and shell utilities -----------------------
 
 local function contents(filename)
   local f, msg = io.open(filename, 'r')
