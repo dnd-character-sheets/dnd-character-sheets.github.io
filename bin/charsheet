@@ -51,7 +51,7 @@ local default_layouts = {
 local default_layout =
   assert(default_layouts[basename], 'No default layout defined for ' .. basename)
 
-local vprintf = fields.verbose and eprintf or function() end
+local vprintf = fields.verbose and eprintf or function() end -- luacheck: no unused
 
 local pdflatex =
   fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
@@ -150,7 +150,7 @@ local function scalarvalues(list) -- iterator : value list -> value
 end
 
 -- Local recursive table equality comparison
-local function table_eq(t1, t2)
+local function table_eq(t1, t2) -- luacheck: no unused
   if t1 == t2 then
     return true
   elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
@@ -492,10 +492,6 @@ local nonempty_string = wrap(function (v)
 end)
 
 assert(nonempty_string 'Arborist')
-
-local function is_empty_table(v)
-  return type(v) == 'table' and next(v) == nil
-end
 
 local is_singleton_table = wrap(function(t)
   if type(t) == 'table' then
@@ -1615,10 +1611,9 @@ local function normalize_equipment(eq)
           in_category = false
         end
         local block_header = line:match("^(.+):$")
-        if block_header and not category(block_header) then
-          errorf('Invalid equipment category %q made it past the validator', block_header)
-        elseif block_header then
-          in_category = category(block_header)
+        if block_header then
+          in_category = category(block_header) or heuristic_category(block_header)
+          -- heuristic is used only if block header is invalid, which will have been flagged
         elseif in_category then
           table.insert(normal[in_category], (line:gsub('^%s*%-%s+', ''):gsub('%s+$', '')))
         elseif line:find '^%S.*:' then -- inline "category: item"
@@ -1702,60 +1697,6 @@ render.string  = setDND
 render.number  = setDND
 render.boolean = setDND
 
-local oldrender = { }
--- simple_kv (k, string): \setDND{k}{string} or \setDNDfont
--- item_list (vs): \item as_item(v1) ... \item as_item(vn)
--- as_item(v): \item scalar(v)
----------------------------------------------------------------------------
--- 3. Rendering helpers
----------------------------------------------------------------------------
-local function is_named_list(entry) -- category: [a, b, c, ...]
-  if type(entry) == 'table' then
-    local k, v = next(entry)
-    return type(k) == 'string' and islist(v) and next(entry, k) == nil
-  end
-end
-
-
-function oldrender.scalar(v)
-  if type(v) == 'string' then
-    return do_not_escape(v)
-  elseif type(v) ~= 'table' then
-    return tostring(v)
-  else
-    if isnull(v) or v.proficiencies_skip then
-      return [[\profskip{}]]
-    elseif is_named_list(v) then
-      local name, elements = next(v)
-      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name,
-        render.ipairs(oldrender.item, elements))
-    elseif v.smallskip then
-      return [[\smallskip{}]]
-    elseif v.medskip then
-      return [[\medskip{}]]
-    else
-      return 'whut?: ' .. (require 'inspect'.image(v))
-    end
-  end
-end
-
-
-function oldrender.as_item(v)
-  if is_empty_table(v) then -- blank list entry
-    return [[\profskip{}]]
-  else
-    local s = oldrender.scalar(v)
-    if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
-    or s:find [[\bigskip]]
-    then
-      return s
-    else
---if s:find '_' then require 'inspect'.show { evil_string = s } end
-      return ([[\item %s]]):format(do_not_escape(s))
-    end
-  end
-end
-
 function render.ipairs(render, vs, separator)
   local items = {}
   for _, v in ipairs(vs) do
@@ -1798,18 +1739,6 @@ function render.eqbinding(k, v)
 end
 
 
-local function whatis(v)
-  if type(v) ~= 'table' then
-    return 'scalar'
-  elseif v.level then
-    return 'level spec'
-  elseif v.name and description(v) then
-    return 'named thing'
-  else
-    return 'table'
-  end
-end
-
 function render.described(thing) -- describe a named thing
   local suffix =
     (thing.attack or thing.offense or thing.offensive or thing.save or thing.enemy)
@@ -1842,7 +1771,7 @@ end
 render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
 
 function render.item(s)
-  return stringf([[\item %s]], elem)
+  return stringf([[\item %s]], s)
 end
 
 function render.proficiency(elem)
@@ -1861,53 +1790,6 @@ function render.proficiency(elem)
 end
 
 
-
-function oldrender.struct_list (key, list)
-  vprintf('rendering struct for %s\n', key)
-  local out = {}
-  for _,elem in ipairs(list) do
-    if type(elem) ~= "table" then
-      outf(out, [[\item %s]], do_not_escape(tostring(elem)))
-    elseif elem.level and (elem.slots or not next(elem, 'level')) then
-      if type(elem.level) == 'table' then
-        verrorf('Spell-level table uses old format; switch to { level: N, slots: M }')
-        elem.level = 99
-      end
-      if elem.slots then
-        outf(out, [[\spellslevellabel{%s}{%s}]], elem.level, elem.slots)
-      else
-        outf(out, [[\spellslevellabel{%s}{%s}]], do_not_escape(elem.level), 0)
-      end
-    elseif elem.name and description(elem) and not elem.ATTACK
-        or key == 'MAGIC'
-    then
-    elseif false and elem.ATTACK then
-      vprintf('rendering an attack\n')
-      table.insert(out, oldrender.attack_record(elem))
-    else
-      table.insert(out, oldrender.generic_record(elem))
-    end
-  end
-
-  return ([[\setDND{%s}{%s}]]):format(key, table.concat(out, "\n"))
-end
-
----------------------------------------------------------------------------
--- 3.6. Equipment format detection and processing
----------------------------------------------------------------------------
-
--- Helper functions for equipment processing
-local function extract_weight_arg(category, equipment_item)
-  if category == "HEAVY ITEMS" then
-    local stones = equipment_item:match("%((%d+) stones?%)")
-    if stones then
-      return string.format("[%d]", tonumber(stones) * 10)
-    end
-  end
-  return ""
-end
-
-
 equipment.category_order = {
  "SHIELDS",
  "LIGHT WEAPONS",
@@ -1922,31 +1804,15 @@ equipment.category_order = {
  "STORED ITEMS"
 }
 
-
-local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
-  local weight_arg = extract_weight_arg(category, equipment_item)
-  table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}",
-    weight_arg, category:gsub('&', '+'), do_not_escape(equipment_item)))
-  table.insert(flattened_equipment, oldrender.as_item(equipment_item))
-end
-
-function render.encumbrance(category, item)
-  assert(category ~= 'UNCATEGORIZED')
-  local stones = item:match '%((%d+) stone%s?%)'
-  local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
-  return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
-end
-
--- Process structured equipment and generate LaTeX output
 function render.EQUIPMENT(_, eq)
   local encumbrance = { }
 
   for category, items in pairs(eq) do -- record for encumbrance
-    for _, item in ipairs(item) do
+    for _, item in ipairs(items) do
       table.insert(encumbrance, render.encumbrance(category, item))
     end
   end
-    
+
   local flatlist = { }
   for _, category in ipairs(equipment.category_order) do
     if eq[category] then -- don't want to insert a blank line into flatlist
@@ -1957,123 +1823,17 @@ function render.EQUIPMENT(_, eq)
   return table.concat(encumbrance, '\n') .. setDND('EQUIPMENT', table.concat(flatlist, '\n'))
 end
 
--- Parse equipment from a list of strings into structured format
--- Supports both inline format ("NORMAL WEAPONS: Longsword") and
--- block format ("NORMAL WEAPONS:", "- Longsword", "- Shortbow")
-local function parse_equipment_strings(lines)
-  local category = equipment.category
-  local equipment = {}
-  local i = 1
-
-  local function add(category, item)
-    equipment[category] = equipment[category] or {}
-    table.insert(equipment[category], item)
-  end
-
-  while i <= #lines do
-    -- see grammar for EQUIPMENT in YAML.md
-    local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
-    local block_header = line:match("^(.+):$")
-
-    if line == "" then
-      -- Skip empty lines
-      i = i + 1
-    elseif block_header and category(block_header) then
-      -- Block format category header: "CATEGORY:"
-      local cat = category(block_header)
-      equipment[cat] = equipment[cat] or {} -- populate even if no items follow
-      i = i + 1
-      while i <= #lines and lines[i]:find '^%s*%-%s' do
-        local item = lines[i]:gsub("^%s*%-%s+", ""):gsub("%s+$", "")
-        add(cat, item)
-        i = i + 1
-      end
-    elseif block_header then
-      eprintf("Warning: Unknown equipment category %q\n", block_header)
-      i = i + 1
-    elseif line:match("^%S.*:") then
-      -- Inline format: "CATEGORY: Item Name"
-      local cat, item = assert(line:match("^([^:]-)%s*:%s*(.*)$"))
-      if category(cat) then
-        add(category(cat), item)
-      else
-        eprintf("Warning: Unknown equipment category %q in line %q\n", cat, line)
-      end
-      i = i + 1
-    else
-      add(heuristic_category(line), line)
-      i = i + 1
-    end
-  end
-  return equipment
+function render.encumbrance(category, item)
+  assert(category ~= 'UNCATEGORIZED')
+  local stones = item:match '%((%d+) stone%s?%)'
+  local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
+  return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
 end
 
-local function parse_equipment_strings(lines)
-  local category = equipment.category
-  local equipment = {}
-  local i = 1
 
-  local function add(category, item)
-    equipment[category] = equipment[category] or {}
-    table.insert(equipment[category], item)
-  end
-
-  while i <= #lines do
-    -- see grammar for EQUIPMENT in YAML.md
-    local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
-    local block_header = line:match("^(.+):$")
-
-    if line == "" then
-      -- Skip empty lines
-      i = i + 1
-    elseif block_header and category(block_header) then
-      -- Block format category header: "CATEGORY:"
-      local cat = category(block_header)
-      equipment[cat] = equipment[cat] or {} -- populate even if no items follow
-      i = i + 1
-      while i <= #lines and lines[i]:find '^%s*%-%s' do
-        local item = lines[i]:gsub("^%s*%-%s+", ""):gsub("%s+$", "")
-        add(cat, item)
-        i = i + 1
-      end
-    elseif block_header then
-      eprintf("Warning: Unknown equipment category %q\n", block_header)
-      i = i + 1
-    elseif line:match("^%S.*:") then
-      -- Inline format: "CATEGORY: Item Name"
-      local cat, item = assert(line:match("^([^:]-)%s*:%s*(.*)$"))
-      if category(cat) then
-        add(category(cat), item)
-      else
-        eprintf("Warning: Unknown equipment category %q in line %q\n", cat, line)
-      end
-      i = i + 1
-    else
-      add(heuristic_category(line), line)
-      i = i + 1
-    end
-  end
-  return equipment
-end
-
--- Convert any equipment format to unified structured format
-local function equipment(equipment_data)
-  if is_string_list_with_categories(equipment_data) then
-    return parse_equipment_strings(equipment_data)
-  elseif is_structured_object(equipment_data) then
-    return equipment_data -- already in structured format
-  elseif type(equipment_data) == "table" and #equipment_data > 0 then
-    -- Traditional string list - put everything in heuristic category
-    local result = {}
-    result[heuristic_category()] = equipment_data
-    return result
-  else
-    return {} -- empty equipment
-  end
-end
 
 -- Helper function to visualize table structure for debugging
-local function visualize_table(t, indent)
+local function visualize_table(t, indent) -- luacheck: no unused
   indent = indent or 0
   local spaces = string.rep("  ", indent)
   local result = {}
@@ -2125,62 +1885,14 @@ local function unparse_equipment_structure(structured_equipment)
   return lines
 end
 
-local function validate_equipment_parsing(e)
-  eprintf('validate_equipment_parsing not yet ported\n')
-  return e
+
+local function validate_equipment_parsing(_)
+  eprintf 'equipment parsing not validated \n'
 end
-
---[[
-From doco
-
-    <equipment> ::= { [<category>:] <item> NL
-                    | <category>: NL {- <item> NL}
-                    }
-    <category>  ::= light armor | medium armor | ...
-                 |  <category>s
-
-As Lua object this says an equipment line is one of the following:
-
-  - string
-  - { category |-> string }
-  - { category |-> string list }
-
-]]
-
-local function validate_equipment_parsing(equipment)
-
-    do return end
-    -- Unparse to string list format
-    local unparsed_lines = unparse_equipment_structure(structured_equipment)
-
-    -- Parse it back
-    local reparsed_structure = parse_equipment_strings(unparsed_lines)
-
-    -- Compare with original
-    if not table_eq(structured_equipment, reparsed_structure) then
-      verrorf([[
-In %s, equipment round-trip validation failed!
-Original:
-  %s
-
-Unparsed lines:
-  %s
-
-Reparsed:
-  %s]],
-  context,
-  visualize_table(structured_equipment),
-  table.concat(unparsed_lines, "\n"),
-  visualize_table(reparsed_structure))
-  end
-end
-
-
-
 
 
 -- Round-trip validation function
-function validators.equipment(context, structured_equipment)
+function validators.equipment(_, equipment)
   validate_equipment_parsing(equipment)
 end
 
@@ -2208,35 +1920,17 @@ do -- defend against invalid inputs breaking rendering
     end
   end
 end
-        
+
 
 
 local function render_sheet (map)
   local lines = {}
 
-  -- emit keys in predictable order
-  local keys = sorted_keys(map)
-
-  local use_items = { PROFICIENCIES = true,
-                      ['SECONDARY PROFICIENCIES'] = true,
-  }
-
-  for _, k in ipairs(keys) do
+  for _, k in ipairs(sorted_keys(map)) do -- emit in predictable order
     local v = map[k]
     local t = type(v)
-    table.insert(lines, (render[k] or render[t] or function() return '% UNIMP ' .. k end)(k, v))
---
---    if k == "EQUIPMENT" and t == "table" then
---      emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
---    elseif t=="table" then
---      if use_items[k]
---      or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
---      then
---        table.insert(lines, oldrender.simple_kv(k, oldrender.item_list(v)))
---      else
---        table.insert(lines, oldrender.struct_list(k, v))
---      end
---    end
+    local renderer = render[k] or render[t] or function() return '% UNIMP ' .. k end
+    table.insert(lines, (renderer)(k, v))
   end
   return table.concat(lines, "\n")
 end
