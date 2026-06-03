@@ -1368,12 +1368,6 @@ local function add_magic_markers(name, thing)
   end
 end
 
-
-
-
-
-
-
 local function string_note(thing)
   local n = thing['GM note']
   if type(n) == 'string' then
@@ -1401,7 +1395,7 @@ local function extend(sheet)
     sheet.COLOR = false
   end
 
-  -- confirm existing value or set new one
+  ----- infrastructure: confirm existing value or set new one  -----------
   local function update(field, value) -- checks for consistency
     local v = sheet[field]
     if v and tostring(v):find '%S' and not same_values(v, value) then
@@ -1534,10 +1528,6 @@ local function normalize_equipment(eq)
   end
 end
 
-
-
-
-
 local function normalize(sheet)
   sheet.EQUIPMENT = sheet.EQUIPMENT and normalize_equipment(sheet.EQUIPMENT)
 
@@ -1549,10 +1539,11 @@ local function normalize(sheet)
 end
 
 
---================================================================
 --------------------------------------------------------------------------
 ---
---- Help for LaTeX output
+---         Rendering
+
+----- help with LaTeX
 
 local escape_tex
 
@@ -1586,11 +1577,6 @@ end
 
 local function do_not_escape(s) return tostring(s) end
 
---- rendering, start here
----
----
-
-local render = { }
 local function setDND(k, v)
   local fontbase = k:match('(.*) FONT$')
   if fontbase then
@@ -1599,6 +1585,15 @@ local function setDND(k, v)
     return stringf([[\setDND{%s}{%s}]], k, do_not_escape(v))
   end
 end
+
+local render = { }
+
+--- rendering table
+---
+--- two kinds of renderer:
+---     table entry, including top level, take (k, v)
+---     others take just v
+
 render.string  = setDND
 render.number  = setDND
 render.boolean = setDND
@@ -1644,13 +1639,12 @@ function render.eqbinding(k, v)
   return stringf("%s={%s}", do_not_escape(k), do_not_escape(v))
 end
 
-
 function render.described(thing) -- describe a named thing
   local suffix =
     (thing.attack or thing.offense or thing.offensive or thing.save or thing.enemy)
     and 'Colored{attacks}' or ''
   return stringf([[\described%s{%s}{%s}]], suffix,
-    do_not_escape(thing.name or ''), do_not_escape(description(thing) or ''))
+                 do_not_escape(thing.name or ''), do_not_escape(description(thing) or ''))
 end
 
 function render.FEATURES(k, v)
@@ -1669,16 +1663,11 @@ function render.spell(thing)
   end
 end
 
-
 function render.PROFICIENCIES(k, v)
   return setDND(k, render.ipairs(render.proficiency, v))
 end
 
 render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
-
-function render.item(s)
-  return stringf([[\item %s]], s)
-end
 
 function render.proficiency(elem)
   if type(elem) == 'string' then
@@ -1695,6 +1684,9 @@ function render.proficiency(elem)
   end
 end
 
+function render.item(s)
+  return stringf([[\item %s]], s)
+end
 
 equipment.category_order = {
  "SHIELDS",
@@ -1713,13 +1705,13 @@ equipment.category_order = {
 function render.EQUIPMENT(_, eq)
   local encumbrance = { }
 
-  for category, items in pairs(eq) do -- record for encumbrance
+  for category, items in pairs(eq) do -- records for encumbrance
     for _, item in ipairs(items) do
       table.insert(encumbrance, render.encumbrance(category, item))
     end
   end
 
-  local flatlist = { }
+  local flatlist = { } -- list of all items in inventory
   for _, category in ipairs(equipment.category_order) do
     if eq[category] then -- don't want to insert a blank line into flatlist
       table.insert(flatlist, render.ipairs(render.item, eq[category]))
@@ -1752,17 +1744,6 @@ function render.OTHER(k, v)
   return setDND(k, any(v))
 end
 
----------------------------------------------------------------------------
--- 4. Convert a single YAML mapping to LaTeX lines
----------------------------------------------------------------------------
-
---for k, v in pairs(render) do
---  render[k] = function(...) eprintf('CALL rander.%s %s\n', k, require 'inspect'.image { ... })
---                            return v(...)
---  end
---end
-
-
 do -- defend against invalid inputs breaking rendering
   for k, v in pairs(render) do
     if type(v) == 'function' then
@@ -1775,8 +1756,6 @@ do -- defend against invalid inputs breaking rendering
     end
   end
 end
-
-
 
 local function render_sheet (map)
   local lines = {}
@@ -1791,9 +1770,9 @@ local function render_sheet (map)
   return table.concat(lines, "\n")
 end
 
----------------------------------------------------------------------------
--- 5. Entry point
----------------------------------------------------------------------------
+
+------------ reading a sheet file ---------------------------------
+
 local function slurp(filename)
   if filename == '-' or filename == '.' or not filename then
     return io.stdin:read("*a")
@@ -1802,9 +1781,6 @@ local function slurp(filename)
     local txt = f:read("*a"); f:close(); return txt
   end
 end
-
-
-
 
 local function preprocess(sheet)
   for _, f in ipairs { 'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
@@ -1858,30 +1834,9 @@ local function shell_quote(s)
   end
 end
 
-
 local function double_percents(s)
   return (s:gsub('%%', '%%%%'))
 end
-
-local function fill_template(assignments, layout)
-  local pathname = stringf('%s/%s.tex', fields.templates, layout)
-  local template, msg = contents(pathname)
-  if not template then
-    eprintf('%s\n', msg)
-    os.exit(1)
-  else
-    local images = { 'splash.png', 'merman.pdf', 'splash-nocolor.png' }
-    local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
-    for _, image in ipairs(images) do
-      local pattern = image:gsub('%W', '%%%1')
-      local bracketed = stringf('{%s/%s}', fields.templates, image)
-      filled = filled:gsub('%{' .. pattern .. '%}', bracketed)
-    end
-    return filled
-  end
-end
-
-
 
 local runlatex = [=[
 pdflatex=$PDFLATEX
@@ -1905,6 +1860,26 @@ else
 fi
 ]=]
 
+---- placing LaTeX in a template, then running pdflatex
+
+local function fill_template(assignments, layout)
+  local pathname = stringf('%s/%s.tex', fields.templates, layout)
+  local template, msg = contents(pathname)
+  if not template then
+    eprintf('%s\n', msg)
+    os.exit(1)
+  else
+    local images = { 'splash.png', 'merman.pdf', 'splash-nocolor.png' }
+    local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
+    for _, image in ipairs(images) do
+      local pattern = image:gsub('%W', '%%%1')
+      local bracketed = stringf('{%s/%s}', fields.templates, image)
+      filled = filled:gsub('%{' .. pattern .. '%}', bracketed)
+    end
+    return filled
+  end
+end
+
 local function wrap_latex(latex, layout, font)
   local output = fields.standalone and latex or fill_template(latex, layout)
   if font then
@@ -1916,7 +1891,7 @@ local function wrap_latex(latex, layout, font)
   return output
 end
 
-local function process(output)
+function write_output(output)
   if not fields.output then
     io.stdout:write(output, '\n')
   elseif fields.output:find '%.tex$' then
@@ -1938,63 +1913,24 @@ local function process(output)
         os.exit(1)
       end
     end
---
---    local tex = fields.output:gsub('%.pdf$', '.tex')
---    set_contents(tex, output)
---    local rc = runf('%s -output-directory %s %s',
---                    pdflatex, osquote(dirname(fields.output)), osquote(tex))
---    if rc ~= 0 then
---      os.exit(rc)
---    end
   end
 end
 
-local function sheet_of_file(pathname)
-  curfile = pathname
-  local yaml_text = slurp(pathname)
-  local ok, sheet, msg = pcall(lyaml.load, yaml_text)
-  if not ok or type(sheet) ~= 'table' then
-    eprintf('charsheet load failed %s\n', (not ok and sheet) or msg or 'YAML loaded as string')
-    os.exit(1)
-  end
-  assert(type(sheet) == 'table')
 
-  do -- look for unbalanced braces (security risk)
-    local bad = unbalanced_yaml_string(sheet)
-    if bad then
-      local replace =
-        { ['{'] = [[\lbrace{}]], ['}'] = [[\rbrace{}]], ['\\'] = [[\textbackslash{}]] }
-      local display = bad:gsub([=[[{}\]]=], replace)
-      process(bad_input_tex:gsub("%$BAD", display))
-      return
-    end
-  end
-
-  -- Validate document before processing
-  preprocess(sheet)
-  validate(pathname, sheet, sheet_validation)
-  extend(sheet)
-  normalize(sheet)
-  if #global_validation_errors > 0 then
-    if fields.strict then
-      eprintf("Validation failed in strict mode. Exiting.\n")
-      os.exit(1)
-    else
-      eprintf("Validation warnings encountered. Continuing...\n")
-      -- In non-strict mode, accumulate validation errors in the document
-      sheet['VALIDATION ERRORS'] = global_validation_errors
-    end
-  end
-  return sheet, sheet['DOCUMENT FONT']
-end
+-------------------- invoke logic determined by arg[0] -----------
 
 local scripts = { }
+
+---- character sheet
+
 function scripts.charsheet(arg)
   local sheet, font = sheet_of_file(arg[1])
   local layout = fields.layout or sheet.LAYOUT or default_layout
   local latex = sanitize_control_sequences(escape_tex(render_sheet(sheet)))
-  process(wrap_latex(latex, layout, font))
+  write_output(wrap_latex(latex, layout, font))
 end
+
+---- GM's summary sheet
 
 local function plus_newline(s)
   return s .. '\n'
@@ -2168,8 +2104,10 @@ function scripts.gmsheet(arg)
   end
 
   local layout = fields.layout or default_layout
-  process(wrap_latex(table.concat(latexes, '\n'), layout, font))
+  write_output(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
+
+--- list of spells/features for GM reference
 
 function scripts.gmspells(arg)
   local docs = { }
@@ -2213,7 +2151,7 @@ function scripts.gmspells(arg)
   end
 
   local layout = fields.layout or default_layout
-  process(wrap_latex(table.concat(latexes, '\n'), layout, font))
+  write_output(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
 
 if fields.fontable then
