@@ -1792,33 +1792,6 @@ function render.eqbinding(k, v)
 end
 
 
-
-function oldrender.attack_record (rec)
-  local parts = {}
-  if type(rec.ATTACK) == 'number' then
-    rec.ATTACK = stringf('%+d', rec.ATTACK)
-  end
---  for _, k in ipairs { "NAME", "ATTACK", "DAMAGE", "TYPE", "RANGE", "AMMO TYPE", "AMMO COUNT", 'NOTES' }
---  do
---    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(rec[k] or ""))
---  end
-  for k, v in pairs(rec) do
-    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
-  end
-  return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
-end
-
-function oldrender.generic_record (rec)
-  local parts = {}
-  for k,v in pairs(rec) do
-    outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
-  end
-  table.sort(parts)
-  return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
-end
-
-
-
 local function whatis(v)
   if type(v) ~= 'table' then
     return 'scalar'
@@ -1873,10 +1846,10 @@ function render.proficiency(elem)
       outf(groups, [[\item %s: \begin{innerlist}%s\end{innerlist}]], category,
            render.ipairs(render.proficiency, profs))
     end
-    return string.concat(groups, '\n')
+    return table.concat(groups, '\n')
   end
 end
-      
+
 
 
 function oldrender.struct_list (key, list)
