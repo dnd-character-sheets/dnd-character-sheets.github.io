@@ -242,7 +242,7 @@ do
 
   verrorf = function(...)
     local msg = stringf(...)
-    table.insert(global_validation_errors, msg)
+    table.insert(global_validation_errors, (msg:gsub('(%s)"', '%1``'):gsub([["]], [['']])))
     if last_file_announced ~= curfile then
       eprintf('\nValidation error in %s: %s\n', curfile, msg)
       last_file_announced = curfile
