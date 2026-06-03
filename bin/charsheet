@@ -1,9 +1,12 @@
 #!/usr/bin/env lua5.1
---------------------------------------------------------------------------
--- yaml-to-dndtex.lua   ‒  Convert character-sheet YAML to LaTeX macros
--- Usage:   lua yaml-to-dndtex.lua  file.yaml   > file.tex
---          cat file.yaml | lua yaml-to-dndtex.lua   > file.tex
---------------------------------------------------------------------------
+
+-- Read character-sheet YAML and emit various visualization aids
+
+
+-- Note: Normally this code would be split among multiple modules:
+--       validation infrastructure, sheet validation, rendering,
+--       and so on.  But web deployment is so gnarly that I have
+--       chosen to keep it all in one giant file.
 
 ------------------ classic print functions ---------------------
 local stringf = string.format
