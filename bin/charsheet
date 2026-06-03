@@ -353,14 +353,6 @@ local function wrap(p) -- on failure, produces the offending field (XXX name)
   end
 end
 
-local inrange = function(lo, hi)
-  return wrap(function (v)
-    return tonumber(v) and tonumber(v) >= lo and tonumber(v) <= hi
-  end)
-end
-
-assert(type(inrange(1,10)) == 'function')
-
 local function any(p, list) -- existential quantifier
   local ok, msg
   for _, v in ipairs(list) do
@@ -399,12 +391,6 @@ local empty = wrap(function(v)
       or type(v) == 'string' and not v:find '%S'
       or false
 end)
-
-local nonempty_string = wrap(function (v)
-  return can_be 'string'(v) and tostring(v):find('%S')
-end)
-
-assert(nonempty_string 'Arborist')
 
 local is_singleton_table = wrap(function(t)
   if type(t) == 'table' then
