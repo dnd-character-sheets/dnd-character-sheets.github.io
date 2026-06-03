@@ -1306,7 +1306,7 @@ function validators.level(context, v)
 end
 
 function validators.eqline(context, v)
-  local cat = v:match '^(.-):%s'
+  local cat = v:match '^(.-):'
   if cat and not equipment.good_category(cat) then
     verrorf('In %s, equipment line %q uses an unknown category %q', context, v, cat)
   end
@@ -1610,7 +1610,7 @@ local function normalize_equipment(eq)
 
     local in_category = false
     for _, line in ipairs(eq) do
-      if line:find '%S' then
+      if type(line) == 'string' and line:find '%S' then -- counting on validation to show error
         if not line:find '^%s*%-%s' then
           in_category = false
         end
@@ -1629,7 +1629,7 @@ local function normalize_equipment(eq)
         end
       end
     end
-    return normal
+    return setmetatable(normal, nil)
   end
 end
 
@@ -1841,9 +1841,13 @@ end
 
 render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
 
+function render.item(s)
+  return stringf([[\item %s]], elem)
+end
+
 function render.proficiency(elem)
   if type(elem) == 'string' then
-    return stringf([[\item %s]], elem)
+    return render.item(elem)
   elseif empty(elem) then
     return [[\profskip{}]]
   else
@@ -1889,36 +1893,8 @@ function oldrender.struct_list (key, list)
 end
 
 ---------------------------------------------------------------------------
--- 3.5. Equipment string list parsing
----------------------------------------------------------------------------
-
-
----------------------------------------------------------------------------
 -- 3.6. Equipment format detection and processing
 ---------------------------------------------------------------------------
-
-local function is_string_list_with_categories(equipment_data)
-  if type(equipment_data) ~= "table" or #equipment_data == 0 then
-    return false
-  end
-  if type(equipment_data[1]) ~= "string" and type(equipment_data[1]) ~= "number" then
-    return false
-  end
-  -- Check if any item has category syntax
-  local has_category_syntax = function(item)
-    return type(item) == "string" and (item:find(":%s*$") or item:find("^-"))
-  end
-  return any(has_category_syntax, equipment_data)
-end
-
-local function is_structured_object(equipment_data)
-  if type(equipment_data) ~= "table" or #equipment_data > 0 then
-    return false
-  end
-  -- Has string keys (categories) rather than numeric indices
-  return next(equipment_data) ~= nil
-end
-
 
 -- Helper functions for equipment processing
 local function extract_weight_arg(category, equipment_item)
@@ -1954,47 +1930,31 @@ local function add_equipment_item(category, equipment_item, lines, flattened_equ
   table.insert(flattened_equipment, oldrender.as_item(equipment_item))
 end
 
+function render.encumbrance(category, item)
+  assert(category ~= 'UNCATEGORIZED')
+  local stones = item:match '%((%d+) stone%s?%)'
+  local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
+  return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
+end
+
 -- Process structured equipment and generate LaTeX output
-local function emit_structured_equipment(structured_equipment, lines)
-  local flattened_equipment = {}
+function render.EQUIPMENT(_, eq)
+  local encumbrance = { }
 
-  -- The flat EQUIPMENT list must follow `category_order` (user request),
-  -- so iterate canonical categories first, then sweep up anything left over
-  -- (UNCATEGORIZED, plus any unrecognized categories).
-  local processed = {}
-  local function process(category)
-    processed[category] = true
-    local items = structured_equipment[category]
-    if type(items) ~= "table" or #items == 0 then return end
-    if category ~= "UNCATEGORIZED" then
-      -- Categorized items get \addDNDitem commands
-      for _, equipment_item in ipairs(items) do
-        add_equipment_item(category, equipment_item, lines, flattened_equipment)
-      end
-    else
-      -- Uncategorized items only go to flattened list
-      for _, equipment_item in ipairs(items) do
-        table.insert(flattened_equipment, oldrender.as_item(equipment_item))
-      end
+  for category, items in pairs(eq) do -- record for encumbrance
+    for _, item in ipairs(item) do
+      table.insert(encumbrance, render.encumbrance(category, item))
     end
   end
-
+    
+  local flatlist = { }
   for _, category in ipairs(equipment.category_order) do
-    process(category)
-  end
-  for category in pairs(structured_equipment) do
-    if not processed[category] then
-      process(category)
+    if eq[category] then -- don't want to insert a blank line into flatlist
+      table.insert(flatlist, render.ipairs(render.item, eq[category]))
     end
   end
 
-  -- Emit flattened equipment list
-  if #flattened_equipment > 0 then
-    table.insert(lines, string.format("\\setDND{EQUIPMENT}{%s}",
-      table.concat(flattened_equipment, "\n")))
-  else
-    table.insert(lines, "\\setDND{EQUIPMENT}{}")
-  end
+  return table.concat(encumbrance, '\n') .. setDND('EQUIPMENT', table.concat(flatlist, '\n'))
 end
 
 -- Parse equipment from a list of strings into structured format
