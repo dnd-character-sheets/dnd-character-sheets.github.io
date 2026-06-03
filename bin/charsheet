@@ -1849,42 +1849,6 @@ local function visualize_table(t, indent) -- luacheck: no unused
   return table.concat(result, "\n")
 end
 
--- Convert structured equipment back to string list format
-local function unparse_equipment_structure(structured_equipment)
-  local lines = {}
-
-  -- Helper to capitalize first letter of each word
-  local function capitalize(s)
-    return s:gsub("(%a)([%w_']*)", function(first, rest)
-      return first:upper() .. rest:lower()
-    end)
-  end
-
-  -- Helper to get singular form and proper capitalization
-  local function format_category_name(category)
-    return capitalize(category:lower():gsub("s$", ""))
-  end
-
-  for category, items in pairs(structured_equipment) do
-    if type(items) == "table" then
-      if #items == 1 then
-        -- Single item: use inline format
-        local formatted_category = format_category_name(category)
-        table.insert(lines, formatted_category .. ": " .. items[1])
-      else
-        -- Multiple items or empty: use block format
-        local formatted_category = format_category_name(category)
-        table.insert(lines, formatted_category .. "s:")
-        for _, item in ipairs(items) do
-          table.insert(lines, "- " .. item)
-        end
-      end
-    end
-  end
-
-  return lines
-end
-
 render['VALIDATION ERRORS'] = function(k, v)
   return setDND(k, render.ipairs(render.item, v))
 end
