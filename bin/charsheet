@@ -1741,10 +1741,12 @@ end
 
 function render.OTHER(k, v)
   local function any(v)
-    if type(v) == 'table' then
-      return render.sorted_pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
-    else
+    if type(v) ~= 'table' then
       return tostring(v)
+    elseif v[1] then
+      return render.ipairs(render.item, v)
+    else
+      return render.sorted_pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
     end
   end
 
