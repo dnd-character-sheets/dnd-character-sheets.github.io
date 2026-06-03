@@ -2264,7 +2264,7 @@ local function render_sheet (map)
   for _, k in ipairs(keys) do
     local v = map[k]
     local t = type(v)
-    table.insert(lines, (render[k] or render[t] or function() return 'UNIMP ' .. k end)(k, v))
+    table.insert(lines, (render[k] or render[t] or function() return '% UNIMP ' .. k end)(k, v))
 --
 --    if k == "EQUIPMENT" and t == "table" then
 --      emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
