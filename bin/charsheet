@@ -1606,14 +1606,6 @@ function render.ipairs(render, vs, separator)
   return table.concat(items, separator or "\n")
 end
 
-function render.pairs(render, t, separator)
-  local items = {}
-  for k, v in pairs(t) do
-    table.insert(items, render(k, v))
-  end
-  return table.concat(items, separator or "\n")
-end
-
 function render.sorted_pairs(render, t, separator)
   local keys = { }
   for k in pairs(t) do
@@ -1735,7 +1727,7 @@ end
 function render.OTHER(k, v)
   local function any(v)
     if type(v) == 'table' then
-      return render.pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
+      return render.sorted_pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
     else
       return tostring(v)
     end
