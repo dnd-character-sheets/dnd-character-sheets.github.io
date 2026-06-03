@@ -1128,7 +1128,7 @@ local sheet_validation = ([[
                |level$level-spec@{level:n[0..9],?slots:n[1..]}
                |null
                ),
-    ?%EQUIPMENT:equipment@equipment$(etable@EQUIPMENT_TABLE|list(eqline$string)),
+    ?%EQUIPMENT:equipment@(etable@EQUIPMENT_TABLE|list(eqline$string)),
     ?EQUIPMENT COLS:n[1..3],
 
     ?STONES:b, -- use Alexandrian stones
@@ -1228,6 +1228,8 @@ local function check_validator_use()
     end
   end
 end
+
+check_validator_use()
 
 -------------------------------------------------------------------------
 --
@@ -1749,19 +1751,6 @@ function render.OTHER(k, v)
 
   return setDND(k, any(v))
 end
-
-
-local function validate_equipment_parsing(_)
-  eprintf 'equipment parsing not validated \n'
-end
-
-
--- Round-trip validation function
-function validators.equipment(_, equipment)
-  validate_equipment_parsing(equipment)
-end
-
-check_validator_use()
 
 ---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
