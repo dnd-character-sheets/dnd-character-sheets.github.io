@@ -683,7 +683,7 @@ do
 
     return {
       validate = function(_, context, v)
-        if not tonumber(v) or out_of_range(v, rg) then
+        if not tonumber(v) or out_of_range(tonumber(v), rg) then
           missing(context, what, v)
         else
           return tonumber(v)
