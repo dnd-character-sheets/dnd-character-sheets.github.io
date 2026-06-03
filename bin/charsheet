@@ -1652,6 +1652,19 @@ local function do_not_escape(s) return tostring(s) end
 ---
 
 local render = { }
+local function setDND(k, v)
+  local fontbase = k:match('(.*) FONT$')
+  if fontbase then
+    return stringf([[\setDNDfont{%s}{%s}]], fontbase, do_not_escape(v))
+  else
+    return stringf([[\setDND{%s}{%s}]], k, do_not_escape(v))
+  end
+end
+render.string  = setDND
+render.number  = setDND
+render.boolean = setDND
+
+local oldrender = { }
 -- simple_kv (k, string): \setDND{k}{string} or \setDNDfont
 -- item_list (vs): \item as_item(v1) ... \item as_item(vn)
 -- as_item(v): \item scalar(v)
@@ -1665,17 +1678,8 @@ local function is_named_list(entry) -- category: [a, b, c, ...]
   end
 end
 
-function render.simple_kv (key, val)
-  local fontbase = key:match('(.*) FONT$')
-  if fontbase then
-    return ([[\setDNDfont{%s}{%s}]]):format(fontbase, do_not_escape(val))
-  else
-    return ([[\setDND{%s}{%s}]]):format(key, do_not_escape(val))
-  end
-end
 
-
-function render.scalar(v)
+function oldrender.scalar(v)
   if type(v) == 'string' then
     return do_not_escape(v)
   elseif type(v) ~= 'table' then
@@ -1685,7 +1689,8 @@ function render.scalar(v)
       return [[\profskip{}]]
     elseif is_named_list(v) then
       local name, elements = next(v)
-      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name, render.item_list(elements))
+      return stringf([[%s: \begin{innerlist}%s\end{innerlist}]], name,
+        render.ipairs(oldrender.item, elements))
     elseif v.smallskip then
       return [[\smallskip{}]]
     elseif v.medskip then
@@ -1697,11 +1702,11 @@ function render.scalar(v)
 end
 
 
-function render.as_item(v)
+function oldrender.as_item(v)
   if is_empty_table(v) then -- blank list entry
     return [[\profskip{}]]
   else
-    local s = render.scalar(v)
+    local s = oldrender.scalar(v)
     if s:find [[\profskip]] or s:find [[\medskip]] or s:find [[\smallskip]]
     or s:find [[\bigskip]]
     then
@@ -1713,15 +1718,50 @@ function render.as_item(v)
   end
 end
 
-function render.item_list (list)
+function render.ipairs(render, vs, separator)
   local items = {}
-  for _,v in ipairs(list) do
-    table.insert(items, render.as_item(v))
+  for _, v in ipairs(vs) do
+    table.insert(items, render(v))
   end
-  return table.concat(items, "\n")
+  return table.concat(items, separator or "\n")
 end
 
-function render.attack_record (rec)
+function render.pairs(render, t, separator)
+  local items = {}
+  for k, v in pairs(t) do
+    table.insert(items, render(k, v))
+  end
+  return table.concat(items, separator or "\n")
+end
+
+function render.sorted_pairs(render, t, separator)
+  local keys = { }
+  for k in pairs(t) do
+    table.insert(keys, k)
+  end
+  table.sort(keys)
+  local items = {}
+  for _, k in ipairs(keys) do
+    table.insert(items, render(k, t[k]))
+  end
+  return table.concat(items, separator or "\n")
+end
+
+function render.ATTACKS(k, v)
+  return setDND(k, render.ipairs(render.keys, v))
+end
+
+function render.keys(v)
+  return stringf([[\dndkeys{%s}]], render.sorted_pairs(render.eqbinding, v, ','))
+end
+
+function render.eqbinding(k, v)
+  return stringf("%s={%s}", do_not_escape(k), do_not_escape(v))
+end
+
+
+
+function oldrender.attack_record (rec)
   local parts = {}
   if type(rec.ATTACK) == 'number' then
     rec.ATTACK = stringf('%+d', rec.ATTACK)
@@ -1736,7 +1776,7 @@ function render.attack_record (rec)
   return ([[\dndkeys{%s}]]):format(table.concat(parts, ","))
 end
 
-function render.generic_record (rec)
+function oldrender.generic_record (rec)
   local parts = {}
   for k,v in pairs(rec) do
     outf(parts, "%s={%s}", do_not_escape(k), do_not_escape(v))
@@ -1747,11 +1787,67 @@ end
 
 
 
-local function description(thing)
-  return thing.description or thing.long or thing.abbrev
+local function whatis(v)
+  if type(v) ~= 'table' then
+    return 'scalar'
+  elseif v.level then
+    return 'level spec'
+  elseif v.name and description(v) then
+    return 'named thing'
+  else
+    return 'table'
+  end
 end
 
-function render.struct_list (key, list)
+function render.described(thing) -- describe a named thing
+  local suffix =
+    (thing.attack or thing.offense or thing.offensive or thing.save or thing.enemy)
+    and 'Colored{attacks}' or ''
+  return stringf([[\described%s{%s}{%s}]], suffix,
+    do_not_escape(thing.name or ''), do_not_escape(description(thing) or ''))
+end
+
+function render.FEATURES(k, v)
+  return setDND(k, render.ipairs(render.described, v))
+end
+
+function render.MAGIC(k, v)
+  return setDND(k, render.ipairs(render.spell, v))
+end
+
+function render.spell(thing)
+  if thing.level then
+    return stringf([[\spellslevellabel{%s}{%d}]], thing.level, thing.slots or 0)
+  else
+    return render.described(thing)
+  end
+end
+
+
+function render.PROFICIENCIES(k, v)
+  return setDND(k, render.ipairs(render.proficiency, v))
+end
+
+render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
+
+function render.proficiency(elem)
+  if type(elem) == 'string' then
+    return stringf([[\item %s]], elem)
+  elseif empty(elem) then
+    return [[\profskip{}]]
+  else
+    local groups = { }
+    for category, profs in pairs(elem) do
+      outf(groups, [[\item %s: \begin{innerlist}%s\end{innerlist}]], category,
+           render.ipairs(render.proficiency, profs))
+    end
+    return string.concat(groups, '\n')
+  end
+end
+      
+
+
+function oldrender.struct_list (key, list)
   vprintf('rendering struct for %s\n', key)
   local out = {}
   for _,elem in ipairs(list) do
@@ -1770,16 +1866,11 @@ function render.struct_list (key, list)
     elseif elem.name and description(elem) and not elem.ATTACK
         or key == 'MAGIC'
     then
-      local suffix =
-        (elem.attack or elem.offense or elem.offensive or elem.save or elem.enemy)
-        and 'Colored{attacks}' or ''
-      outf(out, [[\described%s{%s}{%s}]], suffix,
-           do_not_escape(elem.name or ''), do_not_escape(description(elem) or ''))
     elseif false and elem.ATTACK then
       vprintf('rendering an attack\n')
-      table.insert(out, render.attack_record(elem))
+      table.insert(out, oldrender.attack_record(elem))
     else
-      table.insert(out, render.generic_record(elem))
+      table.insert(out, oldrender.generic_record(elem))
     end
   end
 
@@ -1839,7 +1930,7 @@ local function add_equipment_item(category, equipment_item, lines, flattened_equ
   local weight_arg = extract_weight_arg(category, equipment_item)
   table.insert(lines, string.format("\\addDNDitem%s{%s}{%s}",
     weight_arg, category:gsub('&', '+'), do_not_escape(equipment_item)))
-  table.insert(flattened_equipment, render.as_item(equipment_item))
+  table.insert(flattened_equipment, oldrender.as_item(equipment_item))
 end
 
 -- Process structured equipment and generate LaTeX output
@@ -1862,7 +1953,7 @@ local function emit_structured_equipment(structured_equipment, lines)
     else
       -- Uncategorized items only go to flattened list
       for _, equipment_item in ipairs(items) do
-        table.insert(flattened_equipment, render.as_item(equipment_item))
+        table.insert(flattened_equipment, oldrender.as_item(equipment_item))
       end
     end
   end
@@ -2072,9 +2163,19 @@ end
 
 
 
+
+
+
 ---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
 ---------------------------------------------------------------------------
+
+--for k, v in pairs(render) do
+--  render[k] = function(...) eprintf('CALL rander.%s %s\n', k, require 'inspect'.image { ... })
+--                            return v(...)
+--  end
+--end
+
 local function convert_mapping (map)
   local lines = {}
 
@@ -2088,19 +2189,19 @@ local function convert_mapping (map)
   for _, k in ipairs(keys) do
     local v = map[k]
     local t = type(v)
-    if k == "EQUIPMENT" and t == "table" then
-      emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
-    elseif t=="string" or t=="number" or t=="boolean" then
-      table.insert(lines, render.simple_kv(k, tostring(v)))
-    elseif t=="table" then
-      if use_items[k]
-      or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
-      then
-        table.insert(lines, render.simple_kv(k, render.item_list(v)))
-      else
-        table.insert(lines, render.struct_list(k, v))
-      end
-    end
+    table.insert(lines, (render[k] or render[t] or function() return 'UNIMP ' .. k end)(k, v))
+--
+--    if k == "EQUIPMENT" and t == "table" then
+--      emit_structured_equipment(validate_equipment_parsing(equipment(v)), lines)
+--    elseif t=="table" then
+--      if use_items[k]
+--      or (#v > 0 and (type(v[1])=="string" or type(v[1])=="number"))
+--      then
+--        table.insert(lines, oldrender.simple_kv(k, oldrender.item_list(v)))
+--      else
+--        table.insert(lines, oldrender.struct_list(k, v))
+--      end
+--    end
   end
   return table.concat(lines, "\n")
 end
