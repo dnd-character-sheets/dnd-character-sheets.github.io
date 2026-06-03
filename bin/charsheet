@@ -1165,20 +1165,6 @@ equipment.canonical_category = {
   ["stored"] = "STORED ITEMS",
 }
 
-equipment.category_order = {
- "SHIELDS",
- "LIGHT WEAPONS",
- "NORMAL WEAPONS",
- "HEAVY WEAPONS",
- "LIGHT ARMOR",
- "MEDIUM ARMOR",
- "HEAVY ARMOR",
- "HEAVY ITEMS",
- "SLOTTED ITEMS",
- "SMALL ITEMS",
- "STORED ITEMS"
-}
-
 function equipment.good_category(c)
   c = c:lower():gsub('s$', '')
   if equipment.canonical_category[c] then
@@ -1258,8 +1244,7 @@ local sheet_validation = ([[
                |level$level-spec@{level:n[0..9],?slots:n[1..]}
                |null
                ),
-    ?%EQUIPMENT:equipment@equipment$
-                  (etable@EQUIPMENT_TABLE|list(eqline$string|etable@EQUIPMENT_TABLE)),
+    ?%EQUIPMENT:equipment@equipment$(etable@EQUIPMENT_TABLE|list(eqline$string)),
     ?EQUIPMENT COLS:n[1..3],
 
     ?STONES:b, -- use Alexandrian stones
@@ -1609,6 +1594,53 @@ local function extend(sheet)
   return sheet
 end
 
+----------------------------------- normalization --------------------------
+
+local function heuristic_category(_)
+  return 'SLOTTED ITEMS'
+end
+
+local function normalize_equipment(eq)
+  if not eq[1] then -- either empty or already in table form
+    return eq
+  else
+    local category = equipment.category
+    local normal =
+      setmetatable({}, { __index = function(t, k) local u = {} t[k] = u return u end })
+
+    local in_category = false
+    for _, line in ipairs(eq) do
+      if line:find '%S' then
+        if not line:find '^%s*%-%s' then
+          in_category = false
+        end
+        local block_header = line:match("^(.+):$")
+        if block_header and not category(block_header) then
+          errorf('Invalid equipment category %q made it past the validator', block_header)
+        elseif block_header then
+          in_category = category(block_header)
+        elseif in_category then
+          table.insert(normal[in_category], (line:gsub('^%s*%-%s+', ''):gsub('%s+$', '')))
+        elseif line:find '^%S.*:' then -- inline "category: item"
+          local cat, item = assert(line:match '^(.-)%s*:%s*(.*)$')
+          table.insert(normal[category(cat) or heuristic_category(item)], item)
+        else
+          table.insert(normal[heuristic_category(line)], line)
+        end
+      end
+    end
+    return normal
+  end
+end
+
+
+
+
+
+local function normalize(sheet)
+  sheet.EQUIPMENT = sheet.EQUIPMENT and normalize_equipment(sheet.EQUIPMENT)
+end
+
 
 --================================================================
 --------------------------------------------------------------------------
@@ -1882,11 +1914,6 @@ end
 ---------------------------------------------------------------------------
 
 
--- Extract valid equipment categories from equipment.canonical_category (single point of truth)
-local function heuristic_category(_)
-  return 'SLOTTED ITEMS'
-end
-
 ---------------------------------------------------------------------------
 -- 3.6. Equipment format detection and processing
 ---------------------------------------------------------------------------
@@ -1924,6 +1951,21 @@ local function extract_weight_arg(category, equipment_item)
   end
   return ""
 end
+
+
+equipment.category_order = {
+ "SHIELDS",
+ "LIGHT WEAPONS",
+ "NORMAL WEAPONS",
+ "HEAVY WEAPONS",
+ "LIGHT ARMOR",
+ "MEDIUM ARMOR",
+ "HEAVY ARMOR",
+ "HEAVY ITEMS",
+ "SLOTTED ITEMS",
+ "SMALL ITEMS",
+ "STORED ITEMS"
+}
 
 
 local function add_equipment_item(category, equipment_item, lines, flattened_equipment)
@@ -1979,6 +2021,54 @@ end
 -- Parse equipment from a list of strings into structured format
 -- Supports both inline format ("NORMAL WEAPONS: Longsword") and
 -- block format ("NORMAL WEAPONS:", "- Longsword", "- Shortbow")
+local function parse_equipment_strings(lines)
+  local category = equipment.category
+  local equipment = {}
+  local i = 1
+
+  local function add(category, item)
+    equipment[category] = equipment[category] or {}
+    table.insert(equipment[category], item)
+  end
+
+  while i <= #lines do
+    -- see grammar for EQUIPMENT in YAML.md
+    local line = lines[i]:gsub("^%s+", ""):gsub("%s+$", "") -- trim whitespace
+    local block_header = line:match("^(.+):$")
+
+    if line == "" then
+      -- Skip empty lines
+      i = i + 1
+    elseif block_header and category(block_header) then
+      -- Block format category header: "CATEGORY:"
+      local cat = category(block_header)
+      equipment[cat] = equipment[cat] or {} -- populate even if no items follow
+      i = i + 1
+      while i <= #lines and lines[i]:find '^%s*%-%s' do
+        local item = lines[i]:gsub("^%s*%-%s+", ""):gsub("%s+$", "")
+        add(cat, item)
+        i = i + 1
+      end
+    elseif block_header then
+      eprintf("Warning: Unknown equipment category %q\n", block_header)
+      i = i + 1
+    elseif line:match("^%S.*:") then
+      -- Inline format: "CATEGORY: Item Name"
+      local cat, item = assert(line:match("^([^:]-)%s*:%s*(.*)$"))
+      if category(cat) then
+        add(category(cat), item)
+      else
+        eprintf("Warning: Unknown equipment category %q in line %q\n", cat, line)
+      end
+      i = i + 1
+    else
+      add(heuristic_category(line), line)
+      i = i + 1
+    end
+  end
+  return equipment
+end
+
 local function parse_equipment_strings(lines)
   local category = equipment.category
   local equipment = {}
@@ -2118,23 +2208,9 @@ As Lua object this says an equipment line is one of the following:
 
 ]]
 
--- Round-trip validation function
-function validators.equipment(context, structured_equipment)
+local function validate_equipment_parsing(equipment)
 
-  -- should confirm that a structured equipment table can be transformed
-  -- into a string list and back without losing information
-
-  if next(structured_equipment) ~= nil then
-
-    -- Skip round-trip validation if equipment structure is invalid
-    local valid = false
-    if not valid then
-      return structured_equipment  -- Return invalid structure as-is, validation errors already reported
-    end
-
--- DEAD CODE:
-
-
+    do return end
     -- Unparse to string list format
     local unparsed_lines = unparse_equipment_structure(structured_equipment)
 
@@ -2157,13 +2233,17 @@ Reparsed:
   visualize_table(structured_equipment),
   table.concat(unparsed_lines, "\n"),
   visualize_table(reparsed_structure))
-    end
   end
 end
 
 
 
 
+
+-- Round-trip validation function
+function validators.equipment(context, structured_equipment)
+  validate_equipment_parsing(equipment)
+end
 
 
 ---------------------------------------------------------------------------
@@ -2389,6 +2469,7 @@ local function sheet_of_file(pathname)
   preprocess(sheet)
   validate(pathname, sheet, sheet_validation)
   extend(sheet)
+  normalize(sheet)
   if #global_validation_errors > 0 then
     if fields.strict then
       eprintf("Validation failed in strict mode. Exiting.\n")
