@@ -1122,7 +1122,7 @@ local sheet_validation = ([[
            {name,?description
            ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
            ,?markers:b -- add "magic markers" to name (default false)?
-           ,?GM note
+           ,?GM note:(b|s)
            }),
     ?%MAGIC:list(described$spell@{MAGICPROPNAMES}
                |level$level-spec@{level:n[0..9],?slots:n[1..]}
