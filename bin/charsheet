@@ -76,16 +76,6 @@ local function sq(s)
   end
 end
 
-local function count(n, what, plural) -- luacheck: no unused
-  if n == 1 then
-    return stringf('one %s', what)
-  elseif n == 0 then
-    return stringf('no %s', plural or what .. 's')
-  else
-    return stringf('%d %s', n, plural or what .. 's')
-  end
-end
-
 local function plural(count, what, theplural)
   if count == 1 then
     return what
@@ -152,27 +142,6 @@ local function scalarvalues(list) -- iterator : value list -> value
     end)
 end
 
--- Local recursive table equality comparison
-local function table_eq(t1, t2) -- luacheck: no unused
-  if t1 == t2 then
-    return true
-  elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
-    return false
-  else
-    for k, v in pairs(t1) do
-      if not table_eq(v, t2[k]) then
-        return false
-      end
-    end
-    for k in pairs(t2) do
-      if t1[k] == nil then
-        return false
-      end
-    end
-    return true
-  end
-end
-
 
 
 local function commafy(t, andword, comma)
@@ -202,8 +171,6 @@ function isnull(v) return v == lyaml.null end
 local function false_yaml(v)
   return v == nil or v == false or v == 'false' or v == '0' or v == 0
 end
-
-local function nonnull(v) if v ~= nil and v ~= lyaml.null then return v end end -- luacheck: no unused
 
 assert(lyaml.dump)
 local function image(v)
@@ -398,42 +365,6 @@ end
 
 assert(type(inrange(1,10)) == 'function')
 
-local isnumber = inrange(-math.huge, math.huge) -- luacheck: no unused
-local positive = inrange(1, math.huge)
-
-
-local function anyvalue(_) -- luacheck: no unused
-  return true
-end
-
--- Higher-order validator functions
-
-local optional = function(p)
-  return wrap(function (v)
-    -- Handle YAML null, nil, and empty string as valid "empty" values
-    if v == '' or v == nil or isnull(v) then
-      return true
-    else
-      return p(v)
-    end
-  end)
-end
-
-assert(type(optional(positive)) == 'function')
-assert(optional(positive)(nil))
-assert(optional(positive)(3))
-assert(not optional(positive)(0))
-
-local function all(p, list)
-  for _, v in ipairs(list) do
-    local ok, msg = p(v)
-    if not ok then
-      return ok, msg
-    end
-  end
-  return true
-end
-
 local function any(p, list)
   local ok, msg
   for _, v in ipairs(list) do
@@ -468,21 +399,6 @@ end
 assert(can_be 'string'('hello'))
 assert(can_be 'string'(7))
 
-local function has(v, ...) -- luacheck: no unused
-  if type(v) ~= 'table' then
-    return false
-  else
-    for i = 1, select('#', ...) do
-      if v[select(i, ...)] == nil then
-        return false, select(i, ...)
-      end
-    end
-    return true
-  end
-end
-
------
-
 local empty = wrap(function(v)
   return v == nil
       or type(v) == 'table' and next(v) == nil
@@ -506,17 +422,6 @@ end)
 local islist = wrap(function(t)
   return type(t) == 'table' and (empty(t) or t[1] ~= nil)
 end)
-
-local function listof(predicate) -- luacheck: no unused
-  return function(list)
-    if not islist(list) then
-      return false, list
-    else
-      local ok, msg = all(predicate, list)
-      return ok, msg or "list contains invalid items"
-    end
-  end
-end
 
 ------------ validation grammar
 
@@ -1831,25 +1736,6 @@ function render.encumbrance(category, item)
   local stones = item:match '%((%d+) stone%s?%)'
   local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
   return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
-end
-
-
-
--- Helper function to visualize table structure for debugging
-local function visualize_table(t, indent) -- luacheck: no unused
-  indent = indent or 0
-  local spaces = string.rep("  ", indent)
-  local result = {}
-  for k, v in pairs(t) do
-    if type(v) == "table" then
-      table.insert(result, spaces .. tostring(k) .. " = {")
-      table.insert(result, visualize_table(v, indent + 1))
-      table.insert(result, spaces .. "}")
-    else
-      table.insert(result, spaces .. tostring(k) .. " = " .. tostring(v))
-    end
-  end
-  return table.concat(result, "\n")
 end
 
 render['VALIDATION ERRORS'] = function(k, v)
