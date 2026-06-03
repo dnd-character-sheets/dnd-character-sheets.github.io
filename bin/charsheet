@@ -1248,13 +1248,13 @@ local sheet_validation = ([[
 
     ?%ATTACKS:attacks@list(
        attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-    ?%FEATURES:list(feature@
-           {name,description
+    ?%FEATURES:list(described$feature@
+           {name,?description
            ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
            ,?markers:b -- add "magic markers" to name (default false)?
            ,?GM note
            }),
-    ?%MAGIC:list(spell$spell@{MAGICPROPNAMES}
+    ?%MAGIC:list(described$spell@{MAGICPROPNAMES}
                |level$level-spec@{level:n[0..9],?slots:n[1..]}
                |null
                ),
@@ -1301,9 +1301,13 @@ function validators.attack(context, v)
   end
 end
 
-function validators.spell(context, v)
-  if not (v.description or v.long or v.abbrev) then
-    verrorf('In %s, spell %q has no description', context, v.name)
+local function description(thing)
+  return thing.description or thing.long or thing.abbrev
+end
+
+function validators.described(context, v)
+  if not description(v) then
+    verrorf('In %s, %q has no description', context, v.name)
   end
 end
 
