@@ -2119,19 +2119,9 @@ function scripts.gmspells(arg)
   end
   local spells = { } -- need a way to identify features
   for _, sheet in ipairs(docs) do
-    for _, spell in ipairs(sheet.MAGIC or nothing) do
-      if spell.name then
-        table.insert(spells, spell)
-      end
-    end
-    for _, feature in ipairs(sheet.FEATURES or nothing) do
-      local inserted = nil
-      if feature['GM note'] ~= false then
-        table.insert(spells, feature)
-        inserted = 'YES'
-      end
-      if feature.name:find 'Mask' or feature.name:find 'Ability' then
-      require 'inspect'.show { name = feature.name, note = feature['GM note'], inserted = inserted }
+    for thing in named_things(sheet) do
+      if thing['GM note'] ~= false then
+        table.insert(spells, thing)
       end
     end
   end
