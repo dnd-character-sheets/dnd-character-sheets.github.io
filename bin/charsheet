@@ -18,6 +18,27 @@ local function outf(out, ...)
   return out
 end
 
+---- diagnostic output
+
+local function commafy(t, andword, comma)
+  if t == nil or #t == 0 then return '' end  -- ugly special case
+  andword = andword or 'and'
+  local comma_space = comma and comma .. ' ' or ', '
+  local n = #t
+  assert(n > 0, 'Empty list not handled correctly in string.commafy')
+  if n == 1 then
+    return t[1]
+  elseif n == 2 then
+    return table.concat { t[1], ' ', andword, ' ', t[2] }
+  else
+    local last = t[n]
+    t[n] = andword .. ' ' .. t[n]
+    local answer = table.concat(t, comma_space)
+    t[n] = last
+    return answer
+  end
+end
+
 ------------ basename and option processing ------------------------------------------
 
 local basename = arg[0]:gsub('^.*/', '')
@@ -28,6 +49,15 @@ local options = { -- specialized for different scripts
   gmsheet   = function(parser) return parser:minarg(1) end,
 }
 options.gmspells = options.gmsheet
+
+if not options[basename] then
+  local basenames = { }
+  for k in pairs(options) do
+    table.insert(basenames, stringf('`%s`', k))
+  end
+  table.sort(basenames)
+  dief('%s: I expected to be called as %s.\n', arg[0], commafy(basenames, 'or'))
+end
 
 local fields = require 'flags'.parser()
   :output_file('output as o'):help('where to write if not stdout')
@@ -142,24 +172,6 @@ local function scalarvalues(list) -- iterator : value list -> value
     end)
 end
 
-local function commafy(t, andword, comma)
-  if t == nil or #t == 0 then return '' end  -- ugly special case
-  andword = andword or 'and'
-  local comma_space = comma and comma .. ' ' or ', '
-  local n = #t
-  assert(n > 0, 'Empty list not handled correctly in string.commafy')
-  if n == 1 then
-    return t[1]
-  elseif n == 2 then
-    return table.concat { t[1], ' ', andword, ' ', t[2] }
-  else
-    local last = t[n]
-    t[n] = andword .. ' ' .. t[n]
-    local answer = table.concat(t, comma_space)
-    t[n] = last
-    return answer
-  end
-end
 
 ----------------- yaml utilities --------------------
 
@@ -2179,6 +2191,8 @@ function scripts.gmspells(arg)
   write_output(wrap_latex(table.concat(latexes, '\n'), layout, font))
 end
 
+------------ finally, act on options / arguments  ------------
+
 if fields.fontable then
   local methods = setmetatable({}, {__index = function() return function() return false end end })
   function methods:key(name, props, _)
@@ -2188,9 +2202,7 @@ if fields.fontable then
     return name
   end
   parse_validation(methods, sheet_validation)
-elseif scripts[basename] then
-  scripts[basename](arg)
 else
-  dief('%s: I expected to be called as `charsheet`, `gmsheet`, or `gmspells`.\n')
+  assert(scripts[basename])(arg)
 end
 
