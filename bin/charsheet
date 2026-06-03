@@ -1889,6 +1889,18 @@ render['VALIDATION ERRORS'] = function(k, v)
   return setDND(k, render.ipairs(render.item, v))
 end
 
+function render.OTHER(k, v)
+  local function any(v)
+    if type(v) == 'table' then
+      return render.pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
+    else
+      return tostring(v)
+    end
+  end
+
+  return setDND(k, any(v))
+end
+
 
 local function validate_equipment_parsing(_)
   eprintf 'equipment parsing not validated \n'
