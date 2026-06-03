@@ -403,7 +403,7 @@ local islist = wrap(function(t)
   return type(t) == 'table' and (empty(t) or t[1] ~= nil)
 end)
 
------------- validation infrastructure -------------------------
+------------ validation infrastructure (parsing) -------------------------
 
 --[=[
 
@@ -458,18 +458,18 @@ do
 
   function parse_validation(semantics, s)
 
-
-
     local tokens = tokenize(s)
     local tindex = 1
 
+    local maybe, maybe_find, eat, backup, eos -- basic token functions
+
     local lastmaybe
 
-    local function eos()
+    function eos()
       return not tokens[tindex]
     end
 
-    local function maybe(token, ...)
+    function maybe(token, ...)
       lastmaybe = nil
       if token ~= nil then
         if tokens[tindex] == token then
@@ -484,7 +484,7 @@ do
       end
     end
 
-    local function maybe_find(pat)
+    function maybe_find(pat)
       lastmaybe = nil
       if tokens[tindex]:find(pat) then
         lastmaybe = tokens[tindex]
@@ -495,7 +495,7 @@ do
       end
     end
 
-    local function backup()
+    function backup()
       assert(tindex > 1)
       tindex = tindex - 1
     end
@@ -513,13 +513,13 @@ do
              table.concat(tcontext, ' '))
     end
 
-    local function eat(context, token)
+    function eat(context, token)
       if maybe(token) == nil then
         expected(context, token)
       end
     end
 
-    local alts, alt, range, keys, key -- self == semantics
+    local alts, alt, range, keys, key -- parsers
 
     alts = function()
       local alts = { alt() }
@@ -568,8 +568,6 @@ do
       eat('table keys', '}')
       return semantics:table(keys)
     end
-
-
 
     alt = function()
       if eos() then
@@ -632,14 +630,19 @@ do
 end
 
 
-local vfactory = { }
-local validators, vnames = { }, { }
+---------- validation infrastructure (syntax-directed validators) ------------
+
+local vfactory = { } -- methods
+local validators, vnames = { }, { } -- these hold the escape hatches
 
 do
-  -- key       : { name : string, optional : bool, validator = v }
+  -- Semantic objects are built as follows:
+  --
+  -- key       : { name : string, validator = v, ... property fields ... }
   -- validator : object with methods and fields
   --    self:validate(context, value) optionally returns normalized value
   --    self:mine(value) returns bool
+  --    self:maybe_mine(value) returns bool  -- optional
   --    self.what : string
 
   local function out_of_range(n, rg)
@@ -977,15 +980,12 @@ do
 
 end
 
-
-
-
--- print(parse_validation(vfactory, '{level:n[0..9],?slots:n}').what)
-
 local function validate(context, sheet, validation)
   parse_validation(vfactory, validation):validate(context, sheet)
 end
 
+
+------------------------ Validators for character sheets -------------------
 
 -- XXX some strings are now allowed to be empty
 local magic_property = {
@@ -1012,7 +1012,7 @@ function validators.components(context, v)
   end
 end
 
-local magicpropnames
+local magicpropnames -- spec for validation keys
 do
   local names = { }
   for k in pairs(magic_property) do
@@ -1068,9 +1068,6 @@ function equipment.category(s)
   return equipment.canonical_category[strip_s(s:lower())]
 end
 
-
-
-
 do -- set equipment.tablespec
   local catspecs = { }
   local function catspec(category)
@@ -1086,6 +1083,9 @@ end
 vnames.equipment = 'equipment list'
 
 local sheet_validation = ([[
+
+  -- validation spec for a full character sheet
+
   sheet${
     CLASS:nonempty$s,
     ?LEVEL:n,
@@ -1154,7 +1154,7 @@ local sheet_validation = ([[
    :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
         :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:b, '))
 
---print(sheet_validation); os.exit(2)
+------- validators used in the sheet spec ----
 
 vnames.etable = 'categorized list of equipment'
 
@@ -1196,14 +1196,11 @@ function validators.eqline(context, v)
   end
 end
 
-
 function validators.nonempty(context, v)
   if empty(v) then
     verrorf('In %s, expected data but found %s', context, friendly(v))
   end
 end
-
-
 
 -- Validation function
 function validators.sheet(context, sheet)
@@ -1212,6 +1209,25 @@ function validators.sheet(context, sheet)
   end
 end
 
+local function check_validator_use()
+  local validators_used = { }
+  local methods = setmetatable({}, {__index = function() return function() return false end end })
+  function methods:validate(name, v)
+    validators_used[name] = true
+    return v
+  end
+  parse_validation(methods, sheet_validation)
+  for k in pairs(validators_used) do
+    if not validators[k] then
+      errorf('Function validators.%s is not defined\n', k)
+    end
+  end
+  for k in pairs(validators) do
+    if not validators_used[k] then
+      errorf('Function validators.%s is not used\n', k)
+    end
+  end
+end
 
 -------------------------------------------------------------------------
 --
@@ -1745,6 +1761,7 @@ function validators.equipment(_, equipment)
   validate_equipment_parsing(equipment)
 end
 
+check_validator_use()
 
 ---------------------------------------------------------------------------
 -- 4. Convert a single YAML mapping to LaTeX lines
