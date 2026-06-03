@@ -2229,6 +2229,22 @@ end
 --  end
 --end
 
+
+do -- defend against invalid inputs breaking rendering
+  for k, v in pairs(render) do
+    if type(v) == 'function' then
+      local function finish(ok, ...)
+        if ok then return ...
+        else return stringf('render.%s failed because of invalid input', k)
+        end
+      end
+      render[k] = function(...) return finish(pcall(v, ...)) end
+    end
+  end
+end
+        
+
+
 local function render_sheet (map)
   local lines = {}
 
