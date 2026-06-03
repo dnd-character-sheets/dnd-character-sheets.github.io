@@ -1157,6 +1157,9 @@ local sheet_validation = ([[
     ?SPELLCASTING ABILITY,
     ?SPELLCASTING ABILITY MODIFIER:n,
 
+    ?SUGGESTED NAMES:list(s),
+    ?SUGGESTED MOTIVATIONS:list(s),
+
     ?OTHER:any,
 
   }
