@@ -1599,7 +1599,7 @@ local function extend(sheet)
           table.insert(things, stringf([[\%s{%s}]], field, description))
         end
       end
-      return table.concat(things, '\\relax\n')
+      return table.concat(things, '\\relax\n  ')
     end
 
     sheet['BONUS ACTIONS'] = things_with 'bonus'
