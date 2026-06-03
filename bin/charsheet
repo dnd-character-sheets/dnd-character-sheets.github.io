@@ -1933,7 +1933,8 @@ local function render_sheet (map)
   for _, k in ipairs(sorted_keys(map)) do -- emit in predictable order
     local v = map[k]
     local t = type(v)
-    local renderer = render[k] or render[t] or function() return '% UNIMP ' .. k end
+    local renderer = render[k] or render[t] or
+                     errorf('Cannot render %s', require 'inspect'.image { key = k, value = v })
     table.insert(lines, (renderer)(k, v))
   end
   return table.concat(lines, "\n")
