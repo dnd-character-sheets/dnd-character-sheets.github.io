@@ -20,7 +20,7 @@ CODE=bin/charsheet $TEMPLATES_TEX
 CSS=https://www.cs.tufts.edu/cs/106/course.css
 
 S=samples
-QCHARS=`extract-yaml -keys QUICKSTART.md`
+QCHARS=`lib/yaml-from-md -keys QUICKSTART.md`
 QYAMLS=${QCHARS:%=/tmp/%.yaml}
 
 all:V: bundle zanogh.pdf miriel.pdf
@@ -34,8 +34,8 @@ test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} zanogh.pdf miriel.pdf fighter.pd
 	yamllint -d '{extends: default, rules: { document-start: disable } }' /tmp/$stem.yaml
 	charsheet -o /dev/null -s /tmp/$stem.yaml
 
-$QYAMLS: QUICKSTART.md extract-yaml
-	extract-yaml QUICKSTART.md > /tmp/QUICKSTART.yaml
+$QYAMLS: QUICKSTART.md lib/yaml-from-md
+	lib/yaml-from-md QUICKSTART.md > /tmp/QUICKSTART.yaml
 
 &.pdf: /tmp/&.yaml
 	charsheet -o $target $prereq
