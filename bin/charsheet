@@ -172,6 +172,12 @@ local function scalarvalues(list) -- iterator : value list -> value
     end)
 end
 
+----------------- function utilities ----------------
+
+function app1(f, arg1) -- partial application
+  return function(...) return f(arg1, ...) end
+end
+
 
 ----------------- yaml utilities --------------------
 
@@ -1717,21 +1723,18 @@ equipment.category_order = {
 
 function render.EQUIPMENT(_, eq)
   local encumbrance = { }
-
-  for category, items in pairs(eq) do -- records for encumbrance
-    for _, item in ipairs(items) do
-      table.insert(encumbrance, render.encumbrance(category, item))
-    end
-  end
-
   local flatlist = { } -- list of all items in inventory
+
   for _, category in ipairs(equipment.category_order) do
-    if eq[category] then -- don't want to insert a blank line into flatlist
-      table.insert(flatlist, render.ipairs(render.item, eq[category]))
+    local items = eq[category]
+    if items then -- don't want to insert a blank line into flatlist
+      table.insert(flatlist, render.ipairs(render.item, items))
+      table.insert(encumbrance, render.ipairs(app1(render.encumbrance, category), items))
     end
   end
 
-  return table.concat(encumbrance, '\n') .. setDND('EQUIPMENT', table.concat(flatlist, '\n'))
+  return stringf('%s\n%s', table.concat(encumbrance, '\n'),
+                           setDND('EQUIPMENT', table.concat(flatlist, '\n')))
 end
 
 function render.encumbrance(category, item)
