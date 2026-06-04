@@ -122,8 +122,9 @@ you will continue to use the web service to generate PDF:
 
 If you have Linux and are comfortable with software,
 you can try dispensing with the web service and generating PDF on your own machine.
-I have yet to write installation instructions, but
-the code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io), and I will provide help on request.
+The software you'll need is sketched in [`INSTALL.md`](INSTALL.md),
+and my code is in [a Github repository](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io).
+If you want help, ask.
 
 If you do install the software locally, you get a couple of other goodies.
 In particular, you can create a [one-page summary of characters'
