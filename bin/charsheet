@@ -89,6 +89,14 @@ local fields = require 'flags'.parser()
 
 local nothing = { }
 
+local function table_or_nothing(v)
+  if type(v) == 'table' then
+    return v
+  else
+    return nothing
+  end
+end
+
 local default_layouts = {
   charsheet = 'silverpine',
   gmsheet = 'gmsheet',
@@ -182,7 +190,7 @@ local function scalarvalues(list) -- iterator : value list -> value
           end
         end
       end
-      process(list)
+      process(table_or_nothing(list))
     end)
 end
 
@@ -365,7 +373,7 @@ local function named_things(sheet) -- anything in MAGIC or FEATURES with a .name
   return coroutine.wrap(function()
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
       local things = sheet[section] or nothing
-      for _, thing in ipairs(things) do
+      for _, thing in ipairs(table_or_nothing(things)) do
         if thing.name then
           coroutine.yield(thing)
         end
