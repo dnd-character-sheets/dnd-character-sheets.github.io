@@ -109,6 +109,7 @@
   \path (class field sw) +(0mm,0.6mm) coordinate (class sw);
   \path (race field sw) +(0mm,0.6mm) coordinate (race sw);
 
+  \setDND{CLASS + LEVEL}{\getDND{CLASS} \getDND{LEVEL}} % use legacy layout below
   \writesplash[at=(class sw)]{34mm}{CLASS + LEVEL}
   \writesplash[right of base=1mm of CLASS + LEVEL]{28mm}{BACKGROUND}
   \writesplash[right of base=1mm of BACKGROUND]{34mm}{PLAYER NAME}
