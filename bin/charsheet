@@ -1614,6 +1614,10 @@ local render = { }
 render.string  = setDND
 render.number  = setDND
 render.boolean = setDND
+render.signed  = function(k, v) return setDND(k, stringf('%+d', v)) end
+
+render['PROFICIENCY BONUS'] = render.signed
+render['INITIATIVE'] = render.signed
 
 function render.ipairs(render, vs, separator)
   local items = {}
