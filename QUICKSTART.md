@@ -404,7 +404,8 @@ the player has yet to choose some features and proficiencies:
 ```yaml fighter
 CHARACTER NAME:
 PLAYER NAME:
-CLASS & LEVEL: Fighter 1
+CLASS: Fighter
+LEVEL: 1
 RACE: Human
 BACKGROUND: Soldier
 ALIGNMENT:
@@ -472,7 +473,8 @@ PP:
 ```yaml miriel
 CHARACTER NAME: Miriel
 PLAYER NAME: Michelle
-CLASS & LEVEL: Cleric 3
+CLASS: Cleric
+LEVEL: 3
 RACE: Human
 BACKGROUND: Acolyte
 MOTIVATION: Miriel is trying to prove herself
@@ -509,13 +511,12 @@ ATTACKS:
     DAMAGE: 1d6+2/1d6
     TYPE: slashing/cold
     RANGE: 5 ft.
-    AMMO: '---'
   - NAME: Light Crossbow
     ATTACK: '+4'
     DAMAGE: 1d8+2
     TYPE: piercing
     RANGE: 80/320 ft.
-    AMMO: ''
+    AMMO TYPE: bolts
 FEATURES:
   - name: Disciple of Life
     description: Healing spells restore an additional 2 HP + spell's level.
