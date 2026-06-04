@@ -40,11 +40,11 @@ SPELL DC: 13
 
 
 # coin totals
-CP: ""
-SP: ""
-EP: ""
+CP: 
+SP: 
+EP: 
 GP: 
-PP: ""
+PP: 
 
 PROFICIENCIES:
   # Skills
@@ -112,7 +112,8 @@ MAGIC:
     description: Target one creature; DEX save or 1d8 radiant damage.
   - name: Spare the Dying
     description: One unconscious creature you touch is stabilized.
-  - level: {number : 1, slots : 4 }
+  - level: 1
+    slots: 4
   - name: Bane [C]
     description: Up to three targets within 30 ft gain -1d4 to attacks and saves for 1 minute (CHA saving throw).
   - name: Bless [C]  # life domain

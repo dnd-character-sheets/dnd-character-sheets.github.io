@@ -76,6 +76,7 @@ MAGIC:
   - name: Mage Hand
     description: For 1 minute, control a ghostly hand that can move or interact with light, unattended objects within 30 ft.
   - level: 1                    # 1st LEVEL
+    slots: 2
   - name: Burning Hands
     description: Creatures in a 15-foot cone take 3d6 fire damage, or half as much if they make a Dexterity save (DC 13).
   - name: Detect Magic [R]

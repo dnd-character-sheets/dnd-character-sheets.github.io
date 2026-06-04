@@ -11,22 +11,22 @@ FEATURES:
 
 # Circle spells for Forest terrain
 MAGIC:
-  - level: 3
+  - acquired at level: 3
   - name: "Barkskin (Circle)"
     description: ""
   - name: "Spider Climb (Circle)"
     description: ""
-  - level: 5
+  - acquired at level: 5
   - name: "Call Lightning (Circle)"
     description: ""
   - name: "Plant Growth (Circle)"
     description: ""
-  - level: 7
+  - acquired at level: 7
   - name: "Divination (Circle)"
     description: ""
   - name: "Freedom of Movement (Circle)"
     description: ""
-  - level: 9
+  - acquired at level: 9
   - name: "Commune with Nature (Circle)"
     description: ""
   - name: "Tree Stride (Circle)"

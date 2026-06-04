@@ -46,6 +46,7 @@ MAGIC:
   - name: "Cantrip 3"
     description: ""
   - level: 1
+    slots: 2
   - name: "1st-level spell 1"
     description: ""
   - name: "1st-level spell 2"

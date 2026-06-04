@@ -248,7 +248,7 @@ local function un3ify(doc)
       if spell.name then
         for name in spell.name:gmatch '%a+' do
           if offensive[name] then
-            spell.offensive = true
+            spell.enemy = true
           end
         end
       end

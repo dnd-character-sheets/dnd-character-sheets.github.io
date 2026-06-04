@@ -11,22 +11,22 @@ FEATURES:
 
 # Circle spells for Underdark terrain
 MAGIC:
-  - level: 3
+  - acquired at level: 3
   - name: "Spider Climb (Circle)"
     description: ""
   - name: "Web (Circle)"
     description: ""
-  - level: 5
+  - acquired at level: 5
   - name: "Gaseous Form (Circle)"
     description: ""
   - name: "Stinking Cloud (Circle)"
     description: ""
-  - level: 7
+  - acquired at level: 7
   - name: "Greater Invisibility (Circle)"
     description: ""
   - name: "Stone Shape (Circle)"
     description: ""
-  - level: 9
+  - acquired at level: 9
   - name: "Cloudkill (Circle)"
     description: ""
   - name: "Insect Plague (Circle)"

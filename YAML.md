@@ -14,9 +14,12 @@ As you perused the guide, you will see examples both with and without quotation 
 YAML's rules for quotation are actually fairly involved, but for the character sheets, 
 most quotation marks are optional.
 
-Finally, I have not yet documented exactly how few keys you can get away with.
-I have tried to require as few as possible.  The only one I am sure is required is
-`CLASS`.
+A couple of other notes:
+
+ - The only required key is `CLASS`.
+ - If a top-level key is given with no value at all, it is as if the
+   key were not given.
+
 
 # What you can write: Beyond plain text
 
@@ -410,6 +413,13 @@ section.
 
 Depending on the template, the default value may be one column or two.
 
+#### `EQUIPMENT LEFT`
+
+A Boolean that tells the default layout to put the equipment list in
+the left column, even if there is no magic.
+(With magic, the default is to use both columns for equipment.)
+
+
 
 #### `EXPERIENCE POINTS`
 
@@ -477,6 +487,12 @@ FEATURES:
   - name: "Bardic Inspiration 2/day"
     description: "Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes."
 ```
+
+#### `FEATURES SPACE`
+
+In the default layout, an amount of vertical space that is placed
+after each feature in the `FEATURES` section.
+Defaults to `3pt`.
 
 
 
@@ -553,6 +569,10 @@ The number is used to calculate the character's proficiency bonus.
 A list of spells, separated by level markers.
 A level marker is a table with a `level` key and possibly a `slots` key.
 The `slots` key is forbidden for level 0 spells (cantrips) and mandatory for spells of level 1 and up.
+Another form of level marker has key `acquired at level` and a number
+indicating at what level the spell is acquired.
+This number provides a reminder in the YAML file, but at present it
+serves no other function.
 
 A spell is a structured key-value table, which *must* have at
 least two keys:
@@ -582,6 +602,7 @@ In addition, each spell may be labeled with any or all of the following properti
 - `GM note`: A Boolean or a string that governs what appears on the GM's sheet
 - `markers`: If set to false, prevent system from marking `[C]` for concentration, and so on
 - `domain`: The spell is a domain spell
+- `acquired at level`: A number indicating at what class level the spell is acquired
 
 If a spell has the `attack`, `save`, or `enemy` property, that
 spell will be displayed using an "attack color."  (Provided the

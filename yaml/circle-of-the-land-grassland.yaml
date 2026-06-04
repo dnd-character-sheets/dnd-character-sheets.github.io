@@ -11,22 +11,22 @@ FEATURES:
 
 # Circle spells for Grassland terrain
 MAGIC:
-  - level: 3
+  - acquired at level: 3
   - name: "Invisibility (Circle)"
     description: ""
   - name: "Pass without Trace (Circle)"
     description: ""
-  - level: 5
+  - acquired at level: 5
   - name: "Daylight (Circle)"
     description: ""
   - name: "Haste (Circle)"
     description: ""
-  - level: 7
+  - acquired at level: 7
   - name: "Divination (Circle)"
     description: ""
   - name: "Freedom of Movement (Circle)"
     description: ""
-  - level: 9
+  - acquired at level: 9
   - name: "Dream (Circle)"
     description: ""
   - name: "Insect Plague (Circle)"
