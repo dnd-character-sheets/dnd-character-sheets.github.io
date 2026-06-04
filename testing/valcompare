@@ -1,0 +1,79 @@
+#!/bin/ksh
+# valcompare — compare the validation verdicts of bin/charsheet vs bin/ocharsheet.
+#
+# Ephemeral migration aid.  For each YAML file named on the command line,
+# run each script with -s (emit macros only; no PDF, no side effects) in
+# the default non-strict mode and reduce the run to a verdict:
+#       OK        exit 0, zero validation errors
+#       FAIL:n    exit 0, n validation errors (counted from stderr)
+#       CRASH     nonzero exit (parse error, Lua error, ...)
+#
+# The two scripts word their messages differently, so we compare only the
+# verdict, not the text.  Both emit one "Validation error in <file>: ..."
+# line per error on stderr, so n is just a line count.  A file is flagged
+# (status != AGREE) when the pass/fail outcome differs (DIFFER), when both
+# reject but with a different error count (COUNT), or when either script
+# crashes (CRASH).
+#
+# With -v, the actual validation messages from each script are printed
+# under any diverging row, since verdict + count alone don't say *why* the
+# two disagree (the messages are worded differently between the scripts).
+#
+# The report goes to stdout; progress/summary notes go to stderr; the
+# script exits nonzero if any file diverged.
+
+here=$(cd "$(dirname "$0")/.." && pwd)
+cs=$here/bin/charsheet
+ocs=$here/bin/ocharsheet
+
+verbose=false
+case "$1" in
+  -v) verbose=true; shift ;;
+esac
+
+if [ $# -eq 0 ]; then
+  print -u2 "usage: $0 [-v] file.yaml ..."
+  exit 2
+fi
+
+# messages SCRIPT FILE -> emits the raw "Validation error in ..." lines on stdout.
+# Capture stderr, discard stdout; strip the "Validation error in <file>: "
+# prefix down to just the message.
+messages() {
+  "$1" -s "$2" 2>&1 >/dev/null | sed -n 's/^Validation error in [^:]*: //p'
+}
+
+# verdict SCRIPT FILE -> echoes OK | FAIL:n | CRASH
+# Capture stderr, discard stdout; a nonzero exit means a crash rather than
+# a clean validation verdict.
+verdict() {
+  err=$("$1" -s "$2" 2>&1 >/dev/null)
+  if [ $? -ne 0 ]; then
+    print CRASH
+  else
+    n=$(printf '%s\n' "$err" | grep -c '^Validation error in ')
+    if [ "$n" -eq 0 ]; then print OK; else print "FAIL:$n"; fi
+  fi
+}
+
+status=0
+diverged=0
+printf '%-7s %-45s %-10s %-10s\n' STATUS FILE charsheet ocharsheet
+for f in "$@"; do
+  a=$(verdict "$cs" "$f")
+  b=$(verdict "$ocs" "$f")
+  if [ "$a" = CRASH ] || [ "$b" = CRASH ]; then st=CRASH
+  elif [ "$a" = "$b" ];                     then st=AGREE
+  elif [ "$a" = OK ] || [ "$b" = OK ];      then st=DIFFER
+  else                                           st=COUNT
+  fi
+  if [ "$st" != AGREE ]; then status=1; diverged=$((diverged + 1)); fi
+  printf '%-7s %-45s %-10s %-10s\n' "$st" "$(basename "$f")" "$a" "$b"
+  if $verbose && [ "$st" != AGREE ]; then
+    messages "$cs"  "$f" | sed 's/^/    charsheet : /'
+    messages "$ocs" "$f" | sed 's/^/    ocharsheet: /'
+  fi
+done
+
+print -u2 "valcompare: $diverged of $# file(s) diverged"
+exit $status
