@@ -23,11 +23,11 @@ S=samples
 QCHARS=`lib/yaml-from-md -keys QUICKSTART.md`
 QYAMLS=${QCHARS:%=/tmp/%.yaml}
 
-all:V: bundle zanogh.pdf miriel.pdf
+all:V: samples test
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html
-test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} zanogh.pdf miriel.pdf fighter.pdf
+test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
 &.test:VQ: /tmp/&-test.pdf /tmp/&.yaml
@@ -36,9 +36,6 @@ test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} zanogh.pdf miriel.pdf fighter.pd
 
 $QYAMLS: QUICKSTART.md lib/yaml-from-md
 	lib/yaml-from-md QUICKSTART.md > /tmp/QUICKSTART.yaml
-
-&.pdf: /tmp/&.yaml
-	charsheet -o $target $prereq
 
 /tmp/&-test.pdf: /tmp/&.yaml
 	charsheet -o $target $prereq
