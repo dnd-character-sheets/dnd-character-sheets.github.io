@@ -18,3 +18,5 @@ silver-king-*.yaml
 node_modules/
 /js-testing
 /custom-grid.pdf
+/bin/ocharsheet
+/samples/wizard.pdf
