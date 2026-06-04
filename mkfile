@@ -86,7 +86,7 @@ push:V: ${GITDOCS:%=docs/%}
 $REMOTE/index.html: docs/index.html mkfile
 	cat docs/index.html > $target
 
-$REMOTE/render.cgi: halligan-prefix.sh render.cgi
+$REMOTE/render.cgi: www/halligan-prefix.sh www/render.cgi
 	cat $prereq > $target
         chmod 755 $target 
 
