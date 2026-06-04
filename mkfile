@@ -92,8 +92,8 @@ $REMOTE/render.cgi: halligan-prefix.sh render.cgi
 $REMOTE/charsheet.css:	docs/charsheet.css
 	/bin/cp $prereq $target
 
-yaml/silver-king-%.yaml:D: yaml/king-%.yaml un3ify
-	un3ify yaml/king-$stem.yaml > $target
+yaml/silver-king-%.yaml:D: yaml/king-%.yaml lib/un3ify
+	lib/un3ify yaml/king-$stem.yaml > $target
 
 ###################
 
@@ -112,16 +112,16 @@ $S/samples.pdf: mario.pdf $S/mario.3.pdf ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S
 $S/samples1.pdf: ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
 	set -A pdfs
 	for k in $KINGS; do pdfs+=(king-$k.3.pdf king-$k.s.pdf); done
-	./catpage1s $target "${pdfs[@]}"
+	lib/catpage1s $target "${pdfs[@]}"
 
 $S/3samples.pdf: ${KINGS:%=$S/king-%.3.pdf}
 	pdftk $prereq cat output $target
 
 $S/3samples1.pdf: ${KINGS:%=$S/king-%.3.pdf}
-	./catpage1s $target $prereq 
+	lib/catpage1s $target $prereq 
 
 $S/ssamples1.pdf: ${KINGS:%=$S/king-%.s.pdf}
-	./catpage1s $target $prereq 
+	lib/catpage1s $target $prereq 
 
 $S/ssamples.pdf: ${KINGS:%=$S/king-%.s.pdf}
 	pdftk $prereq cat output $target
