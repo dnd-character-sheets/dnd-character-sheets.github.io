@@ -1304,7 +1304,7 @@ end
 local function passive_skill(sheet, stat, proficiency, expertise)
   local prof_bonus = proficiency_bonus(sheet.LEVEL)
   local skill_bonus = proficiency and (expertise and 2 * prof_bonus or prof_bonus) or 0
-  return 10 + ability_modifier(sheet[stat] or 10) + skill_bonus
+  return 10 + ability_modifier(sheet[stat]) + skill_bonus
 end
 
 local function spell_attack_modifier(level, mod)
@@ -1450,8 +1450,10 @@ local function extend(sheet)
 
   do   -- passive skills
     local function set_passive_skill(stat, skill)
-      update(stringf('PASSIVE %s', skill:upper()),
-             passive_skill(sheet, stat, skill_p_e(sheet, skill)))
+      if sheet[stat] then
+        update(stringf('PASSIVE %s', skill:upper()),
+               passive_skill(sheet, stat, skill_p_e(sheet, skill)))
+      end
     end
 
     set_passive_skill('WIS', 'Perception')
