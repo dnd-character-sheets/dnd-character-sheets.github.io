@@ -109,6 +109,7 @@ MAGIC:
     description: Target gains +1d4 on one saving throw within 1 minute.
 
   - level: 1
+    slots: 2
   - name: Cure Wounds
     description: A creature you touch regains 1d8+3 hit points.
   - name: Detect Magic

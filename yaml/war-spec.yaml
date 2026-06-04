@@ -14,7 +14,7 @@ PROFICIENCIES:
 
 # Domain spells (1st level only)
 MAGIC:
-  - level: 1
+  - acquired at level: 1
   - name: "Divine Favor [B,D]"
     description: "For 1 minute, weapons deal extra 1d4 radiant."
   - name: "Shield of Faith [D,B,C]" 

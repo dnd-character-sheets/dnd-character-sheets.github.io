@@ -1,27 +1,27 @@
-CHARACTER NAME: ''
-PLAYER NAME: Jess
+CHARACTER NAME: 
+PLAYER NAME: 
 CLASS: Druid
 LEVEL: 1
 RACE: Stout Halfling
 BACKGROUND: Outlander
-ALIGNMENT: ''
-EXPERIENCE POINTS: ''
+ALIGNMENT: 
+EXPERIENCE POINTS: 
 MOTIVATION: fight evil
-STR: ''
-DEX: ''
-CON: ''
-INT: ''
-WIS: ''
-CHA: ''
-PROFICIENCY BONUS: ''
-MAX HP: ''
-CURRENT HIT POINTS: ''
+STR: 
+DEX: 
+CON: 
+INT: 
+WIS: 
+CHA: 
+PROFICIENCY BONUS: 
+MAX HP: 
+CURRENT HIT POINTS: 
 HIT DICE: d8
-INITIATIVE: ''
+INITIATIVE: 
 SPEED: '25'
-ARMOR CLASS: ''
-SENSES: ''
-PASSIVE PERCEPTION: ''
+ARMOR CLASS: 
+SENSES: 
+PASSIVE PERCEPTION: 
 PROFICIENCIES:
   - Druid skill 1
   - Druid skill 2
@@ -58,8 +58,8 @@ EQUIPMENT:
   - leather armor
   - explorer's pack
   - druidic focus
-CP: ''
-SP: ''
-EP: ''
-GP: ''
-PP: ''
+CP: 
+SP: 
+EP: 
+GP: 
+PP: 

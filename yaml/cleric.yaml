@@ -81,7 +81,8 @@ MAGIC:
     description: An object you touch sheds light like a torch for 1 hour.
   - name: Sacred Flame
     description: A creature within 60 ft. must make a Dexterity save (DC 13) or take 1d8 radiant damage.
-  - level: 1                  # 1st LEVEL
+  - level: 1
+    slots: 2
   - name: Bless [C]
     description: Three creatures within 30 ft. add +1d4 to all attacks and saves for up to 1 minute.
   - name: Cure Wounds

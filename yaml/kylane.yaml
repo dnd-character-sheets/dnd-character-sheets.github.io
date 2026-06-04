@@ -21,7 +21,7 @@ WIS: 11
 CHA: 16
 
 "PROFICIENCY BONUS": +2
-"PASSIVE PERCEPTION": 10
+"PASSIVE PERCEPTION": 12
 "CURRENT HIT POINTS": ""
 "INITIATIVE": "+2"
 "SPEED": 30 ft
@@ -55,7 +55,7 @@ PROFICIENCIES:
   - Light Crossbow
 
 EQUIPMENT:
-  - "Arcane Focus: Staff"
+  - Arcane Focus (Staff)
   - Backpack
   - Bedroll
   - Mess Kit

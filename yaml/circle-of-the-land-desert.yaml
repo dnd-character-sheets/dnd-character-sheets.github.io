@@ -11,22 +11,22 @@ FEATURES:
 
 # Circle spells for Desert terrain
 MAGIC:
-  - level: 3
+  - acquired at level: 3
   - name: "Blur (Circle)"
     description: ""
   - name: "Silence (Circle)"
     description: ""
-  - level: 5
+  - acquired at level: 5
   - name: "Create Food and Water (Circle)"
     description: ""
   - name: "Protection from Energy (Circle)"
     description: ""
-  - level: 7
+  - acquired at level: 7
   - name: "Blight (Circle)"
     description: ""
   - name: "Hallucinatory Terrain (Circle)"
     description: ""
-  - level: 9
+  - acquired at level: 9
   - name: "Insect Plague (Circle)"
     description: ""
   - name: "Wall of Stone (Circle)"
