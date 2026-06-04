@@ -67,9 +67,10 @@ bundle:V: docs/index.html docs/charsheet.css
 
 publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
-	rsync -avP $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $REMOTEHOST:$REMOTEWEBPATH/charsheet/
+	rsync -avP -L $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $LUAFILES \
+                      $REMOTEHOST:$REMOTEWEBPATH/charsheet/
 	rsync -avP $REMOTE/render.cgi $REMOTEHOST:$REMOTEWEBPATH/cgi-bin/render-charsheet.cgi
-	rsync -avP $REMOTE/render.cgi homework:www/cgi-bin/$REMOTECGINAME
+	rsync -avP $REMOTE/render.cgi $REMOTEHOST:www/cgi-bin/$REMOTECGINAME
 
 GITDOCS=index.html README.html YAML.html QUICKSTART.html
 github:V: ${GITDOCS:%=docs/%}
