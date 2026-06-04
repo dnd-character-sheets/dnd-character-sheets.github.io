@@ -243,7 +243,7 @@ And AI doesn't write for me; this README is all mine.
 The pregenerated characters and the bones of the three-column template were supplied by
 [NoxAeternus](https://ko-fi.com/noxaeturnus/).
 
-The two-column template is taken from the module [_The Fall of Silverpine Watch_](https://theangrygm.com/the-fall-of-silverpine-watch/) by [The Angry GM](https://theangrygm.com/) (who uses Linux now, by the way).
+The two-column template is taken from the module [_The Fall of Silverpine Watch_](https://theangrygm.com/the-fall-of-silverpine-watch/) by [The Angry GM](https://theangrygm.com/).  (The Angry GM uses Linux now, you know.)
 The template was originally designed by Alyssa.
 
 The tropical template was designed by French Rice Meɹman.
