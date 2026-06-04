@@ -18,7 +18,23 @@ local function outf(out, ...)
   return out
 end
 
----- diagnostic output
+if arg[-1] == 'lua5.1' then
+  local fd = io.open '/usr/bin/lua5.2'
+  if fd then
+    fd:close()
+    local osx = require 'osx'
+    table.insert(arg, 1, arg[0])
+    table.insert(arg, 1, '/usr/bin/lua5.2')
+    local function finish(rc, ...)
+      eprintf('lua5.2 rc == %d\n', rc)
+      os.exit(rc == 0 and 0 or 1)
+    end
+    finish(osx.execv(arg))
+  end
+end
+
+
+---- diagnostic output for option processing
 
 local function commafy(t, andword, comma)
   if t == nil or #t == 0 then return '' end  -- ugly special case
@@ -1955,7 +1971,7 @@ tee /tmp/debug > "$dir/sheet.tex"
 $pdflatex -output-directory "$dir" "$dir/sheet.tex"
 rc=$?
 
-if [[ $rc != 0 ]]; then
+if [[ $rc -ne 0 ]]; then
   exit $rc
 fi
 
