@@ -128,7 +128,15 @@ If you want help, ask.
 
 If you do install the software locally, you get a couple of other goodies.
 In particular, you can create a [one-page summary of characters'
-important abilities and stats, for a GM to use at the table](gmsheet.pdf).
+important abilities and stats, for a GM to use at the table](gmsheet.pdf):
+
+<div align="center">
+  <a href="gmsheet.pdf">
+    <img src="gmsheet-preview.png"
+         style="width:50%; height:auto;"
+         alt="A summary I use at the table">
+  </a>
+</div>
 
 
 
