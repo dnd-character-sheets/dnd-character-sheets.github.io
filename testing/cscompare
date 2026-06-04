@@ -1,0 +1,18 @@
+#!/bin/ksh
+
+for i
+do
+  echo "======================= $i ==================="
+  old=$(mktemp old-charsheet.XXXXX)
+  new=$(mktemp new-charsheet.XXXXX)
+  $HOME/etc/dnd/resources/character-sheets/bin/ocharsheet -s $i |
+    fgrep -v -e 'CLASS + LEVEL' -e setcounter > $old
+  charsheet -s $i | 
+    if ! grep -q 'PROFICIENCY BONUS' $old; then
+      fgrep -v 'setDND{PROFICIENCY BONUS}'
+    else
+      cat
+    fi > $new
+  colordiff -u $old $new
+  rm -f $old $new
+done

@@ -16,5 +16,5 @@ silver-king-*.yaml
 *.?.pdf
 *sample*.pdf
 node_modules/
-/testing
+/js-testing
 /custom-grid.pdf
