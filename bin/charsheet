@@ -25,11 +25,7 @@ if arg[-1] == 'lua5.1' then
     local osx = require 'osx'
     table.insert(arg, 1, arg[0])
     table.insert(arg, 1, '/usr/bin/lua5.2')
-    local function finish(rc, ...)
-      eprintf('lua5.2 rc == %d\n', rc)
-      os.exit(rc == 0 and 0 or 1)
-    end
-    finish(osx.execv(arg))
+    os.exit(osx.execv(arg) == 0 and 0 or 1)
   end
 end
 
