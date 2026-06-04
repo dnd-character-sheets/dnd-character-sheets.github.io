@@ -30,8 +30,9 @@ draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html
 test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} zanogh.pdf miriel.pdf fighter.pdf
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
-&.test:V: /tmp/&-test.pdf /tmp/&.yaml
+&.test:VQ: /tmp/&-test.pdf /tmp/&.yaml
 	yamllint -d '{extends: default, rules: { document-start: disable } }' /tmp/$stem.yaml
+	charsheet -o /dev/null -s /tmp/$stem.yaml
 
 $QYAMLS: QUICKSTART.md extract-yaml
 	extract-yaml QUICKSTART.md > /tmp/QUICKSTART.yaml
