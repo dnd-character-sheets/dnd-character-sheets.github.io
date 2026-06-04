@@ -1739,7 +1739,7 @@ end
 
 function render.encumbrance(category, item)
   assert(category ~= 'UNCATEGORIZED')
-  local stones = item:match '%((%d+) stone%s?%)'
+  local stones = item:match '%((%d+) stones?%)'
   local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
   return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
 end
