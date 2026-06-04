@@ -1,0 +1,4 @@
+# expect: I was looking for a Boolean, but I found ...  (missing@967)
+CLASS: Fighter
+LEVEL: 1
+PREGENERATED: maybe

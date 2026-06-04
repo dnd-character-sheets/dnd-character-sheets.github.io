@@ -1,0 +1,12 @@
+# EQUIPMENT as a simple flat list of items, plus EQUIPMENT COLS and
+# the EQUIPMENT FONT key.
+CLASS: Ranger
+LEVEL: 2
+EQUIPMENT COLS: 2
+EQUIPMENT FONT: \footnotesize
+EQUIPMENT:
+  - "Leather Armor"
+  - "Shortsword"
+  - "Light Crossbow"
+  - "Backpack"
+  - "Bedroll"

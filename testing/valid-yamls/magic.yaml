@@ -1,0 +1,39 @@
+# A caster's MAGIC list: level-0 (no slots) and level-1 (with slots)
+# markers, spells with name/description, and every documented property
+# (ritual, concentration, components, material, bonus, reaction, attack,
+# save, enemy, duration, abbrev, long).  SPELL DC is left to be computed.
+CLASS: Wizard
+LEVEL: 5
+INT: 16
+WIS: 12
+PASSIVE PERCEPTION: 11
+MAGIC FONT: \small
+MAGIC:
+  - level: 0
+  - name: Fire Bolt
+    description: "Ranged spell attack, 1d10 fire."
+    attack: true
+  - level: 1
+    slots: 4
+  - name: Magic Missile
+    description: "Three darts, 1d4+1 force each."
+  - name: Shield
+    description: "Reaction; +5 AC until the start of your next turn."
+    reaction: true
+    duration: "1 round"
+  - name: Cure Wounds
+    components: VS
+    description: "A touched creature regains 1d8 HP."
+  - name: Detect Magic
+    ritual: true
+    concentration: true
+    components: VSM
+    material: "a pinch of powdered jade"
+    abbrev: "sense magic 30 ft"
+    long: "Sense the presence of magic within 30 feet; an action reveals the school."
+    description: "Sense magic within 30 ft."
+  - name: Hold Person
+    bonus: true
+    save: true
+    enemy: true
+    description: "A humanoid must succeed on a WIS save or be paralyzed."

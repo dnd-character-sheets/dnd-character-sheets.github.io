@@ -1,0 +1,4 @@
+# expect: I was looking for a number, but I found ...   (missing@780, n given non-number)
+CLASS: Fighter
+LEVEL: 1
+SPELL DC: "lots"

@@ -1,0 +1,19 @@
+# Triggers the unknown-field check.  Run with -strict (error, line 911) or
+# -verbose (warning, line 914):
+#   "Unknown field: FAVORITE COLOR"
+# Every other field here is valid, so this isolates the unknown-field path.
+CHARACTER NAME: Strange Field
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+FAVORITE COLOR: blue

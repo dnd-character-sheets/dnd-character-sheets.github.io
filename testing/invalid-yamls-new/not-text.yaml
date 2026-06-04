@@ -1,0 +1,6 @@
+# expect: I was looking for text, but I found ...  (missing@795, s given a list)
+CLASS: Fighter
+LEVEL: 1
+RACE:
+  - a
+  - b

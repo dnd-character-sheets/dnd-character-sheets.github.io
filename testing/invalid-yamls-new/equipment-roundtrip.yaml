@@ -1,0 +1,7 @@
+# expect: equipment round-trip validation failed  (validators.equipment@1854) -- DEAD CODE:
+#   validate_equipment returns nil so the hook early-returns; no message currently fires.
+CLASS: Fighter
+LEVEL: 1
+EQUIPMENT:
+  NORMAL WEAPONS:
+    - Longsword

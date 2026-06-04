@@ -1,0 +1,5 @@
+# expect: spec for level 3 is missing its slot count  (validators.level@1286)
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - level: 3

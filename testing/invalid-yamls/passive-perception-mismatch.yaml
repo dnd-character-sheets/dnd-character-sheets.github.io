@@ -1,0 +1,18 @@
+# Triggers the computed-vs-supplied passive-skill check in extend():
+#   line 1667: "PASSIVE PERCEPTION mismatch: got 17, expected 10 ..."
+# With WIS 10 and no Perception proficiency the value computes to 10, but
+# the file supplies 17.
+CHARACTER NAME: Wrong Passive
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 17

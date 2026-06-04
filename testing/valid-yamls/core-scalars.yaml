@@ -1,0 +1,49 @@
+# Exercises the scalar keys: names, ability scores (+ a boolean SAVING),
+# numeric stats, the spell-number keys, info text, coins (incl. blank),
+# booleans, columns, stones, layout, provenance, and the document font.
+CLASS: Fighter
+LEVEL: 5
+CHARACTER NAME: Arana Alewind
+PLAYER NAME: Dave
+RACE: "Human (Sunderland)"
+BACKGROUND: Soldier
+SENSES: "Darkvision 60 ft."
+STR: 16
+DEX: 14
+CON: 14
+INT: 10
+WIS: 12
+CHA: 8
+STR SAVING: true
+CON SAVING: true
+MAX HP: 44
+ARMOR CLASS: 18
+PASSIVE PERCEPTION: 11
+SPELL DC: 13
+DOMAIN SPELLS: 2
+SPELLS KNOWN: 5
+SORCERY POINTS: 3
+AGE: "young adult"
+DESCRIPTION: "Tall, dark hair, piercing blue eyes."
+MOTIVATION: "Prove herself"
+SPECIALTY: Champion
+ALIGNMENT: "Lawful Good"
+HIT DICE: d10
+INITIATIVE: "+2"
+SPEED: "30 ft."
+EXPERIENCE POINTS: "6500/14000"
+CURRENT HIT POINTS: 44
+PROFICIENCY BONUS: "+3"
+CP: 10
+SP: 5
+EP: ""
+GP: 100
+PP: 2
+GM NOTES: "Owes a debt to the Town Watch."
+PREGENERATED: true
+MAGIC SEPARATE: false
+EQUIPMENT COLS: 2
+STONES: true
+LAYOUT: silverpine
+SHEET ORIGIN: "Manual YAML Creation"
+DOCUMENT FONT: 11pt

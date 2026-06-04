@@ -1,0 +1,23 @@
+# Triggers the legacy spell-level-table message in render.struct_list
+#   line 1102: "Spell-level table uses old format; switch to { level: N, slots: M }"
+# (The old format puts a table where the level number should be.  This also
+#  trips line 541 "spell level is not a number" during validation, since the
+#  level is no longer a scalar.)
+# The single MAGIC entry is a table, so MAGIC renders via struct_list.
+CHARACTER NAME: Old Format
+CLASS: Wizard
+LEVEL: 1
+RACE: Human
+BACKGROUND: Sage
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+MAGIC:
+  - level:
+      3: 4

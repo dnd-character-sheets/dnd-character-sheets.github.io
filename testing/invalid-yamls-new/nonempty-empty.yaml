@@ -1,0 +1,3 @@
+# expect: expected data but found ...  (validators.nonempty@1300, CLASS present but empty)
+CLASS: ""
+LEVEL: 1

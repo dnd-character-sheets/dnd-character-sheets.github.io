@@ -1,0 +1,24 @@
+# FEATURES exercising name/description plus abbrev, long, and every
+# property: bonus, reaction, attack, save, enemy, duration, GM note.
+# Plus the FEATURES FONT key.
+CLASS: Rogue
+LEVEL: 4
+FEATURES FONT: \small
+FEATURES:
+  - name: Cunning Action
+    description: "Dash, Disengage, or Hide as a bonus action."
+    abbrev: "Bonus Dash/Disengage/Hide"
+    bonus: true
+  - name: Sneak Attack
+    description: "Add 2d6 to a finesse/ranged hit with advantage or a threatened target."
+    long: "Once per turn, extra 2d6 damage when you have advantage, or an ally is within 5 ft of the target."
+    attack: true
+  - name: Uncanny Dodge
+    description: "Halve the damage of one attack as a reaction."
+    reaction: true
+  - name: Menacing
+    description: "Frighten a creature that fails a save."
+    save: true
+    enemy: true
+    duration: "1 minute"
+    GM note: "DC = 8 + prof + CHA"

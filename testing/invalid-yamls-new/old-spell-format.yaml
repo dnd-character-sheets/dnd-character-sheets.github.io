@@ -1,0 +1,8 @@
+# expect: Spell-level table uses old format; switch to { level: N, slots: M }  (render@1558)
+# NOTE: a table-valued level also trips the validator's "looking for a number"
+# error first; the old-format message is emitted later at render time.
+CLASS: Wizard
+LEVEL: 1
+MAGIC:
+  - level:
+      3: 4

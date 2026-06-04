@@ -1,0 +1,4 @@
+# expect: WIS is present but PASSIVE PERCEPTION is missing  (validators.doc@1309)
+CLASS: Fighter
+LEVEL: 1
+WIS: 10

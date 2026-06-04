@@ -1,0 +1,5 @@
+# expect: didn't find any of those things  (@1050, MAGIC entry matches no alt)
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - foo: bar

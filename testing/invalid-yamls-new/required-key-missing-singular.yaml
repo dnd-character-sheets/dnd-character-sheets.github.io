@@ -1,0 +1,7 @@
+# expect: required key "TYPE" is missing  (@935, one required attack field absent)
+CLASS: Fighter
+LEVEL: 1
+ATTACKS:
+  - NAME: Sword
+    ATTACK: "+5"
+    DAMAGE: "1d8"

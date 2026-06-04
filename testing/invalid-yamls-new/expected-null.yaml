@@ -1,0 +1,6 @@
+# expect: expected YAML null but found ...  (@1023) -- LIKELY UNREACHABLE:
+#   'null' only appears as a MAGIC alt whose mine() gates it; documenting the gap.
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - null

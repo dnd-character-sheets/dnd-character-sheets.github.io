@@ -1,0 +1,22 @@
+# Triggers the equipment-parsing WARNINGS in parse_equipment_strings.
+# EQUIPMENT is a string list using category syntax, so it is parsed as text.
+#   line 1310: "Unknown equipment category ..."        (block header form)
+#   line 1318: "Unknown equipment category ... in line" (inline form)
+# These are stderr Warnings, not "Validation error" messages.
+CHARACTER NAME: Mystery Gear
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+EQUIPMENT:
+  - "Bogus Block Category:"
+  - "Phantom Inline Category: Magic Wand"

@@ -1,0 +1,4 @@
+# expect: EQUIPMENT FONT text does not contain a LaTeX font command  (@901)
+CLASS: Fighter
+LEVEL: 1
+EQUIPMENT FONT: Helvetica

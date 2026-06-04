@@ -1,0 +1,5 @@
+# expect: equipment line ... uses an unknown category "Bogus Category"  (validators.eqline@1293)
+CLASS: Fighter
+LEVEL: 1
+EQUIPMENT:
+  - "Bogus Category: Sword"

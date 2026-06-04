@@ -1,0 +1,40 @@
+# Triggers the MAGIC-entry validators (validate_magic_entry & helpers).
+# NOTE: first entry is a string so this MAGIC list renders via item_list,
+# which keeps the deliberately-broken table entries from being rendered.
+#   line 616: MAGIC entry is not a table         (string entry)
+#   line 541: spell level is not a number        (level: foo)
+#   line 545: spell level out of range 0..9      (level: 12)
+#   line 556: slot count is not a number         (slots: lots)
+#   line 561: slot count isn't big enough        (slots: 0)
+#   line 627: spell has no description           (name only)
+#   line 631: spell has an unknown property      (bogus: ...)
+#   line 636: magic entry has no name            (description only)
+# (line 638, name-is-not-a-string, lives in magic-name-not-string.yaml because
+#  a table-valued name later aborts extend(); see that file.)
+CHARACTER NAME: Bad Magic
+CLASS: Wizard
+LEVEL: 1
+RACE: Human
+BACKGROUND: Sage
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+MAGIC:
+  - "a bare string spell, not a table"
+  - level: foo
+  - level: 12
+  - level: 3
+    slots: lots
+  - level: 2
+    slots: 0
+  - name: Orphan Cantrip
+  - name: Fireball
+    description: "A blast of fire"
+    bogus: yes
+  - description: "a spell with no name at all"

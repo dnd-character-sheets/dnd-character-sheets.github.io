@@ -1,0 +1,5 @@
+# expect: PASSIVE PERCEPTION mismatch: got 17, expected 10 ...  (extend@2073)
+CLASS: Fighter
+LEVEL: 1
+WIS: 10
+PASSIVE PERCEPTION: 17

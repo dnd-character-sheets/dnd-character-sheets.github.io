@@ -1,0 +1,22 @@
+# Triggers the computed-vs-supplied check in extend()'s update():
+#   line 1580: "Value SPELL DC computed as 10, but input says 99"
+# A 1st-level Wizard with INT 10 has SPELL DC 8 + prof 2 + mod 0 = 10,
+# but the file supplies 99.  MAGIC must be present for the DC to compute.
+CHARACTER NAME: Wrong DC
+CLASS: Wizard
+LEVEL: 1
+RACE: Human
+BACKGROUND: Sage
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+SPELL DC: 99
+MAGIC:
+  - name: Magic Missile
+    description: "Three darts of force"

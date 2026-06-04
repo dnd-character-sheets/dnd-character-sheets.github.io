@@ -1,0 +1,18 @@
+# Triggers validate_equipment_structure when EQUIPMENT is a bare scalar
+# instead of a list/object:
+#   line 644: "equipment entry ... should be a list of items"
+CHARACTER NAME: Scalar Gear
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+EQUIPMENT: "a single string instead of a list"

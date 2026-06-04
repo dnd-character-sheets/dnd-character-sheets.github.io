@@ -1,0 +1,24 @@
+# Triggers validate_foreach "is not a list" (ocharsheet line 414) for a
+# list-valued field supplied as a scalar instead of a list:
+#   "ATTACKS: entry ... is not a list"
+#   "proficiencies: entry ... is not a list"
+# NOTE: the value must be a scalar (string), not a mapping -- verrorf's %q
+# crashes on a table value, and FEATURES/MAGIC scalars later crash extend()'s
+# ipairs, so ATTACKS and PROFICIENCIES (not walked by extend) are used here.
+# The emitted message text is identical for every list-valued field.
+CHARACTER NAME: Nota List
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+ATTACKS: "this should be a list of attacks, not a string"
+PROFICIENCIES: "this should be a list of proficiencies, not a string"

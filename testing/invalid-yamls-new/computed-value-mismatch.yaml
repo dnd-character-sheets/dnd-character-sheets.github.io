@@ -1,0 +1,8 @@
+# expect: Value SPELL DC computed as 10, but input says 99  (extend@2008)
+CLASS: Wizard
+LEVEL: 1
+INT: 10
+SPELL DC: 99
+MAGIC:
+  - name: Magic Missile
+    description: "three darts of force"
