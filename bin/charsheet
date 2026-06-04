@@ -1861,8 +1861,8 @@ local function preprocess(sheet)
 
   do -- strip known, empty fields
     local methods = setmetatable({}, default_validator_meta(function(v) return v end))
-    function methods:key(name)
-      return name
+    function methods:key(name, _, validator)
+      return { name = name, validator = validator }
     end
     function methods:table(keys)
       return keys
@@ -1870,10 +1870,15 @@ local function preprocess(sheet)
     function methods:validate(_, v)
       return v
     end
+    function methods:number(_)
+      return 'number'
+    end
     local fields = parse_validation(methods, sheet_validation)
     for _, field in ipairs(fields) do
-      if isnull(sheet[field]) then
-        sheet[field] = nil
+      if isnull(sheet[field.name])
+      or field.validator == 'number' and not tostring(sheet[field.name]):find '%S'
+      then
+        sheet[field.name] = nil
       end
     end
   end
