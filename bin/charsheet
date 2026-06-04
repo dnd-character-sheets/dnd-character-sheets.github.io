@@ -1334,7 +1334,7 @@ local function convert_colon_tables(v)
   else
     local k, e = next(v)
     if k == 'proficiencies_skip' and tostring(e) == 'true' then
-      return [[\profskip{}]]
+      return v
     elseif type(k) == 'string' then
       if isnull(e) then -- singleton table
         return stringf('%s:', k)
@@ -1681,7 +1681,7 @@ render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
 function render.proficiency(elem)
   if type(elem) == 'string' then
     return render.item(elem)
-  elseif empty(elem) then
+  elseif empty(elem) or elem.proficiencies_skip then
     return [[\profskip{}]]
   else
     local groups = { }
