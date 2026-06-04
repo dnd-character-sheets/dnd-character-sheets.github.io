@@ -1934,6 +1934,17 @@
   \fi
 }
 
+\ExplSyntaxOn
+
+  \newcommand\signedorraw[1]{%   for contexts where numeric literal is not guaranteed
+    \regex_match:nnTF { \A [+-]? \d+ \Z } { #1 }
+      { \signed{#1} }
+      { #1 }%
+  }
+
+\ExplSyntaxOff
+
+
 \newcommand\signedmath[1]{%
   \setcounter{ptemp}{#1}%
   \expandafter\ifnum\value{ptemp}<0
@@ -2278,7 +2289,7 @@
   \gdef\@attackammocount{}%
 %  {\def\statdc{\protect\statdc}\typeout{attack keys: #1}}%
   \pgfkeys{/attacks/.cd, #1}%
-  \@attackname&\signed{\@attackattack}&\@attackdamage&\@attacktype&\@attackrange&
+  \@attackname&\signedorraw{\@attackattack}&\@attackdamage&\@attacktype&\@attackrange&
     \@ammocolumn\\
 }
 
