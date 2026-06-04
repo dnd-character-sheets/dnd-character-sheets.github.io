@@ -227,10 +227,12 @@
             \vrule height 8mm width 0pt\Large\getDND*{HIT DICE}}
          ;
 
-     \ifDNDdefined{LEVEL}{
-         \node [at=(hitdice.north),anchor=north] 
-              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
-     }{}
+     \whenDNDdefined{LEVEL}{
+         \expandafter\ifnum\rawgetDND{LEVEL}<5
+           \node [at=(hitdice.north),anchor=north] 
+                {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+         \fi
+     }
 
       \node (death saves)
             [dnd hit dice,below right corner=of temphp,font=\small] 
