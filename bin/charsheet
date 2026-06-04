@@ -196,7 +196,7 @@ end
 
 ----------------- function utilities ----------------
 
-function app1(f, arg1) -- partial application
+local function app1(f, arg1) -- partial application
   return function(...) return f(arg1, ...) end
 end
 
