@@ -94,32 +94,32 @@ $REMOTE/charsheet.css:	docs/charsheet.css
 yaml/silver-king-%.yaml:D: yaml/king-%.yaml un3ify
 	un3ify yaml/king-$stem.yaml > $target
 
-yaml/king-%.s.pdf: yaml/silver-king-%.yaml charsheet caster.tex charsheet.sty
-	charsheet -t silverpine -o $target yaml/silver-king-$stem.yaml
+$S/king-%.s.pdf: yaml/silver-king-%.yaml bin/charsheet templates/caster.tex templates/charsheet.sty
+	bin/charsheet -t silverpine -o $target yaml/silver-king-$stem.yaml
 
-%.3.pdf: %.yaml charsheet 3col.tex charsheet.sty
-	charsheet -t 3col -o $target $stem.yaml
+$S/%.3.pdf: yaml/%.yaml bin/charsheet templates/3col.tex templates/charsheet.sty
+	bin/charsheet -t 3col -o $target yaml/$stem.yaml
 
-samples.pdf: ${KINGS:%=king-%.s.pdf} ${KINGS:%=king-%.3.pdf}
+$S/samples.pdf: ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
 	set -A pdfs
-	for k in $KINGS; do pdfs+=(king-$k.3.pdf king-$k.s.pdf); done
+	for k in $KINGS; do pdfs+=($S/king-$k.3.pdf $S/king-$k.s.pdf); done
 	pdftk "${pdfs[@]}" cat output $target
 
-samples1.pdf: ${KINGS:%=king-%.s.pdf} ${KINGS:%=king-%.3.pdf}
+$S/samples1.pdf: ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
 	set -A pdfs
 	for k in $KINGS; do pdfs+=(king-$k.3.pdf king-$k.s.pdf); done
 	./catpage1s $target "${pdfs[@]}"
 
-3samples.pdf: ${KINGS:%=king-%.3.pdf}
+$S/3samples.pdf: ${KINGS:%=$S/king-%.3.pdf}
 	pdftk $prereq cat output $target
 
-3samples1.pdf: ${KINGS:%=king-%.3.pdf}
+$S/3samples1.pdf: ${KINGS:%=$S/king-%.3.pdf}
 	./catpage1s $target $prereq 
 
-ssamples1.pdf: ${KINGS:%=king-%.s.pdf}
+$S/ssamples1.pdf: ${KINGS:%=$S/king-%.s.pdf}
 	./catpage1s $target $prereq 
 
-ssamples.pdf: ${KINGS:%=king-%.s.pdf}
+$S/ssamples.pdf: ${KINGS:%=$S/king-%.s.pdf}
 	pdftk $prereq cat output $target
 
 
