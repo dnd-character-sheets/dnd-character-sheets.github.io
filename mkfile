@@ -94,15 +94,18 @@ $REMOTE/charsheet.css:	docs/charsheet.css
 yaml/silver-king-%.yaml:D: yaml/king-%.yaml un3ify
 	un3ify yaml/king-$stem.yaml > $target
 
+###################
+
 $S/king-%.s.pdf: yaml/silver-king-%.yaml bin/charsheet templates/caster.tex templates/charsheet.sty
 	bin/charsheet -t silverpine -o $target yaml/silver-king-$stem.yaml
 
 $S/%.3.pdf: yaml/%.yaml bin/charsheet templates/3col.tex templates/charsheet.sty
 	bin/charsheet -t 3col -o $target yaml/$stem.yaml
 
-$S/samples.pdf: ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
+$S/samples.pdf: mario.pdf $S/mario.3.pdf ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
 	set -A pdfs
 	for k in $KINGS; do pdfs+=($S/king-$k.3.pdf $S/king-$k.s.pdf); done
+	pdfs+=(mario.pdf $S/mario.3.pdf)
 	pdftk "${pdfs[@]}" cat output $target
 
 $S/samples1.pdf: ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
@@ -122,8 +125,10 @@ $S/ssamples1.pdf: ${KINGS:%=$S/king-%.s.pdf}
 $S/ssamples.pdf: ${KINGS:%=$S/king-%.s.pdf}
 	pdftk $prereq cat output $target
 
+$S/mario.3.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet.sty
+	bin/charsheet -t 3col -o $target yaml/mario.yaml
 
-mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX
+mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet.sty
 	bin/charsheet -o $target yaml/mario.yaml
 
 mario-preview.png: mario.pdf
