@@ -1,0 +1,5 @@
+# expect: I was looking for a table with ...  (missing@911, a {..} entry given a scalar)
+CLASS: Fighter
+LEVEL: 1
+FEATURES:
+  - "just a string, not a feature table"

@@ -1,0 +1,20 @@
+# PROFICIENCIES: flat strings, a blank-line separator, a proficiencies_skip
+# separator, strings with embedded markup, and a grouped {category: [items]}
+# table.  Plus SECONDARY PROFICIENCIES and the PROFICIENCIES FONT key.
+CLASS: Bard
+LEVEL: 3
+PROFICIENCIES FONT: \footnotesize
+PROFICIENCIES:
+  - Acrobatics
+  - Arcana
+  -
+  - "Language (Common)"
+  - "Languages: Elvish"
+  - proficiencies_skip: true
+  - Tools:
+      - "Thieves' Tools"
+      - Lute
+  - Simple Weapons
+SECONDARY PROFICIENCIES:
+  - Stealth
+  - Persuasion

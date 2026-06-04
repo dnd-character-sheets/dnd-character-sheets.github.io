@@ -1,0 +1,5 @@
+# expect: spell "Mystery" has no description  (validators.spell@1277)
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - name: Mystery

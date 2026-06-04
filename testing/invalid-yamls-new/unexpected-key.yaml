@@ -1,0 +1,4 @@
+# expect: found unexpected key "FAVORITE COLOR"  (@948, unknown top-level key)
+CLASS: Fighter
+LEVEL: 1
+FAVORITE COLOR: blue

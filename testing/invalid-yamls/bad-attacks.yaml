@@ -1,0 +1,41 @@
+# Triggers the ATTACKS-entry validators (validate_attack_entry):
+#   line 489: attack is not a table              (string entry)
+#   line 519: attack is missing required fields  (NAME-only entry)
+#   line 507: bad field, expected a string       (NOTES given as a list)
+#   line 507: bad field, expected a number       (AMMO COUNT given as text)
+#   line 514: AMMO COUNT without an AMMO TYPE     (count but no type)
+CHARACTER NAME: Bad Attacker
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+ATTACKS:
+  - "I am just a string, not a table"
+  - NAME: Incomplete
+  - NAME: Listy Notes
+    ATTACK: "+5"
+    DAMAGE: "1d8"
+    TYPE: slashing
+    NOTES:
+      - one
+      - two
+  - NAME: Wordy Ammo
+    ATTACK: "+4"
+    DAMAGE: "1d6"
+    TYPE: piercing
+    AMMO TYPE: arrow
+    AMMO COUNT: "a whole bunch"
+  - NAME: Typeless Ammo
+    ATTACK: "+3"
+    DAMAGE: "1d4"
+    TYPE: bludgeoning
+    AMMO COUNT: 20

@@ -1,0 +1,9 @@
+# expect: AMMO COUNT is specified without an AMMO TYPE  (validators.attack@1271)
+CLASS: Fighter
+LEVEL: 1
+ATTACKS:
+  - NAME: Shortbow
+    ATTACK: "+5"
+    DAMAGE: "1d6"
+    TYPE: piercing
+    AMMO COUNT: 20

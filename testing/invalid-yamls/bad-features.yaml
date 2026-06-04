@@ -1,0 +1,22 @@
+# Triggers the FEATURES-entry validators (validate_feature_entry):
+#   line 526: feature is not a table            (string entry)
+#   line 529: feature is missing a name         (description but no name)
+#   line 534: feature has no description        (name but no description)
+CHARACTER NAME: Bad Features
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+FEATURES:
+  - "just a bare string feature"
+  - description: "A feature whose name field is entirely missing here"
+  - name: Mystery Feature

@@ -1,0 +1,14 @@
+# EQUIPMENT as a list of strings: an uncategorized item, inline
+# "CATEGORY: item" lines (incl. a singular-form alias), and a block
+# "CATEGORY:" header followed by "- item" lines.
+CLASS: Cleric
+LEVEL: 3
+WIS: 14
+PASSIVE PERCEPTION: 12
+EQUIPMENT:
+  - "Longsword"
+  - "NORMAL WEAPONS: Mace"
+  - "light armor: Leather Armor"
+  - "SLOTTED ITEMS:"
+  - "- Holy Symbol"
+  - "- Rations (5 days)"

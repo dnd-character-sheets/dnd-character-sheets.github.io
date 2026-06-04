@@ -1,0 +1,27 @@
+# Triggers the proficiency-entry validators (validate_proficiency_entry):
+#   line 684: proficiencies_skip entry is not boolean (given a list)
+#   line 692: singleton {key: value} where value is not a list of profs
+#   line 695: a multi-key table (neither string, empty, nor a list)
+CHARACTER NAME: Bad Profs
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+PROFICIENCIES:
+  - Athletics
+  - proficiencies_skip:
+      - a
+      - b
+  - Stealth:
+      nested: thing
+  - a: 1
+    b: 2

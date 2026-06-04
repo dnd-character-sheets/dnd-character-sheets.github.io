@@ -1,0 +1,25 @@
+# Triggers validate_magic_entry's "magic entry name is not a string":
+#   line 638: "magic entry name ... is not a string"
+# The only way to reach this branch is a non-empty, non-string name (a list
+# or mapping).  The validation message is emitted as expected, but ocharsheet
+# then aborts in extend()/add_magic_markers, which calls :match on the table
+# name (line 593) -- so this file exits nonzero AFTER printing the message.
+CHARACTER NAME: Listy Name
+CLASS: Wizard
+LEVEL: 1
+RACE: Human
+BACKGROUND: Sage
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10
+PASSIVE PERCEPTION: 10
+MAGIC:
+  - name:
+      - this name
+      - is a list
+    description: "a spell whose name is a list, not a string"

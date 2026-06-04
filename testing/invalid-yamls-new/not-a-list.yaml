@@ -1,0 +1,4 @@
+# expect: I was looking for a list, but I found ...  (missing@991)
+CLASS: Fighter
+LEVEL: 1
+FEATURES: "not a list"

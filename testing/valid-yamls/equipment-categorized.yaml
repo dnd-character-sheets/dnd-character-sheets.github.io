@@ -1,0 +1,22 @@
+# EQUIPMENT as a categorized mapping covering many categories, including
+# a HEAVY ITEMS entry carrying an Alexandrian stone weight.  STONES on.
+CLASS: Fighter
+LEVEL: 4
+STONES: true
+EQUIPMENT:
+  SHIELDS:
+    - Shield
+  NORMAL WEAPONS:
+    - Longsword
+    - Shortbow
+  LIGHT ARMOR:
+    - "Leather Armor"
+  SLOTTED ITEMS:
+    - "Arrows (20)"
+    - "Rations (10 days)"
+  SMALL ITEMS:
+    - Clothes
+  HEAVY ITEMS:
+    - "Anvil (8 stones)"
+  STORED ITEMS:
+    - "Chest of coin (at the inn)"

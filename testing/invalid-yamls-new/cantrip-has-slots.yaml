@@ -1,0 +1,6 @@
+# expect: spec for cantrips (level 0) included slots  (validators.level@1283)
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - level: 0
+    slots: 3

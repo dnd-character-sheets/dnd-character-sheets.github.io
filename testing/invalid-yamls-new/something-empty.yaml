@@ -1,0 +1,6 @@
+# expect: I was looking for something empty  (missing@979) -- LIKELY UNREACHABLE:
+#   'empty' only appears as an alt that 's'/mine pre-empts; documenting the gap.
+CLASS: Fighter
+LEVEL: 1
+PROFICIENCIES:
+  - {}

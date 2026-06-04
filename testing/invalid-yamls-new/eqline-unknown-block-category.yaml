@@ -1,0 +1,11 @@
+# expect: equipment line "BOGUS:" uses an unknown category "BOGUS"  (validators.eqline)
+# Block-header form of an unknown category (complements eqline-unknown-category.yaml,
+# which uses the inline "CATEGORY: item" form).  This block-header case formerly
+# slipped past eqline (its regex required ": ") and then crashed normalize_equipment
+# with "...made it past the validator"; eqline now matches "^(.-):" so it is flagged,
+# and normalize_equipment falls back to the heuristic category instead of erroring.
+CLASS: Fighter
+LEVEL: 1
+EQUIPMENT:
+  - "BOGUS:"
+  - "- Sword"

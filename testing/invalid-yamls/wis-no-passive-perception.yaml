@@ -1,0 +1,16 @@
+# Triggers the WIS/PASSIVE PERCEPTION consistency check:
+#   line 920: "WIS present but PASSIVE PERCEPTION missing"
+# WIS is given but PASSIVE PERCEPTION is omitted.
+CHARACTER NAME: No Passive
+CLASS: Fighter
+LEVEL: 1
+RACE: Human
+BACKGROUND: Soldier
+STR: 10
+DEX: 10
+CON: 10
+INT: 10
+WIS: 10
+CHA: 10
+MAX HP: 10
+ARMOR CLASS: 10

@@ -1,0 +1,4 @@
+# expect: I was looking for a number in the range 1..20  (missing@780, n[1..20])
+CLASS: Fighter
+LEVEL: 1
+STR: 25

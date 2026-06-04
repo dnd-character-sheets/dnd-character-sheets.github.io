@@ -1,0 +1,7 @@
+# expect: expected components to be a subset of MSV, but found "Q"  (validators.components@1102)
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - name: Fireball
+    description: "a blast of fire"
+    components: "Q"

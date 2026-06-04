@@ -1,0 +1,5 @@
+# expect: required keys "ATTACK", "DAMAGE", "TYPE" are missing  (@937)
+CLASS: Fighter
+LEVEL: 1
+ATTACKS:
+  - NAME: Sword
