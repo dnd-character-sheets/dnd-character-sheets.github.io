@@ -22,11 +22,13 @@ CSS=https://www.cs.tufts.edu/cs/106/course.css
 S=samples
 QCHARS=`lib/yaml-from-md -keys QUICKSTART.md`
 QYAMLS=${QCHARS:%=/tmp/%.yaml}
+PREVIEWS=mario gmsheet
 
-all:V: samples test
+
+all:V: samples test ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
-draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html
+draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
 test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
@@ -130,5 +132,8 @@ $S/mario.3.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet
 mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet.sty
 	bin/charsheet -o $target yaml/mario.yaml
 
-mario-preview.png: mario.pdf
+&-preview.png: &.pdf
 	convert -density 50 $prereq $target
+
+/tmp/&-preview.png: &-preview.png
+	cp $prereq $target
