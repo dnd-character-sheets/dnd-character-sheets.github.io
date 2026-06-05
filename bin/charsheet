@@ -1061,7 +1061,7 @@ do
       what = #validator.what > 30 and a(name) or stringf('%s, which is %s', name, validator.what),
       validate = function(_, context, v)
         if #context:long() > 30 then
-          context = ctx.new(name)
+          context = context + name
         else
           context = context + stringf('%s, which is %s', a(name), context:long())
         end
