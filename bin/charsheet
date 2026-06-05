@@ -498,7 +498,26 @@ do
   local meta = { __index = methods }
 
   function meta.__tostring(c)
-    return c:long()
+    return c:short()
+  end
+
+
+  function methods:short()
+    local function topelement()
+      if self.topindex then
+        return stringf('element %d of %s', self.topindex, self.topkey)
+      else
+        return self.topkey
+      end
+    end
+
+    if not self.topkey then
+      return self:long()
+    elseif self.topkey == self.key then
+      return topelement()
+    else
+      return stringf('field %q of %s', self.key, topelement())
+    end
   end
 
   function methods:long()
