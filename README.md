@@ -17,7 +17,7 @@ produces well-designed paper sheets.
 As an example, 
 here's a fictitious character sheet in a format that I admire (click to embiggen):
 
-<div align="center">
+<div align="center" class="centered">
   <a href="mario.pdf">
     <img src="mario-preview.png"
          style="width:50%; height:auto;"
@@ -130,7 +130,7 @@ If you do install the software locally, you get a couple of other goodies.
 In particular, you can create a [one-page summary of characters'
 important abilities and stats, for a GM to use at the table](gmsheet.pdf):
 
-<div align="center">
+<div align="center" class="centered">
   <a href="gmsheet.pdf">
     <img src="gmsheet-preview.png"
          style="width:50%; height:auto;"
