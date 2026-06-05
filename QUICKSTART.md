@@ -2,6 +2,10 @@
 title: 'Quick-Start Guide to YAML Character Sheets'
 ---
 
+<!--
+Background colors in docs/charsheet.css match the corresponding colors defined in `charsheet.sty` and used in `caster.tex`.
+-->
+
 <article>
 
 To create a D&D character sheet using YAML,
