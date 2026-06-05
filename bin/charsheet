@@ -2027,6 +2027,7 @@ local function sheet_of_file(pathname)
   preprocess(sheet)
   sheet.CLASS = sheet.CLASS or fields.class
   validate(context.new(pathname), sheet, sheet_validation)
+  sheet.CLASS = sheet.CLASS or next(saving_throw_proficiencies) -- avoid crash in extend()
   extend(sheet)
   normalize(sheet)
   if #global_validation_errors > 0 then
