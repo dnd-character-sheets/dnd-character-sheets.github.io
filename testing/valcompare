@@ -91,16 +91,23 @@ for f in "$@"; do
   ocs_kept=$(printf '%s\n' "$ocs_all" | keep "$ocs_filter")
   ocs_supp=$(printf '%s\n' "$ocs_all" | drop "$ocs_filter")
 
-  a=$(verdict_of "$cs_rc"  "$cs_kept")
-  b=$(verdict_of "$ocs_rc" "$ocs_kept")
+  # Verdicts with innocuous messages removed (a, b) and without (a_raw,
+  # b_raw).  Suppression may only convert a divergence into agreement, never
+  # the reverse: if the scripts already agree on the raw messages (e.g. both
+  # reject an empty CLASS), dropping an innocuous message from one side must
+  # not fabricate a DIFFER.  So a raw agreement wins, and the columns then
+  # show the raw verdicts to stay consistent with the AGREE status.
+  a=$(verdict_of     "$cs_rc"  "$cs_kept");  b=$(verdict_of     "$ocs_rc" "$ocs_kept")
+  a_raw=$(verdict_of "$cs_rc"  "$cs_all");   b_raw=$(verdict_of "$ocs_rc" "$ocs_all")
 
-  if   [ "$a" = CRASH ] || [ "$b" = CRASH ]; then st=CRASH
-  elif [ "$a" = "$b" ];                      then st=AGREE
-  elif [ "$a" = OK ] || [ "$b" = OK ];       then st=DIFFER
-  else                                            st=COUNT
+  if   [ "$a" = CRASH ] || [ "$b" = CRASH ]; then st=CRASH;  da=$a;     db=$b
+  elif [ "$a_raw" = "$b_raw" ];              then st=AGREE;  da=$a_raw; db=$b_raw
+  elif [ "$a" = "$b" ];                      then st=AGREE;  da=$a;     db=$b
+  elif [ "$a" = OK ] || [ "$b" = OK ];       then st=DIFFER; da=$a;     db=$b
+  else                                            st=COUNT;  da=$a;     db=$b
   fi
   if [ "$st" != AGREE ]; then status=1; diverged=$((diverged + 1)); fi
-  printf '%-7s %-45s %-10s %-10s\n' "$st" "$(basename "$f")" "$a" "$b"
+  printf '%-7s %-45s %-10s %-10s\n' "$st" "$(basename "$f")" "$da" "$db"
 
   if $verbose && { [ "$st" != AGREE ] || [ -n "$cs_supp$ocs_supp" ]; }; then
     # On a crash, show the raw stderr (likely a traceback); otherwise the
