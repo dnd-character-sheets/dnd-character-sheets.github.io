@@ -939,7 +939,7 @@ do
 
     local function validate_font(context, s)
       if type(s) ~= 'string' or not s:find [[^\]] then
-        verrorf('%s text does not contain a LaTeX font command', context:long(), image(s))
+        verrorf(context, 'expected a LaTeX font command but did not find one in %q', image(s))
       end
     end
 
@@ -964,7 +964,7 @@ do
           local omitted = { }
           for _, key in ipairs(keys) do
             if key.fontable and v[fontkeyname(key)] then
-              validate_font(fontkeyname(key), v[fontkeyname(key)])
+              validate_font(mycontext + { key = fontkeyname(key) }, v[fontkeyname(key)])
               validated[fontkeyname(key)] = true
             end
             if key.any then
