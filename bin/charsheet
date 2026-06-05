@@ -989,14 +989,16 @@ do
           if type(other) ~= 'boolean' then
             -- other is permitted
             for k, field in pairs(v) do
-              if not validated[k] and not validated[k:lower()] then
+              if type(k) ~= 'string' then
+                verrorf(mycontext, 'table has a non-string key %s', friendly(k))
+              elseif not validated[k] and not validated[k:lower()] then
                 other:validate(mycontext + { key = k }, field)
               end
             end
           elseif not other then
             local unexpected = { }
             for k in pairs(v) do
-              if not (acceptable[k] or insensitive[k:lower()]) then
+              if not (acceptable[k] or type(k) == 'string' and insensitive[k:lower()]) then
                 table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
               end
             end
@@ -1202,7 +1204,7 @@ equipment.canonical_category = {
 }
 
 function equipment.good_category(c)
-  c = c:lower():gsub('s$', '')
+  c = tostring(c):lower():gsub('s$', '')
   if equipment.canonical_category[c] then
     return c
   end
@@ -1217,7 +1219,7 @@ function equipment.category(s)
     end
   end
 
-  return equipment.canonical_category[strip_s(s:lower())]
+  return equipment.canonical_category[strip_s(tostring(s):lower())]
 end
 
 do -- set equipment.tablespec
