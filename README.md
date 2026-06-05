@@ -11,7 +11,11 @@ I don't have to mouse, click, tap, or fiddle with a device.
 And I can scribble on it!
 But when my character levels up or prepares new spells, 
 a paper sheet is a pain to update.
-So I created a digital format that is easy to read and update,
+Except if the paper sheet is created by the right kind of software,
+the pain goes away.
+
+To relieve all of our pain,
+I have created a digital character-sheet format that is easy to read and update,
 plus software that
 produces well-designed paper sheets.
 As an example, 
