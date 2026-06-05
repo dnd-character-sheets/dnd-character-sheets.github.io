@@ -25,7 +25,7 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: samples test ${PREVIEWS:%=%-preview.png}
+all:V: samples test github ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
@@ -72,11 +72,22 @@ publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $REMOTE/render.cgi $REMOTEHOST:$REMOTEWEBPATH/cgi-bin/render-charsheet.cgi
 	rsync -avP $REMOTE/render.cgi $REMOTEHOST:www/cgi-bin/$REMOTECGINAME
 
-GITDOCS=index.html README.html YAML.html QUICKSTART.html
+GITDOCS=index.html README.html YAML.html QUICKSTART.html \
+        mario.pdf mario-preview.png gmsheet.pdf gmsheet-preview.png
+
 github:V: ${GITDOCS:%=docs/%}
 
-docs/&.html: &.md
-	pandoc -s -o $target -c charsheet.css $prereq
+docs/&.html:D: &.md
+	set -o pipefail
+	pandoc -s -t html -c charsheet.css $prereq |
+        sed -E -e 's/(QUICKSTART|README|YAML)\.md/\1.html/g' |
+	cat > $target
+
+docs/&.pdf:D: &.pdf
+	cp $prereq $target
+
+docs/&.png:D: &.png
+	cp $prereq $target
 
 push:V: ${GITDOCS:%=docs/%}
 	git commit -m 'updated web page' -- $prereq

@@ -5,24 +5,60 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>D&amp;D Character Sheets using YAML</title>
-  <style type="text/css">
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="charsheet.css" />
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
-<header>
+<header id="title-block-header">
 <h1 class="title">D&amp;D Character Sheets using YAML</h1>
 </header>
 <h1 id="introduction">Introduction</h1>
-<p>When I play D&amp;D, I love the convenience of a paper character sheet. Everything I need to know is right in front of me; there is no mousing, clicking, tapping, or other fiddling with devices. But when my character levels up or prepares new spells, updating a paper sheet is a nuisance, and so is copying out my character to a new sheet. This project tries to provide the best of both worlds.</p>
-<p>This project works with a “digital character sheet” that is plain text and is meant to be edited and maintained with a simple, ordinary text editor like Emacs, vim, or Notepad. The text of the character sheet is a form of <a href="">YAML</a> (<a href="https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started">decent beginner tutorial</a>), which I consider decently user-friendly while still being machine-readable. A character sheet might start something like this:</p>
+<p>Paper character sheets are great. A paper sheet puts everything I
+need to know right in front of me; I don’t have to mouse, click, tap, or
+fiddle with a device. And I can scribble on it! But when my character
+levels up or prepares new spells, a paper sheet is a pain to update.
+So I created a digital format that is easy to read and update, plus
+software that produces well-designed paper sheets. As an example, here’s
+a fictitious character sheet in a format that I admire (click to
+embiggen):</p>
+<div data-align="center">
+<p><a href="mario.pdf"> <img src="mario-preview.png"
+         style="width:50%; height:auto;"
+         alt="Not actually Mario's character sheet"> </a></p>
+</div>
+<p>This character sheet, designed by Alyssa, is readable and yet dense
+with information. Use my software, and you can create character sheets
+just like it. You don’t need any kind of subscription; just go to <a
+href="https://dnd-character-sheets.github.io"><code>https://dnd-character-sheets.github.io</code></a>
+and start exploring.</p>
+<h1 id="an-open-archival-digital-character-sheet">An open, archival
+digital character sheet</h1>
+<p>A web service is great, but a web form disappears when the browser
+closes, and your character needs to last as long as your campaign.
+My web service can save your character in archival form; it uses a
+plain-text format called <a
+href="https://en.wikipedia.org/wiki/YAML">YAML</a>. YAML is a common
+format that is reasonably user-friendly (<a
+href="https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started">beginner
+tutorial</a>). Your YAML character sheets can be created and edited
+entirely on the web.</p>
+<p>A YAML character sheet might start something like this:</p>
 <pre><code>CHARACTER NAME: Mario Greymist
 CLASS: Rogue
 LEVEL: 20
@@ -43,50 +79,153 @@ PROFICIENCIES:
   - 
   - Daggers
 # ... and so on</code></pre>
-<p>The software can then produce <a href="sample-rogue.pdf">a PDF suitable for printing and using at the table</a>.<br />
-Preview:</p>
-<p><a href="sample-rogue.pdf"><img src="sample-rogue.png" alt="not actually Mario’s character sheet" /></a>.</p>
-<p>The software runs on Linux—the Angry GM uses Linux now, you know—but for those who don’t wish to fool around with installing it and getting it to work, I provide <a href="https://dnd-character-sheets.github.io">a web service</a>.</p>
+<p>You can download Mario’s complete character sheet from <a
+href="https://dnd-character-sheets.github.io">the web site</a>.</p>
 <h1 id="using-the-web-service">Using the web service</h1>
-<p>Most of the web service is just a big web form that you fill in with the values that describe your character. The service does a little calculation (modifiers from your stats, proficiency bonus from your level), but most of the grunt work is left to you (how many spell slots your character has at each level, for example).</p>
-<p>The key bits are at the top. When you are first getting started you might try something like this:</p>
+<p>The web service has two parts: a site with a form that you can use to
+describe your character, and a back end that renders your sheet as PDF.
+Once you have a character in the form, you can download it as a YAML
+file, which you can keep as long as you want. When you want to change
+your character sheet, or just generate new PDF, go back to the site and
+upload your YAML. You will find all the important buttons (“upload”,
+“download”, and “generate PDF”) at the beginning of the web form.</p>
+<p>To help you get started, I have provided some pregenerated characters
+to play with.</p>
 <ol type="1">
-<li><p>Go to the web service and select a pregenerated character from one of the dropdowns. Then click “Load this character.”</p></li>
-<li><p>Fill in missing fields, edit what’s there, and otherwise make the character your own.</p></li>
-<li><p>Click the “Generate PDF” button to see what your character sheet will look like.</p></li>
-<li><p>Click the “Download <em>name</em><code>.yaml</code>” button to save your work.</p></li>
+<li><p>Go to <a
+href="https://dnd-character-sheets.github.io"><code>https://dnd-character-sheets.github.io</code></a>.
+From the first dropdown (“best at 2 columns”), choose a pregenerated
+character, perhaps Mario. Then click “Load this character” on the
+right.</p></li>
+<li><p>Click the “Generate PDF” button. After a few seconds, your
+browser should show the PDF in a new tab.</p></li>
+<li><p>Go back to the web form and look for a “Download
+<code>mario-greymist.yaml</code>” button. Click to save Mario’s sheet on
+your machine. (By default, a YAML file that you download is named for
+the character, or if there is no character name, for the character’s
+class.)</p></li>
 </ol>
-<p>In the long term, you will ideally use the service something like this:</p>
-<ol start="5" type="1">
-<li><p>Edit your YAML character sheet on the comfort of your own machine.</p></li>
-<li><p>Go to the web service and use the “Load YAML file” button to load your character sheet into the web form.</p></li>
-<li><p>Get PDF by clicking “Generate PDF.”</p></li>
-</ol>
-<h1 id="working-with-yaml-on-your-own">Working with YAML on your own</h1>
-<h2 id="yaml-for-beginners">Yaml for beginners</h2>
-<p>Key-value pairs, with colons Looks like markdown lists. Best to follow examples.</p>
-<p>round-trip through web form is meant to preserve, though some fields may be added, and sometimes empty space following a dash will render as <code>null</code>. and blank lines are necessarily lost.</p>
-<p>Markdown, colons</p>
-<h2 id="yaml-for-this-project">Yaml for this project</h2>
-<p>AI doco :-(</p>
-<h2 id="quick-start">Quick start</h2>
-<p>quickstart</p>
-<h2 id="what-you-can-write-in-your-yaml-fields">What you can write in your YAML fields</h2>
-<p>LaTeX</p>
-<p>bespoke macros</p>
-<h2 id="all-the-yaml-keys">All the YAML keys</h2>
-<p>YAML.md</p>
-<h2 id="standard-yaml-you-can-use-with-your-own-characters">Standard YAML you can use with your own characters</h2>
-<p>I have yamls.</p>
-<h2 id="getting-yaml-from-other-digital-character-sheets">Getting YAML from other digital character sheets</h2>
-<p>ChatGPT can help.</p>
-<h1 id="deliberate-omissions">Deliberate omissions</h1>
-<p>No traits, bonds, etc. I don’t believe in them. No electrum pieces</p>
-<h1 id="character-sheet-layouts">Character-sheet layouts</h1>
-<p>i am not a graphic designer. Thanks to “Alyssa.”</p>
-<p>3col silverpine</p>
-<p>hoping for more</p>
-<h1 id="notes-on-sources">Notes on sources</h1>
-<p>AI used. Link to Nox, Silverpine W, Alyssa sheets</p>
+<p>The web form works just fine, but if you are an experienced computer
+user, you may prefer to edit your YAML character sheet on your own
+machine. In this case you will use a text editor like Emacs, vim, or
+Notepad, and you will continue to use the web service to
+generate PDF:</p>
+<ul>
+<li><p>Go to <a href="https://dnd-character-sheets.github.io">the web
+site</a> and use the “Upload YAML file” button to load your character
+sheet into the web form.</p></li>
+<li><p>Click “Generate PDF.”</p></li>
+</ul>
+<h1 id="running-the-back-end-on-your-own-machine-with-bonus">Running the
+back end on your own machine (with bonus!)</h1>
+<p>If you have Linux and are comfortable with software, you can try
+dispensing with the web service and generating PDF on your own machine.
+The software you’ll need is sketched in <a
+href="INSTALL.md"><code>INSTALL.md</code></a>, and my code is in <a
+href="https://github.com/dnd-character-sheets/dnd-character-sheets.github.io">a Github
+repository</a>. If you want help, ask.</p>
+<p>If you do install the software locally, you get a couple of other
+goodies. In particular, you can create a <a href="gmsheet.pdf">one-page
+summary of characters’ important abilities and stats, for a GM to use at
+the table</a>:</p>
+<div data-align="center">
+<p><a href="gmsheet.pdf"> <img src="gmsheet-preview.png"
+         style="width:50%; height:auto;"
+         alt="A summary I use at the table"> </a></p>
+</div>
+<h1 id="working-with-yaml">Working with YAML</h1>
+<h2 id="yaml-for-beginners">YAML for beginners</h2>
+<p>To get started with YAML, you can work through my <a
+href="QUICKSTART.html">Quick-Start Guide</a>, or you can download one of
+the pregenerated characters from <a
+href="https://dnd-character-sheets.github.io"><code>https://dnd-character-sheets.github.io</code></a>.</p>
+<p>Every YAML character sheet contains key-value pairs in the form</p>
+<pre><code>KEY: value</code></pre>
+<p>Character-sheet keys are uppercase by convention, and a value is
+usually a string, a number, or a list. Lists look like Markdown lists,
+in which each item is a string marked with a leading dash. Most items
+are strings, but an item that describes an attack, a feature, or a magic
+spell is itself a list of named properties. For example, a feature has a
+<code>name</code> and a <code>description</code>. An attack has
+<code>DAMAGE</code>, a <code>TYPE</code>, possibly a <code>RANGE</code>,
+and other properties.</p>
+<p>You can edit a character sheet both on your machine and on the
+web form. If you upload your YAML to the web form, edit on the form, and
+download the result, the software should preserve all your YAML
+data—even fields that don’t appear on the form. But the software may add
+a few fields, and it may change empty values to <code>null</code>.
+Finally, the software removes blank lines, because they are not visible
+to a YAML parser.</p>
+<h2 id="yaml-keys-for-this-project">YAML keys for this project</h2>
+<p>YAML is just a format; to write anything meaningful, you must know
+what keys to use. My software recognizes over 60 keys, from
+<code>ARMOR CLASS</code> to <code>WIS</code>. Each key is described in a
+project-specific <a href="YAML.html">YAML reference</a>, but you are
+probably better off using the <a href="QUICKSTART.html">Quick-Start
+Guide</a>.
+<!--And if something goes wrong, you can find the ultimate truth in the
+`.sty` and `.tex` files in the [templates directory](templates).
+--></p>
+<h2 id="getting-yaml-from-other-digital-character-sheets">Getting YAML
+from other digital character sheets</h2>
+<p>There are eight million <del>stories</del> digital character sheets
+in <del>the naked city</del> various corners of the Web. If you are
+willing to use a large language model, the popular chatbots can extract
+pretty good YAML from a web page or PDF. Show the bot an example YAML
+sheet or the <a href="YAML.html">user documentation</a>, then ask it to
+convert whatever format you have to the YAML format.</p>
+<h2 id="more-yaml-to-play-with">More YAML to play with</h2>
+<p>To see more examples of YAML, including fragments that you might want
+to incorporate into your own character sheets, check out the <a
+href="yaml"><code>yaml</code></a> directory. For example, if you want to
+roll up a ranger, you can include <a
+href="yaml/ranger-class.yaml"><code>yaml/ranger-class.yaml</code></a>.
+Or if your druid is about to specialize, try <a
+href="yaml/circle-of-the-land-forest.yaml"><code>yaml/circle-of-the-land-forest.yaml</code></a>.</p>
+<p>The snippets in the <a href="yaml"><code>yaml</code></a> directory
+aren’t comprehensive; they are just fragments I put together for my own
+game. If you find them useful, we’re both surprised and pleased.</p>
+<h1 id="limitations-and-caveats">Limitations and caveats</h1>
+<h2 id="limitations">Limitations</h2>
+<p>My YAML doesn’t support all of D&amp;D 5e.</p>
+<ul>
+<li><p>The character sheets are meant to be used at the table, and
+I want everything I need on one sheet of paper. So my format doesn’t
+support such properties as traits, bonds, ideals—they’re not immediately
+useful during play, and I could not find room for them. If these are
+things that you want, sketch the layout you are looking for and open <a
+href="https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues">a
+Github issue</a>.</p></li>
+<li><p>Electrum pieces clutter the character sheet, and they tend to
+confuse players: unlike the other coins, they are not ten times as
+valuable as the next most valuable coin. Electrum pieces do have a
+dedicated YAML key, but they do not display on any of the existing
+layouts.</p></li>
+</ul>
+<h2 id="character-sheet-layouts">Character-sheet layouts</h2>
+<p>Although I have some training in information design, I am not a
+graphic designer. If you want another layout, please open <a
+href="https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues">a
+Github issue</a>.</p>
+<h2 id="ai">AI</h2>
+<p>I used AI for help with code. I do not love theft of intellectual
+property or the likelihood of AI putting creative artists out of work.
+But the popular models are trained on my work—I have been putting code
+on the public internet for over 35 years—and given my contributions,
+I wish to reap some of the benefits.</p>
+<p>I have not used AI blindly; except for parts of the JavaScript,
+I have reviewed every line of AI-generated code, and I have rewritten
+most of it.</p>
+<p>And AI doesn’t write for me; this README is all mine.</p>
+<h1 id="acknowledgments">Acknowledgments</h1>
+<p>The pregenerated characters and the bones of the three-column
+template were supplied by <a
+href="https://ko-fi.com/noxaeturnus/">NoxAeternus</a>.</p>
+<p>The two-column template is taken from the module <a
+href="https://theangrygm.com/the-fall-of-silverpine-watch/"><em>The Fall
+of Silverpine Watch</em></a> by <a href="https://theangrygm.com/">The
+Angry GM</a>. (The Angry GM uses Linux now, you know.) The template was
+originally designed by Alyssa.</p>
+<p>The tropical template was designed by French Rice Meɹman.</p>
 </body>
 </html>
