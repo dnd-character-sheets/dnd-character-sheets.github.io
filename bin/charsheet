@@ -194,6 +194,15 @@ local function scalarvalues(list) -- iterator : value list -> value
     end)
 end
 
+local function tcopy(t)
+  local u = { }
+  for k, v in pairs(t) do
+    u[k] = v
+  end
+  return setmetatable(u, getmetatable(t))
+end
+
+
 ----------------- function utilities ----------------
 
 local function app1(f, arg1) -- partial application
@@ -244,12 +253,17 @@ local global_validation_errors = {}
 
 local curfile -- name of the file currently being validated
 
+
+local context = { }
+
 local verrorf -- save validation error
 do
   local last_file_announced
 
-  verrorf = function(...)
-    local msg = stringf(...)
+  verrorf = function(fmt, ...)
+    local msg = context.is(fmt)
+                  and stringf('In %s, %s', tostring(fmt), stringf(...))
+                   or stringf(fmt, ...)
     table.insert(global_validation_errors, (msg:gsub('(%s)"', '%1``'):gsub([["]], [['']])))
     if last_file_announced ~= curfile then
       eprintf('\nValidation error in %s: %s\n', curfile, msg)
@@ -471,6 +485,69 @@ Operators @ and $ associate to the right and bind tighter than |.
 
 ]=]
 
+-- a context is a table with fields
+
+-- { longstring: string           --- narrative
+-- , topkey : string option    --- top-level key if any
+-- , topindex: int          --- top-level list index, if any
+-- , key : string option    --- most recent key
+-- }
+
+do
+  local methods = { }
+  local meta = { __index = methods }
+
+  function meta.__tostring(c)
+    return c:long()
+  end
+
+  function methods:long()
+    return self.longstring
+  end
+
+  function context.is(v)
+    return getmetatable(v) == meta
+  end
+
+  local function update(t, k, v)
+    local u = tcopy(t)
+    u[k] = v
+    return u
+  end
+
+  function context.new(v)
+    if type(v) == 'string' then
+      return setmetatable({ longstring = v }, meta)
+    else
+      return setmetatable(v, meta)
+    end
+  end
+
+  function context.extend(c, x)
+    -- x has table long, key, index
+    if type(x) == 'string' then
+      return update(c, 'longstring', x)
+    elseif type(x) == 'number' then
+      if c.topindex == nil then
+        return update(c, 'topindex', x) + stringf('element %d of %s', x, c:long())
+      else
+        return c
+      end
+    else
+      local d = { longstring = x.longstring
+                      or x.index and stringf('element %d of %s', x.index, c:long())
+                      or x.key   and stringf('field %q of %s', x.key, c:long())
+                      or c:long(),
+                  topkey   = c.topkey or x.key,
+                  topindex = c.topindex or x.index,
+      }
+      return setmetatable(d, meta)
+    end
+  end
+
+  meta.__add = context.extend
+end
+
 local parse_validation
 do
   local inspect = require 'inspect'
@@ -549,7 +626,7 @@ do
         end
         table.insert(tcontext, tokens[j])
       end
-      errorf('Error parsing %s; expected %s, got %s at token %d ⟨%s⟩', parsing, wanted,
+      errorf('Error parsing %s; expected %s, got %s at token %d ⟨%s⟩', parsing:long(), wanted,
              tokens[tindex] ~= nil and inspect.image(tokens[tindex]) or "end of stream", tindex,
              table.concat(tcontext, ' '))
     end
@@ -684,6 +761,8 @@ end
   -- used to define partial validators
 
 do
+  local ctx = context
+
   -- Semantic objects are built as follows:
   --
   -- key       : { name : string, validator = v, ... property fields ... }
@@ -700,7 +779,8 @@ do
   end
 
   local function missing(context, wanted, found)
-    verrorf('In %s: I was looking for %s, but I found %s', context, wanted, friendly(found))
+    assert(type(context) == 'table')
+    verrorf(context, 'I was looking for %s, but I found %s', wanted, friendly(found))
   end
 
   function vfactory:number(rg)
@@ -839,7 +919,7 @@ do
 
     local function validate_font(context, s)
       if type(s) ~= 'string' or not s:find [[^\]] then
-        verrorf('%s text does not contain a LaTeX font command', context, image(s))
+        verrorf('%s text does not contain a LaTeX font command', context:long(), image(s))
       end
     end
 
@@ -855,9 +935,12 @@ do
         else
           local validated = { }
           local myname = v.name or v.NAME
+          assert(ctx.is(context))
           local mycontext =
-               myname and type(myname) == 'string' and stringf('%q, which is %s', myname, context)
-            or context
+               myname and type(myname) == 'string' and
+                      context + stringf('%q, which is %s', myname, context:long())
+               or context
+          assert(ctx.is(mycontext))
           local omitted = { }
           for _, key in ipairs(keys) do
             if key.fontable and v[fontkeyname(key)] then
@@ -870,7 +953,8 @@ do
               table.insert(omitted, sq(key.name))
             elseif v[key.name] ~= nil then
               local val = key.validator or text
-              local u = val:validate(stringf('field %q of %s', key.name, mycontext), v[key.name])
+              assert(ctx.is(mycontext))
+              local u = val:validate(mycontext + { key = key.name }, v[key.name])
               validated[key.name] = true
               if u ~= nil then
                 v[key.name] = u
@@ -878,7 +962,7 @@ do
             end
           end
           if #omitted > 0 then
-            verrorf('In %s, required %s %s %s missing', mycontext, plural(#omitted, 'key'),
+            verrorf(mycontext, 'required %s %s %s missing', plural(#omitted, 'key'),
                     commafy(omitted), #omitted == 1 and 'is' or 'are')
           end
 
@@ -886,7 +970,7 @@ do
             -- other is permitted
             for k, field in pairs(v) do
               if not validated[k] and not validated[k:lower()] then
-                other:validate(stringf('field %q of %s', k, mycontext), field)
+                other:validate(mycontext + { key = k }, field)
               end
             end
           elseif not other then
@@ -897,8 +981,8 @@ do
               end
             end
             if #unexpected > 0 then
-              verrorf('In %s, found unexpected %s %s',
-                      mycontext, plural(#unexpected, 'key'), commafy(unexpected))
+              verrorf(mycontext, 'found unexpected %s %s',
+                      plural(#unexpected, 'key'), commafy(unexpected))
             end
           end
         end
@@ -943,7 +1027,7 @@ do
           missing(context, 'a list', v)
         else
           for i, e in ipairs(v) do
-            element:validate(stringf('element %d of %s', i, context), e)
+            element:validate(context + { index = i }, e)
           end
         end
       end,
@@ -956,10 +1040,10 @@ do
       mine = function(_, v) return validator:mine(v) end,
       what = #validator.what > 30 and a(name) or stringf('%s, which is %s', name, validator.what),
       validate = function(_, context, v)
-        if #context > 30 then
-          context = name
+        if #context:long() > 30 then
+          context = ctx.new(name)
         else
-          context = stringf('%s, which is %s', a(name), context)
+          context = context + stringf('%s, which is %s', a(name), context:long())
         end
         return validator:validate(context, v)
       end,
@@ -979,7 +1063,7 @@ do
         what = 'YAML null',
         validate = function(_, context, v)
           if not isnull(v) then
-            verrorf('In %s, expected YAML null but found %s', context, friendly(v))
+            verrorf(context, 'expected YAML null but found %s', friendly(v))
           end
         end,
       }
@@ -1006,8 +1090,8 @@ do
                  end
                end
                -- or maybe just the first? XXX
-               verrorf("In %s, expected %s, but didn't find %s of those things.  Found %s",
-                       context, whatnames, #alts == 2 and 'either' or 'any', friendly(v))
+               verrorf(context, "expected %s, but didn't find %s of those things.  Found %s",
+                       whatnames, #alts == 2 and 'either' or 'any', friendly(v))
              end,
     }
   end
@@ -1056,7 +1140,7 @@ local magic_property = {
 
 function validators.components(context, v)
   if not v:find '^[MSV]+$' then
-    verrorf('In %s, expected components to be a subset of MSV, but found %q', context, v)
+    verrorf(context, 'expected components to be a subset of MSV, but found %q', v)
   end
 end
 
@@ -1169,15 +1253,15 @@ local sheet_validation = ([[
     ?PREGENERATED:b,
     ?MAGIC SEPARATE:b,
 
-    ?%ATTACKS:attacks@list(
+    ?%ATTACKS:ATTACKS@list(
        attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
-    ?%FEATURES:list(described$feature@
+    ?%FEATURES:FEATURES@list(described$feature@
            {name,?description
            ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
            ,?markers:b -- add "magic markers" to name (default false)?
            ,?GM note:(b|s)
            }),
-    ?%MAGIC:list(described$spell@{MAGICPROPNAMES}
+    ?%MAGIC:MAGIC@list(described$spell@{MAGICPROPNAMES}
                |{acquired at level:n[1..20]}
                |level$level-spec@{level:n[0..9],?slots:n[1..]}
                |null
@@ -1226,7 +1310,7 @@ end
 
 function validators.attack(context, v)
   if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
-    verrorf('In %s, AMMO COUNT is specified without an AMMO TYPE', context)
+    verrorf(context, 'AMMO COUNT is specified without an AMMO TYPE')
   end
 end
 
@@ -1236,36 +1320,35 @@ end
 
 function validators.described(context, v)
   if not description(v) then
-    verrorf('In %s, %q has no description', context, v.name)
+    verrorf(context, '%q has no description', v.name)
   end
 end
 
 function validators.level(context, v)
   if v.level == 0 and v.slots then
-    verrorf('In %s, spec for cantrips (level 0) included slots, but cantrips have no slots',
-            context)
+    verrorf(context, 'spec for cantrips (level 0) included slots, but cantrips have no slots')
   elseif v.level > 0 and not v.slots then
-    verrorf('In %s, spec for level %d is missing its slot count', context, v.level)
+    verrorf(context, 'spec for level %d is missing its slot count', v.level)
   end
 end
 
 function validators.eqline(context, v)
   local cat = v:match '^(.-):'
   if cat and not equipment.good_category(cat) then
-    verrorf('In %s, equipment line %q uses an unknown category %q', context, v, cat)
+    verrorf(context, 'equipment line %q uses an unknown category %q', v, cat)
   end
 end
 
 function validators.nonempty(context, v)
   if empty(v) then
-    verrorf('In %s, expected data but found %s', context, friendly(v))
+    verrorf(context, 'expected data but found %s', friendly(v))
   end
 end
 
 -- Validation function
 function validators.sheet(context, sheet)
   if not empty(sheet.WIS) and empty(sheet['PASSIVE PERCEPTION']) then
-    verrorf('In %s, WIS is present but PASSIVE PERCEPTION is missing', context)
+    verrorf(context, 'WIS is present but PASSIVE PERCEPTION is missing')
   end
 end
 
@@ -1921,7 +2004,7 @@ local function sheet_of_file(pathname)
   -- Validate document before processing
   preprocess(sheet)
   sheet.CLASS = sheet.CLASS or fields.class
-  validate(pathname, sheet, sheet_validation)
+  validate(context.new(pathname), sheet, sheet_validation)
   extend(sheet)
   normalize(sheet)
   if #global_validation_errors > 0 then
