@@ -7,6 +7,7 @@ Critical parts:
   - bin/charsheet and its aliases render YAML into .tex or .pdf
   - templates/ has LaTeX style `charsheet.sty` and sheet-layout templates like `silverpine.tex`
   - www/character-form.html has the web form, plus JavaScript to upload and download YAML.  The `Generate PDF` button sends YAML to a back end that runs `bin/charsheet`.
+  - `js-testing/` has some infrastructure for testing the JavaScript.
   - `QUICKSTART.yaml`: documentation that uses examples of valid YAML files to help human creators get started. 
   - `YAML.md` is the reference
 
