@@ -543,7 +543,7 @@ do
   end
 
   function context.extend(c, x)
-    -- x has table long, key, index
+    -- x has table longstring, key, topkey, topindex
     if type(x) == 'string' then
       return update(c, 'longstring', x)
     elseif type(x) == 'number' then
@@ -559,6 +559,7 @@ do
                       or c:long(),
                   topkey   = c.topkey or x.key,
                   topindex = c.topindex or x.index,
+                  key = x.key or c.key,
       }
       return setmetatable(d, meta)
     end
