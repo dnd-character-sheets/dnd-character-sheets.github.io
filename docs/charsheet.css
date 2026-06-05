@@ -90,6 +90,10 @@ input:focus, textarea:focus, select:focus {
     max-width: 4em;
 }
 
+.centered {
+    text-align: center;
+}
+
 .list-container {
     border: 1px solid #ccc;
     padding: 0.5em;
