@@ -1627,7 +1627,7 @@ local function extend(sheet)
   end
 
   ----- infrastructure: confirm existing value or set new one  -----------
-  local function update(field, value) -- checks for consistency
+  local function confirm_or_set(field, value) -- checks for consistency
     local v = sheet[field]
     if v and tostring(v):find '%S' and not same_values(v, value) then
       verrorf('Value %s computed as %s, but input says %s\n',
@@ -1647,28 +1647,28 @@ local function extend(sheet)
 
   do -- saving-throw profs
     for _, prof in ipairs(saving_throw_proficiencies[class] or nothing) do
-      update(stringf('%s SAVING', prof:sub(1,3):upper()), true)
+      confirm_or_set(stringf('%s SAVING', prof:sub(1,3):upper()), true)
     end
   end
 
-  update('PROFICIENCY BONUS', proficiency_bonus(sheet.LEVEL))
+  confirm_or_set('PROFICIENCY BONUS', proficiency_bonus(sheet.LEVEL))
 
 
   do -- spellcasting ability, modifier, DC
     local casting = casting_ability[class] or sheet['SPELLCASTING ABILITY']
     if casting and tonumber(sheet[casting]) then
-      update('SPELLCASTING ABILITY', casting)
+      confirm_or_set('SPELLCASTING ABILITY', casting)
       local mod = ability_modifier(tonumber(sheet[casting]))
-      update('SPELL DC', spell_dc(level, mod))
-      update('SPELL ATTACK MODIFIER', stringf('%+d', spell_attack_modifier(level, mod)))
+      confirm_or_set('SPELL DC', spell_dc(level, mod))
+      confirm_or_set('SPELL ATTACK MODIFIER', stringf('%+d', spell_attack_modifier(level, mod)))
     end
   end
 
   do   -- passive skills
     local function set_passive_skill(stat, skill)
       if tonumber(sheet[stat]) then
-        update(stringf('PASSIVE %s', skill:upper()),
-               passive_skill(sheet, stat, skill_p_e(sheet, skill)))
+        confirm_or_set(stringf('PASSIVE %s', skill:upper()),
+                       passive_skill(sheet, stat, skill_p_e(sheet, skill)))
       end
     end
 
