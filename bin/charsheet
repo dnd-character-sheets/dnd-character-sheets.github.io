@@ -97,6 +97,14 @@ local function table_or_nothing(v)
   end
 end
 
+local function non_nil_or(v, u)
+  if v ~= nil then
+    return v
+  else
+    return u
+  end
+end
+
 local default_layouts = {
   charsheet = 'silverpine',
   gmsheet = 'gmsheet',
@@ -404,8 +412,8 @@ end
 local function named_things(sheet) -- anything in MAGIC or FEATURES with a .name field
   return coroutine.wrap(function()
     for _, section in ipairs {'MAGIC', 'FEATURES'} do
-      local things = sheet[section] or nothing
-      for _, thing in ipairs(table_or_nothing(things)) do
+      local things = table_or_nothing(sheet[section])
+      for _, thing in ipairs(things) do
         if thing.name then
           coroutine.yield(thing)
         end
@@ -803,6 +811,10 @@ do
   --    self:mine(value) returns bool
   --    self:maybe_mine(value) returns bool  -- optional
   --    self.what : string
+  --
+  -- postcondition:
+  --    if v:validator(context, value) returns nil then value is valid
+  --    if v:validator(context, value) returns non-nil then it returns a valid valuea
 
   local function out_of_range(n, rg)
     if rg then
@@ -810,9 +822,22 @@ do
     end
   end
 
-  local function missing(context, wanted, found)
+  local function choose_a_number(rg)
+    if rg.lo and rg.hi then
+      return math.floor((rg.lo + rg.hi) / 2)
+    elseif rg.lo then
+      return rg.lo
+    elseif rg.hi then
+      return rg.hi
+    else
+      return 99
+    end
+  end
+
+  local function missing(context, wanted, found, replacement)
     assert(type(context) == 'table')
-    verrorf(context, 'I was looking for %s, but I found %s', wanted, friendly(found))
+    verrorf(context, 'I was looking for %s, but I found %s.  I substituted %s',
+            wanted, friendly(found), friendly(replacement))
   end
 
   function vfactory:number(rg)
@@ -832,7 +857,9 @@ do
     return {
       validate = function(_, context, v)
         if not tonumber(v) or out_of_range(tonumber(v), rg) then
-          missing(context, what, v)
+          local substitute = rg and choose_a_number(rg) or 11
+          missing(context, what, v, substitute)
+          return substitute
         else
           return tonumber(v)
         end
@@ -845,10 +872,9 @@ do
   local text = {
     validate = function(_, context, v)
       if not can_be 'string' (v) then
-        missing(context, 'text', v)
-      else
-        return tostring(v)
+        missing(context, 'text', v, tostring(v))
       end
+      return tostring(v)
     end,
     mine = function(_, v) return can_be 'string'(v) end,
     what = 'text',
@@ -963,7 +989,8 @@ do
       maybe_mine = function(_, v) return type(v) == 'table' and maybe_my_key(v) end,
       validate = function(_, context, v)
         if type(v) ~= 'table' then
-          missing(context, wanted, v)
+          missing(context, wanted, v, nothing)
+          return { } -- will not have the required keys, but is better than just v
         else
           local validated = { }
           local myname = v.name or v.NAME
@@ -979,14 +1006,16 @@ do
               validate_font(mycontext + { key = fontkeyname(key) }, v[fontkeyname(key)])
               validated[fontkeyname(key)] = true
             end
+            local validator = key.validator or text
             if key.any then
               -- validator  is run below
             elseif v[key.name] == nil and not key.optional then
               table.insert(omitted, sq(key.name))
+              v[key.name] =
+                without_verrorf(function() validator:validate(mycontext+{key=key.name}, nil) end)
             elseif v[key.name] ~= nil then
-              local val = key.validator or text
               assert(ctx.is(mycontext))
-              local u = val:validate(mycontext + { key = key.name }, v[key.name])
+              local u = validator:validate(mycontext + { key = key.name }, v[key.name])
               validated[key.name] = true
               if u ~= nil then
                 v[key.name] = u
@@ -998,26 +1027,32 @@ do
                     commafy(omitted), #omitted == 1 and 'is' or 'are')
           end
 
+          local sanitized = tcopy(v)
           if type(other) ~= 'boolean' then
             -- other is permitted
             for k, field in pairs(v) do
               if type(k) ~= 'string' then
                 verrorf(mycontext, 'table has a non-string key %s', friendly(k))
+                sanitized[k] = nil
               elseif not validated[k] and not validated[k:lower()] then
-                other:validate(mycontext + { key = k }, field)
+                sanitized[k] =
+                  non_nil_or(other:validate(mycontext + { key = k }, field), sanitized[k])
               end
             end
+            return sanitized
           elseif not other then
             local unexpected = { }
             for k in pairs(v) do
               if not (acceptable[k] or type(k) == 'string' and insensitive[k:lower()]) then
                 table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
+                sanitized[k] = nil
               end
             end
             if #unexpected > 0 then
-              verrorf(mycontext, 'found unexpected %s %s',
+              verrorf(mycontext, 'found and removed unexpected %s %s',
                       plural(#unexpected, 'key'), commafy(unexpected))
             end
+            return sanitized
           end
         end
       end,
@@ -1034,7 +1069,7 @@ do
       mine = function(_, v) return can_be 'boolean' (v) end,
       validate = function(_, context, v)
         if not can_be 'boolean' (v) then
-          missing(context, 'a Boolean', v)
+          missing(context, 'a Boolean', v, false)
         end
       end,
     }
@@ -1046,7 +1081,8 @@ do
       mine = function(_, v) return empty(v) or isnull(v) end,
       validate = function(self, context, v)
         if not self:mine(v) then
-          missing(context, 'something empty', v)
+          missing(context, 'something empty', v, '')
+          return ''
         end
       end,
     }
@@ -1056,12 +1092,13 @@ do
     return {
       what = stringf('a list of (%s)', element.what),
       mine = function(_, v) return type(v) == 'table' and (v[1] ~= nil or next(v) == nil) end,
-      validate = function(_, context, v)
-        if type(v) ~= 'table' or next(v) ~= nil and not v[1] then
-          missing(context, 'a list', v)
+      validate = function(self, context, v)
+        if not self:mine(v) then
+          missing(context, 'a list', v, nothing)
+          return { }
         else
           for i, e in ipairs(v) do
-            element:validate(context + { index = i }, e)
+            v[i] = non_nil_or(element:validate(context + { index = i }, e), e)
           end
         end
       end,
@@ -1113,6 +1150,7 @@ do
     return { mine = function(_, v) return any(function(alt) return alt:mine(v) end, alts) end,
              what = whatnames,
              validate = function(_, context, v)
+               assert(#alts > 1)
                for _, alt in ipairs(alts) do
                  if alt:mine(v) then
                    return alt:validate(context, v)
@@ -1123,9 +1161,14 @@ do
                    return alt:validate(context, v)
                  end
                end
+               local substitute =
+                 without_verrorf(function() return alts[1]:validate(context, v) end)
                -- or maybe just the first? XXX
-               verrorf(context, "expected %s, but didn't find %s of those things.  Found %s",
-                       whatnames, #alts == 2 and 'either' or 'any', friendly(v))
+               local any = #alts == 2 and 'either' or 'any'
+               verrorf(context, "expected %s, but I didn't find %s of those things.  " ..
+                       "I found %s and substituted %s.",
+                       whatnames, any, friendly(v), friendly(substitute))
+               return substitute
              end,
     }
   end
@@ -1136,9 +1179,12 @@ do
       what = stringf('%s validated by function %s', validator.what, f),
       validate = function(_, context, v)
         local bad = #global_validation_errors
-        validator:validate(context, v)
-        if #global_validation_errors == bad then
-          assert(validators[f], 'No validation function named ' .. f)(context, v)
+        local u = non_nil_or(validator:validate(context, v), v)
+        if #global_validation_errors > bad then
+          return u
+        else
+          local vf = assert(validators[f], 'No validation function named ' .. f)
+          return non_nil_or(vf(context, u), u)
         end
       end,
     }
@@ -1147,7 +1193,7 @@ do
 end
 
 local function validate(context, sheet, validation)
-  parse_validation(vfactory, validation):validate(context, sheet)
+  return non_nil_or(parse_validation(vfactory, validation):validate(context, sheet), sheet)
 end
 
 
@@ -1339,12 +1385,14 @@ vnames.etable = 'categorized list of equipment'
 function validators.docfont(_, v)
   if not v:find '^1[012]pt$' then
     verrorf('The DOCUMENT FONT must be 10pt, 11pt, or 12pt; found %q', v)
+    return '10pt'
   end
 end
 
 function validators.attack(context, v)
   if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
     verrorf(context, 'AMMO COUNT is specified without an AMMO TYPE')
+    return update(v, 'AMMO COUNT', nil)
   end
 end
 
@@ -1355,14 +1403,17 @@ end
 function validators.described(context, v)
   if not description(v) then
     verrorf(context, '%q has no description', v.name)
+    return update(v, 'description', '???')
   end
 end
 
 function validators.level(context, v)
   if v.level == 0 and v.slots then
     verrorf(context, 'spec for cantrips (level 0) included slots, but cantrips have no slots')
+    return { level = 0 }
   elseif v.level > 0 and not v.slots then
     verrorf(context, 'spec for level %d is missing its slot count', v.level)
+    return { level = v.level, slots = 1 }
   end
 end
 
@@ -1370,12 +1421,14 @@ function validators.eqline(context, v)
   local cat = v:match '^(.-):'
   if cat and not equipment.good_category(cat) then
     verrorf(context, 'equipment line %q uses an unknown category %q', v, cat)
+    return (v:gsub('%:', '---'))
   end
 end
 
 function validators.nonempty(context, v)
   if empty(v) then
     verrorf(context, 'expected data but found %s', friendly(v))
+    return 'missing'
   end
 end
 
@@ -1383,6 +1436,7 @@ end
 function validators.sheet(context, sheet)
   if not empty(sheet.WIS) and empty(sheet['PASSIVE PERCEPTION']) then
     verrorf(context, 'WIS is present but PASSIVE PERCEPTION is missing')
+    -- no need to fix here; extend() handles it
   end
 end
 
@@ -2058,7 +2112,7 @@ local function sheet_of_file(pathname)
   -- Validate document before processing
   preprocess(sheet)
   sheet.CLASS = sheet.CLASS or fields.class
-  validate(context.new(pathname), sheet, sheet_validation)
+  sheet = validate(context.new(pathname), sheet, sheet_validation) or sheet
   sheet.CLASS = sheet.CLASS or next(saving_throw_proficiencies) -- avoid crash in extend()
   extend(sheet)
   normalize(sheet)
