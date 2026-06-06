@@ -1,0 +1,7 @@
+CLASS: Fighter
+LEVEL: 1
+MAGIC:
+  - level: 0
+  - name: Spell
+    description: Ordinary
+    components: 123
