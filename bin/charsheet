@@ -280,6 +280,18 @@ do
   end
 end
 
+local function without_verrorf(f, ...)
+  local old = verrorf
+  verrorf = function() end
+  local function finish(...)
+    verrorf = old
+    return ...
+  end
+  return finish(f(...))
+end
+
+
+
 --------------------- sandboxing ------------------------
 
 local bad_input_tex = [[
