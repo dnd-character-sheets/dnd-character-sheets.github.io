@@ -202,6 +202,12 @@ local function tcopy(t)
   return setmetatable(u, getmetatable(t))
 end
 
+local function update(t, k, v)
+  local u = tcopy(t)
+  u[k] = v
+  return u
+end
+
 
 ----------------- function utilities ----------------
 
@@ -526,12 +532,6 @@ do
 
   function context.is(v)
     return getmetatable(v) == meta
-  end
-
-  local function update(t, k, v)
-    local u = tcopy(t)
-    u[k] = v
-    return u
   end
 
   function context.new(v)
