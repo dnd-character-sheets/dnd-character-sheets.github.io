@@ -2011,6 +2011,26 @@ local function sheet_of_file(pathname)
   end
   assert(type(sheet) == 'table')
 
+  do -- break cycles, lest other code recur forever
+    local function break_cycles(t, visiting)
+      -- remove any value in t that cycles up
+      if type(t) == 'table' then
+        visiting = visiting or {}
+        visiting[t] = true
+        for k, v in pairs(t) do
+          if visiting[v] then
+            t[k] = 'cycle in YAML'
+          else
+            break_cycles(v, visiting)
+          end
+        end
+        visiting[t] = nil
+      end
+    end
+
+    break_cycles(sheet)
+  end
+
   do -- look for unbalanced braces (security risk)
     local bad = unbalanced_yaml_string(sheet)
     if bad then
