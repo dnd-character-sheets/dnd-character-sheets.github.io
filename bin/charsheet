@@ -278,7 +278,7 @@ do
     local msg = context.is(fmt)
                   and stringf('In %s, %s', tostring(fmt), stringf(...))
                    or stringf(fmt, ...)
-    table.insert(global_validation_errors, (msg:gsub('(%s)"', '%1``'):gsub([["]], [['']])))
+    table.insert(global_validation_errors, image(msg:gsub('(%s)"', '%1``'):gsub([["]], [['']])))
     if last_file_announced ~= curfile then
       eprintf('\nValidation error in %s: %s\n', curfile, msg)
       last_file_announced = curfile
