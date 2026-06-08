@@ -1451,11 +1451,59 @@ function validators.nonempty(context, v)
   end
 end
 
+local ability_modifier
+
+local function eval_prepcount(sheet, s)
+  if can_be 'number' (s) then
+    return tonumber(s)
+  elseif type(s) == 'table' then
+    local total = 0
+    for _, what in ipairs(s) do
+      local n = what == 'LEVEL' and sheet.LEVEL or ability_modifier(sheet[what] or 10)
+      total = total + assert(tonumber(n))
+    end
+    return total
+  else
+    assert(false)
+  end
+end
+
+local function spellcounts(magic)
+  local level = 0
+  local cantrips, spells = 0, 0
+  for _, thing in ipairs(magic) do
+    if thing.level then
+      level = thing.level
+    elseif thing.name and not (thing.freebie or thing.domain) then
+      if level == 0 then
+        cantrips = cantrips + 1
+      else
+        spells = spells + 1
+      end
+    end
+  end
+  return cantrips, spells
+end
+
 -- Validation function
 function validators.sheet(context, sheet)
   if not empty(sheet.WIS) and empty(sheet['PASSIVE PERCEPTION']) then
     verrorf(context, 'WIS is present but PASSIVE PERCEPTION is missing')
     -- no need to fix here; extend() handles it
+  end
+  for _, key in ipairs {'SPELLS PREPARED', 'SPELLS KNOWN', 'CANTRIPS KNOWN' } do
+--    eprintf('check %s == %s\n', key, friendly(sheet[key]))
+    if not empty(sheet[key]) then
+      local n = eval_prepcount(sheet, sheet[key])
+      local cantrips, spells = spellcounts(sheet.MAGIC or nothing)
+      local what     = key:find 'CANTRIPS' and 'cantrips' or 'spells'
+      local how_many = key:find 'CANTRIPS' and cantrips or spells
+      if n > how_many then
+        verrorf('character can know %d %s, but they only know %d', n, what, how_many)
+      elseif n < how_many then
+        verrorf('character can only know %d %s, but they know %d', n, what, how_many)
+      end
+    end
   end
 end
 
@@ -1528,7 +1576,7 @@ local casting_ability = {
   Wizard    = 'INT',
 }
 
-local function ability_modifier(score)
+function ability_modifier(score)
   return math.floor((score - 10) / 2)
 end
 
