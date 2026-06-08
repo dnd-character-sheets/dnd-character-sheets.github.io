@@ -1216,6 +1216,7 @@ local magic_property = {
   material = 'Material components',
   components = 'What of MSV is required to cast the spell',
   domain = 'the spell is a domain spell',
+  freebie = 'does not count against number of spells caster can know (e.g., domain, circle)',
 }
 
 function validators.components(context, v)
@@ -1230,6 +1231,8 @@ do
   for k in pairs(magic_property) do
     if k == 'components' then
       table.insert(names, '?components:components$s')
+    elseif k == 'freebie' then
+      table.insert(names, '?freebie:s|b')
     else
       table.insert(names, k == 'name' and k or '?' .. k)
     end
