@@ -1317,7 +1317,9 @@ local sheet_validation = ([[
 
     ?SPELL DC:n,
     ?DOMAIN SPELLS:n[1..],
-    ?SPELLS KNOWN:n,
+    ?SPELLS KNOWN:spellcount$s,
+    ?SPELLS PREPARED:spellcount$s,
+    ?CANTRIPS KNOWN:s,
     ?SORCERY POINTS:n,
 
     ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
@@ -1417,6 +1419,20 @@ function validators.level(context, v)
   elseif v.level > 0 and not v.slots then
     verrorf(context, 'spec for level %d is missing its slot count', v.level)
     return { level = v.level, slots = 1 }
+  end
+end
+
+function validators.spellcount(context,v)
+  if v:find '^%s*%d+%s*$' then
+    return tonumber(v)
+  else
+    local n1, n2 = v:match '^%s*(%u+)%s+%+%s+(%u+)%s*$'
+    if not n1 then
+      verrorf(context, 'Expected formula for spells known or prepared; found %q', v)
+      return 3
+    else
+      return {n1, n2}
+    end
   end
 end
 
