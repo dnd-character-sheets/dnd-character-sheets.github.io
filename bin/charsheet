@@ -235,8 +235,8 @@ end
 
 assert(lyaml.dump)
 local function image(v)
-  return lyaml.dump({v}):gsub([[\]], [[\textbackslash{}]])
-                        :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]])
+  return (lyaml.dump({v}):gsub([[\]], [[\textbackslash{}]])
+                         :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]]))
 end
 
 -- return a string with unbalanced {}, if any
