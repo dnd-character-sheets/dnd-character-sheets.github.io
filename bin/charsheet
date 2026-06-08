@@ -1726,8 +1726,9 @@ local function extend(sheet)
     if casting and tonumber(sheet[casting]) then
       confirm_or_set('SPELLCASTING ABILITY', casting)
       local mod = ability_modifier(tonumber(sheet[casting]))
+      confirm_or_set('SPELLCASTING ABILITY MODIFIER', stringf('%d', mod))
       confirm_or_set('SPELL DC', spell_dc(level, mod))
-      confirm_or_set('SPELL ATTACK MODIFIER', stringf('%+d', spell_attack_modifier(level, mod)))
+      confirm_or_set('SPELL ATTACK MODIFIER', stringf('%d', spell_attack_modifier(level, mod)))
     end
   end
 
