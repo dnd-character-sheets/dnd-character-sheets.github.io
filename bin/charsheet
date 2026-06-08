@@ -1303,7 +1303,7 @@ local sheet_validation = ([[
 
   sheet${
     CLASS:nonempty$s,
-    ?LEVEL:n,
+    ?LEVEL:n[1..30],
 
     ?DOCUMENT FONT:docfont$s,
 
