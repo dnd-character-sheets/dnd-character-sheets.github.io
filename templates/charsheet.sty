@@ -1,6 +1,13 @@
 \RequirePackage[margin=7mm,top=4mm]{geometry}
 \RequirePackage{tikz}
-\RequirePackage{times}
+\RequirePackage{iftex}
+\ifPDFTeX
+  \RequirePackage{times}
+\else
+  \RequirePackage{fontspec}
+  \setmainfont{TeX Gyre Termes}[Ligatures=TeX]
+  \setsansfont{TeX Gyre Heros}[Ligatures=TeX]
+\fi
 \RequirePackage{xcolor}
 \RequirePackage{colortbl}
 \RequirePackage{environ}
