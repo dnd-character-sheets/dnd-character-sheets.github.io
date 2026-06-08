@@ -2077,14 +2077,50 @@ local function render_sheet (map)
 end
 
 
------------- reading a sheet file ---------------------------------
+------------ preprocessing YAML ---------------------------------
 
-local function slurp(filename)
-  if filename == '-' or filename == '.' or not filename then
-    return io.stdin:read("*a")
-  else
-    local f = assert(io.open(filename, "r"))
-    local txt = f:read("*a"); f:close(); return txt
+local word_size_limit = 54
+
+local function has_overlong_word(v)
+  local start = 1
+  while start <= #v do
+    local i, j = v:find('%S+', start)
+    if i == nil then
+      return false
+    elseif j - i >= word_size_limit then -- fencepost not relevant here
+      return true
+    else
+      start = j + 1
+    end
+  end
+end
+
+local function split_overlong_words_in(s)
+  local function split_part(s)
+    local inner_parts = { }
+    for i = 1, #s, word_size_limit do
+      table.insert(inner_parts, s:sub(i, i+word_size_limit-1))
+    end
+    return table.concat(inner_parts, ' ')
+  end
+
+  local parts = { }
+  for part in s:gmatch '%S+%s*' do
+    table.insert(parts, #part <= word_size_limit and part or split_part(part))
+  end
+
+  return stringf([[\parbox{\linewidth}{\raggedright{}%s}]], table.concat(parts))
+end
+
+local function split_overlong_words(t)
+  for k, v in pairs(t) do
+    if type(v) == 'table' then
+      split_overlong_words(v)
+    elseif type(v) == 'string' then
+      if has_overlong_word(v) then
+        t[k] = split_overlong_words_in(v)
+      end
+    end
   end
 end
 
@@ -2108,6 +2144,8 @@ local function preprocess(sheet)
       end
     end
   end
+
+  split_overlong_words(sheet)
 
   do -- strip known, empty fields
     local methods = setmetatable({}, default_validator_meta(function(v) return v end))
@@ -2136,11 +2174,23 @@ local function preprocess(sheet)
   return sheet
 end
 
+------------ reading a sheet file ---------------------------------
+
+local function read_all(filename)
+  if filename == '-' or filename == '.' or not filename then
+    return io.stdin:read("*a")
+  else
+    local f = assert(io.open(filename, "r"))
+    local txt = f:read("*a"); f:close(); return txt
+  end
+end
+
 local write_output -- forward declaration
+
 
 local function sheet_of_file(pathname)
   curfile = pathname
-  local yaml_text = slurp(pathname)
+  local yaml_text = read_all(pathname)
   local ok, sheet, msg = pcall(lyaml.load, yaml_text)
   if not ok or type(sheet) ~= 'table' then
     eprintf('charsheet load failed %s\n', (not ok and sheet) or msg or 'YAML loaded as string')
