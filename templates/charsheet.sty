@@ -2356,13 +2356,15 @@
      \expandafter\ifDNDnonempty\expandafter{\key}%
          {\ifx#1\empty
             \xdef#1{\key}%
-            \edef\defined@go{\noexpand\rawgetDND{\key}}%
-            \xdef#2{\defined@go}%
+%            \edef\defined@go{\noexpand\rawgetDND{\key}}%
+%            \xdef#2{\defined@go}%
+             \xdef#2{\noexpand\rawgetDND{\key}}%
           \else
             \ifx#3\empty
               \xdef#3{\key}%
-              \edef\defined@go{\noexpand\rawgetDND{\key}}%
-              \xdef#4{\defined@go}%
+%              \edef\defined@go{\noexpand\rawgetDND{\key}}%
+%              \xdef#4{\defined@go}%
+             \xdef#4{\noexpand\rawgetDND{\key}}%
             \fi
           \fi
          }%
