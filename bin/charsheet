@@ -1832,15 +1832,18 @@ end
 local function normalize(sheet)
   sheet.EQUIPMENT = sheet.EQUIPMENT and normalize_equipment(sheet.EQUIPMENT)
 
-  local magic = { }
-  for _, spell in ipairs(sheet.MAGIC or nothing) do
-    if type(spell) == 'table' and spell['acquired at level'] then
-      -- skip this one
-    else
-      table.insert(magic, spell)
+  if sheet.MAGIC then
+    local magic = { }
+    for _, spell in ipairs(sheet.MAGIC) do
+      if type(spell) == 'table' and spell['acquired at level'] then
+        -- skip this one
+      else
+        table.insert(magic, spell)
+      end
     end
+
+    sheet.MAGIC = magic
   end
-  sheet.MAGIC = magic
 
 end
 
