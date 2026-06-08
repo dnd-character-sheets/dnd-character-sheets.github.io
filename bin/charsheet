@@ -2344,6 +2344,9 @@ function write_output(output)
   elseif fields.output:find '%.pdf$' then
     local command = runlatex:gsub('%$PDFLATEX', shell_quote(pdflatex))
                             :gsub('%$OUTPUT', shell_quote(fields.output))
+    if output:find("[\128-\255]") then
+      command = command:gsub('pdflatex', 'xelatex') -- unicode inside
+    end
     local fd = assert(io.popen(stringf('bash -c %s', shell_quote(command)), 'w'))
     fd:write(output)
     local ok, termination, code = fd:close()
