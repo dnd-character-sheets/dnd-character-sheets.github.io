@@ -87,7 +87,7 @@ ATTACKS:
 #    RANGE: 120 ft.
     NOTES: >-
       Creates 3 darts targeting up to 3 creatures within
-      120 ft. 1d4\psam\ per dart.
+      120 ft. 1d4+1 per dart.
       Casting uses a 1st-level spell slot.
 
 MAGIC FONT: \normalsize
