@@ -57,8 +57,9 @@ attack modifiers or spell DCs, which may change as your character evolves,
 I have defined a handful of custom macros
 In any text field you can write any of the following:
 
-- `\psam` is "plus spell attack modifier" rendered as "+N."
-- `\satk` is "spell attack modifier," preceded by a hard space.
+- `\psam` is "plus spell ability modifier" rendered as "+N."
+- `\psatk` is "plus spell attack modifier" rendered as "+N."
+- `\ssatk` is "spell attack modifier," preceded by a hard space.
 - `\spellattack` is the spell attack modifier *without* the hard space.
 - `\statdc{XXX}` calculates a DC from a stat modifier, as in `\statdc{CON}`.
 - `\spelldc` calculates a DC using the spellcasting modifier for the class, from the `SPELL DC` field.
@@ -635,7 +636,7 @@ MAGIC:
     components: VSM
     material: the stem of a plant with thorns
     description: >-
-        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\satk,
+        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\psatk,
         1d6 piercing damage.  When hitting Large or smaller,
         pull up to 10 feet toward yourself.
     attack: true

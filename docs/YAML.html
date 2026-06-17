@@ -145,9 +145,9 @@ so on.</p></li>
 which may change as your character evolves, I have defined a handful of
 custom macros In any text field you can write any of the following:</p>
 <ul>
-<li><code>\psam</code> is “plus spell attack modifier” rendered as
+<li><code>\psatk</code> is “plus spell attack modifier” rendered as
 “+N.”</li>
-<li><code>\satk</code> is “spell attack modifier,” preceded by a hard
+<li><code>\ssatk</code> is “spell attack modifier,” preceded by a hard
 space.</li>
 <li><code>\spellattack</code> is the spell attack modifier
 <em>without</em> the hard space.</li>
@@ -618,6 +618,8 @@ appears on the GM’s sheet</li>
 <li><code>markers</code>: If set to false, prevent system from marking
 <code>[C]</code> for concentration, and so on</li>
 <li><code>domain</code>: The spell is a domain spell</li>
+<li><code>freebie</code>: The spell doesn’t count against a limit
+(domain spell or circle spell)</li>
 <li><code>acquired at level</code>: A number indicating at what class
 level the spell is acquired</li>
 </ul>
@@ -643,13 +645,13 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Cure Wounds</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">components</span><span class="kw">:</span><span class="at"> VS</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> A touched creature regains 1d8\psam HP.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> A touched creature regains 1d8\psatk HP.</span></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Thorn Whip</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">components</span><span class="kw">:</span><span class="at"> VSM</span></span>
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">material</span><span class="kw">:</span><span class="at"> the stem of a plant with thorns</span></span>
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">    description</span><span class="kw">: </span><span class="ch">&gt;-</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\satk,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\ssatk,</span>
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        1d6 piercing damage.  When hitting Large or smaller,</span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        pull up to 10 feet toward yourself.</span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">attack</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>

@@ -2155,7 +2155,7 @@
 \setDNDfont{DEFAULT LABEL}{\footnotesize} % XXX not used
 \setDND{COLOR}{true}
 
-\newcommand\satk{%  Add to user documentation
+\newcommand\ssatk{%  Add to user documentation
   \ifDNDnonempty{SPELL ATTACK MODIFIER}%
     {~\getDND{SPELL ATTACK MODIFIER}}%
     {}%
@@ -2171,7 +2171,7 @@
   \ifDNDdefined{SPELL DC}{DC~\getDND*{SPELL DC}}{}%
 }
 
-\newcommand\psam{%  Add to user documentation
+\newcommand\psatk{%  Add to user documentation
   \ifDNDnonempty{SPELLCASTING ABILITY MODIFIER}%
 %    {\expandafter\ifnum\rawgetDND{SPELLCASTING ABILITY MODIFIER}>0
 %       \expandafter\signed\expandafter{\rawgetDND{SPELLCASTING ABILITY MODIFIER}}%
@@ -2182,6 +2182,15 @@
     }
     {+?}%
 }
+
+\newcommand\psam{%
+  \ifDNDnonempty{SPELLCASTING ABILITY MODIFIER}%
+    {\edef\go{\noexpand\setcounter{ptemp}{\rawgetDND{SPELLCASTING ABILITY MODIFIER}}}%
+     \go \ifnum\value{ptemp}>0 +\fi \arabic{ptemp}%
+    }
+    {+?}%
+}
+
 
 \newcounter{dcresult}
 
