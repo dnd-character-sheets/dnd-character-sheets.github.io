@@ -49,7 +49,7 @@ $S/wizard.pdf: $S/king-wizard.3.pdf $S/king-wizard.s.pdf
 	pdftk $prereq cat output $target
 
 LUAUTIL=flags inspect osutil tabutil
-LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua}
+LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua} $HOME/src/lua/validate
 
 local-cgi:V: /usr/lib/cgi-bin/render.cgi
 	sudo systemctl reload apache2
