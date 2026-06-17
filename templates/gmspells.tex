@@ -81,9 +81,11 @@
 \begin{document}
 \raggedright
 \newcommand\bracket[1]{$\langle${#1}$\rangle$}
-\def\psam{+\bracket{\footnotesize\textsc{Spell ability modifier}}}
+\def\sam{\bracket{\footnotesize\textsc{Spell ability modifier}}}
 \def\spelldc{\bracket{\footnotesize\textsc{Spell DC}}}
-\def\satk{\bracket{\footnotesize\textsc{Spell Attack}}}
+\def\spellattack{\bracket{\footnotesize\textsc{Spell Attack}}}
+\def\satk{~\spellattack}
+\def\psam{+\spellattack}
 %\columnseprule=0.4pt
 \columnsep=25pt
 \begin{multicols}{3}[\begin{center}\LARGE \textbf{Spells and Features} \end{center}]
