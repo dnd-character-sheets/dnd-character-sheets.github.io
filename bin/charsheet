@@ -1912,7 +1912,7 @@ function scripts.gmspells(arg)
       name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
     end
     local defs = gm_macro_defs(spell)
-    latexf([[\spell{%s}{{%s%s%s}}]], name, defs, escape_tex(description), note)
+    latexf([[\spell{{\let\rlap\relax{}%s}}{{%s%s%s}}]], name, defs, escape_tex(description), note)
   end
 
   local layout = fields.layout or default_layout
