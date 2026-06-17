@@ -1,5 +1,11 @@
 #!/bin/ksh
 
+page=1
+
+case $1 in
+  -[0-9]|-[0-9][0-9]) page="${1#-}"; shift ;;
+esac
+
 target="$1"
 shift
 
@@ -7,7 +13,7 @@ set -A pdfs
 for k in "$@"; do
   tmp=$(mktemp --suffix=.pdf)
   pdfs+=("$tmp")
-  pdftk "$k" cat 1 output "$tmp"
+  pdftk "$k" cat $page output "$tmp"
 done
 pdftk "${pdfs[@]}" cat output $target
 rm -f "${pdfs[@]}"
