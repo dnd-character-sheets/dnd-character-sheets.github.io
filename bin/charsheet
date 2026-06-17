@@ -1266,10 +1266,17 @@ function render.EQUIPMENT(_, eq)
   local encumbrance = { }
   local flatlist = { } -- list of all items in inventory
 
+  local function strip_and_render(item)
+    return render.item((item:gsub('%s+%(%d+%s*stones?%)', '')))
+  end
+
   for _, category in ipairs(equipment.category_order) do
     local items = eq[category]
+    local r = (category:find 'WEAPONS' or category:find 'ARMOR')
+       and strip_and_render
+        or render.item
     if items then -- don't want to insert a blank line into flatlist
-      table.insert(flatlist, render.ipairs(render.item, items))
+      table.insert(flatlist, render.ipairs(r, items))
       table.insert(encumbrance, render.ipairs(app1(render.encumbrance, category), items))
     end
   end
@@ -1280,8 +1287,11 @@ end
 
 function render.encumbrance(category, item)
   assert(category ~= 'UNCATEGORIZED')
-  local stones = item:match '%((%d+) stones?%)'
+  local stripped, stones = item:match '^(.*)%s+%((%d+) stones?%)'
   local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
+  if stripped and (category:find 'ARMOR' or category:find 'WEAPON') then
+    item = stripped
+  end
   return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
 end
 
