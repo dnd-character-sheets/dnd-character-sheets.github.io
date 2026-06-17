@@ -888,7 +888,7 @@ local magic_markers = {
   ritual = 'R',
   bonus = 'B',
   reaction = 'Rx',
-  domain  = 'D',
+  domain = 'D',
 }
 
 local function add_magic_markers(name, thing)
