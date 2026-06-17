@@ -1081,6 +1081,12 @@ end
 local function normalize(sheet)
   sheet.EQUIPMENT = sheet.EQUIPMENT and normalize_equipment(sheet.EQUIPMENT)
 
+  for _, rec in ipairs(sheet.ATTACKS or nothing) do
+    if can_be 'number'(rec.ATTACK) then
+      rec.ATTACK = stringf('%+d', tonumber(rec.ATTACK))
+    end
+  end
+
   if sheet.MAGIC then
     local magic = { }
     for _, spell in ipairs(sheet.MAGIC) do
