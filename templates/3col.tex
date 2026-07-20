@@ -301,10 +301,14 @@
 
 
 
+\newif\ifspellListOpen
+\spellListOpenfalse
+
 \newenvironment{itemize spells}
   {\clubpenalty=10000
    \widowpenalty=10000
    \begin{itemize}[topsep=0pt,itemsep=0pt,leftmargin=6pt,parsep=0pt,labelsep=2pt]
+   \spellListOpentrue
   }%
   {\end{itemize}}
 
@@ -330,7 +334,9 @@
         \ifnum#1=0
            \emph{\normalsize Cantrips:} You can cast these spells as often as you like using 1~action.
         \else
-           \end{itemize spells}
+           \ifspellListOpen
+             \end{itemize spells}
+           \fi
            \smallskip
            \emph{\normalsize Level~#1 spells:} Cast these spells in any combination%
            \ifnum#2>0\relax
@@ -347,7 +353,9 @@
             \item \hspace*{-\fboxsep}{\colorbox{#1}{#2:} #3}%
       }
       \getDND{MAGIC}
-      \end{itemize spells}
+      \ifspellListOpen
+        \end{itemize spells}
+      \fi
     }{}
   }
   ;
