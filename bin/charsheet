@@ -1658,7 +1658,7 @@ local function namelt (t1, t2)
 end
 local function nameeq (t1, t2) return t1.name == t2.name end
 
-local spellprops = { 'spelldc', 'sam', 'spellattack', 'profbonus' }
+local spellprops = { 'spelldc', 'sam', 'spellattack', 'profbonus', 'initial' }
 
 local function spelleq(s1, s2)
   if s1.name ~= s2.name or any(function(p) return s1[p] ~= s2[p] end, spellprops) then
@@ -1898,7 +1898,9 @@ function scripts.gmspells(arg)
   end
   local spells = { } -- need a way to identify features
   for _, sheet in ipairs(docs) do
-    local initial = sheet['CHARACTER NAME'] and sheet['CHARACTER NAME']:match '%a':upper() or '?'
+    local letter = sheet['CHARACTER NAME'] and sheet['CHARACTER NAME']:match '%a'
+                or sheet['CLASS'] and sheet['CLASS']:match '%a'
+    local initial = (letter or '?'):upper()
     local props = { spelldc = sheet['SPELL DC'],
                     sam = sheet['SPELLCASTING ABILITY MODIFIER'],
                     spellattack = sheet['SPELL ATTACK MODIFIER'],
@@ -1928,7 +1930,8 @@ function scripts.gmspells(arg)
       name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
     end
     local defs = gm_macro_defs(spell)
-    latexf([[\spell{{\let\rlap\relax{}%s}}{{%s%s%s}}]], name, defs, escape_tex(description), note)
+    latexf([[\spell{{\let\rlap\relax{}%s\footnotesize\upshape{~(%s)}}}{{%s%s%s}}]],
+      name, spell.initial or '?', defs, escape_tex(description), note)
   end
 
   local layout = fields.layout or default_layout
