@@ -1679,10 +1679,12 @@ local function merge_spells(spells, i, limit)
         for j = i, limit - 1 do
           local spell = spells[j]
           if spell[prop] then
-            table.insert(parts, spell[prop] .. spell.initial)
+            local marker = prop == 'initial' and '' or spell.initial
+            table.insert(parts, spell[prop] .. marker)
           end
         end
-        spells[i][prop] = stringf([[\bracket{%s}]], table.concat(parts, ','))
+        local wrapper = prop == 'initial' and '' or [[\bracket]]
+        spells[i][prop] = stringf([[%s{%s}]], wrapper, table.concat(parts, ','))
       end
     end
     return spells[i]
