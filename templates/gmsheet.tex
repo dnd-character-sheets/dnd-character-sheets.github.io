@@ -196,6 +196,7 @@
     \whenDNDnonempty{MOTIVATION}{\emph{Motivation: \getDND{MOTIVATION}.}\\}%
     \hline
     \end{tabular}%
+    \vskip 0pt plus 5\baselineskip \penalty-200 \vskip 0pt plus -5\baselineskip
   \endgroup
 }
 
@@ -336,8 +337,12 @@
 \newcommand\?{\phantom{1}}
 
 \noindent
-\hspace*{-0.4\linewidth}%
-\begin{minipage}{1.4\linewidth}
+\ifDNDplayer6{%
+  \begin{minipage}{\textwidth}
+}{%
+  \hspace*{-0.4\linewidth}%
+  \begin{minipage}{1.4\linewidth}
+}
 \emph{\Large Durable Effects}
 \par
 \medskip
