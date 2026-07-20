@@ -38,6 +38,7 @@ PROFICIENCIES:
   - Intimidation
   - Medicine
   - Religion
+  -
   - Gaming Set (Dice)
   - Language (Celestine)
   - Language (Common)
@@ -79,20 +80,31 @@ MAGIC:
   - level: 0                  # CANTRIPS
   - name: Light
     description: An object you touch sheds light like a torch for 1 hour.
+    duration: 1 hr
   - name: Sacred Flame
     description: A creature within 60 ft. must make a Dexterity save (DC 13) or take 1d8 radiant damage.
+    save: Dex
   - level: 1
     slots: 2
-  - name: Bless [C]
+  - name: Bless
+    concentration: true
     description: Three creatures within 30 ft. add +1d4 to all attacks and saves for up to 1 minute.
+    duration: 1 min
   - name: Cure Wounds
     description: A creature you touch regains 1d8+3 hit points.
-  - name: Divine Favor [B] [C]
+  - name: Divine Favor
+    bonus: true
+    concentration: true
     description: Your weapon deals +1d4 radiant damage for up to 1 minute.
-  - name: Shield of Faith [B] [C]
+    duration: 1 min
+  - name: Shield of Faith
+    bonus: true
+    concentration: true
     description: A creature within 60 feet gains +2 AC for up to 10 minutes.
+    duration: 10 min
 
 FEATURES:
-  - name: War Priest [B] 3/day
+  - name: War Priest 3/day
+    bonus: true
     description: As a bonus action, make an extra attack when you attack.
 

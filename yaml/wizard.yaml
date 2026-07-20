@@ -71,22 +71,29 @@ MAGIC:
   - level: 0                    # CANTRIPS
   - name: Fire Bolt
     description: Make a ranged spell attack (+5) to deal 1d10 fire damage to a creature within 120 ft.
+    attack: true
   - name: Light
     description: An object you touch sheds light like a torch for 1 hour.
   - name: Mage Hand
     description: For 1 minute, control a ghostly hand that can move or interact with light, unattended objects within 30 ft.
+    duration: 1 min
   - level: 1                    # 1st LEVEL
     slots: 2
   - name: Burning Hands
     description: Creatures in a 15-foot cone take 3d6 fire damage, or half as much if they make a Dexterity save (DC 13).
-  - name: Detect Magic [R]
+    save: Dex
+  - name: Detect Magic
     description: You sense the presence of magic objects within 30 ft.; visible magic objects appear to glow.
-  - name: Identify [R]
+    ritual: true
+  - name: Identify
+    ritual: true
     description: Learn all of the properties of one magic object you are holding.
   - name: Mage Armor
     description: An unarmored creature you touch gains an AC of 13 + their Dexterity modifier for 8 hours.
+    duration: 8 hr
   - name: Magic Missile
     description: Each of three magical bolts of force strikes a target you designate within 120 ft., dealing 1d4+1 force damage.
+    enemy: true
 
 FEATURES:
   - name: Arcane Recovery 1/day
