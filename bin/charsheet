@@ -1003,6 +1003,26 @@ local function extend(sheet)
     end
   end
 
+  -------------------  tag spell levels  ---------------------------
+  if sheet.MAGIC then
+    local level = nil
+    for _, spell in ipairs(sheet.MAGIC) do
+      if type(spell) == 'table' then
+        if spell.level then
+          level = spell.level
+        elseif not spell['acquired at level'] then
+          spell.level = level
+          if tonumber(spell.level) then
+            spell.name =
+              stringf([[\atlevel{%s\/}{%d}]], spell.name, tonumber(spell.level))
+          end
+        end
+      else
+        table.insert(magic, spell)
+      end
+    end
+  end
+
   -- add info markers to spell names
   for thing in named_things(sheet) do
     if thing.markers ~= false then
