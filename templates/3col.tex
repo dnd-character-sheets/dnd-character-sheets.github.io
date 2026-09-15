@@ -316,7 +316,7 @@
 \setdeltay\sectionheight{motivation.south}{bottom right}
 
 
-\ifDNDdefined{FEATURES}{%
+\whenDNDdefined{FEATURES}{%
   %%% XXX drops below bottom right
   \ifDNDnonempty{MAGIC}{\def\myfill{magic}}{\def\myfill{features}}%
   \node (features) [columnbox,height=\sectionheight-\mynodedistance,fill=\myfill,below=of motivation]  {
@@ -326,8 +326,8 @@
     \long\def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
     \long\def\describedColored#1#2#3{\described{#1}{#2}}%
     \getDND{FEATURES}
-    \ifDNDnonempty{SENSES}{\described{Senses}{\getDND{SENSES}}}{}
-    \ifDNDnonempty{MAGIC}{%
+    \whenDNDnonempty{SENSES}{\described{Senses}{\getDND{SENSES}}}
+    \whenDNDnonempty{MAGIC}{%
       \smallskip
       \footnotesize
       \useDNDfont*{MAGIC}%
@@ -357,10 +357,10 @@
       \ifspellListOpen
         \end{itemize spells}
       \fi
-    }{}
+    }
   }
   ;
-}{}
+}
 
 
 
