@@ -891,7 +891,13 @@ local magic_markers = {
   domain = 'D',
 }
 
-local function add_magic_markers(name, thing)
+local freebies = {
+  Druid = [[{\druidcircle}]],
+  Cleric = [[D]],
+}
+setmetatable(freebies, { __index = function() return 'F' end })
+
+local function add_magic_markers(name, thing, class)
   if type(name) ~= 'string' then
     return name
   else
@@ -905,9 +911,13 @@ local function add_magic_markers(name, thing)
           table.insert(tags, tag)
         end
       end
+      if thing.freebie and not thing.domain then
+        table.insert(tags, freebies[class or '?'])
+      end
+
       if #tags > 0 then
         table.sort(tags)
-        return stringf('%s [%s]', name, table.concat(tags, ','))
+        return stringf([[%s \upshape{[%s]}]], name, table.concat(tags, ','))
       else
         return name
       end
@@ -1010,15 +1020,14 @@ local function extend(sheet)
       if type(spell) == 'table' then
         if spell.level then
           level = spell.level
-        elseif not spell['acquired at level'] then
-          spell.level = level
+        end
+        if spell.name and not spell['acquired at level'] then
+          spell.level = spell.level or level
           if tonumber(spell.level) then
-            spell.name =
+            spell.tagged_name =
               stringf([[\atlevel{%s\/}{%d}]], spell.name, tonumber(spell.level))
           end
         end
-      else
-        table.insert(magic, spell)
       end
     end
   end
@@ -1026,7 +1035,10 @@ local function extend(sheet)
   -- add info markers to spell names
   for thing in named_things(sheet) do
     if thing.markers ~= false then
-      thing.name = add_magic_markers(thing.name, thing)
+      thing.name = add_magic_markers(thing.name, thing, sheet.CLASS)
+      if thing.tagged_name then
+        thing.tagged_name = add_magic_markers(thing.tagged_name, thing, sheet.CLASS)
+      end
     end
   end
 
@@ -1236,7 +1248,7 @@ function render.MAGIC(k, v)
 end
 
 function render.spell(thing)
-  if thing.level then
+  if thing.slots or thing.level == 0 and is_singleton_table(thing) then
     return stringf([[\spellslevellabel{%s}{%d}]], thing.level, thing.slots or 0)
   else
     return render.described(thing)
@@ -1947,7 +1959,7 @@ function scripts.gmspells(arg)
   for _, spell in ipairs(spells) do
     local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
     local description = spell.abbrev or spell.description or spell.long
-    local name = escape_tex(spell.name)
+    local name = escape_tex(spell.tagged_name or spell.name)
     if spell.components then
       name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
     end
