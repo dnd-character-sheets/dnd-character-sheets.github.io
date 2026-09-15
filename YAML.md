@@ -604,7 +604,7 @@ In addition, each spell may be labeled with any or all of the following properti
 - `markers`: If set to false, prevent system from marking `[C]` for concentration, and so on
 - `domain`: The spell is a domain spell
 - `freebie`: The spell doesn't count against a limit (domain spell or circle spell)
-- `acquired at level`: A number indicating at what class level the spell is acquired
+- `acquired at level`: A number indicating at what class level the spell will be acquired in the future
 
 If a spell has the `attack`, `save`, or `enemy` property, that
 spell will be displayed using an "attack color."  (Provided the
