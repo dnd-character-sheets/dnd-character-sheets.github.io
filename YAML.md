@@ -98,6 +98,9 @@ in a YAML file:
 - Saving-throw modifiers `STR SAVING`, `DEX SAVING`, `CON SAVING`, `INT SAVING`, `WIS SAVING`, and `CHA SAVING` are calculated automatically based on the `CLASS`.  (The class determines the character's saving-throw proficiencies.)
 - `SPELL ATTACK MODIFIER` and `SPELLCASTING ABILITY MODIFIER` are calculated automatically for spellcasters.
 - `PROFICIENCY BONUS` is calculated automatically based on LEVEL.
+- `BONUS ACTIONS` and `REACTIONS` are assembled automatically from the
+  `FEATURES` entries marked `bonus: true` or `reaction: true`; they are
+  not settable directly.
 
 Other calculated keys may be included, but when they are absent, the rendering engine calculates them:
 
