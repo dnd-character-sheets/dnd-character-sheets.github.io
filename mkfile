@@ -32,6 +32,14 @@ draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/
 qstest:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
+# Steps run one at a time, in the shell script below, rather than as mk
+# prerequisites: formcrash runs many pdflatex jobs back to back, and a
+# concurrent pdflatex job from another target corrupts its results.
+test:V:
+	mk qstest
+	testing/formcrash
+	testing/formcrash testing/crashers/*.yaml
+
 &.test:VQ: /tmp/&-test.pdf /tmp/&.yaml
 	yamllint -d '{extends: default, rules: { document-start: disable } }' /tmp/$stem.yaml
 	charsheet -o /dev/null -s /tmp/$stem.yaml
