@@ -80,7 +80,7 @@ publish:V: test $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $REMOTE/render.cgi $REMOTEHOST:$REMOTEWEBPATH/cgi-bin/render-charsheet.cgi
 	rsync -avP $REMOTE/render.cgi $REMOTEHOST:www/cgi-bin/$REMOTECGINAME
 
-GITDOCS=index.html README.html YAML.html QUICKSTART.html \
+GITDOCS=index.html README.html YAML.html QUICKSTART.html CHANGELOG.html \
         mario.pdf mario-preview.png gmsheet.pdf gmsheet-preview.png
 
 github:V: ${GITDOCS:%=docs/%}

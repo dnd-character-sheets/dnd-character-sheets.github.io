@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Changelog</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="charsheet.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Changelog</h1>
+</header>
+<h1 id="changelog">Changelog</h1>
+<p>Entries are dated, not versioned — this project doesn’t use version
+numbers (the web form has its own separate, food-themed version string,
+unrelated to this file).</p>
+<h2 id="release-readiness-pass">2026-09-16 — Release-readiness pass</h2>
+<p>A broad correctness and hygiene pass ahead of the first public
+push.</p>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li>Validation now correctly reports type, range, required-key, and
+unexpected-key problems it was silently missing before (out-of-range
+ability scores, non-Boolean flags, missing required <code>ATTACKS</code>
+fields, and more) — the fix landed in the shared
+<code>validate.dsl</code> library this project depends on, not in this
+repo directly.</li>
+<li>A YAML document that never sets <code>ATTACKS</code> at all no
+longer crashes every layout.</li>
+<li>Several character sheets that rendered fine on one layout but
+crashed on another (a free-text <code>ATTACK</code> value,
+<code>PASSIVE PERCEPTION</code> over a layout’s built-in numeric limit,
+an empty <code>PROFICIENCIES</code> list, a <code>MAGIC</code> list with
+no level markers, a <code>FEATURES</code> description containing
+<code>\par</code>, <code>EQUIPMENT</code> positioned relative to a
+<code>FEATURES</code> section that didn’t exist) now render correctly on
+all three layouts.</li>
+<li>An extremely long, unbroken value in a coin field
+(<code>CP</code>/<code>SP</code>/etc.) that got rejected by validation
+could leave the rendered PDF’s error page malformed. Fixed by only ever
+LaTeX-wrapping long values at render time, after validation has already
+seen the real value.</li>
+<li>The web backend (<code>render.cgi</code>) now actually enforces its
+render timeout — previously it only bounded <code>charsheet</code>
+itself, not the <code>pdflatex</code>/<code>xelatex</code> process it
+starts, which could keep running (and consuming CPU) indefinitely past
+the configured limit.</li>
+<li>The web backend no longer echoes raw Lua tracebacks or LaTeX’s
+internal compile log to whoever submitted a sheet; only
+<code>charsheet</code>’s own intentional, user-facing messages are
+shown. The full detail is still saved locally for debugging.</li>
+<li>The web backend’s CORS policy is now consistent between the
+preflight request and the actual response — previously only the
+preflight checked the origin allowlist.</li>
+<li>A symlink planted at the backend’s fixed debug-capture path could
+previously redirect that write to an attacker-chosen file.</li>
+</ul>
+<h3 id="added">Added</h3>
+<ul>
+<li><code>mk test</code> runs the full regression suite
+(<code>testing/formcrash</code>’s fuzz sweep, the hand-built
+<code>testing/crashers</code> corpus, and the <code>QUICKSTART.html</code>
+round-trip check) and is now a prerequisite of every target that
+actually ships something (<code>bundle</code>, <code>publish</code>,
+<code>push</code>).</li>
+<li><code>testing/formcrash</code> runs under GNU parallel (one job per
+core by default; set <code>$NPROC</code> to override) — the full sweep
+dropped from about 6 minutes to well under 2.</li>
+<li>Documented several accepted-but-previously-undocumented
+<code>YAML.html</code> keys (<code>SPELLS PREPARED</code>,
+<code>CANTRIPS KNOWN</code>, <code>SUGGESTED NAMES</code>,
+<code>SUGGESTED MOTIVATIONS</code>, the shared spell-count formula
+syntax).</li>
+<li>A private/public repository split: this repository (and its full
+history) stays private; <code>lib/sync-public</code> maintains a
+filtered public mirror with private-only paths removed from every
+commit, not just the current tree.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>Repo cleanup: removed stray editor backup files, dead
+<code>.gitignore</code> entries, and a personal filesystem path from
+<code>AGENTS.md</code>.</li>
+</ul>
+</body>
+</html>
