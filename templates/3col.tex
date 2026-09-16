@@ -461,7 +461,9 @@
         anchor=south east,at=(stats background.south -| saving throws.east)]
    {\nodepart{label}PROFICIENCIES\nodepart{text}%
 \begin{proflist}
-   \getDND*{PROFICIENCIES}
+  \ifDNDnonempty{PROFICIENCIES}
+     {\getDND{PROFICIENCIES}}
+     {\item (No proficiencies listed.)}
 \end{proflist}
    }
    ;
