@@ -91,9 +91,28 @@ capture_debug() {
 # Keep the last submitted sheet around for local inspection.
 capture_debug "$INPUT" /tmp/last-charsheet.yaml || true
 
+# to keep typesetting from running too long,
+# setsid makes charsheet the leader of a new
+# process group, so a negative-PID kill reaches the
+# whole tree it spawns, typesetting run included.
+
 set +e
-timeout "${RENDER_TIMEOUT_SECS}s" "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT"
+setsid "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT" &
+child=$!
+
+timed_out=0
+(
+  sleep "$RENDER_TIMEOUT_SECS"
+  kill -TERM -- "-$child" 2>/dev/null && : > "$TMPDIR/timed_out"
+  sleep 2
+  kill -KILL -- "-$child" 2>/dev/null
+) &
+watchdog=$!
+
+wait "$child"
 rc=$?
+kill "$watchdog" 2>/dev/null
+wait "$watchdog" 2>/dev/null
 set -e
 
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
