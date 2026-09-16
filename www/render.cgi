@@ -91,31 +91,44 @@ capture_debug() {
 # Keep the last submitted sheet around for local inspection.
 capture_debug "$INPUT" /tmp/last-charsheet.yaml || true
 
-# to keep typesetting from running too long,
-# setsid makes charsheet the leader of a new
-# process group, so a negative-PID kill reaches the
-# whole tree it spawns, typesetting run included.
+# run_with_timeout SECS TIMED_OUT_VAR CMD [ARGS...]
+# Runs CMD as the leader of its own process group, so a single signal
+# reaches everything it spawns, typesetting run included. Sets the
+# variable named by TIMED_OUT_VAR to 1 if CMD was still running after
+# SECS (in which case it is stopped: SIGTERM, then SIGKILL after a 2s
+# grace period) or 0 if it finished on its own. Returns CMD's own exit
+# status.
+run_with_timeout() {
+  local secs="$1" timed_out_var="$2"
+  shift 2
+  local flag
+  flag="$(mktemp)"
+
+  setsid "$@" &
+  local child=$!
+  (
+    sleep "$secs"
+    kill -TERM -- "-$child" 2>/dev/null && echo timed_out > "$flag"
+    sleep 2
+    kill -KILL -- "-$child" 2>/dev/null
+  ) &
+  local watchdog=$!
+
+  wait "$child"
+  local rc=$?
+  kill "$watchdog" 2>/dev/null
+  wait "$watchdog" 2>/dev/null
+
+  [[ -s "$flag" ]] && printf -v "$timed_out_var" 1 || printf -v "$timed_out_var" 0
+  rm -f "$flag"
+  return "$rc"
+}
 
 set +e
-setsid "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT" &
-child=$!
-
-timed_out=0
-(
-  sleep "$RENDER_TIMEOUT_SECS"
-  kill -TERM -- "-$child" 2>/dev/null && : > "$TMPDIR/timed_out"
-  sleep 2
-  kill -KILL -- "-$child" 2>/dev/null
-) &
-watchdog=$!
-
-wait "$child"
+run_with_timeout "$RENDER_TIMEOUT_SECS" timed_out \
+  "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT"
 rc=$?
-kill "$watchdog" 2>/dev/null
-wait "$watchdog" 2>/dev/null
 set -e
-
-[[ -e "$TMPDIR/timed_out" ]] && timed_out=1
 
 if (( timed_out )); then
   echo -e "Status: 504 Gateway Timeout\r"
