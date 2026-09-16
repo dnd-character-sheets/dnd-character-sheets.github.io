@@ -1,23 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Origin allowlist. Computed once, here, and used for BOTH the OPTIONS
+# preflight below and the real POST response render.cgi sends further
+# down (this file is concatenated in front of it -- see mkfile). Echoes
+# "*" for a non-browser request (no Origin header at all), the exact
+# origin when it's on the allowlist, or the empty string when it's set but not
+# allowed -- the empty case matters and is not the same as "*": it means
+# "omit the Access-Control-Allow-Origin header", i.e. deny.
+allowed_origin() {
+  local origin="${HTTP_ORIGIN:-}"
+  if [[ -z "$origin" ]]; then
+    echo '*'
+    return
+  fi
+  case "$origin" in
+    https://www.cs.tufts.edu|https://www.cs.tufts.edu/*|\
+    https://dnd-character-sheets.github.io|\
+    https://nr.chickenkiller.com*|http://nr.chickenkiller.com*\
+    )
+      echo "$origin"
+      ;;
+  esac
+}
+
+ORIGIN="$(allowed_origin)"
 
 if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
 
-  ORIGIN="${HTTP_ORIGIN:-}"
-
   echo -e "Status: 200 OK\r"
-  if [[ -z "$ORIGIN" ]]; then
-    echo -e "Access-Control-Allow-Origin: *\r"
-  else
-    case "$ORIGIN" in
-      https://www.cs.tufts.edu|https://www.cs.tufts.edu/*|\
-      https://dnd-character-sheets.github.io|\
-      https://nr.chickenkiller.com*|http://nr.chickenkiller.com*\
-      )
-        echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
-        ;;
-    esac
+  if [[ -n "$ORIGIN" ]]; then
+    echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
   fi
   echo -e "Access-Control-Allow-Headers: Content-Type\r"
   echo -e "Content-Type: text/plain\r"
