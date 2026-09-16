@@ -349,8 +349,11 @@
         \fi
         \begin{itemize spells}
       }
-      \long\def\described#1#2{\item #1: #2}%
+      \long\def\described#1#2{%
+        \ifspellListOpen\else\begin{itemize spells}\fi
+        \item #1: #2}%
       \long\def\describedColored#1#2#3{%
+            \ifspellListOpen\else\begin{itemize spells}\fi
             \item \hspace*{-\fboxsep}{\colorbox{#1}{#2:} #3}%
       }
       \getDND{MAGIC}
