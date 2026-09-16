@@ -145,6 +145,8 @@ so on.</p></li>
 which may change as your character evolves, I have defined a handful of
 custom macros In any text field you can write any of the following:</p>
 <ul>
+<li><code>\psam</code> is “plus spell ability modifier” rendered as
+“+N.”</li>
 <li><code>\psatk</code> is “plus spell attack modifier” rendered as
 “+N.”</li>
 <li><code>\ssatk</code> is “spell attack modifier,” preceded by a hard
@@ -187,6 +189,10 @@ proficiencies.)</li>
 for spellcasters.</li>
 <li><code>PROFICIENCY BONUS</code> is calculated automatically based on
 LEVEL.</li>
+<li><code>BONUS ACTIONS</code> and <code>REACTIONS</code> are assembled
+automatically from the <code>FEATURES</code> entries marked
+<code>bonus: true</code> or <code>reaction: true</code>; they are not
+settable directly.</li>
 </ul>
 <p>Other calculated keys may be included, but when they are absent, the
 rendering engine calculates them:</p>
@@ -280,6 +286,14 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <li><code>"BACKGROUND": "Hermit"</code></li>
 <li><code>BACKGROUND: Acolyte</code></li>
 <li><code>BACKGROUND: Town Watch</code></li>
+</ul>
+<h4 id="cantrips-known"><code>CANTRIPS KNOWN</code></h4>
+<p>A number that may be used for cantrip tracking, checked against the
+cantrips listed in <code>MAGIC</code>. May appear only on the GM’s
+sheet. Accepts the same formula syntax as <code>SPELLS KNOWN</code> (see
+below).</p>
+<ul>
+<li><code>CANTRIPS KNOWN: 3</code></li>
 </ul>
 <h4 id="cha"><code>CHA</code></h4>
 <p>The Charisma ability score, a number, as in <code>CHA: 15</code>.</p>
@@ -621,7 +635,7 @@ appears on the GM’s sheet</li>
 <li><code>freebie</code>: The spell doesn’t count against a limit
 (domain spell or circle spell)</li>
 <li><code>acquired at level</code>: A number indicating at what class
-level the spell is acquired</li>
+level the spell will be acquired in the future</li>
 </ul>
 <p>If a spell has the <code>attack</code>, <code>save</code>, or
 <code>enemy</code> property, that spell will be displayed using an
@@ -645,13 +659,13 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Cure Wounds</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">components</span><span class="kw">:</span><span class="at"> VS</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> A touched creature regains 1d8\psatk HP.</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> A touched creature regains 1d8\psam HP.</span></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Thorn Whip</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">components</span><span class="kw">:</span><span class="at"> VSM</span></span>
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">material</span><span class="kw">:</span><span class="at"> the stem of a plant with thorns</span></span>
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">    description</span><span class="kw">: </span><span class="ch">&gt;-</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\ssatk,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        A vine-like whip lashes at a creature within 30 ft.  Melee spell attack\psatk,</span>
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        1d6 piercing damage.  When hitting Large or smaller,</span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        pull up to 10 feet toward yourself.</span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">attack</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
@@ -833,10 +847,25 @@ id="spellcasting-ability-modifier-calculated-by-the-system"><code>SPELLCASTING A
 (calculated by the system)</h4>
 <p>The modifier for your spellcasting ability.</p>
 <h4 id="spells-known"><code>SPELLS KNOWN</code></h4>
-<p>A number that may be used for spell tracking. May appear only on the
-GM’s sheet.</p>
+<p>A number that may be used for spell tracking. May appear only on the
+GM’s sheet. Instead of a plain number, you may give a formula: two
+ability names, or an ability name and <code>LEVEL</code>, joined by
+<code>+</code>, e.g. <code>INT + LEVEL</code>. Each name contributes its
+ability modifier, except <code>LEVEL</code>, which contributes the
+character’s <code>LEVEL</code> directly. <code>SPELLS PREPARED</code>
+and <code>CANTRIPS KNOWN</code> accept the same formula syntax.</p>
 <ul>
 <li><code>SPELLS KNOWN: 5</code></li>
+<li><code>SPELLS KNOWN: INT + LEVEL</code></li>
+</ul>
+<h4 id="spells-prepared"><code>SPELLS PREPARED</code></h4>
+<p>A number that may be used for spell tracking, checked against the
+spells listed in <code>MAGIC</code>. May appear only on the GM’s sheet.
+Accepts the same formula syntax as <code>SPELLS KNOWN</code> (see
+above).</p>
+<ul>
+<li><code>SPELLS PREPARED: 5</code></li>
+<li><code>SPELLS PREPARED: WIS + LEVEL</code></li>
 </ul>
 <h4 id="stones"><code>STONES</code></h4>
 <p>A Boolean. In some layouts, causes an extra page to be added that can
@@ -851,10 +880,19 @@ stone system</a>.</p>
 proficiency in Strength, the rendering engine defines
 <code>STR SAVING</code> to be <code>true</code>. Otherwise
 <code>STR SAVING</code> is left undefined.</p>
-<p><strong>Usage</strong>: Strength ability score <strong>Type</strong>:
-Number <strong>Template Usage</strong>: Displayed in stats column with
-calculated modifier <strong>Examples</strong>: - <code>STR: 17</code> -
-<code>STR: 8</code> - <code>STR: 9</code> - <code>STR: 16</code></p>
+<h4 id="suggested-motivations"><code>SUGGESTED MOTIVATIONS</code></h4>
+<p>A list of strings. On the 3-column layout only, rendered as a
+bulleted list next to <code>MOTIVATION</code>, to help a player
+personalize a pregenerated character.</p>
+<ul>
+<li><code>SUGGESTED MOTIVATIONS: ["Avenge my family", "Prove myself worthy"]</code></li>
+</ul>
+<h4 id="suggested-names"><code>SUGGESTED NAMES</code></h4>
+<p>A list of strings. On the 3-column layout only, rendered as a
+bulleted list to help a player personalize a pregenerated character.</p>
+<ul>
+<li><code>SUGGESTED NAMES: ["Alric", "Bryn", "Cassia"]</code></li>
+</ul>
 <h4 id="traits"><code>TRAITS</code></h4>
 <p>A list of tables each containing a <code>name</code> and
 <code>description</code> key. May be used for the character’s
