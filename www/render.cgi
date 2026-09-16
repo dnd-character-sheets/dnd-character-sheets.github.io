@@ -62,15 +62,6 @@ if (( ACTUAL != CL )); then
   exit 0
 fi
 
-if false; then
-  echo -e "Status: 200 OK\r"
-  echo -e "Content-Type: text/plain; charset=utf-8\r"
-  echo -e "Access-Control-Allow-Origin: $ORIGIN\r"
-  echo -e "\r"
-  cat "$INPUT"
-  exit 0
-fi
-
 # Optional: export runtime env for charsheet here
 # export TEMPLATES_DIR="/srv/charsheet/templates"
 # export FONTS_DIR="/srv/charsheet/fonts"
