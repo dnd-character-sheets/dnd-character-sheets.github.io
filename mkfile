@@ -36,7 +36,7 @@ test:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable } }' /tmp/$stem.yaml
 	charsheet -o /dev/null -s /tmp/$stem.yaml
 
-$QYAMLS: QUICKSTART.md lib/yaml-from-md
+$QYAMLS /tmp/QUICKSTART.yaml: QUICKSTART.md lib/yaml-from-md
 	lib/yaml-from-md QUICKSTART.md > /tmp/QUICKSTART.yaml
 
 /tmp/&-test.pdf: /tmp/&.yaml
