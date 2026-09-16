@@ -277,8 +277,8 @@
       \par\smallskip
       \advance\baselineskip by 2pt \selectfont
       \def\spellslevellabel#1#2{\ignorespaces\relax}%
-      \def\describedColored#1#2#3{\emph{#2}\\}%
-      \def\described#1#2{\emph{#1}\\}%
+      \long\def\describedColored#1#2#3{\emph{#2}\\}%
+      \long\def\described#1#2{\emph{#1}\\}%
       \rawgetDND{MAGIC}%
      }
      \end{merman attacks}
@@ -290,7 +290,7 @@
       \node[text width=4.3cm, anchor=north] 
        (features)
         at (173, 0 |- attacks etc.north)
-       {\def\described#1#2{%
+       {\long\def\described#1#2{%
            \hangindent=2em \hangafter=1
            \scriptsize #1: \tiny #2 \par
         }
