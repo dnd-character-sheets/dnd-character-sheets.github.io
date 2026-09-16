@@ -76,19 +76,20 @@ fi
 # export TEMPLATES_DIR="/srv/charsheet/templates"
 # export FONTS_DIR="/srv/charsheet/fonts"
 
-# Debug capture: keep the last submitted sheet around for local inspection.
-# Write through a mktemp'd file and mv (an atomic rename) into the
-# well-known name, rather than cp'ing straight over it: cp follows a
-# symlink at the destination, so a symlink planted at /tmp/last-charsheet.yaml
-# could redirect the write to an attacker-chosen target; rename() replaces
-# the symlink itself instead of the file it points to. Best-effort -- a
-# failure here must never block PDF rendering for the user.
-{
-  debug_tmp="$(mktemp /tmp/charsheet-debug.XXXXXX)" &&
-  cp "$INPUT" "$debug_tmp" &&
-  chmod 644 "$debug_tmp" &&
-  mv -f "$debug_tmp" /tmp/last-charsheet.yaml
-} || true
+# Best-effort: write $1 (a source file) through a mktemp'd file and mv
+# (an atomic rename) into place at $2, rather than cp'ing straight over
+# it: cp follows a symlink at the destination, so a symlink planted at
+# a well-known debug path could redirect the write to an
+# attacker-chosen target; rename() replaces the symlink itself instead
+# of the file it points to. Never blocks the response.
+capture_debug() {
+  local src="$1" dst="$2" tmp
+  tmp="$(mktemp "$dst.XXXXXX")" || return 0
+  cp "$src" "$tmp" && chmod 644 "$tmp" && mv -f "$tmp" "$dst"
+}
+
+# Keep the last submitted sheet around for local inspection.
+capture_debug "$INPUT" /tmp/last-charsheet.yaml || true
 
 set +e
 timeout "${RENDER_TIMEOUT_SECS}s" "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT"
