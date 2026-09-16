@@ -9,8 +9,13 @@
 --       chosen to keep it all in one giant file.
 
 ------------------ classic print functions ---------------------
+
+local basename = arg[0]:gsub('^.*/', '')
+
 local stringf = string.format
-local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function eprintf(...)
+  return io.stderr:write(basename, ': ', stringf(...))
+end
 local function dief(...) eprintf(...); os.exit(1) end
 local function errorf(...) error(stringf(...), 2) end
 local function outf(out, ...)
@@ -1608,7 +1613,7 @@ local function fill_template(assignments, layout)
   local pathname = stringf('%s/%s.tex', fields.templates, layout)
   local template, msg = contents(pathname)
   if not template then
-    eprintf('%s\n', msg)
+    io.stderr:write(msg, '\n') -- don't use eprintf, which leaks to web client
     os.exit(1)
   else
     local images = { 'splash.png', 'merman.pdf', 'splash-nocolor.png' }

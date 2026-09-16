@@ -126,6 +126,20 @@ if (( timed_out )); then
   exit 0
 fi
 
+# tagged_messages FILE TAG
+# Extracts the text bin/charsheet wrote through its own eprintf, which
+# tags every line with "TAG: ". A message whose format starts with a
+# newline puts the tag alone on its own line, with the content on the
+# next line, so a tag-only line also pulls in the line right after it.
+tagged_messages() {
+  local file="$1" tag="$2: "
+  awk -v tag="$tag" '
+    $0 == tag            { want_next = 1; next }
+    want_next            { print; want_next = 0; next }
+    index($0, tag) == 1  { print substr($0, length(tag) + 1) }
+  ' "$file"
+}
+
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   # Error messages should not be allowed to leak server paths or
   # software versions.  So stderr is filtered aggressively to allow
@@ -135,9 +149,7 @@ if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   capture_debug "$STDERR" /tmp/last-charsheet.stderr.txt || true
   capture_debug "$STDOUT" /tmp/last-charsheet.stdout.txt || true
 
-  safe_stderr="$(grep -E \
-    '^(Validation error|charsheet load failed|Unbalanced braces in|Validation failed in strict mode)' \
-    "$STDERR" || true)"
+  safe_stderr="$(tagged_messages "$STDERR" "$(basename "$CHARSHEET_CMD")")"
 
   echo -e "Status: 400 Bad Request\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
