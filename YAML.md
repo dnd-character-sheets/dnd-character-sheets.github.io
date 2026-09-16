@@ -927,14 +927,6 @@ Strength,
 the rendering engine defines `STR SAVING` to be `true`.
 Otherwise `STR SAVING` is left undefined.
 
-**Usage**: Strength ability score
-**Type**: Number
-**Template Usage**: Displayed in stats column with calculated modifier
-**Examples**:
-- `STR: 17`
-- `STR: 8`
-- `STR: 9`
-- `STR: 16`
 
 
 
