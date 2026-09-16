@@ -928,6 +928,22 @@ the rendering engine defines `STR SAVING` to be `true`.
 Otherwise `STR SAVING` is left undefined.
 
 
+#### `SUGGESTED MOTIVATIONS`
+
+A list of strings.  On the 3-column layout only, rendered as a bulleted
+list next to `MOTIVATION`, to help a player personalize a pregenerated
+character.
+
+- `SUGGESTED MOTIVATIONS: ["Avenge my family", "Prove myself worthy"]`
+
+
+
+#### `SUGGESTED NAMES`
+
+A list of strings.  On the 3-column layout only, rendered as a bulleted
+list to help a player personalize a pregenerated character.
+
+- `SUGGESTED NAMES: ["Alric", "Bryn", "Cassia"]`
 
 
 #### `TRAITS`
