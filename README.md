@@ -111,6 +111,11 @@ To help you get started, I have provided some pregenerated characters to play 
     Click to save Mario's sheet on your machine.
     (By default, a YAML file that you download is named for the character, or if there is no character name, for the character's class.)
 
+This is a hobby project, and the web hosting has been graciously
+provided by friends at Tufts.
+Don't expect it always to be up or to last forever, and please don't
+abuse my friends' generosity. 
+
 The web form works just fine,
 but if you are an experienced computer user, 
 you may prefer to edit your YAML character sheet on your own machine.
@@ -230,6 +235,13 @@ My YAML doesn't support all of D&D 5e.
 Although I have some training in information design,
 I am not a graphic designer.
 If you want another layout, please open [a Github issue](https://github.com/dnd-character-sheets/dnd-character-sheets.github.io/issues).
+
+## Privacy
+
+Your YAML is sent to my server, but it stays there only long enough to
+render your PDF—I don't keep it archivally.
+I *do* keep a copy of the most recently submitted sheet, to help with
+debugging.
 
 ## AI
 
