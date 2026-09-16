@@ -115,6 +115,17 @@ kill "$watchdog" 2>/dev/null
 wait "$watchdog" 2>/dev/null
 set -e
 
+[[ -e "$TMPDIR/timed_out" ]] && timed_out=1
+
+if (( timed_out )); then
+  echo -e "Status: 504 Gateway Timeout\r"
+  echo -e "Content-Type: text/plain; charset=utf-8\r"
+  cors_header
+  echo -e "\r"
+  echo "PDF rendering exceeded the ${RENDER_TIMEOUT_SECS}s limit and was stopped."
+  exit 0
+fi
+
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   echo -e "Status: 400 Bad Request\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
