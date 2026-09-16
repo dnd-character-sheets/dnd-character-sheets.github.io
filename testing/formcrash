@@ -1,0 +1,335 @@
+#!/bin/ksh
+# formcrash -- fuzz the web form's scalar fields looking for inputs that crash
+# bin/charsheet or break PDF generation.
+#
+# Threat model (see the project's stress-test notes): a user of the web form can
+# only set the values the form emits.  This harness exercises the FREE-TEXT and
+# NUMBER form fields -- the ones a casual user types into -- by taking a base
+# YAML that renders cleanly and, one field at a time, replacing that field's
+# value with an adversarial payload.  Each mutated sheet is run two ways:
+#
+#       charsheet -s        emit macros only (no LaTeX).  A nonzero exit here is
+#                           a charsheet-level crash: a Lua error in validation,
+#                           coercion, or pre-render code -- a real bug.
+#       charsheet -q -o pdf the full pipeline the back end runs.  If -s passed
+#                           but this fails to produce a PDF, the failure is in
+#                           LaTeX (an escaping gap).
+#
+# So each case is classed OK / CRASH (charsheet) / LATEX (no PDF).  Mutated
+# sheets that crash or fail are saved under the crashers directory so the report
+# is reproducible.
+#
+# Scope, per the project owner's decisions:
+#   * Form fields only.  Arbitrary uploaded YAML is a separate, future job, so
+#     structured fields routed through the form's JavaScript (EQUIPMENT,
+#     PROFICIENCIES, ATTACKS, FEATURES, MAGIC) are NOT fuzzed here.
+#   * The back end escapes every LaTeX special except \ { }, which are
+#     undefendable.  Payloads containing \ { } are therefore skipped: a PDF
+#     failure that needs them is out of scope.  A failure WITHOUT them is a
+#     finding (the escaping leaked, or charsheet crashed).
+#
+# Payloads are injected with charsheet's own YAML library (lyaml), so the
+# mutated file is guaranteed parseable and the value is coerced exactly as a
+# real run would coerce it.  Every field's payload is injected as a string;
+# charsheet's schema does the number coercion, which is the code under test.
+#
+# With one or more YAML files named on the command line, the fuzzer is skipped
+# entirely: each named file is run through the same two-phase classification as
+# is (no mutation, nothing saved).  This is handy for re-checking the saved
+# reproducers or the hand-built testing/crashers corpus after a fix.
+#
+# Cases run under GNU parallel: this script re-invokes itself in a hidden
+# worker mode (--worker), one process per case, so many cases classify at
+# once instead of one at a time.  -j defaults to one job per core (parallel's
+# own "100%"); set $NPROC to run a specific number of jobs at once instead.
+# --keep-order makes the report come out in the same case-number order
+# regardless of which job finishes first.
+#
+# Report -> stdout; progress/summary -> stderr; exits nonzero if any case
+# crashed charsheet or failed to produce a PDF.
+
+here=$(cd "$(dirname "$0")/.." && pwd)
+cs=${cs:-$here/bin/charsheet}
+
+# Pin the interpreter.  charsheet's shebang is lua5.1; running it through an
+# explicit lua5.1 (rather than relying on the shebang and the caller's PATH)
+# keeps results reproducible even when the harness is launched from a login
+# shell whose PATH resolves lua differently.  Override with $LUA if needed.
+lua=${LUA:-lua5.1}
+
+njobs=${NPROC:-100%}                 # GNU parallel job count; $NPROC overrides
+
+# A worker process (see --worker below) inherits base/crashdir/quick/save from
+# the driver's environment, so each ${var:-default} here only supplies the
+# default when nothing was inherited -- the driver's own CLI flags (-b -d -q
+# -n, below) still take effect the normal way for the driver itself.
+base=${base:-$here/yaml/cleric.yaml}          # a sheet that renders cleanly to PDF
+crashdir=${crashdir:-$here/testing/formcrash-cases} # harness-owned; wiped at each run
+quick=${quick:-false}                # -q: skip the (slower) PDF phase
+verbose=false                        # -v: list OK rows too
+save=${save:-true}                   # -n: do not save crash reproducers
+
+usage() {
+  print -u2 "usage: $0 [options]            fuzz the form's fields against a base sheet"
+  print -u2 "       $0 [options] FILE...    classify the named YAML files as-is (no mutation)"
+  print -u2 ""
+  print -u2 "  -b FILE   base sheet to mutate in fuzz mode (default: yaml/cleric.yaml)"
+  print -u2 "  -d DIR    where reproducer YAMLs are saved in fuzz mode (default: testing/formcrash-cases)"
+  print -u2 "  -q        quick: run only charsheet validation (Phase A); skip the slow PDF build"
+  print -u2 "  -v        also print the cases that pass (OK rows)"
+  print -u2 "  -n        do not save reproducers or wipe the reproducer directory"
+  print -u2 "  -h        show this help and exit"
+  print -u2 ""
+  print -u2 "Jobs run in parallel (GNU parallel); \$NPROC sets how many at once."
+  exit ${1:-2}
+}
+
+# printable PAYLOAD -> a one-line, truncated rendering for the report.
+printable() {
+  typeset s=$1
+  s=${s//$'\n'/\\n}; s=${s//$'\t'/\\t}
+  [ ${#s} -gt 22 ] && s="${s:0:22}..."
+  print -r -- "$s"
+}
+
+# slug TEXT -> filesystem-safe token.
+slug() { print -r -- "$1" | tr -c 'A-Za-z0-9' '-' | sed 's/--*/-/g;s/^-//;s/-$//'; }
+
+# classify FILE -> set ST (OK|CRASH|LATEX) and DETAIL (first diagnostic line) by
+# running charsheet two ways.  Shared by both modes: the fuzzer feeds it mutated
+# sheets, file mode feeds it the files named on the command line.  Uses $tmp,
+# which each caller (a worker, below) sets up for itself.
+classify() {
+  typeset out
+  # Phase A: macros only.  A nonzero exit is a charsheet-level crash.
+  out=$("$lua" "$cs" -s "$1" 2>&1 >/dev/null)
+  if [ $? -ne 0 ]; then
+    ST=CRASH
+    DETAIL=$(print -r -- "$out" | grep -m1 -E 'charsheet:[0-9]+|stack traceback|bad argument|attempt to|assertion')
+    return
+  fi
+  if $quick; then ST=OK; DETAIL=; return; fi
+  # Phase B: full pipeline.  No PDF == LaTeX failure.  Run WITHOUT -q so
+  # pdflatex's scroll-mode chatter (which carries the "! ..." line) is captured.
+  rm -f "$tmp/out.pdf"
+  out=$("$lua" "$cs" -o "$tmp/out.pdf" "$1" 2>&1)
+  if [ $? -ne 0 ] || [ ! -s "$tmp/out.pdf" ]; then
+    ST=LATEX
+    DETAIL=$(print -r -- "$out" | grep -m1 -E '^! ')
+  else
+    ST=OK; DETAIL=
+  fi
+}
+
+# --worker fuzz CASE KEY MODE PAYLOAD-BASE64 : mutate $base's KEY to the given
+# payload, classify the result, print one CASE\tSTATUS\tKEY\tPAYLOAD\tDETAIL
+# result line, and save a reproducer if it's a finding.
+#
+# --worker file CASE FILE : classify FILE as given (no mutation), print one
+# CASE\tSTATUS\tFILE\t-\tDETAIL result line.
+#
+# Either way, this is one GNU parallel job: the driver (below) generates one
+# job per case and lets parallel run many of these worker invocations at once.
+if [ "${1:-}" = --worker ]; then
+  shift
+  wmode=$1; shift
+  tmp=$(mktemp -d) || exit 2
+  trap 'rm -rf "$tmp"' EXIT
+  case $wmode in
+    fuzz)
+      wcase=$1 key=$2 mode=$3 payload=$(print -r -- "$4" | base64 -d)
+      cat >"$tmp/mutate.lua" <<'LUA'
+local lyaml = require 'lyaml'
+local key, val, mode = os.getenv 'KEY', os.getenv 'VAL', os.getenv 'MODE'
+local f = assert(io.open(os.getenv 'BASE'))
+local t = lyaml.load(f:read '*a'); f:close()
+
+-- MODE 'numi' mirrors the form's numberField/classLevel capture, which runs the
+-- typed value through  value ? (parseInt(value) || value) : value  before it
+-- ever reaches the YAML.  So a user typing "1e400" into an ability or LEVEL box
+-- actually emits 1, not infinity.  Reproducing that here keeps the fuzzer
+-- faithful to what the form can emit (otherwise we would report crashes no real
+-- form input can trigger).  Text and raw-number fields inject the value as-is.
+local value = val
+if mode == 'numi' and val ~= '' then
+  local sign, digits = val:match '^%s*([+%-]?)(%d+)'      -- JS parseInt prefix
+  local n = digits and tonumber((sign == '-' and '-' or '') .. digits) or nil
+  if n and n ~= 0 then value = n end                      -- else falls back to val
+end
+t[key] = value
+io.write(lyaml.dump { t })
+LUA
+      mut=$tmp/mut.yaml
+      if ! BASE=$base KEY=$key VAL=$payload MODE=$mode \
+           "$lua" "$tmp/mutate.lua" >"$mut" 2>"$tmp/muterr"; then
+        # The mutator itself failing is not a charsheet bug; report and stop.
+        printf '%s\t%s\t%s\t%s\t%s\n' "$wcase" MUTERR "$key" "$(printable "$payload")" \
+               "$(sed -n 1p "$tmp/muterr")"
+        exit
+      fi
+      classify "$mut"
+      printf '%s\t%s\t%s\t%s\t%s\n' "$wcase" "$ST" "$key" "$(printable "$payload")" "$DETAIL"
+      if [ "$ST" != OK ] && $save; then
+        # The case number keeps filenames unique and cross-references the report:
+        # several all-punctuation payloads slug to the same token and would
+        # otherwise overwrite one another.
+        cp "$mut" "$crashdir/$(printf '%04d' "$wcase")-$ST-$(slug "$key")-$(slug "$payload" | cut -c1-16).yaml"
+      fi
+      ;;
+    file)
+      wcase=$1 f=$2
+      if [ ! -r "$f" ]; then
+        printf '%s\t%s\t%s\t%s\t%s\n' "$wcase" NOFILE "$f" - "cannot read $f"
+        exit
+      fi
+      classify "$f"
+      printf '%s\t%s\t%s\t%s\t%s\n' "$wcase" "$ST" "$f" - "$DETAIL"
+      ;;
+  esac
+  exit
+fi
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -b) base=$2; shift 2 ;;
+    -d) crashdir=$2; shift 2 ;;
+    -q) quick=true; shift ;;
+    -v) verbose=true; shift ;;
+    -n) save=false; shift ;;
+    -h|--help) usage 0 ;;
+    --) shift; break ;;          # end of options; rest are files
+    -?*) print -u2 "formcrash: unknown option: $1"; usage ;;
+    *) break ;;                  # first non-option: rest are files to classify
+  esac
+done
+
+[ -r "$base" ] || { print -u2 "formcrash: cannot read base $base"; exit 2; }
+
+# A long unbreakable value -- exercises LaTeX line-breaking / dimension limits.
+long=$(head -c 4000 /dev/zero | tr '\0' A)
+
+# Payload batteries.  None contain \ { } (those are out of scope); everything
+# here is something a user could actually type into the corresponding control.
+set -A text_payloads \
+  '$' '%' '&' '#' '_' '^' '~' \
+  '100%' 'Tom & Jerry' 'C_sharp' 'a^b' '#1 fan' '50% off & more' \
+  '[bracket]' '][' 'a[b]c' \
+  "it's" 'say "hi"' '`tick`' \
+  'a - b' '3-5' '1 - 2 - 3' \
+  $'tab\there' '   ' 'trailing %' '%%%%' \
+  'café résumé €' '−minus−sign' '😀 dragon' \
+  "$long"
+
+# Multi-line payloads -- only reachable through the one textarea-backed scalar
+# (DESCRIPTION).  Single-line text fields cannot contain newlines.
+set -A multi_payloads \
+  $'line one\nline two' $'\n\n\n' $'  leading\n  spaces'
+
+# Numeric strings a type=number control accepts (digits, sign, dot, exponent);
+# charsheet's schema decides whether each coerces.  Includes out-of-range,
+# fractional, and overflow-to-infinity values.
+set -A num_payloads \
+  '0' '-1' '-100' '999999999999' '1.5' '-2.5' '0.0001' \
+  '1e3' '1e308' '1e400' '-1e400' '00' '+5' ''
+
+# Fields the form lets a user type into, with the payload battery each uses.
+# CLASS and HIT DICE are <select> (fixed options) and PROFICIENCY BONUS is a
+# hidden, auto-computed field, so none are user-typed -- they are omitted.
+set -A fields \
+  'CHARACTER NAME|text'   'PLAYER NAME|text'       'RACE|text' \
+  'BACKGROUND|text'       'ALIGNMENT|text'         'EXPERIENCE POINTS|text' \
+  'AGE|text'              'MOTIVATION|text'        'SPECIALTY|text' \
+  'INITIATIVE|text'       'SPEED|text'             'SENSES|text' \
+  'CP|text' 'SP|text' 'EP|text' 'GP|text' 'PP|text' \
+  'DESCRIPTION|textarea' \
+  'LEVEL|numi' 'STR|numi' 'DEX|numi' 'CON|numi' 'INT|numi' 'WIS|numi' 'CHA|numi' \
+  'MAX HP|nums' 'ARMOR CLASS|nums' 'PASSIVE PERCEPTION|nums'
+
+# payloads_for CLASS -> echoes the payload-set name(s) for a field class.
+#   text  free single-line text input        numi  type=number, parseInt'd
+#   textarea  multi-line text                 nums  type=number, kept as text
+payloads_for() {
+  case $1 in
+    text)        print text ;;
+    textarea)    print 'text multi' ;;
+    numi|nums)   print num ;;
+  esac
+}
+
+# inject_mode CLASS -> the MODE the mutator uses for this field class.  Only the
+# parseInt-backed number fields need the 'numi' transform; everything else is
+# injected verbatim.
+inject_mode() { case $1 in numi) print numi ;; *) print string ;; esac; }
+
+export cs lua base crashdir quick save
+
+# jobs_source [FILE...] -> one job line per case on stdout, tab-separated:
+#   file mode:  CASE\tFILE
+#   fuzz mode:  CASE\tKEY\tMODE\tPAYLOAD-BASE64 (base64 so a payload's own
+#               tabs/newlines/spaces can't be mistaken for column breaks)
+# Consumed by parallel below, one line per worker invocation.
+if [ $# -gt 0 ]; then
+  # Positional parameters are local to each function call, so a file list
+  # passed on the command line doesn't survive into jobs_source/results_cmd
+  # unless it's threaded through explicitly; an array in scope for both
+  # does that without repeating "$@" at every call site below.
+  set -A cmdline_files -- "$@"
+  jobs_source() {
+    typeset n=0 f
+    for f in "${cmdline_files[@]}"; do
+      (( n++ ))
+      printf '%s\t%s\n' "$n" "$f"
+    done
+  }
+  results_cmd() {
+    parallel --will-cite --colsep '\t' -j "$njobs" --keep-order \
+      "$here/testing/formcrash" --worker file {1} {2} < <(jobs_source)
+  }
+else
+  $save && { rm -rf "$crashdir"; mkdir -p "$crashdir"; }
+  jobs_source() {
+    typeset n=0 entry key class mode setname payload
+    for entry in "${fields[@]}"; do
+      # The '|' is escaped: in ksh patterns an unescaped '|' is alternation, not a
+      # literal pipe, so ${entry%|*} would strip nothing and inject a bogus key.
+      key=${entry%\|*}
+      class=${entry#*\|}
+      mode=$(inject_mode "$class")
+      for setname in $(payloads_for "$class"); do
+        eval "set -A batch -- \"\${${setname}_payloads[@]}\""
+        for payload in "${batch[@]}"; do
+          # \ { } are undefendable and out of scope; never fuzz with them.
+          case $payload in *[\\{}]*) continue ;; esac
+          (( n++ ))
+          printf '%s\t%s\t%s\t%s\n' "$n" "$key" "$mode" "$(print -r -- "$payload" | base64 -w0)"
+        done
+      done
+    done
+  }
+  results_cmd() {
+    parallel --will-cite --colsep '\t' -j "$njobs" --keep-order \
+      "$here/testing/formcrash" --worker fuzz {1} {2} {3} {4} < <(jobs_source)
+  }
+fi
+
+findings=0
+cases=0
+printf '%-4s %-7s %-20s %-26s %s\n' CASE STATUS FIELD PAYLOAD DETAIL
+
+while IFS=$'\t' read -r rcase rst rname rpayload rdetail; do
+  (( cases++ ))
+  if [ "$rst" = OK ]; then
+    $verbose && printf '%04d %-7s %-20s %-26s\n' "$rcase" OK "$(basename "$rname")" "$rpayload"
+    continue
+  fi
+  (( findings++ ))
+  printf '%04d %-7s %-20s %-26s %s\n' "$rcase" "$rst" "$(basename "$rname")" "$rpayload" "$rdetail"
+done < <(results_cmd)
+
+if [ $# -gt 0 ]; then
+  print -u2 "formcrash: $findings finding(s) in $cases file(s)"
+else
+  print -u2 "formcrash: $findings finding(s) in $cases case(s); base=$base"
+  $save && [ "$findings" -gt 0 ] && print -u2 "formcrash: reproducers saved in $crashdir"
+fi
+[ "$findings" -eq 0 ]
