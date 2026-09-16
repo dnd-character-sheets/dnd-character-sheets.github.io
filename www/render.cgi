@@ -127,25 +127,30 @@ if (( timed_out )); then
 fi
 
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
+  # Error messages should not be allowed to leak server paths or
+  # software versions.  So stderr is filtered aggressively to allow
+  # only known messages back to the client.  The full, unfiltered
+  # stderr/stdout are saved where only local inspection can see them.
+
+  capture_debug "$STDERR" /tmp/last-charsheet.stderr.txt || true
+  capture_debug "$STDOUT" /tmp/last-charsheet.stdout.txt || true
+
+  safe_stderr="$(grep -E \
+    '^(Validation error|charsheet load failed|Unbalanced braces in|Validation failed in strict mode)' \
+    "$STDERR" || true)"
+
   echo -e "Status: 400 Bad Request\r"
   echo -e "Content-Type: text/plain; charset=utf-8\r"
   cors_header
   echo -e "X-Charsheet-Exit: $rc\r"
   echo -e "\r"
-  echo "PDF rendering failed (rc==$rc)."
+  echo "PDF rendering failed."
   echo
-  echo "=== stderr (first 400 lines) ==="
-  sed -n '1,400p' "$STDERR"
-  echo "=== stdout (first 400 lines) ==="
-  sed -n '1,400p' "$STDOUT"
-  if [[ -r "$OUTPUT" ]]; then
-    echo "=== output (first 2 lines) ==="
-    sed -n '1,2p' "$OUTPUT"
+  if [[ -n "$safe_stderr" ]]; then
+    echo "$safe_stderr"
   else
-    echo "=== no file $OUTPUT ==="
+    echo "An internal error occurred while rendering. This has been logged for review."
   fi
-  echo "=== input (first 400 lines of $CL bytes) ==="
-  sed -n '1,400p' "$INPUT"
   exit 0
 fi
 
