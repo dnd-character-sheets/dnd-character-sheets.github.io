@@ -8,7 +8,6 @@ miriel*.tex
 *.aux
 *.out
 *.log
-/delenda
 /www/homework/index.html
 /www/homework/charsheet.css
 /www/homework/render.cgi
@@ -17,6 +16,5 @@ silver-king-*.yaml
 *sample*.pdf
 node_modules/
 /js-testing
-/custom-grid.pdf
 /bin/ocharsheet
 /samples/wizard.pdf
