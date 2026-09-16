@@ -73,7 +73,7 @@ bundle:V: docs/index.html docs/charsheet.css
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
 
-publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
+publish:V: test $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
 	rsync -avP -L $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $LUAFILES \
                       $REMOTEHOST:$REMOTEWEBPATH/charsheet/
@@ -97,7 +97,7 @@ docs/&.pdf:D: &.pdf
 docs/&.png:D: &.png
 	cp $prereq $target
 
-push:V: ${GITDOCS:%=docs/%}
+push:V: test ${GITDOCS:%=docs/%}
 	git commit -m 'updated web page' -- $prereq
 	git push
 
