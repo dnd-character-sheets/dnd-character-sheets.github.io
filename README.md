@@ -9,9 +9,9 @@ A paper sheet puts
 everything I need to know right in front of me; 
 I don't have to mouse, click, tap, or fiddle with a device.
 And I can scribble on it!
-But when my character levels up or prepares new spells, 
+When my character levels up, however, or even just prepares new spells, 
 a paper sheet is a pain to update.
-Except if the paper sheet is created by the right kind of software,
+But if the paper sheet is created by the right kind of software,
 the pain goes away.
 
 To relieve all of our pain,
