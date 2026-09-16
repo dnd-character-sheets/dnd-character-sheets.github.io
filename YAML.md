@@ -205,6 +205,17 @@ A string that is displayed in the character-information section.
 
 
 
+#### `CANTRIPS KNOWN`
+
+A number that may be used for cantrip tracking, checked against the
+cantrips listed in `MAGIC`.
+May appear only on the GM's sheet.
+Accepts the same formula syntax as `SPELLS KNOWN` (see below).
+
+- `CANTRIPS KNOWN: 3`
+
+
+
 #### `CHA`
 
 The Charisma ability score, a number, as in `CHA: 15`.
@@ -870,10 +881,28 @@ The modifier for your spellcasting ability.
 
 #### `SPELLS KNOWN`
 
-A number that may be used for spell tracking.
-May appear only on the GM's sheet.
+A number that may be used for spell tracking.
+May appear only on the GM's sheet.
+Instead of a plain number, you may give a formula: two ability names, or
+an ability name and `LEVEL`, joined by ` + `, e.g. `INT + LEVEL`.  Each
+name contributes its ability modifier, except `LEVEL`, which contributes
+the character's `LEVEL` directly.  `SPELLS PREPARED` and `CANTRIPS
+KNOWN` accept the same formula syntax.
 
 - `SPELLS KNOWN: 5`
+- `SPELLS KNOWN: INT + LEVEL`
+
+
+
+#### `SPELLS PREPARED`
+
+A number that may be used for spell tracking, checked against the
+spells listed in `MAGIC`.
+May appear only on the GM's sheet.
+Accepts the same formula syntax as `SPELLS KNOWN` (see above).
+
+- `SPELLS PREPARED: 5`
+- `SPELLS PREPARED: WIS + LEVEL`
 
 
 
