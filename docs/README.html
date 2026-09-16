@@ -31,10 +31,10 @@
 <h1 id="introduction">Introduction</h1>
 <p>Paper character sheets are great. A paper sheet puts everything I
 need to know right in front of me; I don’t have to mouse, click, tap, or
-fiddle with a device. And I can scribble on it! But when my character
-levels up or prepares new spells, a paper sheet is a pain to update.
-Except if the paper sheet is created by the right kind of software, the
-pain goes away.</p>
+fiddle with a device. And I can scribble on it! When my character levels
+up, however, or even just prepares new spells, a paper sheet is a pain
+to update. But if the paper sheet is created by the right kind of
+software, the pain goes away.</p>
 <p>To relieve all of our pain, I have created a digital character-sheet
 format that is easy to read and update, plus software that produces
 well-designed paper sheets. As an example, here’s a fictitious character
@@ -188,6 +188,20 @@ href="yaml/circle-of-the-land-forest.yaml"><code>yaml/circle-of-the-land-forest.
 aren’t comprehensive; they are just fragments I put together for my own
 game. If you find them useful, we’re both surprised and pleased.</p>
 <h1 id="limitations-and-caveats">Limitations and caveats</h1>
+<h2 id="privacy-and-hosting">Privacy and hosting</h2>
+<p>This is a personal project, not a company, and the web service runs
+on my own server. There’s no guaranteed uptime and no support contract —
+if my server is down, “Generate PDF” won’t work; running the software
+locally (above) is the fallback.</p>
+<p>Your YAML is sent to my server only to render your PDF. I don’t
+create accounts and I don’t keep a database of characters — your YAML
+file, on your own machine, is the archival copy. The one exception: the
+server keeps a copy of the most recently submitted sheet (and, if
+rendering fails, the error output) around so I can debug problems. That
+copy is on a shared machine I don’t fully control access to, so treat it
+like anything else on a shared server: don’t put anything in a character
+sheet you wouldn’t want another account on that machine to be able to
+read.</p>
 <h2 id="limitations">Limitations</h2>
 <p>My YAML doesn’t support all of D&amp;D 5e.</p>
 <ul>
