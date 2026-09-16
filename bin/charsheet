@@ -562,7 +562,7 @@ local sheet_validation = ([[
     ?DOMAIN SPELLS:n[1..],
     ?SPELLS KNOWN:spellcount$s,
     ?SPELLS PREPARED:spellcount$s,
-    ?CANTRIPS KNOWN:s,
+    ?CANTRIPS KNOWN:spellcount$s,
     ?SORCERY POINTS:n,
 
     ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
