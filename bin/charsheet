@@ -1414,13 +1414,15 @@ local function split_overlong_words_in(s)
   return stringf([[\parbox{\linewidth}{\raggedright{}%s}]], table.concat(parts))
 end
 
-local function split_overlong_words(t)
-  for k, v in pairs(t) do
-    if type(v) == 'table' then
-      split_overlong_words(v)
-    elseif type(v) == 'string' then
-      if has_overlong_word(v) then
-        t[k] = split_overlong_words_in(v)
+local function split_overlong_words_except(t, skip)
+  if t ~= skip then
+    for k, v in pairs(t) do
+      if type(v) == 'table' then
+        split_overlong_words_except(v, skip)
+      elseif type(v) == 'string' then
+        if has_overlong_word(v) then
+          t[k] = split_overlong_words_in(v)
+        end
       end
     end
   end
@@ -1446,8 +1448,6 @@ local function preprocess(sheet)
       end
     end
   end
-
-  split_overlong_words(sheet)
 
   do -- strip known, empty fields
     local methods = setmetatable({}, default_validator_meta(function(v) return v end))
@@ -1549,6 +1549,11 @@ local function sheet_of_file(pathname)
       sheet['VALIDATION ERRORS'] = global_validation_errors
     end
   end
+
+  -- Protect against overlong words in LaTeX code.
+  -- VALIDATION ERRORS is trusted.
+  split_overlong_words_except(sheet, sheet['VALIDATION ERRORS'])
+
   return sheet, sheet['DOCUMENT FONT']
 end
 
