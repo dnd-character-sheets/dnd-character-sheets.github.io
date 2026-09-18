@@ -45,33 +45,57 @@ git clone https://github.com/dnd-character-sheets/dnd-character-sheets.github.io
 cd charsheets
 ```
 
-## 3. Point Lua and TeX at this checkout
+## Configure
 
-`charsheet` needs a handful of small Lua modules that live in
-`lib/lua/`, and its templates live in `templates/`.  Neither is found
-automatically — tell Lua and TeX where they are:
+`charsheet` finds its own dependencies at run time, so there's nothing
+to build or generate.  It locates `lib/lua/` — the small pure-Lua
+modules it ships with — from how it was invoked (`argv[0]`), as long
+as the path used to run it contains a `bin/` component:
+`./bin/charsheet`, an absolute path, or a bare `charsheet` found via
+`$PATH` all work.  And it asks `luarocks` directly, at startup, where
+`lyaml` is — wherever *your* `luarocks` put it, a per-user tree under
+`$HOME/.luarocks`, a system tree under `/usr/local`, or somewhere else
+again, `charsheet` finds it itself.
+
+So `./configure` doesn't need to write anything.  It just checks, once
+from the top of the checkout, that this machine actually has what
+`charsheet` is about to go looking for:
 
 ```sh
-here=$(pwd)
-export LUA_PATH="$here/lib/lua/?.lua;$here/lib/lua/?/init.lua;;"
-export TEXINPUTS=".:$here/templates//:"
-export CHARSHEETS="$here/templates"
-export PATH="$here/bin:$PATH"
+./configure
 ```
 
-(The trailing `;;` in `LUA_PATH` and the leading `.:` in `TEXINPUTS`
-keep Lua's and TeX's own default search paths in effect too.  Put
-these lines in your shell's rc file, or in a small `charsheets-env.sh`
-you `source` before use, so you don't retype them every session.)
+It tries Lua 5.1 and 5.2, confirms `lyaml` loads for at least one of
+them, and checks for `pdflatex`, `xelatex`, and the TeX packages
+listed above — then finishes with a real end-to-end run of
+`charsheet`.  It prints what it's checking as it goes, and tells you
+what to install if something's missing.  Re-run it whenever you
+reinstall Lua or Lua packages on this machine; nothing here goes stale
+the way a written-out config file would.
 
-`CHARSHEETS` is what tells `charsheet` where its templates are; if you
-don't set it, `charsheet` falls back to
-`$HOME/etc/dnd/resources/character-sheets/templates`, which is only
-right if you happen to have cloned there.  You can also point one
-invocation at a different templates directory with `-templates DIR`
-instead of exporting `CHARSHEETS`.
+A few other things depend on where *you* keep the checkout, rather
+than on the machine, so `configure` leaves them to you:
 
-## 4. Verify
+```sh
+export PATH="$(pwd)/bin:$PATH"
+export CHARSHEETS="$(pwd)/templates"
+export TEXINPUTS=".:$(pwd)/templates//:"
+```
+
+ - `PATH` lets you type `charsheet`, `gmsheet`, `gmspells` from any
+   directory.
+ - `CHARSHEETS` is where `charsheet` looks for its templates; without
+   it, `charsheet` falls back to
+   `$HOME/etc/dnd/resources/character-sheets/templates`, which is only
+   right if you happen to have cloned there.  `-templates DIR`
+   overrides it for one invocation instead.
+ - `TEXINPUTS` is how `pdflatex`/`xelatex` find `charsheet.sty`.
+
+(Put these three lines in your shell's rc file, or in a small
+`charsheets-env.sh` you `source` before use, so you don't retype them
+every session.)
+
+## Verify
 
 ```sh
 charsheet -o /tmp/mario.pdf yaml/mario.yaml
@@ -92,11 +116,11 @@ gmsheet -o /tmp/mario-gm.pdf yaml/mario.yaml
 gmspells -o /tmp/mario-spells.pdf yaml/mario.yaml
 ```
 
-If `charsheet` complains about a missing Lua module, double check
-`LUA_PATH`; if `pdflatex`/`xelatex` can't find `charsheet.sty`, double
-check `TEXINPUTS`.
+If `charsheet` complains about a missing Lua module, run `./configure`
+to see what it's missing; if `pdflatex`/`xelatex` can't find
+`charsheet.sty`, double check `TEXINPUTS`.
 
-## 5. What you *don't* need, unless you're rebuilding the project's own site
+## What you *don't* need, unless you're rebuilding the project's own site
 
 Everything above is all `charsheet`, `gmsheet`, and `gmspells` need to
 run. A separate set of tools — `mk` (plan9/9base `mk`, not GNU make),

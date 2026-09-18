@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# configure -- find dependencies and update paths
+# configure -- check that this machine has what charsheet needs
 #
-# Run it once after cloning, and again whenever you reinstall Lua or
+# Run it after cloning, and again whenever you reinstall Lua or
 # luarocks packages on this machine.
 
 set -euo pipefail
@@ -14,46 +14,48 @@ charsheet=$here/bin/charsheet
 note() { echo "$arg0: $*" 1>&2; }
 fail() { echo "$arg0: $*" 1>&2; exit 1; }
 
-# ---- Lua interpreter ------------------------------------------------
-# bin/charsheet's shebang and its rockspath/rockscpath locals are
-# specific to Lua 5.1; that's what we check against.
-lua=lua5.1
-command -v "$lua" >/dev/null 2>&1 \
-  || fail "$lua not found on \$PATH; install it (e.g. 'apt install lua5.1')"
-note "found $lua"
+# ---- Lua interpreter, luarocks, lyaml ------------------------
+# charsheet runs under either Lua 5.1 or 5.2.  A version only counts as
+# working if lyaml loads from its luarocks tree.
 
-# ---- luarocks and lyaml ---------------------------------------------
 command -v luarocks >/dev/null 2>&1 \
   || fail "luarocks not found on \$PATH; install it (e.g. 'apt install luarocks')"
 
-rockspath=$(luarocks --lua-version=5.1 path --lr-path 2>/dev/null || true)
-rockscpath=$(luarocks --lua-version=5.1 path --lr-cpath 2>/dev/null || true)
-if [[ -z $rockspath ]]; then
-  # older luarocks: fall back to parsing `luarocks path`'s export lines
-  rockspath=$(luarocks --lua-version=5.1 path 2>/dev/null \
-                | sed -n "s/^export LUA_PATH='\(.*\)'\$/\1/p")
-  rockscpath=$(luarocks --lua-version=5.1 path 2>/dev/null \
-                | sed -n "s/^export LUA_CPATH='\(.*\)'\$/\1/p")
-fi
-[[ -n $rockspath ]] || fail "couldn't get a Lua 5.1 rocks path from luarocks"
-note "luarocks rockspath:  $rockspath"
-note "luarocks rockscpath: $rockscpath"
+working=()
+for version in 5.1 5.2; do
+  candidate=lua$version
+  command -v "$candidate" >/dev/null 2>&1 || { note "$candidate not found"; continue; }
 
-if ! err=$(LUA_PATH="$rockspath;;" LUA_CPATH="$rockscpath;;" "$lua" -e "require 'lyaml'" 2>&1); then
-  fail "lyaml doesn't load via luarocks's own paths -- run 'luarocks install lyaml' and re-run ./configure
-$err"
-fi
-note "lyaml loads OK"
+  path=$(luarocks --lua-version=$version path --lr-path 2>/dev/null || true)
+  cpath=$(luarocks --lua-version=$version path --lr-cpath 2>/dev/null || true)
+  if [[ -z $path ]]; then
+    # older luarocks: fall back to parsing `luarocks path`'s export lines
+    path=$(luarocks --lua-version=$version path 2>/dev/null \
+             | sed -n "s/^export LUA_PATH='\(.*\)'\$/\1/p")
+    cpath=$(luarocks --lua-version=$version path 2>/dev/null \
+             | sed -n "s/^export LUA_CPATH='\(.*\)'\$/\1/p")
+  fi
+  if [[ -z $path ]]; then
+    note "$candidate found, but luarocks has no Lua $version rocks path"
+    continue
+  fi
 
-# ---- bake the rocks paths into bin/charsheet -------------------------
-for name in rockspath rockscpath; do
-  n=$(grep -c "^local $name = '" "$charsheet") || n=0
-  [[ $n -eq 1 ]] \
-    || fail "expected exactly one 'local $name = ...' line in bin/charsheet, found $n; edit it by hand instead"
+  if ! LUA_PATH="$path;;" LUA_CPATH="$cpath;;" "$candidate" -e "require 'lyaml'" >/dev/null 2>&1; then
+    note "$candidate found, but lyaml doesn't load via its luarocks path -- run 'luarocks --lua-version=$version install lyaml'"
+    continue
+  fi
+
+  note "$candidate works: lyaml loads"
+  working+=("$candidate")
 done
-sed -i "s|^local rockspath = '.*'\$|local rockspath = '$rockspath'|" "$charsheet"
-sed -i "s|^local rockscpath = '.*'\$|local rockscpath = '$rockscpath'|" "$charsheet"
-note "updated rockspath/rockscpath in bin/charsheet"
+
+[[ ${#working[@]} -gt 0 ]] || fail "no working Lua 5.1 or 5.2 install found -- see the notes above"
+
+shebang_lua=$(sed -n '1s|^#!/usr/bin/env \(lua5\.[12]\)$|\1|p' "$charsheet")
+if [[ -n $shebang_lua ]] && [[ ! " ${working[*]} " == *" $shebang_lua "* ]]; then
+  note "warning: bin/charsheet's shebang wants $shebang_lua, which isn't one of the working interpreters above"
+  note "warning: invoke it explicitly instead, e.g. '${working[0]} bin/charsheet ...'"
+fi
 
 # ---- TeX ---------------------------------------------------------------
 command -v pdflatex >/dev/null 2>&1 || fail "pdflatex not found; install a TeXLive distribution"
@@ -78,12 +80,20 @@ else
   note "kpsewhich not found; skipping the TeX package check"
 fi
 
-# ---- end-to-end sanity check -------------------------------------------
-if ! err=$(CHARSHEETS="$here/templates" "$charsheet" -o /dev/null -s "$here/yaml/mario.yaml" 2>&1); then
-  fail "bin/charsheet still doesn't run after configuring:
+# ---- end-to-end sanity check --------------------------------------------
+# Prefer the shebang's own interpreter if it's one of the working ones,
+# so this exercises the same invocation INSTALL.md tells people to use;
+# otherwise fall back to an explicit interpreter from the working list.
+if [[ -n $shebang_lua ]] && [[ " ${working[*]} " == *" $shebang_lua "* ]]; then
+  run=("$charsheet")
+else
+  run=("${working[0]}" "$charsheet")
+fi
+if ! err=$(CHARSHEETS="$here/templates" "${run[@]}" -o /dev/null -s "$here/yaml/mario.yaml" 2>&1); then
+  fail "bin/charsheet still doesn't run (via '${run[*]}'):
 $err"
 fi
-note "bin/charsheet runs"
+note "bin/charsheet runs, via '${run[*]}'"
 
-note "configured.  Put $here/bin on \$PATH, and either set \$CHARSHEETS"
-note "and \$TEXINPUTS as INSTALL.md describes, or run from $here."
+note "configured.  Put $here/bin on \$PATH, and set \$CHARSHEETS and"
+note "\$TEXINPUTS as INSTALL.md describes, or run from $here."
