@@ -39,7 +39,7 @@ for rel in "${paths[@]}"; do
     stale+=("$rel")
   elif $update; then
     mkdir -p "$(dirname "$dst")"
-    cp "$src" "$dst"
+    cp -uv "$src" "$dst"
   elif ! cmp -s "$src" "$dst"; then
     stale+=("$rel")
   fi
