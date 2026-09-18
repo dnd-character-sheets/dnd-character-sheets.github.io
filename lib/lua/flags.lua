@@ -1,14 +1,18 @@
 local flags = { }
 
-local assert, ipairs, pairs, print, table, tonumber, tostring, string, setmetatable
-    = assert, ipairs, pairs, print, table, tonumber, tostring, string, setmetatable
+local assert, ipairs, pairs, table, tonumber, string, setmetatable
+    = assert, ipairs, pairs, table, tonumber, string, setmetatable
 
-local unpack = table.unpack or unpack
-local error, type, pcall, require, select, next
-    = error, type, pcall, require, select, next
+local unpack = table.unpack or unpack -- luacheck: ignore 143
+local error, type, require, select, next
+    = error, type, require, select, next
 
 local math, os
     = math, os
+
+local tablex = require 'tablex'
+local stringx = require 'stringx'
+require 'stringutil' -- add methods
 
 local require = require
 
@@ -22,11 +26,7 @@ local stringf = string.format
 local function eprintf(...) return io.stderr:write(string.format(...)) end
 local function errorf(...) return error(string.format(...)) end
 
-require 'stringutil'
-require 'tabutil'
-
-   local inspect = require 'inspect'
-   local io = io
+local io = io
 
 
 
@@ -94,7 +94,7 @@ Internal representation of parser
   _listfields : { fieldname |--> bool }  --- set of fields
   _mandated : { fieldname |--> bool } --- set of fields
   _onerror  : function (parser, string or bool, fields, args) -> value
-  _aliases  : { optname |-> optname list } -- 
+  _aliases  : { optname |-> optname list } --
   _minarg   : number option      -- minimum permissible number of arguments
   _maxarg   : number option      -- maximum permissible number of arguments
   _usage_extra : string list     -- stuff to show after a usage message
@@ -177,7 +177,7 @@ function methods:mandated(f, b)
 end
 
 __doc.bool_or_no = [[method parser:bool_or_no(fieldnames, [default]) returns self
-Define setting option(s) as given by field name, and also 
+Define setting option(s) as given by field name, and also
 clearing options beginning with 'no'.
 ]]
 
@@ -186,9 +186,9 @@ function methods:bool_or_no(f, default)
   local options = optnames(f)
   local thisopt = options[1]
   self:setdefault(field, default or false)
-  self:setopts(options, function(values, option, args) values[field] = true end)
+  self:setopts(options, function(values, _, _) values[field] = true end)
   for i = 1, #options do options[i] = 'no' .. options[i] end
-  self:setopts(options, function(values, option, args) values[field] = false end)
+  self:setopts(options, function(values, _, _) values[field] = false end)
   self._lastoption = thisopt
   return self
 end
@@ -200,7 +200,7 @@ Define setting option(s) as given by field name.
 function methods:bool(f, default)
   local field = fieldname(f)
   self:setdefault(field, default or false)
-  self:setopts(optnames(f), function(values, option, args) values[field] = true end)
+  self:setopts(optnames(f), function(values, _, _) values[field] = true end)
   return self
 end
 
@@ -210,7 +210,7 @@ Define clearing option(s) as given by field name.
 
 function methods:boolnot(f, default)
   local field = fieldname(f)
-  self:setopts(optnames(f), function(values, option, args) values[field] = false end)
+  self:setopts(optnames(f), function(values, _, _) values[field] = false end)
   self:setdefault(field, default or false)
   return self
 end
@@ -218,7 +218,7 @@ end
 __doc.enum = [[method parser:enum(fieldname, option list, default) returns self
 Add a field to the given parser whose value is one of the options
 listed.  Each option sets the field to the name of that option.
-An enum option may include aliases (as in the normal specification 
+An enum option may include aliases (as in the normal specification
 for a field name). An enum field name may not include aliases.
 ]]
 
@@ -278,21 +278,22 @@ local function dual_methods(name, arghelp, convert, errmsg, doctext)
 Field is a list of %s and the option adds to the list.]], name, name)
 end
 
-local function as_readable_file(path)
-  require 'osutil'
-  if os.readable(path) then
-    return path
+local function readable(path)
+  local f, msg = io.open(path, 'r')
+  if f then
+    f:close()
+    return true
   else
-    errorf([['%s' is not a readable file]], path)
+    return false, msg
   end
 end
 
-local function as_nonfile(path)
-  require 'osutil'
-  if os.exists(path) then
-    errorf([[file '%s' already exists]], path)
-  else
+
+local function as_readable_file(path)
+  if readable(path) then
     return path
+  else
+    errorf([['%s' is not a readable file]], path)
   end
 end
 
@@ -355,8 +356,8 @@ end
 __doc.onerror_exit = [=[
 method parser:onerror_exit([[optsring,] argstring]) returns parser
 Modifies the parser so that when an error occurs, the parser prints
-an error message and a usage message and exits.  In the usage message, 
-the optional argstring describes the arguments; optstring describes 
+an error message and a usage message and exits.  In the usage message,
+the optional argstring describes the arguments; optstring describes
 the options.  Defaults are respectively 'ARG' and 'OPT'.
 ]=]
 
@@ -381,7 +382,7 @@ methods.usage_opt_arg = methods.onerror_exit
 
 __doc.apply = [[
 method parser:apply(field[, option], function) returns parser
-When value for option is received, pass it through the 
+When value for option is received, pass it through the
 given function, which returns value or nil, error, and
 put the value in the given field.  If omitted, option is assumed to equal field.
 ]]
@@ -489,8 +490,6 @@ function flags.parser()
 end
 
 
-local function basename(s) return (s:gsub('.*/', '')) end
-
 __doc.parse = [[method parser:parse(arg list) returns field table or (nil, error)
 Parses the command line parameters and returns two tables:
 
@@ -566,7 +565,7 @@ function methods:parse(args)
                                      #args))
     end
   end
-      
+
   return fields
 end
 
@@ -609,17 +608,16 @@ function flags._test()
        :string('subset_matching as subset', false)
        :help('subset', 'pattern used to select outcomes')
        :number('txtest'):transform('txtest', 'txtest', function(n) return n + 1 end)
-  local split = string.split_fields
   local function test(s)
     local args = s:split_fields()
     return args, p:parse(args)
   end
-  local a, f, e = test '-txtest 99 -a4 -dot -anon -rep a -rep b -subset Welch -ratio 8,10 my-outcomes'
+  local _, f, _ = test '-txtest 99 -a4 -dot -anon -rep a -rep b -subset Welch -ratio 8,10 my-outcomes'
   assert(f.dot)
   assert(f.make_anon)
   assert(#f.showreps == 2)
   assert(f.txtest == 100)
-  local a, f, e = test '-noanon -filter -nodot my-outcomes'
+  local a, f, _ = test '-noanon -filter -nodot my-outcomes'
   assert(f.dot == false and #f.showreps == 0 and #a == 1)
   flags.write_helps(io.stderr, p)
 end
@@ -699,7 +697,7 @@ Add the string to the parser's default usage message.
 
 function methods:usage_extra(s)
   assert(type(s) == 'string', 'usage_extra method expects string')
-  for line in s:gmatch('[^\n]*') do 
+  for line in s:gmatch('[^\n]*') do
     table.insert(self._usage_extra, line)
   end
   return self
@@ -715,7 +713,7 @@ function methods:usage_post(s)
   if s:find '%S' and s:sub(-1, -1) ~= "\n" then
     s = s .. "\n"
   end
-  for line in s:gmatch '([^\n]*)\n' do 
+  for line in s:gmatch '([^\n]*)\n' do
     table.insert(self._usage_post, line)
   end
   return self
@@ -745,13 +743,13 @@ function flags.write_helps(file, pfx, parser)
   local prefix = string.rep(' ', width+4)
   local hw = columns - 2 - #prefix - #pfx  -- width of a help line
   local linebreak = require 'linebreak'
-  for _, flag in ipairs(table.sorted_keys(parser._aliases)) do
+  for _, flag in ipairs(tablex.sorted_keys(parser._aliases)) do
     local fstring = arghelps[flag] and stringf('%s %s', flag, arghelps[flag]) or flag
     local aliases = parser._aliases[flag]
     local also = ''
     if aliases[1] then
       local as =
-        string.commafy(table.map(function(s) return '-' .. s end, aliases), 'or')
+        stringx.commafy(tablex.map(function(s) return '-' .. s end, aliases), 'or')
       also = stringf(' (also written %s)', as)
     end
     local helplines = linebreak.run((helps[flag] or '[undocumented]') .. also, hw)
