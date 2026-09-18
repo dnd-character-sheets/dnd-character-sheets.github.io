@@ -10,9 +10,16 @@
 
 ------------------ classic print functions ---------------------
 
-local basename = arg[0]:gsub('^.*/', '')
 
 local stringf = string.format
+
+local rootname, basename = assert(arg[0]:match '^(.*)/bin/(.-)$')
+local rockspath = '/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua'
+local rockscpath = '/usr/local/lib/lua/5.1/?.so'
+
+package.path = stringf('%s/lib/lua/?.lua;%s;;', rootname, rockspath)
+package.cpath = stringf('%s;;', rockscpath)
+
 local function eprintf(...)
   return io.stderr:write(basename, ': ', stringf(...))
 end
