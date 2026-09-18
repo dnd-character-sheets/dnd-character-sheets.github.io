@@ -16,7 +16,7 @@ here=$(cd "$(dirname "$0")/.." && pwd)
 srcdir=$HOME/src/lua
 arg0="$(basename "$0")"
 
-names=(flags inspect module52 osutil osx tabutil tablex
+names=(flags inspect module52 tabutil tablex
        stringutil stringx linebreak ioutil iox)
 paths=("${names[@]/%/.lua}" validate/dsl.lua)
 
