@@ -25,18 +25,6 @@ end
 
 local validate = require 'validate.dsl'
 
-if arg[-1] == 'lua5.1' then
-  local fd = io.open '/usr/bin/lua5.2'
-  if fd then
-    fd:close()
-    local osx = require 'osx'
-    table.insert(arg, 1, arg[0])
-    table.insert(arg, 1, '/usr/bin/lua5.2')
-    os.exit(osx.execv(arg) == 0 and 0 or 1)
-  end
-end
-
-
 ---- diagnostic output for option processing
 
 local function commafy(t, andword, comma)
@@ -1592,7 +1580,8 @@ end
 
 local runlatex = [=[
 pdflatex=$PDFLATEX
-output="$OUTPUT"
+output=$OUTPUT  # quoted using `os.quote` below
+rm -f "$output" # guarantees caller can see failure even in Lua 5.1
 
 dir="$(mktemp -d)"
 trap "rm -rf $dir" 0
@@ -1602,12 +1591,9 @@ rc=$?
 
 if [[ $rc -ne 0 ]]; then
   exit $rc
-fi
-
-if [[ -r "$dir/sheet.pdf" ]]; then
+elif [[ -r "$dir/sheet.pdf" ]]; then
   cp "$dir/sheet.pdf" "$output"
 else
-  rm -f "$output"
   exit 1
 fi
 ]=]
@@ -1657,10 +1643,11 @@ function write_output(output)
     local fd = assert(io.popen(stringf('bash -c %s', shell_quote(command)), 'w'))
     fd:write(output)
     local ok, termination, code = fd:close()
-    if not ok then
+    if not ok then -- script's exit code preserved only in Lua 5.2
       os.exit(termination == 'exit' and code or 1)
     end
-    do -- check success
+    do -- In Lua5.1, fd:close() returns success even if the command failed.
+       -- In which case we check to see if we actually got output.
       local fd = io.open(fields.output)
       if fd then
         fd:close()
