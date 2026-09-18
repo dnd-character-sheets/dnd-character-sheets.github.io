@@ -25,7 +25,7 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: export-check samples test github ${PREVIEWS:%=%-preview.png}
+all:V: export-check sandbox-check samples test github ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
@@ -38,12 +38,19 @@ export:V:  # pull $HOME/src/lua originals into lib/lua
 export-check:V: # check that lib/lua is up to date
 	lib/sync-exported-lua
 
+# export-check only catches drift in modules it already knows to
+# compare; sandbox-check catches a new `require` that was never added
+# to the export at all, by running charsheet against lib/lua alone.
+sandbox-check:V:
+	lib/check-exported-lua
+
 
 # Steps run one at a time, in the shell script below, rather than as mk
 # prerequisites: formcrash runs many pdflatex jobs back to back, and a
 # concurrent pdflatex job from another target corrupts its results.
 test:V:
 	lib/sync-exported-lua
+	lib/check-exported-lua
 	mk qstest
 	testing/formcrash
 	testing/formcrash testing/crashers/*.yaml

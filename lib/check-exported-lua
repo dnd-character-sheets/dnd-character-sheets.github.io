@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# confirm that lib/lua/, on its own, has everything charsheet needs.
+#
+# lib/sync-exported-lua only catches drift in modules it already knows
+# to compare.  If a future change adds a new `require`, that script
+# stays silent -- the module keeps loading on the author's machine via
+# the author's own $LUA_PATH, and lib/lua/ quietly falls short of what
+# a stranger's clone needs.  This script catches that case instead: it
+# runs charsheet (and its gmsheet/gmspells faces) with $LUA_PATH
+# pointing at nothing but lib/lua/, so a genuinely unexported module
+# fails loudly, the way it would for a stranger.
+
+set -euo pipefail
+
+here=$(cd "$(dirname "$0")/.." && pwd)
+arg0="$(basename "$0")"
+sample=$here/yaml/mario.yaml
+
+fail=false
+for prog in charsheet gmsheet gmspells; do
+  if ! output=$(env -i \
+                  PATH="$PATH" \
+                  LUA_PATH="$here/lib/lua/?.lua;$here/lib/lua/?/init.lua;;" \
+                  CHARSHEETS="$here/templates" \
+                  "$here/bin/$prog" -o /dev/null -s "$sample" 2>&1)
+  then
+    echo "$arg0: $prog failed against lib/lua/ alone:" 1>&2
+    echo "$output" | sed 's/^/  /' 1>&2
+    fail=true
+  fi
+done
+
+$fail && exit 1
+exit 0
