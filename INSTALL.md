@@ -1,33 +1,44 @@
 ---
-title: Installing the character-sheet software
+title: Running character-sheet software on your own machine
 ---
 
-# Installing the character-sheet software
+# Running character-sheet software locally
 
-These instructions let you run `charsheet`, `gmsheet`, and `gmspells`
+These instructions let you run `charsheet`
 on your own machine, turning a character's YAML into a PDF without
-using the web form.  They were followed, verbatim, in a clean checkout
-with `$HOME` and `$LUA_PATH` unset, right before this file was
-committed.
+using the web form.
+You can also run the `gmsheet` and `gmspells` scripts, which prepare
+useful summaries for a Game Master to use at the table.
 
-## 1. Prerequisites
+## Dependencies
 
- - **Lua**, version 5.1 or 5.2.  On Debian/Ubuntu: `apt install lua5.1`.
- - **`luarocks`**, to install one Lua package.  `apt install luarocks`.
- - **The LYAML binding for YAML**: `luarocks install lyaml`.
- - **A TeXLive distribution from 2024 or later**, with `pdflatex` and
-   `xelatex` on your `$PATH` (`xelatex` renders sheets containing
-   non-ASCII text).  A full or nearly-full TeXLive install covers the
+ - Lua version 5.1 or 5.2.
+   On Debian/Ubuntu,
+   ```
+   apt install lua5.1
+   ```
+ - `luarocks`, to install one Lua package:
+    ```
+    apt install luarocks
+    ```
+ - A Lua binding for YAML parsing:
+   ```
+   luarocks install lyaml
+   ```
+ - The TeX Live distribution from 2024.  Later distributions may work,
+   but new TeX Live distributions often introduce incompatibilities.
+
+   A full or nearly-full TeXLive install covers the
    packages the templates need; if you're using a minimal one, make
    sure these are available: `amsmath`, `array`, `booktabs`,
    `calc`, `colortbl`, `enumitem`, `environ`, `fontspec`, `geometry`,
    `ifmtarg`, `ifthen`, `iftex`, `multicol`, `pgfkeys`, `soul`,
    `suffix`, `tabularx`, `times`, `tikz`, `xcolor`, `xstring`.
 
-Lua, `luarocks`, and TeXLive are all easy to install with your
+Lua, `luarocks`, and TeXLive should all be easy to install with your
 distribution's package manager.
 
-## 2. Get the code
+## Check out the repository
 
 ```sh
 git clone https://github.com/dnd-character-sheets/dnd-character-sheets.github.io.git charsheets
