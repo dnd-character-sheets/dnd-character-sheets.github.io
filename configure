@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-arg0=configure
+arg0="$(basename "$0")"
 here=$(cd "$(dirname "$0")" && pwd)
 charsheet=$here/bin/charsheet
 
