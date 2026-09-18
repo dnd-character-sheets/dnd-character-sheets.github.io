@@ -1755,7 +1755,7 @@ end
 local function merge_spell_multiples(spells)
   local i = 1
   while i < #spells do
-    j = i + 1
+    local j = i + 1
     while j <= #spells and spells[i].name == spells[j].name do
       j = j + 1
     end
