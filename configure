@@ -62,19 +62,33 @@ command -v pdflatex >/dev/null 2>&1 || fail "pdflatex not found; install a TeXLi
 command -v xelatex  >/dev/null 2>&1 || fail "xelatex not found; install a TeXLive distribution"
 note "found pdflatex and xelatex"
 
-packages=(amsmath array booktabs calc colortbl enumitem environ fontspec
-          geometry ifmtarg ifthen iftex multicol pgfkeys soul suffix
-          tabularx times tikz xcolor xstring)
-if command -v kpsewhich >/dev/null 2>&1; then
+# Find every package templates/*.tex and templates/*.sty actually
+# \usepackage or \RequirePackage, rather than keeping a separate
+# hard-coded list in sync with them by hand.
+mapfile -t packages < <(
+  grep -hoE '^[^%]*\\(usepackage|RequirePackage)(\[[^]]*\])?\{[^}]*\}' \
+       "$here"/templates/*.tex "$here"/templates/*.sty 2>/dev/null \
+    | sed -E 's/.*\{([^}]*)\}$/\1/' \
+    | tr ',' '\n' \
+    | sed -E 's/^ +//; s/ +$//' \
+    | sort -u
+)
+
+if [[ ${#packages[@]} -eq 0 ]]; then
+  note "warning: found no \\usepackage/\\RequirePackage lines under templates/ to check"
+elif command -v kpsewhich >/dev/null 2>&1; then
   missing=()
+  checked=0
   for p in "${packages[@]}"; do
+    [[ -e "$here/templates/$p.sty" ]] && continue  # ships with the repo, not a TeXLive package
+    checked=$((checked + 1))
     kpsewhich "$p.sty" >/dev/null 2>&1 || missing+=("$p")
   done
   if [[ ${#missing[@]} -gt 0 ]]; then
     note "warning: kpsewhich can't find these TeX packages: ${missing[*]}"
     note "warning: a fuller TeXLive install may be needed"
   else
-    note "all required TeX packages found"
+    note "all $checked TeX packages templates/ asks for were found"
   fi
 else
   note "kpsewhich not found; skipping the TeX package check"
