@@ -28,12 +28,11 @@ useful summaries for a Game Master to use at the table.
  - The TeX Live distribution from 2024.  Later distributions may work,
    but new TeX Live distributions often introduce incompatibilities.
 
-   A full or nearly-full TeXLive install covers the
-   packages the templates need; if you're using a minimal one, make
-   sure these are available: `amsmath`, `array`, `booktabs`,
-   `calc`, `colortbl`, `enumitem`, `environ`, `fontspec`, `geometry`,
-   `ifmtarg`, `ifthen`, `iftex`, `multicol`, `pgfkeys`, `soul`,
-   `suffix`, `tabularx`, `times`, `tikz`, `xcolor`, `xstring`.
+   A full or nearly-full TeXLive install covers the packages the
+   templates need.  If you're using a minimal one, `./configure`
+   (below) reads `templates/*.tex` and `templates/*.sty` itself and
+   tells you if any of the packages they ask for are missing, rather
+   than you having to track the list by hand.
 
 Lua, `luarocks`, and TeXLive should all be easy to install with your
 distribution's package manager.
@@ -66,12 +65,14 @@ from the top of the checkout, that this machine actually has what
 ```
 
 It tries Lua 5.1 and 5.2, confirms `lyaml` loads for at least one of
-them, and checks for `pdflatex`, `xelatex`, and the TeX packages
-listed above — then finishes with a real end-to-end run of
+them, and checks for `pdflatex`, `xelatex`, and whatever TeX packages
+`templates/*.tex` and `templates/*.sty` actually `\usepackage` or
+`\RequirePackage` — then finishes with a real end-to-end run of
 `charsheet`.  It prints what it's checking as it goes, and tells you
 what to install if something's missing.  Re-run it whenever you
-reinstall Lua or Lua packages on this machine; nothing here goes stale
-the way a written-out config file would.
+reinstall Lua or Lua packages on this machine, or after a template
+starts using a new package; nothing here goes stale the way a
+written-out config file or list would.
 
 A few other things depend on where *you* keep the checkout, rather
 than on the machine, so `configure` leaves them to you:
