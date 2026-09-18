@@ -50,6 +50,6 @@ if $update; then
 elif [[ ${#stale[@]} -gt 0 ]]; then
   echo "$arg0: lib/lua/ is stale with respect to $srcdir" 1>&2
   printf '  %s\n' "${stale[@]}" 1>&2
-  echo "$arg0:" 'run `lib/vendor-lua -u` to refresh' 1>&2
+  echo "$arg0:" 'run `lib/sync-exported-lua -u` to refresh' 1>&2
   exit 1
 fi
