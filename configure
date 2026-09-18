@@ -95,5 +95,23 @@ $err"
 fi
 note "bin/charsheet runs, via '${run[*]}'"
 
+cat > bin/dndsheets <<EOF
+#!/bin/ksh
+
+dir="$(pwd)"
+EOF
+cat >> bin/dndsheets <<'EOF'
+cmd="$(basename "$0")"
+
+case $# in 
+  0) exec "$dir/$cmd" ;;
+  *) exec "$dir/$cmd" "$@" ;;
+esac
+EOF
+
+chmod +x bin/dndsheets
+
+note 'created bin/dndsheets'
+
 note "configured.  Put $here/bin on \$PATH, and set \$CHARSHEETS and"
 note "\$TEXINPUTS as INSTALL.md describes, or run from $here."
