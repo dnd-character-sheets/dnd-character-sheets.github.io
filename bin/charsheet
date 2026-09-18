@@ -11,14 +11,38 @@
 ------------------ classic print functions ---------------------
 
 
+local luaversion = assert(_VERSION:match '^Lua (5%.[12])$',
+                          'unsupported ' .. _VERSION)
+
 local stringf = string.format
 
 local rootname, basename = assert(arg[0]:match '^(.*)/bin/(.-)$')
-local rockspath = '/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua'
-local rockscpath = '/usr/local/lib/lua/5.1/?.so'
 
-package.path = stringf('%s/lib/lua/?.lua;%s;;', rootname, rockspath)
-package.cpath = stringf('%s;;', rockscpath)
+do -- path settings
+
+  local defaults = { path = package.path, cpath = package.cpath }
+
+  package.path = stringf('%s/lib/lua/?.lua;%s', rootname, defaults.path)
+
+  local function capture(cmd, raw)
+    local function cook_output(s)
+      s = string.gsub(s, '^%s+', '')
+      s = string.gsub(s, '%s+$', '')
+      s = string.gsub(s, '[\n\r]+', ' ')
+      return s
+    end
+
+    local f = assert(io.popen(cmd, 'r'))
+    local s = assert(f:read('*a'))
+    f:close()
+    return raw and s or cook_output(s)
+  end
+
+  local rockspath  = capture(stringf('luarocks --lua-version=%s path --lr-path',  luaversion))
+  local rockscpath = capture(stringf('luarocks --lua-version=%s path --lr-cpath', luaversion))
+  package.path  = stringf('%s/lib/lua/?.lua;%s;%s', rootname, rockspath, defaults.path)
+  package.cpath = stringf('%s;%s', rockscpath, defaults.cpath)
+end
 
 local function eprintf(...)
   return io.stderr:write(basename, ': ', stringf(...))
