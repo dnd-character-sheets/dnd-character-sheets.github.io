@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# configure -- find dependencies and update paths
+#
+# Run it once after cloning, and again whenever you reinstall Lua or
+# luarocks packages on this machine.
+
+set -euo pipefail
+
+arg0=configure
+here=$(cd "$(dirname "$0")" && pwd)
+charsheet=$here/bin/charsheet
+
+note() { echo "$arg0: $*" 1>&2; }
+fail() { echo "$arg0: $*" 1>&2; exit 1; }
+
+# ---- Lua interpreter ------------------------------------------------
+# bin/charsheet's shebang and its rockspath/rockscpath locals are
+# specific to Lua 5.1; that's what we check against.
+lua=lua5.1
+command -v "$lua" >/dev/null 2>&1 \
+  || fail "$lua not found on \$PATH; install it (e.g. 'apt install lua5.1')"
+note "found $lua"
+
+# ---- luarocks and lyaml ---------------------------------------------
+command -v luarocks >/dev/null 2>&1 \
+  || fail "luarocks not found on \$PATH; install it (e.g. 'apt install luarocks')"
+
+rockspath=$(luarocks --lua-version=5.1 path --lr-path 2>/dev/null || true)
+rockscpath=$(luarocks --lua-version=5.1 path --lr-cpath 2>/dev/null || true)
+if [[ -z $rockspath ]]; then
+  # older luarocks: fall back to parsing `luarocks path`'s export lines
+  rockspath=$(luarocks --lua-version=5.1 path 2>/dev/null \
+                | sed -n "s/^export LUA_PATH='\(.*\)'\$/\1/p")
+  rockscpath=$(luarocks --lua-version=5.1 path 2>/dev/null \
+                | sed -n "s/^export LUA_CPATH='\(.*\)'\$/\1/p")
+fi
+[[ -n $rockspath ]] || fail "couldn't get a Lua 5.1 rocks path from luarocks"
+note "luarocks rockspath:  $rockspath"
+note "luarocks rockscpath: $rockscpath"
+
+if ! err=$(LUA_PATH="$rockspath;;" LUA_CPATH="$rockscpath;;" "$lua" -e "require 'lyaml'" 2>&1); then
+  fail "lyaml doesn't load via luarocks's own paths -- run 'luarocks install lyaml' and re-run ./configure
+$err"
+fi
+note "lyaml loads OK"
+
+# ---- bake the rocks paths into bin/charsheet -------------------------
+for name in rockspath rockscpath; do
+  n=$(grep -c "^local $name = '" "$charsheet") || n=0
+  [[ $n -eq 1 ]] \
+    || fail "expected exactly one 'local $name = ...' line in bin/charsheet, found $n; edit it by hand instead"
+done
+sed -i "s|^local rockspath = '.*'\$|local rockspath = '$rockspath'|" "$charsheet"
+sed -i "s|^local rockscpath = '.*'\$|local rockscpath = '$rockscpath'|" "$charsheet"
+note "updated rockspath/rockscpath in bin/charsheet"
+
+# ---- TeX ---------------------------------------------------------------
+command -v pdflatex >/dev/null 2>&1 || fail "pdflatex not found; install a TeXLive distribution"
+command -v xelatex  >/dev/null 2>&1 || fail "xelatex not found; install a TeXLive distribution"
+note "found pdflatex and xelatex"
+
+packages=(amsmath array booktabs calc colortbl enumitem environ fontspec
+          geometry ifmtarg ifthen iftex multicol pgfkeys soul suffix
+          tabularx times tikz xcolor xstring)
+if command -v kpsewhich >/dev/null 2>&1; then
+  missing=()
+  for p in "${packages[@]}"; do
+    kpsewhich "$p.sty" >/dev/null 2>&1 || missing+=("$p")
+  done
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    note "warning: kpsewhich can't find these TeX packages: ${missing[*]}"
+    note "warning: a fuller TeXLive install may be needed"
+  else
+    note "all required TeX packages found"
+  fi
+else
+  note "kpsewhich not found; skipping the TeX package check"
+fi
+
+# ---- end-to-end sanity check -------------------------------------------
+if ! err=$(CHARSHEETS="$here/templates" "$charsheet" -o /dev/null -s "$here/yaml/mario.yaml" 2>&1); then
+  fail "bin/charsheet still doesn't run after configuring:
+$err"
+fi
+note "bin/charsheet runs"
+
+note "configured.  Put $here/bin on \$PATH, and either set \$CHARSHEETS"
+note "and \$TEXINPUTS as INSTALL.md describes, or run from $here."
