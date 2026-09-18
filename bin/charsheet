@@ -107,7 +107,7 @@ local fields = require 'flags'.parser()
   :bool('standalone as s'):help('emit just definitions, not full file')
   :string('layout as t as l'):help('template for character sheet')
   :string('templates', os.getenv 'CHARSHEETS'
-                    or os.getenv 'HOME' .. '/etc/dnd/resources/character-sheets/templates')
+                    or stringf('%s/templates', rootname))
          :help('directory where character-sheet templates live')
   :wrap(assert(options[basename]))
   :string('class'):help('CLASS to use if none is supplied')
