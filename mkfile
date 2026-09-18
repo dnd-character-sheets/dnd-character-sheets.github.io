@@ -25,17 +25,25 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: samples test github ${PREVIEWS:%=%-preview.png}
+all:V: export-check samples test github ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
 qstest:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
+export:V:  # pull $HOME/src/lua originals into lib/lua
+	lib/sync-exported-lua -u
+
+export-check:V: # check that lib/lua is up to date
+	lib/sync-exported-lua
+
+
 # Steps run one at a time, in the shell script below, rather than as mk
 # prerequisites: formcrash runs many pdflatex jobs back to back, and a
 # concurrent pdflatex job from another target corrupts its results.
 test:V:
+	lib/sync-exported-lua
 	mk qstest
 	testing/formcrash
 	testing/formcrash testing/crashers/*.yaml
