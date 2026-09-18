@@ -21,7 +21,7 @@ fail=false
 for prog in charsheet gmsheet gmspells; do
   if ! output=$(env -i \
                   PATH="$PATH" \
-                  LUA_PATH="$here/lib/lua/?.lua;$here/lib/lua/?/init.lua;;" \
+                  LUA_PATH="$here/lib/lua/?.lua;;" \
                   CHARSHEETS="$here/templates" \
                   "$here/bin/$prog" -o /dev/null -s "$sample" 2>&1)
   then
