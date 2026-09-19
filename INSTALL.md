@@ -114,3 +114,14 @@ gmspells -o /tmp/spells.pdf yaml/king-barbarian.yaml yaml/king-cleric.yaml yaml/
 gmsheet -o /tmp/sheet.pdf yaml/king-barbarian.yaml yaml/king-cleric.yaml yaml/king-wizard.yaml yaml/king-rogue.yaml
 ```
 
+## Altering the code
+
+The main `bin/charsheet` script is actually derived from
+`bin/original-charsheet` using the
+[Lua-amalg](https://github.com/siffiejoe/lua-amalg) program.
+This program pulls in a half dozen or so custom libraries,
+which are prepended to the original code.
+The amalgamation process is not easily reversed, but
+if you want the libraries, send an email to
+[me](mailto:nr@cs.tufts.edu).
+Or you can just edit the code, libraries and all.
