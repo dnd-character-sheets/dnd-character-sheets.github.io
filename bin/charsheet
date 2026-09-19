@@ -39,7 +39,7 @@ end
 -- present) lets a symlink to bin/charsheet work from anywhere, not
 -- just from alongside the real file; without realpath, only the old,
 -- unresolved arg[0] is available, same as before.
-local basename = arg[0]:gsub('^.*/', '')
+local basename = arg[0]:gsub('^.*/', ''):gsub('^exported%-', '')
 local real = capture(stringf('realpath -- %s 2>/dev/null', shell_quote(arg[0])))
 local binname = assert((real ~= '' and real or arg[0]):match '^(.*)/[^/]*$',
                          arg[0] .. ': not invoked through a bin/ directory')
@@ -94,9 +94,6 @@ local function commafy(t, andword, comma)
 end
 
 ------------ basename and option processing ------------------------------------------
-
-local basename = arg[0]:gsub('^.*/', '')
-  -- basename determines behavior
 
 local options = { -- specialized for different scripts
   charsheet = function(parser) return parser:numarg(1) end,
