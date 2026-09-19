@@ -83,9 +83,11 @@ To run the `charsheet`, `gmsheet`, and
     ln -s "$(pwd)/bin/gmspells"  ~/bin/gmspells
     ```
 
-The scripts *cannot* successfully be *copied* to another location;
-they rely on the `templates` and `lib` directories being siblings to
-the `bin` directory.
+If you want to copy the scripts to another location, you will have to
+let them know where to find their LaTeX templates:
+Either set the `CHARSHEETS` environment variable to point to the
+`templates` directory,  or use the `-templates` option when invoking 
+the scripts.
 
 ## Verify
 
