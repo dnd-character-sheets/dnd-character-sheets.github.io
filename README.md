@@ -243,6 +243,24 @@ render your PDF—I don't keep it archivally.
 I *do* keep a copy of the most recently submitted sheet, to help with
 debugging.
 
+## Design caveat
+
+This project started out with a simple design philosophy: "Don't
+calculate anything; just render what's in the YAML."  
+But as I used the software for my own game, I gradually let some
+calculation slip in.
+
+In similar fashion, the YAML entries, especially for magic and class
+features, have gradually accrued more and more optional fields,
+including descriptions at three lengths.
+(But nothing like the full complexity of the
+[5etools](https://5e.tools/) database, which has to be seen to be believed.)
+
+The result of all this feature creep is that the design, although
+useful, is no longer intellectually coherent.
+
+
+
 ## AI
 
 I used AI for help with code.
