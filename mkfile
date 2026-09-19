@@ -32,8 +32,11 @@ draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/
 qstest:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 	yamllint -d '{extends: default, rules: { document-start: disable, key-duplicates: disable } }' /tmp/QUICKSTART.yaml
 
-export:V:  # pull $HOME/src/lua originals into lib/lua
-	lib/sync-exported-lua -u
+export:V: bin/exported-charsheet
+
+bin/exported-charsheet:V: bin/charsheet
+	amalg -o bin/exported-charsheet -s bin/charsheet $(lib/lua-depends -x lyaml bin/charsheet)
+	chmod +x bin/exported-charsheet
 
 export-check:V: # check that lib/lua is up to date
 	lib/sync-exported-lua
