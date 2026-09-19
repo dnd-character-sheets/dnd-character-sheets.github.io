@@ -1,5 +1,4236 @@
 #!/usr/bin/env lua5.1
 
+do
+local _ENV = _ENV
+package.preload[ "flags" ] = function( ... ) local arg = _G.arg;
+local flags = { }
+
+local assert, ipairs, pairs, table, tonumber, string, setmetatable
+    = assert, ipairs, pairs, table, tonumber, string, setmetatable
+
+local unpack = table.unpack or unpack -- luacheck: ignore 143
+local error, type, require, select, next
+    = error, type, require, select, next
+
+local math, os
+    = math, os
+
+local tablex = require 'tablex'
+local stringx = require 'stringx'
+require 'stringutil' -- add methods
+
+local require = require
+
+local stderr = io.stderr
+
+-- protected arg
+local base0 = arg and arg[0]:gsub('^.*/', '') or 'lua'
+
+-- debugging --
+local stringf = string.format
+local function eprintf(...) return io.stderr:write(string.format(...)) end
+local function errorf(...) return error(string.format(...)) end
+
+local io = io
+
+
+
+local __doc = { }
+flags.__doc = __doc
+
+__doc.__overview = [[
+A parser understands *options* and *fields*:
+
+  - An *option* is something that appears on the command line.
+
+  - A *field* is something that is set in a data structure.
+
+These often have the same names, but they need not.
+
+Base methods 'bool', 'bool_or_no', 'string', and 'number' use the
+field name as an option.  So do the file methods.
+
+Method 'enum' does not use the field name as an option.
+
+Methods may take 'fieldnames' as an argument.  This is a string
+of a form like
+
+  summary as s as summ
+
+which gives the main field name (which is also an option) plus additional
+aliases for that field (which are only options and do not appear in the field
+table).
+
+Moreover, when a field name is converted to an option, every underscore
+becomes a dash.
+
+Options containing only digits are parsed as strings *unless* the 'digits'
+method is used, in which case they are parsed as numbers.
+
+]]
+
+__doc.__order = { 'parser', 'parse', 'help',
+                  'string', 'number', 'digits',
+                  'enum', 'bool', 'boolnot', 'bool_or_no',
+                  'input_file', 'output_file',
+                  'string_list', 'number_list', 'input_file_list', 'output_file_list',
+                  'onerror', 'onerror_exit',
+                  'minarg', 'maxarg',
+}
+
+
+local function fieldname(s)
+  return s:gsub(' as .*', ''):gsub('%-', '_')
+end
+
+local function optnames(s)
+  return s:gsub('%_', '-'):split_fields('%s+as%s+')
+end
+
+local digits_option_name = '<digits>'
+
+--[[
+Internal representation of parser
+
+  _option   : { optname |--> function }
+  _help     : { optname |--> string   }
+  _help_arg : { optname |--> string option }  -- argument ID as shown in help
+  _default  : { fieldname |--> value }
+  _listfields : { fieldname |--> bool }  --- set of fields
+  _mandated : { fieldname |--> bool } --- set of fields
+  _onerror  : function (parser, string or bool, fields, args) -> value
+  _aliases  : { optname |-> optname list } --
+  _minarg   : number option      -- minimum permissible number of arguments
+  _maxarg   : number option      -- maximum permissible number of arguments
+  _usage_extra : string list     -- stuff to show after a usage message
+  _usage_post : string list      -- stuff to show after options
+  _lastoption : string option    -- name of last option set (used for help)
+  _use_digits : bool             -- string of digits parses as number [default not]
+]]
+
+__doc.aliases = [[function(string) returns string list
+Returns list of aliases for fields
+]]
+
+local methods = { }
+
+function methods:setopts(options, f, arghelp)
+  self._aliases[options[1]] = { select(2, unpack(options)) }
+  self._lastoption = options[1]
+  for _, option in ipairs(options) do
+    if self._option[option] then
+      error('Duplicate specification for option ' .. option)
+    else
+      self._option[option] = f
+      self._help[option] = self._help[option] or false
+      if arghelp then
+        if self._help_arg[option] then
+          error('Duplicate argument help for option ' .. option)
+        else
+          self._help_arg[option] = arghelp
+        end
+      end
+    end
+  end
+  return self
+end
+
+function methods:setdefault(field, v)
+  if v ~= nil then
+    if self._default[field] ~= nil then
+      error('Duplicate default specification for field ' .. field)
+    else
+      self._default[field] = v
+    end
+  end
+  return self
+end
+
+__doc.help = [[method parser:help(fieldname, helptext) returns self
+Associate help text with the given field.
+]]
+
+function methods:help(f, text)
+  if text == nil then
+    f, text = self._lastoption, f
+  end
+  assert(f and text, 'Help field for ' .. (f or 'nil') .. ' is missing fieldname or text')
+  -- XXX need to track options of field
+  for _, option in ipairs(optnames(f)) do
+    if not self._help[option] then
+      self._help[option] = text
+    else
+      errorf('Duplicate help text for option -%s', option)
+    end
+  end
+  return self
+end
+
+__doc.mandated = [[method parser:mandated([fieldname], [boolean]) returns self
+The given field is mandatory.  Or if boolean is false, not mandatory!
+If fields omitted, use the last field defined.  If boolean is omitted,
+use true.
+]]
+
+function methods:mandated(f, b)
+  if b == nil and type(f) == 'boolean' then
+    f, b = nil, f
+  end
+  if b == nil then b = true end
+  self._mandated[assert(f or self._lastoption, 'nothing to mandate')] = b
+  return self
+end
+
+__doc.bool_or_no = [[method parser:bool_or_no(fieldnames, [default]) returns self
+Define setting option(s) as given by field name, and also
+clearing options beginning with 'no'.
+]]
+
+function methods:bool_or_no(f, default)
+  local field = fieldname(f)
+  local options = optnames(f)
+  local thisopt = options[1]
+  self:setdefault(field, default or false)
+  self:setopts(options, function(values, _, _) values[field] = true end)
+  for i = 1, #options do options[i] = 'no' .. options[i] end
+  self:setopts(options, function(values, _, _) values[field] = false end)
+  self._lastoption = thisopt
+  return self
+end
+
+__doc.bool = [[method parser:bool(fieldnames, [default]) returns self
+Define setting option(s) as given by field name.
+]]
+
+function methods:bool(f, default)
+  local field = fieldname(f)
+  self:setdefault(field, default or false)
+  self:setopts(optnames(f), function(values, _, _) values[field] = true end)
+  return self
+end
+
+__doc.boolnot = [[method parser:boolnot(fieldnames, [default]) returns self
+Define clearing option(s) as given by field name.
+]]
+
+function methods:boolnot(f, default)
+  local field = fieldname(f)
+  self:setopts(optnames(f), function(values, _, _) values[field] = false end)
+  self:setdefault(field, default or false)
+  return self
+end
+
+__doc.enum = [[method parser:enum(fieldname, option list, default) returns self
+Add a field to the given parser whose value is one of the options
+listed.  Each option sets the field to the name of that option.
+An enum option may include aliases (as in the normal specification
+for a field name). An enum field name may not include aliases.
+]]
+
+function methods:enum(f, options, default)
+  local field = fieldname(f)
+  local opts = optnames(f)
+  if #opts ~= 1 then
+    errorf([[Enumeration '%s' may not specify options]])
+  else
+    self:setdefault(field, default)
+    for _, option in ipairs(options) do
+      local optval = fieldname(option)
+      self:setopts(optnames(option), function(values, _, _) values[field] = optval end)
+    end
+    self._lastoption = nil -- can't abbreviate help here
+    return self
+  end
+end
+
+local function with_arg(addvalue, arghelp, convert, errmsg)
+  return function(self, f, default)
+    local field = fieldname(f)
+    self:setopts(optnames(f),
+                 function(values, option, args)
+                   if args[1] ~= nil then
+                     local v, msg = convert(args[1])
+                     if v then
+                       table.remove(args, 1)
+                       addvalue(values, field, v)
+                     else
+                       errorf(errmsg, option, msg)
+                     end
+                   else
+                     errorf(errmsg, option, 'argument not provided')
+                   end
+                 end,
+                 arghelp)
+    self:setdefault(field, default)
+    return self
+  end
+end
+local function setfield(t, k, v) t[k] = v end
+local function addfield(t, k, v) table.insert(t[k], v) end
+
+local function dual_methods(name, arghelp, convert, errmsg, doctext)
+  methods[name] = with_arg(setfield, arghelp, convert, errmsg)
+  local listm   = with_arg(addfield, arghelp, convert, errmsg)
+  methods[name .. "_list"] =
+    function(self, f, ...)
+      self._listfields[fieldname(f)] = true
+      return listm(self, f, ...)
+    end
+  __doc[name] = __doc[name] or stringf([[method parser:%s(fieldnames, [default]) returns self
+%s
+]], name, doctext)
+  __doc[name .. '_list'] = stringf([[method parser:%s_list(fieldnames, [defalut]) returns self
+Field is a list of %s and the option adds to the list.]], name, name)
+end
+
+local function readable(path)
+  local f, msg = io.open(path, 'r')
+  if f then
+    f:close()
+    return true
+  else
+    return false, msg
+  end
+end
+
+
+local function as_readable_file(path)
+  if readable(path) then
+    return path
+  else
+    errorf([['%s' is not a readable file]], path)
+  end
+end
+
+__doc.digits = [[method parser:digits(fieldname, [default]) returns self
+Define what field is set by an option matching Lua pattern %-%d+
+]]
+
+function methods:digits(f, default)
+  local field = fieldname(f)
+  self._use_digits = true
+  self:setdefault(field, default or false)
+  assert(#optnames(f) == 1, 'digits option cannot have alternate names')
+  self:setopts({assert(digits_option_name)},
+               function(fields, option, _) fields[field] = assert(tonumber(option)) end)
+  return self
+end
+
+
+
+
+dual_methods('string', '<string>', function(s) return s end,
+             'Option -%s expects a string argument',
+             'Define an option that expects a string argument')
+dual_methods('number', '<number>', tonumber, 'Option -%s expects a numeric argument',
+             'Define an option that expects a numeric argument')
+
+dual_methods('input_file', '<filename>', as_readable_file,
+             'Option -%s expects the name of a readable file',
+             'Define an option that expects as argument the name of a readable file')
+
+dual_methods('output_file', '<filename>', function(s) return s end, -- as_nonfile,
+             'Option -%s expects the name of a file to be written',
+             'Define an option that expects as argument the name of a file to be written.')
+
+__doc.onerror = [[
+method parser:onerror([function]) returns parser
+If a flag-parsing error occurs, the result is the result of calling
+the given function with four arguments:
+  - The current parser
+  - A string or boolean giving the nature of the error
+  - the current 'fields' table
+  - the unconsumed 'args' table
+The 'nature' of the error is 'true' if the option -? is passed,
+and a string error message otherwise.
+
+If no function is given, a function is installed that returns nil
+followed by its arguments.   This function is suitable if the goal
+is to handle parsing errors in the caller.
+]]
+
+function methods:onerror(f)
+  assert(self._onerror)
+  f = f or function(...) return nil, ... end
+  assert(type(f) == 'function')
+  self._onerror = f
+  return self
+end
+
+
+__doc.onerror_exit = [=[
+method parser:onerror_exit([[optsring,] argstring]) returns parser
+Modifies the parser so that when an error occurs, the parser prints
+an error message and a usage message and exits.  In the usage message,
+the optional argstring describes the arguments; optstring describes
+the options.  Defaults are respectively 'ARG' and 'OPT'.
+]=]
+
+function methods:onerror_exit(optstring, argstring)
+  local function fail(parser, msg)
+    if msg ~= true then
+      stderr:write(base0, ': ', msg, '\n')
+    end
+    flags.usage(parser, optstring, argstring)
+    os.exit(1)
+  end
+  return self:onerror(fail)
+end
+
+__doc.usage_opt_arg = [=[method parser:usage_opt_arg([[optsring,] argstring]) returns parser
+Gives the default options and arg for usage message.
+]=]
+
+methods.usage_opt_arg = methods.onerror_exit
+
+
+
+__doc.apply = [[
+method parser:apply(field[, option], function) returns parser
+When value for option is received, pass it through the
+given function, which returns value or nil, error, and
+put the value in the given field.  If omitted, option is assumed to equal field.
+]]
+
+function methods:apply(field, options, f)
+  if f == nil then
+    options, f = field, options
+  end
+  assert(type(f) == 'function', 'non-function passed to parser:apply(...)')
+  for _, option in ipairs(optnames(options)) do
+    local oldfun = self._option[option]
+    if not oldfun then
+      errorf('option %s has to be defined before an apply function can be added',
+             option)
+    else
+      self._option[option] =
+        function(values, ...)
+          oldfun(values, ...)
+          local v, msg = f(values[field])
+          if v == nil then
+            error(msg)
+          else
+            values[field] = v
+          end
+        end
+    end
+  end
+  return self
+end
+
+__doc.onoption = [[
+method parser:onoption(field, option, function) returns parser
+When the given option is parsed, apply the given function
+to its value.
+]]
+
+function methods:onoption(field, option, f)
+  if f == nil then
+    option, f = field, option
+  end
+  return self:apply(field, option, function(s) f(s); return s end)
+end
+
+
+
+__doc.maxarg = [[
+method parser:maxarg(number) returns parser
+Give the maximum permissible number of arguments after option parsing.
+]]
+
+__doc.minarg = [[
+method parser:minarg(number) returns parser
+Give the minimum permissible number of arguments after option parsing.
+]]
+
+__doc.numarg = [[
+method parser:numarg(number) returns parser
+Give the exact require number of arguments after option parsing.
+]]
+
+function methods:maxarg(n)
+  assert(type(n) == 'number', 'argument to maxarg() must be a number')
+  self._maxarg = n
+  return self
+end
+
+function methods:minarg(n)
+  assert(type(n) == 'number', 'argument to minarg() must be a number')
+  self._minarg = n
+  return self
+end
+
+function methods:numarg(n)
+  assert(type(n) == 'number', 'argument to numarg() must be a number')
+  self._maxarg = n
+  self._minarg = n
+  return self
+end
+
+
+__doc.wrap = [[
+method parser:wrap(f) returns f(parser)
+(Typically used to call methods conditionally.)
+]]
+
+function methods:wrap(f)
+  return f(self)
+end
+
+
+
+__doc.parser = [[function () returns parser
+Return a fresh, empty parser that can be modified by adding
+fields/options and help text, then used to parse options.
+By default, it exits on error.
+]]
+
+function flags.parser()
+  local t =
+    { _option = {}, _help = {}, _help_arg = {}, _default = {}, _listfields = {},
+      _aliases = {}, _usage_extra = {}, _transformers = {}, _usage_post = {},
+      _onerror = 'replace via a method call', _mandated = {},
+    }
+  return setmetatable(t, { __index = methods }):onerror_exit()
+end
+
+
+__doc.parse = [[method parser:parse(arg list) returns field table or (nil, error)
+Parses the command line parameters and returns two tables:
+
+  fields : fieldname |--> value
+  error  : bool or string
+
+Options and their arguments are removed from input argument list.
+
+If the -? option is used, the 'error' result is `true`.
+If an error occurs, the 'error' result contains a string message.
+In either of these cases, the 'fields' result is nil.
+
+Finally, an argument of '--' terminates option parsing.
+]]
+local helpopts = { ['-h'] = true, ['-help'] = true, ['--help'] = true }
+function methods:is_help(option)
+  return option == '-?' or self._option[option] == nil and helpopts[option]
+end
+
+function methods:parse(args)
+  assert(args, [[flags module didn't get its args]])
+  local fields = { __self = self }
+  for k, v in pairs(self._default) do
+    fields[k] = v
+  end
+  for k in pairs(self._listfields) do
+    fields[k] = { }
+  end
+
+  while args[1] and args[1]:find '^%-' do
+    if args[1] == '--' then
+      table.remove(args, 1)
+      break
+    elseif self:is_help(args[1]) then
+      return self:_onerror(true, fields, args)
+    else
+      local option = table.remove(args, 1):sub(2)
+      local f = self._option[self._use_digits and option:find '^%d+$' and digits_option_name or option]
+      if not f then
+        return self:_onerror(stringf('Unknown option -%s', option), fields, args)
+      else
+--        local ok, msg = pcall (f, fields, option, args)
+        local ok, msg = true, f(fields, option, args)
+        if not ok then
+          return self:_onerror(msg, fields, args)
+        end
+      end
+    end
+  end
+  for f in pairs(self._mandated) do
+    if fields[f] == nil then
+      return self:_onerror(stringf('the -%s option must be given', f))
+    end
+  end
+
+  if self._minarg or self._maxarg then
+    if self._maxarg == 0 and #args > 0 then
+      return self:_onerror(stringf('this script does not take any arguments; got %d',
+                                   #args))
+    elseif self._minarg == self._maxarg then
+      if #args ~= self._minarg then
+        return self:_onerror(stringf('Expected %d argument%s; got %d',
+                                     self._minarg, self._minarg == 1 and '' or 's',
+                                     #args))
+      end
+    elseif self._minarg and #args < self._minarg then
+      return self:_onerror(stringf('Expected at least %d argument%s; got %d',
+                                     self._minarg, self._minarg == 1 and '' or 's',
+                                     #args))
+    elseif self._maxarg and #args > self._maxarg then
+      return self:_onerror(stringf('Expected at most %d argument%s; got %d',
+                                     self._maxarg, self._maxarg == 1 and '' or 's',
+                                     #args))
+    end
+  end
+
+  return fields
+end
+
+
+__doc._test = [[function() -- run test cases]]
+
+function flags._test()
+  local p = flags.parser()
+  p    :bool_or_no('dot')
+       :help('dot', 'emit a dot file on standard output')
+       :enum('dotratio', { 'fill', 'compress' }, 'compress')
+       :help('dotratio', 'select ratio of dot output')
+       :string('dotratio as ratio')
+       :number('dotnodefontsize as nodefontsize', 9)
+       :bool_or_no('template')
+       :bool_or_no('keep_less_defined as lessdef', false)
+       :bool_or_no('make_anon as anon')
+       :help('anon', [[anonymize students' identities]])
+       :bool_or_no('implications as imp')
+       :enum('dotpaper', { 'landscape', 'portrait' }, false)
+       :help('dotpaper', 'orient dot output')
+       :enum('papersize', { 'usletter', 'a4' })
+       :output_file('fault-list')
+       :string('witness_file as witnesses as update-witnesses')
+       :help('witness_file', 'file holding info about witnesses (to write or update)')
+       :bool('use_witness as use-witnesses as uw')
+       :help('use_witness', [[use the student's actual witness, not an 'explanation']])
+       :bool_or_no('faults')
+       :help('faults', 'emit a faults file')
+       :input_file('utln_faults as utln as of-faults')
+       :help('utln_faults', 'faults file to read to use when emitting utln')
+       :bool('uniq_faults as uniq')
+       :help('uniq_faults', '???')
+       :bool('notsubmitted as nosubmit')
+       :help('notsubmitted', 'become the set of IDs that did not submit a solution?')
+       :string_list('showreps as rep') -- appends to list
+       :help('showreps', 'show a representative of these tests')
+       :bool('write_rep_outcomes as filter')
+       :help('write_rep_outcomes', 'copy representative outcomes to stdout')
+       :string('subset_matching as subset', false)
+       :help('subset', 'pattern used to select outcomes')
+       :number('txtest'):transform('txtest', 'txtest', function(n) return n + 1 end)
+  local function test(s)
+    local args = s:split_fields()
+    return args, p:parse(args)
+  end
+  local _, f, _ = test '-txtest 99 -a4 -dot -anon -rep a -rep b -subset Welch -ratio 8,10 my-outcomes'
+  assert(f.dot)
+  assert(f.make_anon)
+  assert(#f.showreps == 2)
+  assert(f.txtest == 100)
+  local a, f, _ = test '-noanon -filter -nodot my-outcomes'
+  assert(f.dot == false and #f.showreps == 0 and #a == 1)
+  flags.write_helps(io.stderr, p)
+end
+
+----------------------------------------------------------------
+
+
+__doc.usage = [=[function(parser, [string, [string]]) prints to stderr
+Prints a usage message that includes a one-line synopsis and
+a list of options.  The synopsis always includes `arg[0]`, but
+the rest of it is determined by the arguments passed in:
+
+  - If two strings are passed, the first describes options and the
+    second describes positional parameters.
+
+  - If only one string is passed in, it describes positional parameters,
+    and the default documentation of options is used.
+
+  - If no strings are passed, the default descriptions of both options
+    and positional parameters are used.
+
+The defaults for options and for positional parameters are respectively
+the strings 'OPT' and 'ARG'.
+]=]
+
+local function has_helps(parser)
+  return next(parser._aliases)
+end
+
+local columns = tonumber(os.getenv 'COLUMNS') or 80
+
+do
+  local defaults = { OPT = '[options]', ARG = '...' }
+  for _, field in ipairs { 'usage', 'onerror_exit' } do
+    __doc[field] = __doc[field]:gsub('%U%U%U+', defaults)
+  end
+
+  function flags.usage(parser, options, args)
+--    stderr:write('options == ', tostring(options), '; args == ', tostring(args), '\n')
+    if options == nil then
+      return flags.usage(parser, defaults.OPT, defaults.ARG)
+    elseif args == nil then
+      return flags.usage(parser, defaults.OPT, options)
+    else
+      eprintf('Usage: %s%s%s%s%s\n',
+              base0,
+              #options > 0 and ' ' or '', options,
+              #args > 0 and ' ' or '', args)
+      for _, u in ipairs(parser._usage_extra) do
+        if u:find '\n' or #u < columns - 3 then
+          eprintf('  %s\n', u)
+        else
+          eprintf('  I SHOULD RUN LINE BREAKING ON THIS:\n  %s\n', u)
+        end
+      end
+      if has_helps(parser) then
+        eprintf('Where the following options are defined:\n')
+        flags.write_helps(stderr, '  ', parser)
+      end
+      if parser._usage_post[1] then
+        eprintf '\n'
+        for _, u in ipairs(parser._usage_post) do
+          if u:find '\n' or #u < columns - 3 then
+            eprintf('%s\n', u)
+          else
+            eprintf('I SHOULD RUN LINE BREAKING ON THIS:\n  %s\n', u)
+          end
+        end
+      end
+    end
+  end
+end
+
+__doc.usage_extra = [[method parser:usage_extra(string) returns parser
+Add the string to the parser's default usage message.
+]]
+
+function methods:usage_extra(s)
+  assert(type(s) == 'string', 'usage_extra method expects string')
+  for line in s:gmatch('[^\n]*') do
+    table.insert(self._usage_extra, line)
+  end
+  return self
+end
+
+__doc.usage_post = [[method parser:usage_post(string) returns parser
+Add the string to the parser's usage message to follow the options.
+]]
+
+function methods:usage_post(s)
+  assert(type(s) == 'string', 'usage_post method expects string')
+  require 'stringutil'
+  if s:find '%S' and s:sub(-1, -1) ~= "\n" then
+    s = s .. "\n"
+  end
+  for line in s:gmatch '([^\n]*)\n' do
+    table.insert(self._usage_post, line)
+  end
+  return self
+end
+
+
+__doc.write_helps = [[function(file, [prefix], parser) writes to file
+Write parser's options to file, each line preceded by prefix, if any.
+]]
+
+function flags.write_helps(file, pfx, parser)
+  if parser == nil then
+    pfx, parser = '', pfx
+  end
+
+  local helps = parser._help
+  local arghelps = parser._help_arg
+  local width = 0
+  for flag in pairs(parser._aliases) do
+    local w = #flag
+    if arghelps[flag] then
+      w = w + #arghelps[flag] + 1
+    end
+    width = math.max(width, w)
+  end
+  local fmt = stringf('-%%-%ds   ', width)
+  local prefix = string.rep(' ', width+4)
+  local hw = columns - 2 - #prefix - #pfx  -- width of a help line
+  local linebreak = require 'linebreak'
+  for _, flag in ipairs(tablex.sorted_keys(parser._aliases)) do
+    local fstring = arghelps[flag] and stringf('%s %s', flag, arghelps[flag]) or flag
+    local aliases = parser._aliases[flag]
+    local also = ''
+    if aliases[1] then
+      local as =
+        stringx.commafy(tablex.map(function(s) return '-' .. s end, aliases), 'or')
+      also = stringf(' (also written %s)', as)
+    end
+    local helplines = linebreak.run((helps[flag] or '[undocumented]') .. also, hw)
+    for i, line in ipairs(helplines) do
+      file:write(pfx, i == 1 and stringf(fmt, fstring) or prefix, line, '\n')
+    end
+  end
+end
+
+
+return flags
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "inspect" ] = function( ... ) local arg = _G.arg;
+-- migrated to Lua 5.1 only (15 Feb 2013)
+
+-- migrated to Lua 5.1/5.3 (10 Mar 2016)
+
+local stringf = string.format
+local strfind = string.find
+local insert = table.insert
+local concat = table.concat
+local stdout = io.stdout
+local stderr = io.stderr
+local floor = math.floor
+local remove = table.remove
+local sort = table.sort
+
+local type, tostring, ipairs, pairs, select, pcall, next
+    = type, tostring, ipairs, pairs, select, pcall, next
+
+local inspect = { }
+
+local __doc = { }
+inspect.__doc = __doc
+__doc.__overview = [[
+Functions for printing Lua values with debugging information.
+]]
+
+__doc.__order = { 'image', 'show' }
+
+__doc.image = [[function(value) returns string
+Returns a string representation of the given value, suitable
+for debugging.  Digs arbitrarily deep into tables and should
+cope correctly with cycles and sharing.  The result is *not*
+machine-readable.
+]]
+
+__doc.show = [[function(value, ...) prints
+Write the 'image' of each value to io.stderr, separated by newlines.
+There is *no* newline terminator.
+]]
+
+local function safe_tostring(v)
+  local ok, s = pcall(tostring, v)
+  if ok then
+    return s
+  else
+    return 'tostring() failed: ' .. s
+  end
+end
+
+
+function inspect.image(x, inspected, indent)
+  inspected = inspected or { }
+  indent = indent or ''
+  local image = inspect.image
+  local pfx
+  if type(x) == 'string' then return stringf("%q", x)
+  elseif type(x) == 'number' then
+     if x == floor(x) then return stringf("%.0f", x)
+     else                       return stringf("%f", x)
+     end
+  elseif type(x) == 'function' or type(x) == "cfunction" then
+       return tostring(x)
+  elseif type(x) == 'table' then
+        if inspected[x] then
+          return 'inspected ' .. safe_tostring(x)
+        else
+          inspected[x] = true
+          local listform = { } -- map integer keys shown
+          local parts = { }
+          local function add(...)
+            for i = 1, select('#', ...) do
+              insert(parts, (select(i, ...)))
+            end
+          end
+          add(safe_tostring(x), ' {')
+          pfx = " "
+          if x[1] then
+            for i, v in ipairs(x) do
+              listform[i] = true
+              add(pfx, image(v, inspected))
+              pfx = ", "
+            end
+          end
+          pfx = pfx == ' ' and '\n  ' .. indent or ',\n  ' .. indent
+          local newindent = indent .. '  '
+          for k, v in pairs(x) do
+            if not listform[k] then
+              add(pfx)
+              if type(k) == "string" and strfind(k, "^[%a_][%w_]*$") then
+                add(k)
+              else
+                add("[", image(k, inspected, newindent), "]")
+              end
+              add(' = ', image(v, inspected, newindent))
+              pfx = ",\n  " .. indent
+            end
+          end
+          if pfx:find '^,' then
+            add('\n', indent, '}')
+          else
+            add('}')
+          end
+          return concat(parts)
+        end
+  elseif x == nil then return 'nil'
+  else return safe_tostring(x)
+  end
+end
+function inspect.show(...)
+  for i = 1, select('#', ...) do
+    if i>1 then stderr:write '\n' end
+    stderr:write(inspect.image((select(i, ...))))
+  end
+end
+
+__doc.friendly = [[function(v) returns string
+Return a string describing v, suitable for use in error messages.
+]]
+
+local key_cap = 4
+
+
+
+
+
+local function plural(count, what, plural)
+  if count == 1 then
+    return stringf('one %s', what)
+  elseif count == 0 then
+    return stringf('no %s', plural or what .. 's')
+  else
+    return stringf('%d %s', count, plural or what .. 's')
+  end
+end
+
+local function friendly_table(t)
+  if next(t) == nil then
+    return 'an empty table'
+  elseif t[1] then
+    return 'a list of ' .. plural(#t, 'value')
+  else
+    local string_keys, number_keys, other = { }, 0, 0
+    for k in pairs(t) do
+      if type(k) == 'string' then
+        insert(string_keys, k)
+      elseif type(k) == 'number' then
+        number_keys = number_keys + 1
+      else
+        other = other + 1
+      end
+    end
+    table.sort(string_keys)
+    if #string_keys == 0 then
+      if other > 0 then
+        if number_keys > 0 then
+          return stringf('a sparse array with %s', plural(other, 'other inscrutable key'))
+        else
+          return stringf('a table with %s', plural(other, 'inscrutable key'))
+        end
+      else
+        assert(number_keys > 0)
+        return stringf('a sparse array with %s', plural(number_keys, 'entry', 'entries'))
+      end
+    else
+      local nstrings = #string_keys
+      assert(nstrings > 0)
+
+      sort(string_keys)
+      while #string_keys > key_cap do -- strip extras
+        remove(string_keys)
+      end
+
+      for i, s in ipairs(string_keys) do -- quote as needed
+        if #s == 0 or s:find '[^%w_]' then
+          string_keys[i] = stringf('%q', s)
+        end
+      end
+
+      local what = number_keys > 0
+               and stringf('a sparse array with %s and also', plural(number_keys, 'entry', 'entries'))
+                or 'a table'
+
+      local with
+      if nstrings <= #string_keys then
+        if #string_keys == 1 then
+          with = stringf('with key %s', string_keys[1])
+        elseif #string_keys == 2 then
+          with = stringf('with keys %s and %s', string_keys[1], string_keys[2])
+        else
+          string_keys[#string_keys] = 'and ' .. string_keys[#string_keys]
+          with = stringf('with keys %s', concat(string_keys, ', '))
+        end
+      else
+        with = stringf('with keys %s, %s%s',
+                       concat(string_keys, ', '),
+                       other == 0 and 'and ' or '',
+                       plural(nstrings - #string_keys, 'other string key'))
+      end
+
+      if other > 0 then
+        with = stringf('%s, plus %s', with, plural(other, 'other inscrutable key'))
+      end
+      return stringf('%s %s', what, with)
+    end
+  end
+end
+
+local function const(s) return function(_) return s end end
+
+local friendly = {
+  ['nil'] = const 'the value `nil`',
+  number  = function(n) return stringf('the number %s', tostring(n)) end,
+  string  = function(s)
+              if #s < 20 then
+                return stringf('the string %q', s)
+              else
+                return stringf('a string of %s, beginning %q...', plural(#s, 'byte'), s:sub(1, 17))
+              end
+            end,
+  boolean = function(b) return stringf('the Boolean value `%s`', b and 'true' or 'false') end,
+  table   = friendly_table,
+  ['function'] = const 'a function',
+  thread  = const 'a Lua thread',
+  userdata = const 'userdata',
+}
+
+function inspect.friendly(v)
+  return assert(friendly[type(v)])(v)
+end
+
+-- One table for each control-flow path through `inspect.friendly` when it is
+-- given a table; that is, each branch of `friendly_table` above.  The comment
+-- on each entry names the branch it exercises.
+inspect.test_tables = {
+  { },                              -- next(t) == nil: an empty table
+  { 'x' },                          -- t[1]: a list, plural(#t) == 1: 'a list of one value'
+  { 'x', 'y', 'z' },                -- t[1]: a list, plural(#t) > 1: 'a list of N values'
+
+  -- no string keys (#string_keys == 0):
+  { [3] = 'x' },                    -- other == 0, number_keys == 1: 'a sparse array with one entry'
+  { [3] = 'x', [4] = 'y' },         -- other == 0, number_keys > 1: 'a sparse array with N entries'
+  { [true] = 'x' },                 -- other == 1, number_keys == 0: 'a table with one inscrutable key'
+  { [true] = 'x', [false] = 'y' },  -- other > 1, number_keys == 0: 'a table with N inscrutable keys'
+  { [2] = 'x', [true] = 'y' },      -- other == 1, number_keys > 0: 'sparse array with one other inscrutable key'
+
+  -- string keys present, count fits under key_cap (nstrings <= #string_keys):
+  { a = 1 },                                 -- #string_keys == 1: 'with key a'
+  { a = 1, b = 2 },                          -- #string_keys == 2: 'with keys a and b'
+  { a = 1, b = 2, c = 3 },                   -- #string_keys >= 3: 'with keys a, b, and c'
+  { a = 1, b = 2, c = 3, d = 4 },            -- #string_keys == key_cap (the <= boundary)
+  { a = 1, b = 2, [3] = 'x' },               -- 'a sparse array', number_keys == 1
+  { a = 1, b = 2, [3] = 'x', [4] = 'y' },    -- 'a sparse array', number_keys > 1: 'N entries and also'
+  { a = 1, b = 2, [true] = 'x' },            -- other > 0: appends inscrutable keys
+  { a = 1, b = 2, [3] = 'x', [true] = 'y' }, -- sparse array + inscrutable keys
+
+  -- more string keys than key_cap (nstrings > #string_keys):
+  { a = 1, b = 2, c = 3, d = 4, e = 5 },                           -- other == 0, one extra: 'and one other string key'
+  { a = 1, b = 2, c = 3, d = 4, e = 5, f = 6 },                    -- other == 0, many extra: 'and N other string keys'
+  { a = 1, b = 2, c = 3, d = 4, e = 5, [99] = 'x' },               -- sparse array, other == 0
+  { a = 1, b = 2, c = 3, d = 4, e = 5, [true] = 'x' },             -- other > 0: '' prefix + inscrutable keys
+  { a = 1, b = 2, c = 3, d = 4, e = 5, [99] = 'x', [true] = 'y' }, -- sparse array + inscrutable keys
+
+  -- the key-quoting loop:
+  { ['a b'] = 1 },                  -- key contains a non-word character (s:find '[^%w_]')
+  { [''] = 1 },                     -- key is the empty string (#s == 0)
+}
+
+
+function inspect.show_test_tables(img)
+  for i, t in ipairs(inspect.test_tables) do
+    stdout:write(stringf('%2d: %s%s\n', i, inspect.friendly(t), img and ', which is ' .. inspect.image(t) or ''))
+  end
+end
+
+return inspect
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "linebreak" ] = function( ... ) local arg = _G.arg;
+-- updated for Lua 5.2
+
+local function eprintf(...) return io.stderr:write(string.format(...)) end
+require 'tabutil'
+
+local io = io -- debug
+
+local table, string, math
+    = table, string, math
+
+local assert, ipairs
+    = assert, ipairs
+
+local linebreak = { }
+
+local __doc = { }
+
+linebreak.__doc = __doc
+
+local inf = 1/0
+-- NOTE: real problem -- using inf is fine for typical paragraphs,
+-- but it's making it nearly impossible to set narrow paragraphs
+-- for dot.    If I *don't* use 'inf', however, then
+-- breaking regular paragraphs goes quadtratic.
+
+local linepenalty = 10
+
+local function demerits(badness, penalty)
+  penalty = penalty or 0
+  if penalty < -10000 then
+    return (linepenalty + badness)^2
+  elseif penalty < 0 then
+    return (linepenalty + badness)^2 - penalty^2
+  elseif penalty < 10000 then
+    return (linepenalty + badness)^2 + penalty^2
+  else
+    return inf -- (linepenalty + badness)^2 + 11000^2 -- inf does not work
+  end
+end
+    
+-- in the middle of a line, last word in a sentence is followed by an extra space
+local function extend_midwords(midwords)
+  for i = 1, #midwords-1 do
+    local w, next = midwords[i], midwords[i+1]
+    if w:find '[%.%?%!]"?$' and w:len() > 2 and next:find '^%u' then
+      midwords[i] = w .. ' '
+    end
+  end
+  return midwords
+end
+
+__doc.run = [[function(s, width, parms) returns string list
+Where 's' is the input, 'width' is the number of columns,
+and 'parms' can contain these fields:
+
+  stretch    -- spaces to go under target
+  shrink     -- spaces to go over target
+  hangindent -- hanging indentation
+  hangafter  -- line after which to indent
+]]
+
+function linebreak.run(s, width, parms)
+  width = width or 78
+  parms = parms or { }
+  parms.stretch = parms.stretch or 5  -- spaces under
+  parms.shrink  = parms.shrink or 2   -- spaces over
+  parms.hangindent = parms.hangindent or 0
+  parms.hangafter = parms.hangafter or math.huge
+  local openpenalty = parms.openpenalty or 400
+
+  local words = { }
+  for w in s:gmatch '%S+' do table.insert(words, w) end
+  local midwords    = extend_midwords(table.copy(words))
+  local lastlengths = table.map(string.len, words) 
+  local midlengths  = table.map(string.len, midwords) 
+
+  local breaks = { } -- for each i: cost, lines before, prev to break after i
+  breaks[0] = { demerits = 0, prev = nil, before = 0 }
+  
+  local ptab = { ['.'] = -400, [';'] = -200, [','] = -100, [')'] = -100 }
+  ptab['?'] = ptab['.']
+  ptab['!'] = ptab['.']
+
+  local function penalty(i)
+    local p = ptab[words[i]:sub(-1)] or 0
+    if p == 0 and words[i+1] and words[i+1]:find '^%(' then
+      p = openpenalty
+    end
+  end
+
+  local function linebad(lo, hi, width) 
+       -- break after word hi with word lo the last word on the previous line
+    assert(hi > lo)
+    local len = hi - lo - 1 -- number of spaces
+    for i = lo + 1, hi do
+      len = len + midlengths[i]
+    end
+    len = len + lastlengths[hi] - midlengths[hi]
+    local badness
+    local stretch = hi == #words and inf or parms.stretch
+    if len <= width then
+      badness = 100 * ((width - len)/stretch)^3
+    elseif len > width + parms.shrink then
+      badness = inf -- 10000 -- infinity does not work here for dot, but
+                             -- anything less makes line-breaking quadratic
+    else
+      badness = 100 * ((len - width)/parms.shrink)^3
+    end
+    return badness
+  end
+
+--eprintf('Breaking %d words\n', #words)
+
+  for hi = 1, #words do
+    local mindem = inf
+    local prev = 0
+    local minbefore = 0
+    for lo = hi-1, 0, -1 do
+      local before = breaks[lo].before
+      local w = parms.hangafter <= before and width - parms.hangindent or width
+--io.stderr:write('Before = ', before, ' width = ', w, '\n')
+      local badness = linebad(lo, hi, w)
+      if #words[hi] > w then
+        badness = math.min(badness, 100000)
+      end
+      if badness < inf then
+        local dem = demerits(badness, penalty(hi)) + breaks[lo].demerits
+        if dem < mindem then
+          mindem = dem
+          prev = lo
+          minbefore = before
+        end
+      else
+        break
+      end
+    end
+    breaks[hi] = { demerits = mindem, prev = prev, before = minbefore + 1 }
+    --eprintf('Break after %s (%d) preceded by %s (%d) with %g demerits\n',
+    --        words[hi] or '???', hi, words[prev] or '<start>', prev,
+    --        breaks[hi].demerits)
+  end
+  
+  local lines = { }
+  local last = #words
+  
+  while last > 0 do
+    midwords[last], words[last] = words[last], midwords[last] -- temporary swap
+    table.insert(lines, 1, table.concat(midwords, ' ', breaks[last].prev+1, last))
+    midwords[last], words[last] = words[last], midwords[last] -- undo swap
+    --eprintf('%d-%d: %s\n', breaks[last].prev or -1, last, lines[1])
+    last = breaks[last].prev
+  end
+  if parms.hangindent > 0 then
+    indent = string.rep(' ', parms.hangindent)
+    for i = 1, #lines do
+      if i > parms.hangafter then
+        lines[i] = indent .. lines[i]
+      end
+    end
+  end
+--eprintf('RESULT %d lines\n', #lines)
+  return lines
+end
+
+
+__doc.run_multi = [[function(s, width, params) returns string
+Flows text with `run` using the paremters given on each 
+paragraph within string s.  Paragraphs are separated by blank lines.
+]]
+
+function linebreak.run_multi(s, width, params)
+  local opts = { hangafter = 0, hangindent = 2 }
+  paragraphs = {}
+  for _, paragraph in ipairs(s:split_fields '\n[ \t]*\n+') do
+    local lines = linebreak.run(paragraph, width, params)
+    table.insert(paragraphs, table.concat(lines, '\n'))
+  end
+  return table.concat(paragraphs, '\n\n')
+end
+
+linebreak.run_para = linebreak.run_multi -- legacy
+
+return linebreak
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "module52" ] = function( ... ) local arg = _G.arg;
+local M = { }
+
+local setmetatable, error, pairs, assert, require, type
+    = setmetatable, error, pairs, assert, require, type
+
+local __doc = { }
+M.__doc = __doc
+
+__doc.new = [[function([name]) returns module, doctable, function, environment
+Returns a M, __doc, thismodule where
+
+  M is a new, empty table suitable for making into a module
+  __doc is M.__doc
+  thismodule is a function that, when called, checks the globals
+     table and then returns M.
+  environment is an empty table that bleats if read from or written to
+
+Usage:
+
+  local M, __doc, thismodule, _ENV = require 'module52'.new()
+  ...
+  return thismodule()
+
+If `name` is not nil, it must be a string that contains a dot.
+We require the parent module, which must resolve to a table.
+Then the new module `_M` gets inserted into the parent table at
+the appropriate spot.
+
+Special fields of `__doc` include `__overview`, `__order`, `__oneline`,
+and `__methods`.
+]]
+
+local empty_globals =
+  setmetatable({}, {
+      __newindex = function (_, n)
+        error("attempt to write to undeclared variable "..n, 2)
+      end,
+      __index = function (_, n)
+        error("attempt to read undeclared variable "..n, 2)
+      end,
+    })
+
+function M.new(name)
+  local newmodule = { }
+  if name then
+    newmodule._NAME = name
+    local parent, member = assert(name:match '^(.+)%.([^%.]+)$')
+    local pm = require(parent) -- might modify _G
+    assert(type(pm) == 'table')
+    pm[member] = newmodule
+  end
+
+  local globals = { }; for x in pairs(_G) do globals[x] = true end
+  local function thismodule()
+    for x in pairs(_G) do
+      if not globals[x] then
+        error('Accidentally defined global variable ' .. x)
+      end
+    end
+    return newmodule
+  end
+  local __doc = { }
+  newmodule.__doc = __doc
+
+
+  return newmodule, __doc, thismodule, empty_globals
+end
+
+return M
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "set" ] = function( ... ) local arg = _G.arg;
+local type, pairs, unpack, tostring, next, assert, setmetatable, getmetatable
+    = type, pairs, unpack, tostring, next, assert, setmetatable, getmetatable
+
+local table, math, string
+    = table, math, string
+
+local require = require
+local pcall, error
+    = pcall, error
+
+local index = { }
+local setmeta = { __index = index }
+local function s(t) return setmetatable(t, setmeta) end
+
+local M, __doc, thismodule, _ENV = require 'module52'.new()
+
+__doc.__overview = [[
+Sets of non-nil values; each set is represented
+using a Lua table with the members as keys;
+corresponding values are typically the Boolean true.
+Supports infix operations +, -, *, and comparisons
+]]
+
+__doc.is = [[function(value) returns bool
+Return true iff the value is a set (with the set metatable)
+]]
+
+function M.is(value)
+  return type(value) == 'table' and getmetatable(value) == setmeta
+end
+
+__doc.elements = [[function(set) returns generator returns element]]
+
+M.elements = pairs
+
+__doc.sorted_elements = [[function(set[, lt]) returns list]]
+
+M.sorted_elements = table.sorted_keys
+
+__doc.map = [[function(function, set) returns set
+Return new set resulting from applying function to every element of set.
+]]
+function M.map(...) return s(table.setmap(...)) end
+  
+__doc.argmin = [[function(function, set) returns element, value
+argmin(f, xs) returns the element of xs that minimizes the output
+of f.  The minimum value is also returned.  Returns nil if set is empty.
+]]
+
+function M.argmin(f, t)
+  local bestarg, bestx = nil, math.huge
+  for k in pairs(t) do
+    local x = f(k)
+    if bestarg == nil or x < bestx then
+      bestarg, bestx = k, x
+    end
+  end
+  return bestarg, bestx
+end
+
+function M.argmax(f, t)
+  local x, v = M.argmin(function(x) return -f(x) end, t)
+  return x, -v
+end
+
+__doc.fold = [[function(function, set, ...) returns value]]
+
+local function pack(...) return { ... } end
+
+function M.fold(f, t, ...)
+  local z = pack(...)
+  for k in pairs(t) do
+    z = pack(f(k, unpack(z)))
+  end
+  return unpack(z)
+end
+
+__doc.forall = [[function(predicate, set) returns bool]]
+__doc.exists = [[function(predicate, set) returns bool]]
+
+function M.forall(f, l)
+  for v in pairs(l) do
+    if not f(v) then
+      return false
+    end
+  end
+  return true
+end
+
+function M.exists(f, l)
+  for v in pairs(l) do
+    if f(v) then
+      return true
+    end
+  end
+  return false
+end
+
+__doc.find = [[function(predicate, set) returns element or nothing]]
+function M.find(f, l)
+  for v in pairs(l) do
+    if f(v) then
+      return v
+    end
+  end
+end
+
+__doc.of_list = [[function(list) returns set]]
+__doc.to_list = [[function(set) returns list]]
+__doc.of_set =  [[function(table) returns set with metatable]]
+
+function M.of_list(xs)
+  return s(table.set(xs))
+end
+
+M.set = M.of_list
+M.of_set = s
+
+function M.to_list(xs)
+  local l = { }
+  for k in pairs(xs) do
+    table.insert(l, k)
+  end
+  return l
+end
+
+__doc.of_keys = [[function(table) returns set of that table's keys]]
+function M.of_keys(t)
+  local u = { }
+  for k in pairs(t) do u[k] = true end
+  return s(u)
+end
+
+__doc.of_iterator = [[function(iterator) returns set
+Return the set of items produced by the iterator.
+]]
+
+function M.of_iterator(...)
+  local u = { }
+  for v in ... do u[v] = true end
+  return s(u)
+end
+
+__doc.of_matches = [[function(string, [pattern]) returns set
+Set of matches of pattern in string.  Pattern defaults to '%S+'.
+]]
+
+function M.of_matches(s, p)
+  return M.of_iterator(string.gmatch(s, p or '%S+'))
+end
+
+M.subset = table.subset
+setmeta.__le = M.subset
+M.minus = table.setminus
+setmeta.__sub = M.minus
+
+function M._tostring(s, sort)
+  local l = table.map(tostring, M.to_list(s))
+  if sort then table.sort(l) end
+  if #l == 0 then
+    return "{ }"
+  else
+    return table.concat { "{ ", table.concat(l, ", "), " }" }
+  end
+end
+setmeta.__tostring = M._tostring
+
+__doc.key = [[function(set) returns string
+Returns a string key that is unique to the given set,
+provided each element converts to a unique 'tostring'.
+]]
+
+function M.key(s) return M._tostring(s, true) end
+
+
+__doc.size = [[function(set) returns number]]
+M.size = table.numpairs
+setmeta.__len = M.size
+
+__doc.setunion = [[function(set of sets) returns set]]
+function M.setunion(sets)
+  local u = s { }
+  for set in pairs(sets) do
+    u = u + set
+  end
+  return u
+end
+
+
+function M.union(...)
+  local ok, answer = pcall(table.union, ...)
+  if not ok then
+    local inspect = require 'inspect'
+    inspect.show(...)
+    error(answer)
+  else
+    return s(answer)
+  end
+  -- return s(table.union(...))
+end
+setmeta.__add = M.union
+
+function M.inter(s1, s2)
+  local t = { }
+  for k in pairs(s1) do
+    if s2[k] then
+      t[k] = true
+    end
+  end
+  return s(t)
+end
+setmeta.__mul = M.inter
+
+function M.xor(s1, s2)
+  local t = { }
+  for x in pairs(s1) do
+    if not s2[x] then t[x] = true end
+  end
+  for x in pairs(s2) do
+    if not s1[x] then t[x] = true end
+  end
+  return s(t)
+end
+setmeta.__pow = M.xor
+
+function M.eq(s1, s2)
+  return s1 <= s2 and s2 <= s1
+end
+
+function M.lt(s1, s2)
+  return s1 <= s2 and not (s2 <= s1)
+end
+setmeta.__eq = M.eq
+setmeta.__lt = M.lt
+
+function M.copy(t)
+  local u = { }
+  for k in pairs(t) do u[k] = true end
+  return s(u)
+end
+
+__doc.filter = [[function(predicate, set) returns set
+Return a new set that is like the argument set except it
+contains only elements satisfying the predicate function.
+]]
+
+function M.filter(f, l)
+  local u = { }
+  for v in pairs(l) do
+    if f(v) then
+      u[v] = true
+    end
+  end
+  return s(u)
+end
+
+function M.insert(set, x)
+  set[x] = true
+  return set
+end
+index.insert = M.insert
+
+__doc.is_empty = [[function(set) returns bool]]
+function M.is_empty(s)
+  return next(s) == nil
+end
+index.is_empty = M.is_empty
+
+function M.singleton(v)
+  return s { [v] = true }
+end
+
+function M.is_singleton(t)
+  local k = next(t)
+  return k ~= nil and next(t, k) == nil
+end
+
+__doc.partition = [[function(f, set) returns set of sets
+Returns a mimimal partition of 'set' (set of nonoverlapping subsets)
+such that f maps elements of a subset to equal values.
+]]
+
+function M.partition(f, set)
+  assert(f and set)
+  local subsets = { } -- map representative to partition
+  local function add(v)
+    local mapped = f(v)
+    for rep, equiv in pairs(subsets) do
+      if mapped == rep then
+        equiv[v] = true
+        return
+      end
+    end
+    subsets[mapped] = s { [v] = true }
+  end
+  for v in pairs(set) do add(v) end
+  local partition = s { }
+  for _, equiv in pairs(subsets) do
+    partition[equiv] = true
+  end
+  return partition
+end
+
+local small = M.of_list {1, 2, 3, 4, 5}
+local large = M.of_list {1, 5, 10, 100, 1000}
+local xsmall_large = small ^ large
+
+
+__doc.extrema = [[function(set, lt) returns value, value
+return the smallest, largest values in the given set (by lt),
+or nil, nil if the set is empty.  lt defaults to <.
+]]
+
+function M.extrema(set, lt)
+  lt = lt or function(v1, v2) return v1 < v2 end
+  local smallest, largest = nil, nil
+  for v in pairs(set) do
+    if smallest == nil or lt(v, smallest) then
+      smallest = v
+    end
+    if largest == nil or lt(largest, v) then
+      largest = v
+    end
+  end
+  return smallest, largest
+end
+
+
+assert(M.eq(xsmall_large, M.of_list {2, 3, 4, 10, 100, 1000}))
+assert(M.is_empty(small ^ small))
+assert(M.eq(small ^ M.of_list {}, small))
+assert(M.eq(xsmall_large, M.xor(small, large)))
+assert(M.eq((xsmall_large ^ large), small))
+assert(((small ^ large) + M.singleton(42))[42])
+
+assert(M.is_singleton(M.singleton(99)))
+assert(M.is_singleton(M.of_list { 88 }))
+assert(not M.is_singleton(M.of_list { 88, 89 }))
+assert(not M.is_singleton(M.of_list { }))
+
+
+M._test = {
+  small = small,
+  large = large,
+  inter = small * large,
+  union = small + large,
+  xor   = xsmall_large,
+  sub   = small <= large,
+  self_le = small <= small,
+  self_lt = small < small,
+  self_eq = small == small,
+  isub    = small * large <= small,
+  usub    = small <= small + large,
+  parity = M.partition(function (n) return n % 2 == 0 end, small + large),
+}
+
+return thismodule()
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "stringutil" ] = function( ... ) local arg = _G.arg;
+-- legacy monkey-patched stringutil
+
+local string = require 'string'
+local stringx = require 'stringx'
+
+for k, v in pairs(stringx) do
+  if not k:find '^__' then
+    assert(string[k] == nil)
+    string[k] = v
+  end
+end
+
+return string
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "stringx" ] = function( ... ) local arg = _G.arg;
+local string = require 'string'
+
+local unpack = table.unpack or unpack -- luacheck: no global
+local insert = table.insert
+
+local math, table
+    = math, table
+
+local assert, setmetatable, type
+    = assert, setmetatable, type
+
+
+local M, __doc, thismodule, _ENV = require 'module52'.new()
+
+__doc.split = [[iterator(string, pattern) yields string
+Pieces of input as separated by pattern.
+]]
+function M:split(pat)
+  pat = pat or '%s+'
+  local st, g = 1, self:gmatch("()("..pat..")")
+  local function getter(segs, seps, sep, cap1, ...)
+    st = sep and seps + #sep
+    return self:sub(segs, (seps or 0) - 1), cap1 or sep, ...
+  end
+  return function() if st then return getter(st, g()) end end
+end
+
+function M:find_any(pats, ...)
+  local s = self
+  local find = string.find
+  local args = { ... }
+  local function try(p) return find(s, p, unpack(args)) end
+  local i = 1
+  local function finish(n, ...)
+    i = i + 1
+    if n or not pats[i] then
+      return n, ...
+    else
+      return finish(try(pats[i]))
+    end
+  end
+  return finish(try(pats[i]))
+end
+
+function M:split_fields(pat)
+  local fs = { }
+  for f in self:split(pat) do insert(fs, f) end
+  return fs
+end
+
+__doc.lines = [[iterator(string) yields string
+All matches of (.-)\n.
+]]
+
+function M:lines()
+  return self:gmatch('(.-)\n')
+end
+
+__doc.allmatches = [[function(string, pattern) returns string list
+Returns a list of all matches of the given pattern.
+Pattern defaults to '%S+'.
+]]
+function M:allmatches(pattern)
+  local ms = { }
+  for m in self:gmatch(pattern or '%S+') do insert(ms, m) end
+  return ms
+end
+
+__doc.commafy = [[function(string list, [conjunction], [comma])
+Return a string formatting a list of one or more items using
+a serial comma and a conjunction.  The default conjunction is
+'and', but 'or' is also useful.  (For two items, only the
+conjunction is used.)
+
+If passed nil or an empty list, returns an empty string.
+]]
+
+function M.commafy(t, andword, comma)
+  if t == nil or #t == 0 then return '' end  -- ugly special case
+  andword = andword or 'and'
+  local comma_space = comma and comma .. ' ' or ', '
+  local n = #t
+  assert(n > 0, 'Empty list not handled correctly in stringx.commafy')
+  if n == 1 then
+    return t[1]
+  elseif n == 2 then
+    return table.concat { t[1], ' ', andword, ' ', t[2] }
+  else
+    local last = t[n]
+    t[n] = andword .. ' ' .. t[n]
+    local answer = table.concat(t, comma_space)
+    t[n] = last
+    return answer
+  end
+end
+
+function M.center(s, len)
+  if type(len) == 'string' then len = #len end
+  local add = len - #s
+  if add > 0 then
+    local right = math.floor(add / 2)
+    local left = add - right
+    return table.concat { string.rep(' ', left), s, string.rep(' ', right) }
+  else
+    return s
+  end
+end
+
+__doc.wrapf = [[function (string -> a) returns (string, ...) -> a
+Wraps function so it takes the same arguments as string.format
+]]
+
+__doc.wrapf1 = [[function ((a, string) -> b) returns (a, string, ...) -> b
+Wraps function so 2nd argument and beyond are like string.format
+]]
+
+__doc.wrapm = [[function (a, string) returns (...) -> b
+string.wrapm(a, methodname)(...) = a:methodname(string.format(...))
+]]
+
+__doc.fwriter = [[function (a) returns (...) -> b
+string.fwriter(a)(...) = a:write(string.format(...))
+]]
+
+function M.wrapf(f)
+  return function(...) return f(string.format(...)) end
+end
+
+function M.wrapm(self, method)
+  return function(...) return self[method](self, string.format(...)) end
+end
+
+function M.wrapf1(f)
+  return function(x, ...) return f(x, string.format(...)) end
+end
+
+function M.fwriter(self)
+  return function(...) return self:write(string.format(...)) end
+end
+
+
+
+__doc.center = [[function(string, width) returns string
+Pads argument on the left and right with blanks to achieve desired width.
+If 'width' is a string, pad to its size.
+]]
+function M.center(s, len)
+  if type(len) == 'string' then len = #len end
+  local add = len - #s
+  if add > 0 then
+    local right = math.floor(add / 2)
+    local left = add - right
+    return table.concat { string.rep(' ', left), s, string.rep(' ', right) }
+  else
+    return s
+  end
+end
+
+
+__doc.byte_table = [[function(string) returns { code |--> bool}
+Return table mapping every `string.byte` code in 'string' to true.
+]]
+
+function M.byte_table(s)
+  local t = { }
+  for i = 1, #s do
+    t[string.byte(s, i)] = true
+  end
+  return t
+end
+
+__doc.random = [[function(minlen, maxlen) returns str
+Generates a random string with length no shorter than minlen and
+no longer than maxlen.
+
+By default, minlen is 10 and maxlen is 30.
+
+Only capital ASCII letters are used (i.e., A-Z).
+]]
+function M.random(minlen, maxlen)
+  local minlen = minlen or 10
+  local maxlen = maxlen or 30
+  local len = math.random(minlen, maxlen)
+  local let_start, let_end = string.byte('AZ', 1, 2)
+
+  local letters = {}
+  for _ = 1, len do
+    insert(letters, string.char(math.random(let_start, let_end)))
+  end
+  return table.concat(letters)
+end
+
+
+__doc.trim = [[function([string]) returns string
+Returns argument (default '') with leading and trailing space removed.
+]]
+
+function M.trim(s)
+  if not s then
+    return ''
+  else
+    return (s:gsub('^%s*(.-)%s*$', '%1'))
+  end
+end
+
+__doc.rtrim = [[function([string]) returns string
+Returns argument (default '') with trailing space removed.
+]]
+
+function M.rtrim(s)
+  if not s then
+    return ''
+  else
+    return (s:gsub('^(.-)%s*$', '%1'))
+  end
+end
+
+__doc.distance = [[function(string, string, [limit]) returns number
+
+Damerau–Levenshtein edit distance between two strings or tables.
+Transposition, substitution, insertion, deletion.
+Pass 'limit' to get better performance; returns math.min(limit, distance).
+
+Cost is product of lengths.
+
+Also works on tables.
+
+http://en.wikipedia.org/w/index.php?title=Damerau%E2%80%93Levenshtein_distance&oldid=351641537
+http://nayruden.com/?p=115
+https://gist.github.com/Nayruden/427389
+]]
+
+function M.distance2d( s, t, lim )
+    if lim and math.abs(#s - #t) >= lim then
+      return lim
+    else
+      -- Convert string arguments to arrays of ints (ASCII values)
+      if type(s) == "string" then
+        s = { string.byte( s, 1, #s ) }
+      end
+
+      if type(t) == "string" then
+        t = { string.byte( t, 1, #t ) }
+      end
+
+      local min = math.min -- Localize for performance
+
+      local huge = math.huge
+      local d = {} -- (#s+1) * (#t+1) is going to be the size of this array
+        -- access to elements -1 has huge cost (bogus transposition
+      for i = 0, #s do
+        d[i] = { [-1] = huge, [0] = i } -- Initialize cost of deletion
+      end
+      d[-1] = setmetatable({}, { __index = function () return huge end })
+      local d0 = d[0]
+      for j = 0, #t do
+        d0[j] = j -- Initialize cost of insertion
+      end
+
+      for i = 1, #s do
+        local best = huge -- best cost for this i, any j
+        local d_i, d_prev_i, d_i_2 = d[i], d[i-1], d[i-2]
+        for j = 1, #t do
+          local cost = s[i] ~= t[j] and 1 or 0 -- substitution or transposition
+          local trans_cost = s[i] == t[j - 1] and s[i - 1] == t[j] and cost or huge
+
+          local mincost = min(d_prev_i[j]     + 1,   -- Deletion
+                              d_i     [j - 1] + 1,   -- Insertion
+                              d_prev_i[j - 1] + cost, -- Subsn
+                              d_i_2   [j - 2] + trans_cost
+                             )
+          d_i[j] = mincost
+          best = min(best, mincost)
+        end
+        if lim and best >= lim then
+          return lim
+        end
+      end
+      return d[#s][#t]
+    end
+end
+
+
+
+function M.distance( s, t, lim )
+    if lim and math.abs(#s - #t) >= lim then
+      return lim
+    else
+      -- Convert string arguments to arrays of ints (ASCII values)
+      if type(s) == "string" then
+        s = { string.byte( s, 1, #s ) }
+      end
+
+      if type(t) == "string" then
+        t = { string.byte( t, 1, #t ) }
+      end
+
+      local min = math.min -- Localize for performance
+      local num_columns = #t + 1 -- We use this a lot
+
+      local d = {} -- (#s+1) * (#t+1) is going to be the size of this array
+
+      -- This is technically a 2D array, but we're treating it as
+      -- 1D. Remember that 2D access in the form my_2d_array[ i, j ] can
+      -- be converted to my_1d_array[ i * num_columns + j ], where
+      -- num_columns is the number of columns you had in the 2D array
+      -- assuming row-major order and that row and column indices start
+      -- at 0 (we're starting at 0).
+
+      for i = 0, #s do
+        d[i * num_columns] = i -- Initialize cost of deletion
+      end
+      for j = 0, #t do
+        d[j] = j -- Initialize cost of insertion
+      end
+      local huge = math.huge
+      local function idx(t, k)
+        t[k] = huge
+        return huge
+      end
+      setmetatable(d, { __index = idx })
+
+      for i = 1, #s do
+        local i_pos = i * num_columns
+        local best = huge -- best cost for this i, any j
+        for j = 1, #t do
+          local add_cost = s[i] ~= t[j] and 1 or 0
+          local trans_cost = s[i] == t[j - 1] and s[i - 1] == t[j] and add_cost or huge
+
+          local mincost = min(d[i_pos - num_columns + j] + 1,   -- Deletion
+                              d[i_pos + j - 1] + 1,             -- Insertion
+                              d[i_pos - num_columns + j - 1] + add_cost, -- Subsn
+                              d[i_pos - num_columns - num_columns + j - 2] + trans_cost
+                             )
+          d[i_pos + j] = mincost
+          best = min(best, mincost)
+        end
+        if lim and best >= lim then
+          return lim
+        end
+      end
+      return d[#d]
+    end
+end
+
+
+__doc.square_quote = [=[function(string [,newline]) returns string
+Using Lua's [[...]] quoting mechanism, return a quoted
+version of the argument.  If newline is not nil, always
+open with a newline.
+]=]
+
+
+
+function M.square_quote(s, newline)
+  local nl = '' -- possible opening
+  if newline or s:find '^\n' then
+    nl = '\n'
+  end
+  if s:find '%]%]' then
+    local eqmax = 0
+    for eq in s:gmatch '%=+' do
+      eqmax = math.max(eqmax, #eq)
+    end
+    local delim = string.rep('=', #eqmax+1)
+    return table.concat { '[', delim, '[', nl, s, ']', delim, ']' }
+  else
+    return table.concat { '[[', nl, s, ']]' }
+  end
+end
+
+
+function M.to_bits(s)
+  local function as_bits(s)
+    local n = string.byte(s)
+    local bits = { }
+    local hi = 128
+    while hi >= 1 do
+      if n >= hi then
+        insert(bits, '1')
+        n = n - hi
+      else
+        insert(bits, '0')
+      end
+      hi = hi / 2
+    end
+    return table.concat(bits)
+  end
+  return (s:gsub('.', as_bits))
+end
+
+
+function M.explode(s)
+  local t = { }
+  for i = 1, #s do
+    t[i] = s:sub(i, i)
+  end
+  return t
+end
+
+--string.implode = table.concat
+
+function M.longest_matching_prefix(s, pat)
+  for i = 1, #pat do
+    local ok, found = s:find(pat:sub(1, -i))
+    if ok and found then
+      return pat:sub(1, -i)
+    end
+  end
+  return ''
+end
+
+__doc.is_proper_prefix = [[function(needle, haystack) returns bool
+Is the needle a proper prefix of the haystack?
+]]
+
+function M.is_proper_prefix(needle, haystack)
+  return #haystack > #needle and haystack:find(needle, 1, true) == 1
+end
+
+__doc.file_line_table = [[function(string) returns string list
+Returns a list of what file:lines would return if the string
+were the contents of a file.
+]]
+
+function M.file_line_table(s)
+  local lines = { }
+  for line in s:gmatch('(.-)\n') do
+    insert(lines, line)
+  end
+  if #s > 0 and s:sub(-1) ~= '\n' then
+    insert(lines, s:match '[^\n]*$')
+  end
+  return lines
+end
+
+do
+  local function lines_are(s, expected)
+    local lines = M.file_line_table(s)
+    assert(#lines == #expected)
+    for i = 1, #expected do
+      assert(lines[i] == expected[i])
+    end
+  end
+  lines_are('', {})
+  lines_are('a', {'a'})
+  lines_are('a\n', {'a'})
+  lines_are('a\nb', {'a', 'b'})
+  lines_are('a\n\n', {'a', ''})
+end
+
+return thismodule()
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "tablex" ] = function( ... ) local arg = _G.arg;
+local setmetatable, getmetatable, table, type, math, select, assert
+    = setmetatable, getmetatable, table, type, math, select, assert
+
+local coroutine, error, io, ipairs, next, pairs, require, string
+    = coroutine, error, io, ipairs, next, pairs, require, string
+
+local unpack = table.unpack or unpack -- multiversion
+
+local tostring
+    = tostring
+
+local stringf = string.format
+
+local M, __doc, thismodule, _ENV = require 'module52'.new()
+
+function M.average(xs)
+  local sum = 0
+  for _, x in ipairs(xs) do
+    sum = sum + x
+  end
+  return sum / #xs
+end
+
+function M.of_generator(f, ...)
+  local l = { }
+  for x in f(...) do table.insert(l, x) end
+  return l
+end
+
+__doc.take = [[function(t, [n]) returns t
+Keeps the first n elements from t.  Default n == 1.
+]]
+
+function M.take(t, n)
+  n = n or 1
+  for i = 1, #t - n do -- luacheck: no unused
+    table.remove(t)
+  end
+  return t
+end
+
+__doc.shift = [[function(t, [n]) returns t
+Removes the first n elements from t.  Default n == 1.
+]]
+
+function M.shift(t, n)
+  n = n or 1
+  for i = 1, n do  -- luacheck: no unused
+    table.remove(t, 1)
+  end
+  return t
+end
+
+function M.reverse(xs)
+  local u = { }
+  for _, x in ipairs(xs) do
+    table.insert(u, 1, x)
+  end
+  return u
+end
+
+__doc.random = [[function(value list, [number]) return value
+Return random element from list
+]]
+
+function M.random(l, n)
+  n = n or #l
+  assert(n > 0, 'random element from empty list')
+  return l[math.random(n)]
+end
+
+__doc.sorted_keys = [[function(table, [lt]) returns list
+Returns list of all keys in argument, sorted by function lt,
+or if lt is missing the default <.
+]]
+
+function M.sorted_keys(t, lt)
+  local u = { }
+  for k in pairs(t) do table.insert(u, k) end
+  table.sort(u, lt)
+  return u
+end
+
+__doc.randomize = [[function(xs, [random]) returns ys
+Result ys is a fresh list containing elements of xs in random order.
+]]
+function M.randomize(l, random)
+  random = random or math.random
+  local u = { }
+  local n = #l
+  for i = 1, n do
+    u[i] = l[i]
+  end
+  for i = 1, n do
+    local j = random(n)
+    u[i], u[j] = u[j], u[i]
+  end
+  return u
+end
+
+__doc.key = [[function(v) returns function (table) returns value
+Return the function that looks up by the given key.
+]]
+
+function M.key(v)
+  return function(t) return t[v] end
+end
+
+__doc.filter = [[function(f: function, xs : value list) returns value list
+Returns the list of values v in xs satisfying f(v).
+]]
+
+function M.filter(f, l)
+  local u = { }
+  if type(f) == 'table' then
+    for _, v in ipairs(l) do
+      if f[v] then
+        table.insert(u, v)
+      end
+    end
+  else
+    for _, v in ipairs(l) do
+      if f(v) then
+        table.insert(u, v)
+      end
+    end
+  end
+  return u
+end
+
+function M.filternot(f, l)
+  local u = { }
+  if type(f) == 'table' then
+    for _, v in ipairs(l) do
+      if not f[v] then
+        table.insert(u, v)
+      end
+    end
+  else
+    for _, v in ipairs(l) do
+      if not f(v) then
+        table.insert(u, v)
+      end
+    end
+  end
+  return u
+end
+
+function M.filtersplit(f, l)
+  local good, bad = { }, { }
+  if type(f) == 'table' then
+    for _, v in ipairs(l) do
+      table.insert(f[v] and good or bad, v)
+    end
+  else
+    for _, v in ipairs(l) do
+      table.insert(f(v) and good or bad, v)
+    end
+  end
+  return good, bad
+end
+
+
+
+__doc.get_key = [=[function(x)(t) returns t[x]]=]
+
+function M.get_key(x)
+  return function(t) return t[x] end
+end
+
+__doc.map = [[function(f, t, ...) returns list of values
+Returns a map that is like `t` except each key `k`
+is mapped to `f(v, k, ...)` where `v == t[k]`.
+
+If `f` is a table it does table lookup instead of function application.
+]]
+
+function M.map(f, l, ...)
+  local u = { }
+  if type(f) == 'table' then
+    for k, v in pairs(l) do
+      u[k] = f[v]
+    end
+  else
+    for k, v in pairs(l) do
+      u[k] = f(v, k, ...)
+    end
+  end
+  return u
+end
+
+function M.mapi(f, l, ...)
+  local u = { }
+  if type(f) == 'table' then
+    for k, v in ipairs(l) do
+      u[k] = f[v]
+    end
+  else
+    for k, v in ipairs(l) do
+      u[k] = f(v, k, ...)
+    end
+  end
+  return u
+end
+
+
+
+function M.app(f, l, ...)
+  for k, v in pairs(l) do
+    f(v, k, ...)
+  end
+end
+
+__doc.map_no_key = [[function(f, t : table, ...) returns table
+Returns a table u in which u[k] = f(t[k], ...) for every k in t.
+]]
+
+function M.map_no_key(f, l, ...)
+  local u = { }
+  for k, v in pairs(l) do
+    u[k] = f(v, ...)
+  end
+  return u
+end
+
+function M.setmap(f, t)
+  local u = { }
+  for k, v in pairs(t) do
+    u[assert(f(k))] = v
+  end
+  return u
+end
+
+__doc.argmin = [[function(f, t) returns k, v, f(v, k)
+Return key, value, and result where f(v, k) is minimized.
+]]
+
+function M.argmin(f, l)
+  local bestarg, bestk, bestres = nil, nil, math.huge
+  for k, v in pairs(l) do
+    local x = f(v, k)
+    if x < bestres then
+      bestarg, bestk, bestres = k, v, x
+    end
+  end
+  return bestarg, bestk, bestres
+end
+
+__doc.indexmin = [[function(f, xs) returns int
+Return the index i into nonempty xs that minimizes f(xs[i]).
+If xs is empty, returns nil.
+]]
+
+function M.indexmin(f, xs)
+  local besti, bestres = nil, math.huge
+  for i, x in ipairs(xs) do
+    local y = f(x)
+    if y < bestres then
+      besti, bestres = i, y
+    end
+  end
+  return besti, bestres
+end
+
+local function pack(...) return { ... } end
+
+function M.fold(f, t, ...)
+  local z = pack(...)
+  for k, v in pairs(t) do
+    z = pack(f(k, v, unpack(z)))
+  end
+  return unpack(z)
+end
+
+__doc.forall = [[function(f or t, xs) returns boolean
+True iff every element v enumerated by ipairs(xs) satisfies
+function f(v) or table t[v].
+]]
+
+function M.forall(f, l)
+  if type(f) == 'function' then
+    for _, v in ipairs(l) do
+      if not f(v) then
+        return false
+      end
+    end
+  else
+    for _, v in ipairs(l) do
+      if not f[v] then
+        return false
+      end
+    end
+  end
+  return true
+end
+
+__doc.exists = [[function(fun or table, list) returns bool
+Return ∃ x ∈ list : fun(x) or table[x].
+]]
+
+__doc.existsp = [[function(fun, table) returns boolish
+Return ∃ k, v ∈ table : fun(v, k).
+]]
+
+function M.exists(f, l)
+  if type(f) == 'function' then
+    for _, v in ipairs(l) do
+      if f(v) then
+        return true
+      end
+    end
+  else
+    for _, v in ipairs(l) do
+      if f[v] then
+        return true
+      end
+    end
+  end
+  return false
+end
+M.any = M.exists
+M.anyp = M.existsp
+__doc.any = __doc.exists
+__doc.anyp = __doc.existsp
+
+
+function M.existsp(f, t)
+  for k, v in pairs(t) do
+    if f(v, k) then
+      return true
+    end
+  end
+  return false
+end
+
+function M.forallp(f, l)
+  if type(f) == 'function' then
+    for k, v in pairs(l) do
+      if not f(v, k) then
+        return false
+      end
+    end
+  else
+    for _, v in pairs(l) do
+      if not f[v] then
+        return false
+      end
+    end
+  end
+  return true
+end
+
+
+
+
+__doc.find = [[function(p, l) returns v, i in list s.t. p(v) or nil
+Returns the first v, i pair in list l such that p(v) and l[i] == v.
+]]
+
+function M.find(f, l)
+  for i, v in ipairs(l) do
+    if f(v) then
+      return v, i
+    end
+  end
+  return nil
+end
+
+__doc.index_of = [[function(l, v) returns i s.t. l[i] == v or nil
+Returns the first i in list l where l[i] == v.
+]]
+
+function M.index_of(l, v)
+  for i = 1, #l do
+    if l[i] == v then return i end
+  end
+  return nil
+end
+
+__doc.invert = [[function(table) returns table
+return table with keys and values swapped.
+If multiple argument keys map to the same value,
+which one wins is arbitrary.
+]]
+
+function M.invert(t)
+  local u = { }
+  for k, v in pairs(t) do u[v] = k end
+  return u
+end
+
+__doc.set = [[function(value list) returns table
+Returns a table in which every value in the argument list
+is mapped to `true`.  No metatable!  Consider instead `set.of_list`.
+]]
+
+function M.set(t) -- set of list
+  local u = { }
+  for _, v in ipairs(t) do u[v] = true end
+  return u
+end
+
+__doc.subset = [[function(t1, t2) returns bool
+return true if and only if every key in `t1` is also in `t2`.
+]]
+
+function M.subset(l, r) -- every key in l is in r
+  for k in pairs(l) do if r[k] == nil then return false end end
+  return true
+end
+
+__doc.setminus = [[function(t1, t2) returns bool
+Returns a shallow copy of table t1 with every key in t2 removed.
+]]
+
+function M.setminus(l, r)
+  local u = M.copy(l)
+  for k in pairs(r) do u[k] = nil end
+  return u
+end
+
+function M.numpairs(t)
+  local n = 0
+  for _ in pairs(t) do n = n + 1 end
+  return n
+end
+
+__doc.union = [[function(table, ...) returns table
+Returns a table in which every key bound in any argument
+is bound to `true`.
+]]
+
+function M.union(...)
+  local u = { }
+  for _, t in ipairs { ... } do
+    for k in pairs(t) do
+      u[k] = true
+    end
+  end
+  return u
+end
+
+__doc.seteq = [[function(table, ...) returns bool
+Takes two or more table arguments and returns true if and only if
+all are "set equal" to the first, according to table.subset.
+]]
+
+function M.seteq(...)
+  local n = select('#', ...)
+  assert(n > 0)
+  local s1 = select(1, ...)
+  if type(s1) ~= 'table' then
+    local i = require 'inspect'
+    io.stderr:write('set s1 is a ', type(s1), ': ', i.image(s1), '\n')
+  end
+  assert(type(s1) == 'table')
+  for i = 2, n do
+    local s2 = select(i, ...)
+    assert(type(s2) == 'table')
+    if not (table.subset(s1, s2) and table.subset(s2, s1)) then
+      return false
+    end
+  end
+  return true
+end
+
+__doc.elements = [[function(table) returns value list
+Return list of all the keys in the argument table, in arbitrary order.
+]]
+
+function M.elements(t) --- list of set
+  local u = { }
+  for v in pairs(t) do table.insert(u, v) end
+  return u
+end
+
+__doc.values = [[function(table) returns value list
+Returns the values of a table (from `pairs`) in a list.
+]]
+
+function M.values(t) --- values in table as list
+  local u = { }
+  for _, v in pairs(t) do table.insert(u, v) end
+  return u
+end
+
+__doc.copy = [[function(table) returns table
+Return a shallow copy of the argument. Result has same metatable
+as the argument.
+]]
+
+function M.copy(t)
+  local u = { }
+  for k, v in pairs(t) do u[k] = v end
+  return setmetatable(u, getmetatable(t))
+end
+
+__doc.deep_copy = [[function(table) returns table
+Returns its argument, unless argument is a table,
+in which case it returns a fresh table in which
+every key is mapped to a deep copy of the corresponding
+value.  Metatables are also copied.
+
+(Only values are copied deeply, not keys.)
+]]
+
+function M.deep_copy(t)
+  if type(t) == 'table' then
+    return setmetatable(table.map(table.deep_copy, t), getmetatable(t))
+  else
+    return t
+  end
+end
+
+function M.default_to(default)
+  return setmetatable({ }, { __index = function() return default end })
+end
+
+do
+  local default_meta = { __index = function(t) return t['*'] or t.default end }
+  function M.defaulting(t, defaultkey)
+    t = t or { }
+    defaultkey = defaultkey or '*'
+    local om = getmetatable(t)
+    if om then
+      assert(om.__index == nil, "Defaulting table already has __index method")
+      local m = { }
+      for k, v in pairs(om) do m[k] = v end
+      m.__index = function(t) return t[defaultkey] or t.default end
+      setmetatable(t, m)
+    elseif defaultkey == '*' then
+      setmetatable(t, default_meta)
+    else
+      setmetatable(t, { __index = function(t) return t[defaultkey] or t.default end })
+    end
+    return t
+  end
+end
+
+do
+  local meta = { __index = function(t, k) local u = {} t[k] = u return u end }
+  __doc.of_tables = [[function([table]) returns table
+Returns table in which a reference to any unbound key
+materializes as a fresh, empty table.
+]]
+  function M.of_tables(t)
+    t = t or { }
+    local om = getmetatable(t)
+    if om then
+      assert(om.__index == nil, "Defaulting table already has __index method")
+      local m = { }
+      for k, v in pairs(om) do m[k] = v end
+      m.__index = meta.__index
+      setmetatable(t, m)
+    else
+      setmetatable(t, meta)
+    end
+    return t
+  end
+end
+
+do
+  local meta = { }
+  meta.__index = function(t, k) local u = setmetatable({}, meta) t[k] = u return u end
+  __doc.of_deep_tables = [[function([table]) returns table
+Returns table in which a reference to any unbound key
+materializes as a fresh, empty table.
+]]
+  function M.of_deep_tables(t)
+    t = t or { }
+    local om = getmetatable(t)
+    if om then
+      assert(om.__index == nil, "Defaulting table already has __index method")
+      local m = { }
+      for k, v in pairs(om) do m[k] = v end
+      m.__index = meta.__index
+      setmetatable(t, m)
+    else
+      setmetatable(t, meta)
+    end
+    return t
+  end
+end
+
+do
+  local function newset()
+    local set = require 'set'
+    return set.of_list {}
+  end
+  local meta = { __index = function(t, k) local u = newset(); t[k] = u return u end }
+  __doc.of_sets = [[function([table]) returns table
+Returns table in which a reference to any unbound key
+materializes as a new set.
+]]
+  function M.of_sets(t)
+    t = t or { }
+    local om = getmetatable(t)
+    if om then
+      assert(om.__index == nil, "Defaulting table already has __index method")
+      local m = { }
+      for k, v in pairs(om) do m[k] = v end
+      m.__index = meta.__index
+      setmetatable(t, m)
+    else
+      setmetatable(t, meta)
+    end
+    return t
+  end
+end
+
+do
+  local meta = { __index = function(t, k) t[k] = 0 return 0 end }
+  __doc.of_zeroes = [[function([table]) returns table
+Returns table in which a reference to any unbound key materializes as 0.
+Argument defaults to a fresh, empty table.
+]]
+  function M.of_zeroes(t)
+    t = t or { }
+    local om = getmetatable(t)
+    if om then
+      assert(om.__index == nil, "Defaulting table already has __index method")
+      local m = { }
+      for k, v in pairs(om) do m[k] = v end
+      m.__index = meta.__index
+      setmetatable(t, m)
+    else
+      setmetatable(t, meta)
+    end
+    return t
+  end
+end
+
+-------------
+--- for lexicographic sorting
+
+local function listlt(l1, l2, lt)
+  for i = 1, #l1 do
+    local v1, v2 = l1[i], l2[i]
+    if lt(v1, v2) then return true
+    elseif lt(v2, v1) then return false
+    end
+  end
+  return false
+end
+
+function M.lt(l1, l2, lt) -- must be same length
+  if lt then return listlt(l1, l2, lt) end
+  for i = 1, #l1 do
+    local v1, v2 = l1[i], l2[i]
+    if v1 ~= v2 then
+      if type(v1) == 'boolean' then
+        return not v1 and v2
+      elseif type(v1) == 'nil' then
+        return true
+      elseif type(v2) == 'nil' then
+        return false
+      else
+        return v1 < v2
+      end
+    end
+  end
+  return false
+end
+
+function M.gt(l1, l2, lt) return M.lt(l2, l1, lt) end
+
+__doc.lt_field = [[function(key, [lt]) returns function(t1, t2) returns bool
+Compare two tables on the given field.
+]]
+
+function M.lt_field(key, lt)
+  if lt then
+    return function(t1, t2) return lt(t1[key], t2[key]) end
+  else
+    return function(t1, t2) return t1[key] < t2[key] end
+  end
+end
+
+__doc.cat = [[function(value list, ...) returns value list
+Use with `unpack` to flatten a list of lists.
+]]
+
+function M.cat(...)
+  local t = { }
+  for i = 1, select('#', ...) do
+    local u = select(i, ...)
+    for _, v in ipairs(u) do table.insert(t, v) end
+  end
+  return t
+end
+
+__doc.append = [[function(t, ...) returns t
+Append every value in the list ... to the list t, returning t.
+]]
+function M.append(t, ...)
+  for i = 1, select('#', ...) do
+    table.insert(t, (select(i, ...)))
+  end
+  return t
+end
+
+__doc.deep_insert = [[function(t, k1, k2, ..., kn, v)
+Assign t[k1][k2][k3]...[kn] = v, creating tables as needed.
+]]
+
+function M.deep_insert(t, k, v, ...)
+  if select('#', ...) == 0 then
+    t[k] = v
+  else
+    t[k] = t[k] or { }
+    return M.deep_insert(t[k], v, ...)
+  end
+end
+
+__doc.deep_lookup = [[function(t, k1, k2, ..., kn)
+Return t[k1][k2][k3]...[kn], returning nil if any part is missing.
+]]
+
+function M.deep_lookup(t, k, ...)
+  if t == nil then
+    error('Attempted to index nil value with key ' .. tostring(k))
+  else
+    local v = t[k]
+    if select('#', ...) == 0 then
+      return v
+    else
+      t = v
+      if t ~= nil then
+        return M.deep_lookup(t, ...)
+      else
+        return nil
+      end
+    end
+  end
+end
+
+
+__doc.flip_keys = [[function(t) returns u
+where forall k1, k2 in keys(t) : u[k2][k1] = t[k1][k2]
+]]
+
+function M.flip_keys(t)
+  local u = { }
+  for k1, t in pairs(t) do
+    for k2, v in pairs(t) do
+      local uk = u[k2] or { }
+      u[k2] = uk
+      assert(uk[k1] == nil)
+      uk[k1] = v
+    end
+  end
+  return u
+end
+
+__doc.total_group_by = [[function(a -> a -> Bool, 'a list) returns 'a list list
+Like group_by, but satisfies the following property:
+
+    Forall (x, y) in xs, p(x, y) iff x is in the same sub-list as y
+
+i.e., elements from different bins never satisfy p.
+]]
+function M.total_group_by(p, xs)
+  if #xs == 0 then
+    return {}
+  end
+
+  xs = M.copy(xs)
+  local sublists = {}
+  while xs[1] do
+    local tmp = {xs[1]}
+    local new_xs = {}
+    for i = 2, #xs do
+      if p(xs[1], xs[i]) then
+        table.insert(tmp, xs[i])
+      else
+        table.insert(new_xs, xs[i])
+      end
+    end
+    xs = new_xs
+    table.insert(sublists, tmp)
+  end
+  return sublists
+end
+
+__doc.group_by = [[function(a -> a -> Bool, 'a list) returns 'a list list
+Algebraic law:
+
+    xs = concat (group_by p xs)
+]]
+function M.group_by(p, xs)
+  if #xs == 0 then
+    return {}
+  end
+
+  local sublists = {}
+  local tmp = {}
+  for i, x in ipairs(xs) do
+    if i == 1 or p(xs[i-1], x) then
+      table.insert(tmp, x)
+    else -- not p(xs[i-1], x)
+      table.insert(sublists, tmp)
+      tmp = {}
+      table.insert(tmp, x)
+    end
+  end
+  table.insert(sublists, tmp)
+  return sublists
+end
+
+__doc.break_before = [==[function(p, 'a list) returns 'a list, 'a list list
+Returns prefix, partition, where partition is a list of nonempty
+sublists with a break before each element satisfying p.
+The prefix of elements not satisfying p may be empty; no other
+sublist is empty.
+
+See http://stackoverflow.com/questions/5438558/ and the Haskell list-grouping
+package.
+]==]
+
+
+function M.break_before(p, xs)
+  xs = M.copy(xs)
+  local prefix, sublists = { }, { }
+  local i = 1
+  while xs[1] and not p(xs[1], i) do
+    table.insert(prefix, table.remove(xs, 1))
+    i = i + 1
+  end
+  while xs[1] do
+    assert(p(xs[1], i))
+    local ys = { table.remove(xs, 1) }
+    i = i + 1
+    while xs[1] and not p(xs[1], i) do
+      table.insert(ys, table.remove(xs, 1))
+      i = i + 1
+    end
+    table.insert(sublists, ys)
+  end
+
+if false then
+  -- luacheck: ignore 511
+  local function eprintf(...) io.stderr:write(string.format(...)) end
+  eprintf '\n\n\n===================================\n'
+  eprintf('%s\n', table.concat(prefix, '\n'))
+  for _, ls in ipairs(sublists) do
+    eprintf('--------------------\n%s\n', table.concat(ls, '\n'))
+  end
+  eprintf '===================================\n'
+end
+
+
+  return prefix, sublists
+end
+
+
+__doc.sum = [[function(number list) returns number]]
+
+function M.sum(xs)
+  local total = 0
+  for _, x in ipairs(xs) do
+    total = total + x
+  end
+  return total
+end
+
+__doc.sumall = [[function(table) returns number
+Sums *all* values in table (which must all be numbers).
+]]
+
+function M.sumall(t)
+  local total = 0
+  for _, x in pairs(t) do
+    total = total + x
+  end
+  return total
+end
+
+
+__doc.pairsN = [[iterator(n, table) returns k1, k2, ..., k{n-1}, v
+Iterates over nested pairs of nested tables.
+Obeys "pairsN(2, t) == pairs", and pairsN(n, t)
+returns n results per iteration.
+]]
+
+function M.pairsN(n, t)
+  assert(n >= 2)
+  assert(type(t) == 'table')
+  local yield = coroutine.yield
+  if n == 2 then
+    return coroutine.wrap(function ()
+                            for k, v in pairs(t) do
+                              yield(k, v)
+                            end
+                          end)
+  else
+    return coroutine.wrap(function ()
+                            for k, v in pairs(t) do
+                              local function extend(iterator)
+                                local function finish(...)
+                                  if ... ~= nil then
+                                    yield(k, ...)
+                                    return finish(iterator())
+                                  end
+                                end
+                                return finish(iterator())
+                              end
+                              extend(table.pairsN(n-1, v))
+                            end
+                          end)
+  end
+end
+
+__doc.sortpairs = [[iterator(table, [function]) returns k, v
+like 'pairs', but returns keys in sort order
+]]
+
+function M.sortpairs(t)
+  local keys = M.sorted_keys(t)
+  local yield = coroutine.yield
+  return coroutine.wrap(function()
+                          for _, k in ipairs(keys) do
+                            yield(k, t[k])
+                          end
+                        end)
+end
+
+__doc.over = [[function(t1, t2, ...) returns t
+Return an empty table with a metatable whose __index
+method searches each argument table in turn.
+]]
+
+local function over(...)
+  if select('#', ...) == 0 then
+    return { }
+  else
+    local first = select(1, ...)
+    local rest = over(select(2, ...))
+    local function get(_, key)
+      local v = first[key]
+      if v == nil then
+        return rest[key]
+      else
+        return v
+      end
+    end
+    return setmetatable({ }, { __index = get })
+  end
+end
+
+M.over = over
+
+__doc.tconcat = [[function(t1, ...) returns t
+Return concatenation of all list arguments, as in Haskell concat.
+]]
+
+function M.tconcat(...)
+  local t = { }
+  for i = 1, select('#', ...) do
+    local u = select(i, ...)
+    for _, v in ipairs(u) do
+      table.insert(t, v)
+    end
+  end
+  return t
+end
+
+M.cat = M.tconcat
+
+__doc.combine = [[function(table, ...) returns table
+Combines the keys from multiple tables in a  left-biased merge.
+]]
+
+function M.combine(...)
+  local u = {}
+  for _,t in ipairs{...} do
+    for k,v in pairs(t) do
+      if u[k] == nil then
+        u[k] = v
+      end
+    end
+  end
+  return u
+end
+
+__doc.overlay = [[function(t1, t2) returns table
+Return an empty table t such that t[k] returns t1[k] when
+that is not nil and t2[k] otherwise.  No values are copied.
+]]
+
+function M.overlay(t1, t2)
+  return setmetatable({}, {
+      __index = function(_, k)
+        local v = t1[k]
+        if v ~= nil then return v end
+        return t2[k]
+      end
+  })
+end
+
+__doc.of_iterator = [[function(iterator) returns list
+Return a list of all the elements produced by an iterator.
+]]
+
+function M.of_iterator(iter)
+  local t = { }
+  for v in iter do table.insert(t, v) end
+  return t
+end
+
+__doc.list_of = [[function(element or list) returns list
+If argument is not a list, return a new list with the argument.
+]]
+
+function M.list_of(e_or_l)
+  return type(e_or_l) == 'table'
+     and #e_or_l == M.numpairs(e_or_l)
+     and e_or_l or {e_or_l}
+end
+
+__doc.inserted = [[function(table, [pos,] value) returns self
+Behaves like table.insert, except it returns its first argument.
+]]
+
+function M.inserted(t, ...)
+  table.insert(t, ...)
+  return t
+end
+
+__doc.sorted = [[function(table, ...) returns self
+Behaves like table.sort, except it returns its first argument.
+]]
+
+function M.sorted(t, ...)
+  table.sort(t, ...)
+  return t
+end
+
+__doc.iota = [[function(n, [f]) returns list
+Returns list { f(1), ..., f(n) }, where f defaults
+to the identity function.  The name is from APL.
+]]
+
+function M.iota(n, f)
+  local t = { }
+  if f then
+    for i = 1, n do table.insert(t, f(i)) end
+  else
+    for i = 1, n do table.insert(t, i) end
+  end
+  return t
+end
+
+__doc.inc = [[function(t, k1, ..., kn)
+Increment the number stored in n t[k1][k2]...[kn]
+]]
+
+local function inc(t, ...)
+  local k = ...
+  if select('#', ...) == 1 then
+    t[k] = (t[k] or 0) + 1
+  else
+    t[k] = t[k] or { }
+    inc(t[k], select(2, ...))
+  end
+end
+M.inc = inc
+
+
+__doc.eq = [[function(t1, t2) returns bool
+Do a deep check for isomorphic tables.
+]]
+
+function M.eq(t1, t2)
+  if t1 == t2 then
+    return true
+  elseif type(t1) ~= 'table' or type(t2) ~= 'table' then
+    return false
+  else
+    for k, v in pairs(t1) do
+      if not M.eq(v, t2[k]) then
+        return false
+      end
+    end
+    for k in pairs(t2) do
+      if t1[k] == nil then
+        return false
+      end
+    end
+    return true
+  end
+end
+
+
+__doc.only_key = [[function (table) returns value option
+If the given table has exactly one key, return that key,
+otherwise return nothing.
+]]
+
+function M.only_key(t)
+  local o = next(t)
+  if o ~= nil then
+    local no = next(t, o)
+    if no == nil then
+      return o
+    end
+  end
+end
+
+__doc.writevalues = [[function(file, table)
+To the given file, write the contents of the table
+as lines of the form x.y.z : type
+]]
+
+function M.writevaluetypes(fd, t, pfx)
+  pfx = pfx or ''
+  for k, v in pairs(t) do
+    if type(v) ~= 'table' then
+      fd:write(stringf('%s%s : %s\n', pfx, tostring(k), type(v)))
+    else
+      M.writevaluetypes(fd, v, pfx .. tostring(k) .. '.')
+    end
+  end
+end
+
+
+__doc.writevalues = [[function(file, table, [limit])
+To the given file, write the contents of the table as lines of
+the form x.y.z : value, where `value` at most `limit` characters
+]]
+
+local function limited(n, s)
+  local fmt = '%s'
+  if type(s) == 'string' then
+    fmt = '%q'
+    if #s + 2 > n then
+      s = s:sub(1, n-5) .. '...'
+    end
+  else
+    s = tostring(s)
+    if #s > n then
+      s = s:sub(1,n-3) .. '...'
+    end
+  end
+  return stringf(fmt, s)
+end
+
+function M.writevalues(fd, t, limit, pfx)
+  limit = limit or math.huge
+  pfx = pfx or ''
+  for k, v in pairs(t) do
+    if type(v) ~= 'table' then
+      fd:write(stringf('%s%s : %s\n', pfx, tostring(k), limited(limit, v)))
+    else
+      M.writevalues(fd, v, limit, pfx .. tostring(k) .. '.')
+    end
+  end
+end
+
+
+
+
+return thismodule()
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "tabutil" ] = function( ... ) local arg = _G.arg;
+-- legacy monkey-patched tableutil
+
+local table = require 'table'
+local tablex = require 'tablex'
+
+for k, v in pairs(tablex) do
+  if not k:find '^__' then
+    assert(table[k] == nil)
+    table[k] = v
+  end
+end
+
+return table
+end
+end
+
+do
+local _ENV = _ENV
+package.preload[ "validate.dsl" ] = function( ... ) local arg = _G.arg;
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function eprintf(...) return io.stderr:write(stringf(...)) end
+local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) return error(stringf(...)) end
+----------------------------------------------------------------
+
+
+local getmetatable, ipairs, math, next
+    = getmetatable, ipairs, math, next
+local pairs, setmetatable, table
+    = pairs, setmetatable, table
+local tonumber, tostring, type
+    = tonumber, tostring, type
+local require
+    = require
+
+local M, __doc, thismodule, _ENV = require 'module52'.new()
+
+local function sq(s) -- string quote
+  if type(s) ~= 'table' then
+    return stringf('%q', s)
+  else
+    local quoted = { }
+    for k, v in pairs(s) do
+      quoted[k] = sq(v)
+    end
+    return quoted
+  end
+end
+
+
+
+local nothing = { }
+
+
+
+local function non_nil_or(v, u)
+  if v ~= nil then
+    return v
+  else
+    return u
+  end
+end
+
+
+local function plural(count, what, theplural)
+  if count == 1 then
+    return what
+  else
+    return theplural or what .. 's'
+  end
+end
+
+
+local function a(s)
+  if s:find '^[aeiouAEIOU]' then
+    return 'an ' .. s
+  else
+    return 'a ' .. s
+  end
+end
+
+local function wrap(p) -- on failure, produces the offending field (XXX name)
+  return function(v)
+    if p(v) then return true else return false, v end
+  end
+end
+
+
+local function tcopy(t)
+  local u = { }
+  for k, v in pairs(t) do
+    u[k] = v
+  end
+  return setmetatable(u, getmetatable(t))
+end
+
+local function update(t, k, v)
+  local u = tcopy(t)
+  u[k] = v
+  return u
+end
+
+local function any(p, list) -- existential quantifier
+  local ok, msg
+  for _, v in ipairs(list) do
+    ok, msg = p(v)
+    if ok then
+      return ok
+    end
+  end
+  return false, msg
+end
+
+-- predicate `can_be(tau1, tau2, ...)(v)` knows about type conversions
+
+local can_be_tab = {
+  string = wrap(function(v)
+             return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
+             end),
+  number = wrap(function(v) return tonumber(v) end),
+  boolean = wrap(function(v) return type(v) == 'boolean' or tostring(v):find '^[01]$' end),
+}
+setmetatable(can_be_tab, { __index = function(_, t)
+                                       return wrap(function(v) return type(v) == t end)
+                           end})
+
+local function can_be(...)
+  local types = { ... }
+  return function(v) return any(function(t) return can_be_tab[t](v) end, types) end
+end
+
+local function commafy(t, andword, comma)
+  if t == nil or #t == 0 then return '' end  -- ugly special case
+  andword = andword or 'and'
+  local comma_space = comma and comma .. ' ' or ', '
+  local n = #t
+  assert(n > 0, 'Empty list not handled correctly in string.commafy')
+  if n == 1 then
+    return t[1]
+  elseif n == 2 then
+    return table.concat { t[1], ' ', andword, ' ', t[2] }
+  else
+    local last = t[n]
+    t[n] = andword .. ' ' .. t[n]
+    local answer = table.concat(t, comma_space)
+    t[n] = last
+    return answer
+  end
+end
+
+local empty = wrap(function(v)
+  return v == nil
+      or type(v) == 'table' and next(v) == nil
+      or type(v) == 'string' and not v:find '%S'
+      or false
+end)
+
+
+
+__doc.__overview = [=[
+
+Valid inputs are specified by a little language that can be used to
+check the structure and types of Lua objects that come from YAML.
+A "validator" is like a type but with a little extra action, including
+hooks for external validation and naming.
+
+  Validator v ::= s⟦tring⟧                -- can be interpreted as text
+               |  b⟦ool⟦ean⟧⟧             --  true, false, 0, or 1
+               |  n⟦number⟧ ⟦[⟦N⟧..⟦M⟧]⟧   -- a number with optional range constraints
+               |  empty                   -- empty string, table, YAML null
+               |  null                    -- YAML null
+               |  any                     -- any value
+               |  l⟦ist⟧(v)               -- list of values of type v
+               |  {⦃key,⦄}                -- a table with the given keys
+               |  v|v                     -- a choice between two validators
+               |  (v)                     -- bracketing
+               |  name@v                  -- names the type
+               |  fname$v                 -- additional, external validation with function fname
+
+  key         ::= ⦃?|%|^⦄name⟦:v⟧   -- type defaults to text
+
+Operators @ and $ associate to the right and bind tighter than |.
+
+]=]
+
+-- a context is a table with fields
+
+-- { longstring: string           --- narrative
+-- , topkey : string option    --- top-level key if any
+-- , topindex: int          --- top-level list index, if any
+-- , key : string option    --- most recent key
+-- }
+
+local context = { }
+
+M.context = context
+
+
+do
+  local methods = { }
+  local meta = { __index = methods }
+
+  function meta.__tostring(c)
+    return c:short()
+  end
+
+
+  function methods:short()
+    local function topelement()
+      if self.topindex then
+        return stringf('element %d of %s', self.topindex, self.topkey)
+      else
+        return self.topkey
+      end
+    end
+
+    if not self.topkey then
+      return self:long()
+    elseif self.topkey == self.key then
+      return topelement()
+    else
+      return stringf('field %q of %s', self.key, topelement())
+    end
+  end
+
+  function methods:long()
+    return self.longstring
+  end
+
+  function context.is(v)
+    return getmetatable(v) == meta
+  end
+
+  function context.new(v)
+    if type(v) == 'string' then
+      return setmetatable({ longstring = v }, meta)
+    else
+      return setmetatable(v, meta)
+    end
+  end
+
+  function context.extend(c, x)
+    -- x has table longstring, key, topkey, topindex
+    if type(x) == 'string' then
+      return update(c, 'longstring', x)
+    elseif type(x) == 'number' then
+      if c.topindex == nil then
+        return update(c, 'topindex', x) + stringf('element %d of %s', x, c:long())
+      else
+        return c
+      end
+    else
+      local d = { longstring = x.longstring
+                      or x.index and stringf('element %d of %s', x.index, c:long())
+                      or x.key   and stringf('field %q of %s', x.key, c:long())
+                      or c:long(),
+                  topkey   = c.topkey or x.key,
+                  topindex = c.topindex or x.index,
+                  key = x.key or c.key,
+      }
+      return setmetatable(d, meta)
+    end
+  end
+
+  meta.__add = context.extend
+end
+
+do
+  local function tokenize(s)
+    assert(type(s) == 'string', 'tried to parse a non-string')
+    local tokens = { }
+    local init = s:find '%S'
+    while init do
+      local first, last, found  -- luacheck: no unused
+      for _, pat in ipairs { '^(%.%.)', '^([^%w%d])', '^(%d+)', '(%a[%w%-_]*)' } do
+        first, last, found = s:find(pat, init)
+        if found then
+          table.insert(tokens, found)
+          break
+        end
+      end
+      if found then
+        init = s:find('%S', last + 1)
+      else
+        dief('Unrecognized character at position %d in string %q', init, s)
+      end
+    end
+    return tokens
+  end
+
+  function M.parse(semantics, s)
+
+    local tokens = tokenize(s)
+    local tindex = 1
+
+    local maybe, maybe_find, eat, backup, eos -- basic token functions
+
+    local lastmaybe
+
+    function eos()
+      return not tokens[tindex]
+    end
+
+    function maybe(token, ...)
+      lastmaybe = nil
+      if token ~= nil then
+        if tokens[tindex] == token then
+          tindex = tindex + 1
+          lastmaybe = token
+          return lastmaybe
+        else
+          return maybe(...)
+        end
+      else
+        return nil
+      end
+    end
+
+    function maybe_find(pat)
+      lastmaybe = nil
+      if tokens[tindex]:find(pat) then
+        lastmaybe = tokens[tindex]
+        tindex = tindex + 1
+        return lastmaybe
+      else
+        return nil
+      end
+    end
+
+    function backup()
+      assert(tindex > 1)
+      tindex = tindex - 1
+    end
+
+    local function expected(parsing, wanted)
+      local tcontext = { }
+      for j = math.max(1, tindex-5), math.min(#tokens, tindex+5) do
+        if j == tindex then
+          table.insert(tcontext, "·")
+        end
+        table.insert(tcontext, tokens[j])
+      end
+      errorf('Error parsing %s; expected %s, got %s at token %d ⟨%s⟩', parsing:long(), wanted,
+             tokens[tindex] ~= nil and require 'inspect'.image(tokens[tindex]) or "end of stream", tindex,
+             table.concat(tcontext, ' '))
+    end
+
+    function eat(context, token)
+      if maybe(token) == nil then
+        expected(context, token)
+      end
+    end
+
+    local alts, alt, range, keys, key -- parsers
+
+    alts = function()
+      local alts = { alt() }
+      while maybe '|' do
+        table.insert(alts, alt())
+      end
+      return #alts > 1 and semantics:alts(alts) or alts[1]
+    end
+
+    local key_prefix_meaning = {
+      ['?'] = 'optional',
+      ['^'] = 'insensitive',
+      ['%'] = 'fontable',
+    }
+
+    key = function()
+      if maybe '*' then
+        local validator = maybe ':' and alts() or nil
+        return semantics:any_key(validator)
+      else
+        local props = { }
+        while maybe ('?', '^', '%') do
+          props[key_prefix_meaning[lastmaybe]] = true
+        end
+        local nameparts = { }
+        while maybe_find '%w' or maybe '&' do
+          table.insert(nameparts, lastmaybe)
+        end
+        if #nameparts == 0 then
+          expected(context.new 'parsing table key', 'name')
+        end
+        local validator = maybe ':' and alts() or nil
+        return semantics:key(table.concat(nameparts, ' '), props, validator)
+      end
+    end
+
+    keys = function()
+      local keys = { key() }
+      while maybe ',' do
+        if maybe '}' then
+          backup()
+        else
+          table.insert(keys, key())
+        end
+      end
+      eat('table keys', '}')
+      return semantics:table(keys)
+    end
+
+    alt = function()
+      if eos() then
+        errorf('Ran out of tokens parsing validator: %s', require 'inspect'.image(tokens))
+      elseif maybe 'any' then
+        return semantics:any()
+      elseif maybe 'null' then
+        return semantics:null()
+      elseif maybe('s', 'string') then
+        return semantics:string()
+      elseif maybe('b', 'bool', 'boolean') then
+        return semantics:boolean()
+      elseif maybe 'empty' then
+        return semantics:empty()
+      elseif maybe('n', 'number') then
+        return semantics:number(range())
+      elseif maybe('l', 'list') then
+        if maybe '{' then
+          return semantics:list(keys())
+        else
+          eat ('list type', '(')
+          local v = alts()
+          eat ('eend of list type', ')')
+          return semantics:list(v)
+        end
+      elseif maybe '{' then
+        return keys()
+      elseif maybe '(' then
+        local v = alts()
+        eat('parenthesized validator', ')')
+        return v
+      elseif maybe_find '%w' then -- good name
+        local name = lastmaybe
+        if maybe '@' then
+          return semantics:named(name, alt())
+        elseif maybe '$' then
+          return semantics:validate(name, alt())
+        else
+          errorf('Unrecognized validation type %q', name)
+        end
+      else
+        errorf('Validation parser found unknown token %q at position %d in %s',
+             tokens[tindex], tindex, require 'inspect'.image(tokens))
+      end
+    end
+
+    range = function()
+      if maybe '[' then
+        local lo = tonumber(maybe_find '^%d+$')
+        eat('numeric range', '..')
+        local hi = tonumber(maybe_find '^%d+$')
+        eat('numeric range', ']')
+        return { lo = lo, hi = hi }
+      end
+    end
+
+    return alts()
+
+  end
+end
+
+
+
+
+---------- validation infrastructure (syntax-directed validators) ------------
+
+function M.semantics(verrorf, options)
+  assert(type(verrorf) == 'function')
+
+  options = options or nothing
+
+  local function with_verrorf(new, f, ...)
+    local old = verrorf
+    assert(type(new) == 'function')
+    verrorf = new
+    local function finish(...)
+      verrorf = old
+      return ...
+    end
+    return finish(f(...))
+  end
+
+  local function without_verrorf(f, ...)
+    return with_verrorf(function () end, f, ...)
+  end
+
+  local isnull = options.isnull or function() return false end
+
+  local vfactory = { } -- methods
+  local validators, vnames = { }, { } -- these hold the escape hatches
+  local friendly = options.friendly or require 'inspect'.friendly
+
+
+  local ctx = context
+
+  -- Semantic objects are built as follows:
+  --
+  -- key       : { name : string, validator = v, ... property fields ... }
+  -- validator : object with methods and fields
+  --    self:validate(context, value) optionally returns normalized value
+  --    self:mine(value) returns bool
+  --    self:maybe_mine(value) returns bool  -- optional
+  --    self.what : string
+  --
+  -- postcondition:
+  --    if v:validator(context, value) returns nil then value is valid
+  --    if v:validator(context, value) returns non-nil then it returns a valid valuea
+
+  local function out_of_range(n, rg)
+    if rg then
+      return rg.lo and n < rg.lo or rg.hi and n > rg.hi
+    end
+  end
+
+  local function choose_a_number(rg)
+    if rg.lo and rg.hi then
+      return math.floor((rg.lo + rg.hi) / 2)
+    elseif rg.lo then
+      return rg.lo
+    elseif rg.hi then
+      return rg.hi
+    else
+      return 99
+    end
+  end
+
+  local function missing(context, wanted, found, replacement)
+    assert(type(context) == 'table')
+    verrorf(context, 'I was looking for %s, but I found %s.  I substituted %s',
+            wanted, friendly(found), friendly(replacement))
+  end
+
+  function vfactory:number(rg)
+    local range_string = ''
+    if rg then
+      if rg.lo and rg.hi then
+        range_string = stringf(' in the range %d..%d', rg.lo, rg.hi)
+      elseif rg.lo then
+        range_string = stringf(' at least %d', rg.lo)
+      elseif rg.hi then
+        range_string = stringf(' at most %d', rg.hi)
+      end
+    end
+
+    local what = stringf('a number%s', range_string)
+
+    return {
+      validate = function(_, context, v)
+        if not tonumber(v) or out_of_range(tonumber(v), rg) then
+          local substitute = rg and choose_a_number(rg) or 11
+          missing(context, what, v, substitute)
+          return substitute
+        else
+          return tonumber(v)
+        end
+      end,
+      mine = function(_, v) return can_be 'number'(v) end,
+      what = what,
+    }
+  end
+
+  local text = {
+    validate = function(_, context, v)
+      if not can_be 'string' (v) then
+        missing(context, 'text', v, tostring(v))
+      end
+      return tostring(v)
+    end,
+    mine = function(_, v) return can_be 'string'(v) end,
+    what = 'text',
+  }
+
+  local function fontkeyname(key)
+    assert(key.fontable)
+    return stringf('%s FONT', key.name)
+  end
+
+  function vfactory:key(name, props, v)
+    local key = { name = name, validator = v }
+    for k, v in pairs(props) do key[k] = v end
+    if props.insensitive then
+      assert(name == name:lower(), 'case-insensitive key is not all lowercase')
+    end
+    return key
+  end
+
+  function vfactory:any_key(v)  -- XXX unused validator
+    return { any = true, name = '*', validator = v } -- gross hack, but it should work
+  end
+
+  function vfactory:table(keys)
+    local required, optional, other = { }, { }, false
+    local seen = { }
+    for _, key in ipairs(keys) do
+      if key.name then
+        if seen[key.name] then
+          errorf('Duplicate keys %q in validation spec', key.name)
+        else
+          seen[key.name] = true
+        end
+      end
+      if key.fontable then
+        table.insert(optional, fontkeyname(key))
+      end
+      if key.any then
+        other = key.validator or true
+      elseif key.optional then
+        table.insert(optional, key.name)
+      else
+        table.insert(required, key.name)
+      end
+    end
+
+    local also
+    local wanted =
+      #required > 0 and stringf('a table with %s %s', plural(#required, 'key'), commafy(sq(required)))
+                     or 'a table without any required keys'
+    if #optional > 0 then
+      also = stringf('%s %s', plural(#optional, 'key'), commafy(sq(optional)))
+    end
+    if other and not also then
+      if #required > 0 then
+        wanted = stringf('%s, and possibly other keys', wanted)
+      else
+        wanted = stringf('%s but allowing any key you wish to include', wanted)
+      end
+    elseif other and also then
+      if #required > 0 then
+        wanted = stringf('%s, plus optionally %s, and possibly other keys', wanted, also)
+      else
+        wanted = stringf('a table with optional %s, plus any other key you wish to include', also)
+      end
+    elseif also then
+      local conjunction = #required > 0 and 'and also' or 'but'
+      wanted = stringf('%s %s optionally %s', wanted, conjunction, also)
+    end
+
+    local acceptable, insensitive
+    if not other then
+      acceptable, insensitive = { }, { }
+      for _, k in ipairs(keys) do
+        acceptable[k.name] = true
+        if k.fontable then
+          acceptable[fontkeyname(k)] = true
+        end
+        if k.insensitive then
+          insensitive[k.name] = true
+        end
+      end
+    end
+
+    local function has_key(v, required_only)
+      return any(function(key)
+                   if not key.insensitive then
+                     return v[key.name] ~= nil and not (key.optional and required_only)
+                   else
+                     local low = key.name:lower()
+                     for h in pairs(v) do
+                       if type(h) == 'string' and h:lower() == low then
+                         return true
+                       end
+                     end
+                   end
+                 end,
+                 keys)
+    end
+
+    local function validate_font(context, s)
+      if type(s) ~= 'string' or not s:find [[^\]] then
+        verrorf(context, 'expected a LaTeX font command but did not find one in %q', s)
+      end
+    end
+
+    local maybe_my_key = #required > 0 and has_key or other and next or function() end
+
+    return {
+      what = wanted,
+      mine = function(_, v) return type(v) == 'table' and has_key(v, true) end,
+      maybe_mine = function(_, v) return type(v) == 'table' and maybe_my_key(v) end,
+      validate = function(_, context, v)
+        if type(v) ~= 'table' then
+          missing(context, wanted, v, nothing)
+          return { } -- will not have the required keys, but is better than just v
+        else
+          local validated = { }
+          local myname = v.name or v.NAME
+          assert(ctx.is(context))
+          local mycontext =
+               myname and type(myname) == 'string' and
+                      context + stringf('%q, which is %s', myname, context:long())
+               or context
+          assert(ctx.is(mycontext))
+          local omitted = { }
+          for _, key in ipairs(keys) do
+            if key.fontable and v[fontkeyname(key)] then
+              validate_font(mycontext + { key = fontkeyname(key) }, v[fontkeyname(key)])
+              validated[fontkeyname(key)] = true
+            end
+            local validator = key.validator or text
+            if key.any then
+              -- validator  is run below
+            elseif v[key.name] == nil and not key.optional then
+              table.insert(omitted, sq(key.name))
+              v[key.name] =
+                without_verrorf(function() validator:validate(mycontext+{key=key.name}, nil) end)
+            elseif v[key.name] ~= nil then
+              assert(ctx.is(mycontext))
+              local u = validator:validate(mycontext + { key = key.name }, v[key.name])
+              validated[key.name] = true
+              if u ~= nil then
+                v[key.name] = u
+              end
+            end
+          end
+          if #omitted > 0 then
+            verrorf(mycontext, 'required %s %s %s missing', plural(#omitted, 'key'),
+                    commafy(omitted), #omitted == 1 and 'is' or 'are')
+          end
+
+          local sanitized = tcopy(v)
+          if type(other) ~= 'boolean' then
+            -- other is permitted
+            for k, field in pairs(v) do
+              if type(k) ~= 'string' then
+                verrorf(mycontext, 'table has a non-string key %s', friendly(k))
+                sanitized[k] = nil
+              elseif not validated[k] and not validated[k:lower()] then
+                sanitized[k] =
+                  non_nil_or(other:validate(mycontext + { key = k }, field), sanitized[k])
+              end
+            end
+            return sanitized
+          elseif not other then
+            local unexpected = { }
+            for k in pairs(v) do
+              if not (acceptable[k] or type(k) == 'string' and insensitive[k:lower()]) then
+                table.insert(unexpected, type(k) == 'string' and sq(k) or tostring(k))
+                sanitized[k] = nil
+              end
+            end
+            if #unexpected > 0 then
+              verrorf(mycontext, 'found and removed unexpected %s %s',
+                      plural(#unexpected, 'key'), commafy(unexpected))
+            end
+            return sanitized
+          end
+        end
+      end,
+    }
+  end
+
+  function vfactory:string()
+    return text
+  end
+
+  function vfactory:boolean()
+    return {
+      what = 'a Boolean',
+      mine = function(_, v) return can_be 'boolean' (v) end,
+      validate = function(_, context, v)
+        if not can_be 'boolean' (v) then
+          missing(context, 'a Boolean', v, false)
+        end
+      end,
+    }
+  end
+
+  function vfactory:empty()
+    return {
+      what = 'something empty',
+      mine = function(_, v) return empty(v) or isnull(v) end,
+      validate = function(self, context, v)
+        if not self:mine(v) then
+          missing(context, 'something empty', v, '')
+          return ''
+        end
+      end,
+    }
+  end
+
+  function vfactory:list(element)
+    return {
+      what = stringf('a list of (%s)', element.what),
+      mine = function(_, v) return type(v) == 'table' and (v[1] ~= nil or next(v) == nil) end,
+      validate = function(self, context, v)
+        if not self:mine(v) then
+          missing(context, 'a list', v, nothing)
+          return { }
+        else
+          for i, e in ipairs(v) do
+            v[i] = non_nil_or(element:validate(context + { index = i }, e), e)
+          end
+        end
+      end,
+    }
+  end
+
+  function vfactory:named(name, validator)
+    name = vnames[name] or name
+    return {
+      mine = function(_, v) return validator:mine(v) end,
+      what = #validator.what > 30 and a(name) or stringf('%s, which is %s', name, validator.what),
+      validate = function(_, context, v)
+        if #context:long() > 30 then
+          context = context + name
+        else
+          context = context + stringf('%s, which is %s', a(name), context:long())
+        end
+        return validator:validate(context, v)
+      end,
+    }
+  end
+
+  function vfactory:any()
+    return { mine = function() return true end,
+             what = 'anything',
+             validate = function() end,
+    }
+  end
+
+  function vfactory:null()
+    return
+      { mine = function(_, v) return isnull(v) end,
+        what = 'YAML null',
+        validate = function(_, context, v)
+          if not isnull(v) then
+            verrorf(context, 'expected YAML null but found %s', friendly(v))
+          end
+        end,
+      }
+  end
+
+  function vfactory:alts(alts)
+    local whatnames = { }
+    for _, alt in ipairs(alts) do
+      table.insert(whatnames, alt.what)
+    end
+    whatnames = commafy(whatnames, 'or')
+
+    return { mine = function(_, v) return any(function(alt) return alt:mine(v) end, alts) end,
+             what = whatnames,
+             validate = function(_, context, v)
+               assert(#alts > 1)
+               for _, alt in ipairs(alts) do
+                 if alt:mine(v) then
+                   return alt:validate(context, v)
+                 end
+               end
+               for _, alt in ipairs(alts) do
+                 if alt.maybe_mine and alt:maybe_mine(v) then
+                   return alt:validate(context, v)
+                 end
+               end
+               local substitute =
+                 without_verrorf(function() return alts[1]:validate(context, v) end)
+               -- or maybe just the first? XXX
+               local any = #alts == 2 and 'either' or 'any'
+               verrorf(context, "expected %s, but I didn't find %s of those things.  " ..
+                       "I found %s and substituted %s.",
+                       whatnames, any, friendly(v), friendly(substitute))
+               return substitute
+             end,
+    }
+  end
+
+  function vfactory:validate(f, validator)
+    return {
+      mine = function(_, v) return validator:mine(v) end,
+      what = stringf('%s validated by function %s', validator.what, f),
+      validate = function(_, context, v)
+        local bad = false
+        local outer_verrorf = verrorf  -- whatever's actually in effect right now
+        local function setbad(...)
+          bad = true
+          return outer_verrorf(...)  -- forward instead of discarding (was silently dropped)
+        end
+        local function go() return validator:validate(context, v) end
+        local u = non_nil_or(with_verrorf(setbad, go), v)
+        if bad then
+          return u
+        else
+          local vf = assert(validators[f], 'No validation function named ' .. f)
+          return non_nil_or(vf(context, u), u)
+        end
+      end,
+    }
+  end
+
+  return setmetatable({ validators = validators, names = vnames }, {__index = vfactory})
+
+
+end
+
+function M.validate(context, validation, semantics, sheet)
+  return non_nil_or(M.parse(semantics, validation):validate(context, sheet), sheet)
+end
+
+
+return thismodule()
+end
+end
+
+
+
 -- Read character-sheet YAML and emit various visualization aids
 
 

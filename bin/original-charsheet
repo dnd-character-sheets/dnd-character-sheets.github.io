@@ -1,0 +1,2010 @@
+#!/usr/bin/env lua5.1
+
+-- Read character-sheet YAML and emit various visualization aids
+
+
+-- Note: Normally this code would be split among multiple modules:
+--       validation infrastructure, sheet validation, rendering,
+--       and so on.  But web deployment is so gnarly that I have
+--       chosen to keep it all in one giant file.
+
+------------------ classic print functions ---------------------
+
+
+local stringf = string.format
+
+local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what isn't quoted
+local function shell_quote(s)
+  if s:find(quote_me) or s == '' then
+    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
+  else
+    return s
+  end
+end
+
+local function capture(cmd)
+  local f = assert(io.popen(cmd, 'r'))
+  local s = assert(f:read('*a'))
+  f:close()
+  s = s:gsub('^%s+', '')
+  s = s:gsub('%s+$', '')
+  s = s:gsub('[\n\r]+', ' ')
+  return s
+end
+
+-- basename picks behavior (charsheet/gmsheet/gmspells) and has to come
+-- from how we were invoked -- e.g. a symlink's own name -- so it is
+-- read from arg[0] as given, never resolved.  rootname only needs to
+-- find this checkout, so resolving symlinks there (via realpath, when
+-- present) lets a symlink to bin/charsheet work from anywhere, not
+-- just from alongside the real file; without realpath, only the old,
+-- unresolved arg[0] is available, same as before.
+local basename = arg[0]:gsub('^.*/', ''):gsub('^exported%-', '')
+local real = capture(stringf('realpath -- %s 2>/dev/null', shell_quote(arg[0])))
+local binname = assert((real ~= '' and real or arg[0]):match '^(.*)/[^/]*$',
+                         arg[0] .. ': not invoked through a bin/ directory')
+local rootname = binname:gsub('/bin$', '')
+
+local function eprintf(...)
+  return io.stderr:write(basename, ': ', stringf(...))
+end
+local function dief(...) eprintf(...); os.exit(1) end
+local function errorf(...) error(stringf(...), 2) end
+local function outf(out, ...)
+  table.insert(out, stringf(...))
+  return out
+end
+
+local validate = require 'validate.dsl'
+
+---- diagnostic output for option processing
+
+local function commafy(t, andword, comma)
+  if t == nil or #t == 0 then return '' end  -- ugly special case
+  andword = andword or 'and'
+  local comma_space = comma and comma .. ' ' or ', '
+  local n = #t
+  assert(n > 0, 'Empty list not handled correctly in string.commafy')
+  if n == 1 then
+    return t[1]
+  elseif n == 2 then
+    return table.concat { t[1], ' ', andword, ' ', t[2] }
+  else
+    local last = t[n]
+    t[n] = andword .. ' ' .. t[n]
+    local answer = table.concat(t, comma_space)
+    t[n] = last
+    return answer
+  end
+end
+
+------------ basename and option processing ------------------------------------------
+
+local options = { -- specialized for different scripts
+  charsheet = function(parser) return parser:numarg(1) end,
+  gmsheet   = function(parser) return parser:minarg(1) end,
+}
+options.gmspells = options.gmsheet
+
+if not options[basename] then
+  local basenames = { }
+  for k in pairs(options) do
+    table.insert(basenames, stringf('`%s`', k))
+  end
+  table.sort(basenames)
+  dief('%s: I expected to be called as %s.\n', arg[0], commafy(basenames, 'or'))
+end
+
+local fields = require 'flags'.parser()
+  :output_file('output as o'):help('where to write if not stdout')
+  :bool('fontable'):help('dump fontable keys and exit')
+  :bool('verbose as v')
+  :bool('nocolor'):help('disable color')
+  :bool('quiet as q'):help('suppress stdout from pdflatex')
+  :bool('strict'):help('halt on field validation errors (default: warn and continue)')
+  :bool('standalone as s'):help('emit just definitions, not full file')
+  :string('layout as t as l'):help('template for character sheet')
+  :string('templates', os.getenv 'CHARSHEETS'
+                    or stringf('%s/templates', rootname))
+         :help('directory where character-sheet templates live')
+  :wrap(assert(options[basename]))
+  :string('class'):help('CLASS to use if none is supplied')
+  :parse(arg)
+
+local nothing = { }
+
+local function table_or_nothing(v)
+  if type(v) == 'table' then
+    return v
+  else
+    return nothing
+  end
+end
+
+local default_layouts = {
+  charsheet = 'silverpine',
+  gmsheet = 'gmsheet',
+  gmspells = 'gmspells',
+}
+
+local default_layout =
+  assert(default_layouts[basename], 'No default layout defined for ' .. basename)
+
+local vprintf = fields.verbose and eprintf or function() end -- luacheck: no unused
+
+local pdflatex =
+  fields.quiet and 'pdflatex -interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape'
+    or 'pdflatex -interaction=scrollmode -halt-on-error -no-shell-escape'
+
+----------------- string utilities ---------------
+--
+-- likely for error messages
+
+local isnull
+local function friendly(v)
+  if isnull(v) then
+    return 'the YAML null (empty entry)'
+  else
+    return require 'inspect'.friendly(v)
+  end
+end
+
+
+
+
+----------------- table utilities -----------------------------------------------
+
+local function sorted_keys(t, lt)
+  local u = { }
+  for k in pairs(t) do table.insert(u, k) end
+  table.sort(u, lt)
+  return u
+end
+
+local function rmdups(xs, eq) -- remove duplicates from xs, return xs
+  eq = eq or function(a, b) return a == b end
+  local i = 1
+  while i < #xs do
+    if eq(xs[i+1], xs[i]) then
+      table.remove(xs, i+1)
+    else
+      i = i + 1
+    end
+  end
+  return xs
+end
+
+local function scalarvalues(list) -- iterator : value list -> value
+  return coroutine.wrap(function()
+      local function process(values)
+        for _, value in pairs(values) do
+          if type(value) == "table" then
+            process(value)
+          else
+            coroutine.yield(value)
+          end
+        end
+      end
+      process(table_or_nothing(list))
+    end)
+end
+
+local function tcopy(t)
+  local u = { }
+  for k, v in pairs(t) do
+    u[k] = v
+  end
+  return setmetatable(u, getmetatable(t))
+end
+
+local function update(t, k, v)
+  local u = tcopy(t)
+  u[k] = v
+  return u
+end
+
+
+----------------- function utilities ----------------
+
+local function app1(f, arg1) -- partial application
+  return function(...) return f(arg1, ...) end
+end
+
+
+----------------- yaml utilities --------------------
+
+local lyaml  = require "lyaml"
+function isnull(v) return v == lyaml.null end
+
+local function false_yaml(v)
+  return v == nil or v == false or v == 'false' or v == '0' or v == 0
+end
+
+assert(lyaml.dump)
+local function image(v)
+  return (lyaml.dump({v}):gsub([[\]], [[\textbackslash{}]])
+                         :gsub('\n', [[\emph{\scriptsize\textsc{nl}}]]))
+end
+
+-- return a string with unbalanced {}, if any
+local function unbalanced_yaml_string(doc)
+  if type(doc) == 'string' then
+    local d = doc:gsub('%b{}', '')
+    if d:find '[{}]' then return doc end
+  elseif type(doc) == 'table' then -- search values
+    for _, v in pairs(doc) do
+      local d = unbalanced_yaml_string(v)
+      if d then return d end
+    end
+  end
+end
+
+assert(unbalanced_yaml_string([[\documentclass[10pt]{article}]]) == nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]article}]]) ~= nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]{article]]) ~= nil)
+assert(unbalanced_yaml_string([[\documentclass[10pt]}article{]]) ~= nil)
+
+assert(unbalanced_yaml_string { FOOT = "} ASDF {" } == "} ASDF {")
+
+
+------------------------- infrastructure for validation errors
+
+-- Global validation errors list
+local global_validation_errors = {}
+
+local curfile -- name of the file currently being validated
+
+
+local verrorf -- save validation error
+do
+  local last_file_announced
+
+  verrorf = function(fmt, ...)
+    local msg = validate.context.is(fmt)
+                  and stringf('In %s, %s', tostring(fmt), stringf(...))
+                   or stringf(fmt, ...)
+    table.insert(global_validation_errors, image(msg:gsub('(%s)"', '%1``'):gsub([["]], [['']])))
+    if last_file_announced ~= curfile then
+      eprintf('\nValidation error in %s: %s\n', curfile, msg)
+      last_file_announced = curfile
+    else
+      eprintf('\nValidation error: %s\n', msg)
+    end
+  end
+end
+
+local semantics = validate.semantics(verrorf, {friendly = friendly, isnull = isnull})
+local validators, vnames = semantics.validators, semantics.names
+
+--------------------- sandboxing ------------------------
+
+local bad_input_tex = [[
+\documentclass[12pt]{article}
+\def\lbrace{\char`\{}
+\def\rbrace{\char`\}}
+\begin{document}
+A YAML file was rejected because some part of it contained
+unbalanced braces, which is a security risk.  The offending
+string was as follows:
+\begin{quote}
+\ttfamily
+$BAD
+\end{quote}
+\end{document}
+]]
+
+local bad_control_sequences = { } -- do not allow in documents
+do
+  for cs in ([[
+catcode
+openout
+write
+makeatletter
+\input
+\include
+\openin
+\openout
+\read
+\write
+\immediate
+\pdffilesize
+\pdfmdfivesum
+\pdfshellescape
+\usepackage
+\RequirePackage
+\documentclass
+\LoadClass
+\bibliography
+\bibliographystyle
+\csname
+\endcsname
+\catcode
+\def
+\edef
+\let
+\futurelet
+\loop
+\repeat
+\href
+\url
+\includegraphics
+\input
+\include
+\usepackage
+\RequirePackage
+\openin
+\read
+\newread
+\closein
+\openout
+\write
+\newwrite
+\closeout
+\write18
+\special
+\shipout
+\catcode
+\globaldefs
+\everyjob
+\everypar
+\everycr
+\endlinechar
+\lccode
+\uccode
+\sfcode
+\mathcode
+\delcode
+\scantokens
+
+\pdfobj
+\pdfrefobj
+\pdfannot
+\pdfximage
+\pdfcatalog
+\pdfinfo
+\pdfstartlink
+\pdffilesize
+\pdfmdfivesum
+\pdffilemoddate
+\pdffiledump
+
+]]):gmatch [[%a+]] do
+    bad_control_sequences['\\'..cs] = true
+  end
+end
+
+local function sanitize_control_sequences(s)
+  return (s:gsub([[%\%a+]],
+            function(cs) if bad_control_sequences[cs] then
+                return stringf([[\texttt{\textbackslash %s}]], cs:sub(2))
+            end
+  end))
+end
+
+
+
+--------- document (charsheet) utilities
+
+local function named_things(sheet) -- anything in MAGIC or FEATURES with a .name field
+  return coroutine.wrap(function()
+    for _, section in ipairs {'MAGIC', 'FEATURES'} do
+      local things = table_or_nothing(sheet[section])
+      for _, thing in ipairs(things) do
+        if thing.name then
+          coroutine.yield(thing)
+        end
+      end
+    end
+  end)
+end
+
+
+------------------------------------------------------------------------
+--
+-- General-purpose validation predicates
+
+local function wrap(p) -- on failure, produces the offending field (XXX name)
+  return function(v)
+    if p(v) then return true else return false, v end
+  end
+end
+
+local function any(p, list, first, last) -- existential quantifier
+  local ok, msg
+  first = first or 1
+  last = last or #list
+  for i = first, last do
+    ok, msg = p(list[i])
+    if ok then
+      return ok
+    end
+  end
+  return false, msg
+end
+
+-- predicate `can_be(tau1, tau2, ...)(v)` knows about type conversions
+
+local can_be_tab = {
+  string = wrap(function(v)
+             return type(v) == 'string' or type(v) == 'number' or type(v) == 'boolean'
+             end),
+  number = wrap(function(v) return tonumber(v) end),
+  boolean = wrap(function(v) return type(v) == 'boolean' or tostring(v):find '^[01]$' end),
+}
+setmetatable(can_be_tab, { __index = function(_, t)
+                                       return wrap(function(v) return type(v) == t end)
+                           end})
+
+local function can_be(...)
+  local types = { ... }
+  return function(v) return any(function(t) return can_be_tab[t](v) end, types) end
+end
+
+assert(can_be 'string'('hello'))
+assert(can_be 'string'(7))
+
+local empty = wrap(function(v)
+  return v == nil
+      or type(v) == 'table' and next(v) == nil
+      or type(v) == 'string' and not v:find '%S'
+      or false
+end)
+
+local is_singleton_table = wrap(function(t)
+  if type(t) == 'table' then
+    local k = next(t)
+    return k ~= nil and next(t, k) == nil
+  end
+end)
+
+local islist = wrap(function(t)
+  return type(t) == 'table' and (empty(t) or t[1] ~= nil)
+end)
+
+
+------------------------ Validators for character sheets -------------------
+
+-- XXX some strings are now allowed to be empty
+local magic_property = {
+  bonus = 'the spell may be cast as a bonus action',
+  reaction = 'the spell may be cast as a reaction',
+  attack = 'casting the spell requires an attack roll',
+  save = 'the stat the enemy has to use to make a saving throw',
+  enemy = 'the spell targets an enemy [implied by `attack` or `save`]',
+  ritual = 'the spell may be cast as a ritual',
+  duration = 'how long the spell lasts, if more than one action',
+  abbrev = "short description for GM's spell list",
+  concentration = 'the spell requires concentration',
+  name = 'Name of the spell',
+  description = 'How the spell works',
+  long = 'Long description',
+  material = 'Material components',
+  components = 'What of MSV is required to cast the spell',
+  domain = 'the spell is a domain spell',
+  freebie = 'does not count against number of spells caster can know (e.g., domain, circle)',
+  range = 'how far the spell can be cast',
+}
+
+function validators.components(context, v)
+  if not v:find '^[MSV]+$' then
+    verrorf(context, 'expected components to be a subset of MSV, but found %q', v)
+  end
+end
+
+local magicpropnames -- spec for validation keys
+do
+  local names = { }
+  for k in pairs(magic_property) do
+    if k == 'components' then
+      table.insert(names, '?components:components$s')
+    elseif k == 'freebie' then
+      table.insert(names, '?freebie:s|b')
+    else
+      table.insert(names, k == 'name' and k or '?' .. k)
+    end
+  end
+  magicpropnames = table.concat(names, ', ')
+end
+
+local equipment = { }
+
+-- EQUIPMENT
+equipment.canonical_category = {
+  ["heavy weapon"] = "HEAVY WEAPONS",
+  ["normal weapon"] = "NORMAL WEAPONS",
+  ["light weapon"] = "LIGHT WEAPONS",
+  ["shield"] = "SHIELDS",
+  ["heavy armor"] = "HEAVY ARMOR",
+  ["heavy armour"] = "HEAVY ARMOR",
+  ["normal armor"] = "MEDIUM ARMOR",
+  ["normal armour"] = "MEDIUM ARMOR",
+  ["medium armor"] = "MEDIUM ARMOR",
+  ["medium armour"] = "MEDIUM ARMOR",
+  ["light armor"] = "LIGHT ARMOR",
+  ["light armour"] = "LIGHT ARMOR",
+  ["heavy item"] = "HEAVY ITEMS",
+  ["slotted item"] = "SLOTTED ITEMS",
+  ["free item"] = "SMALL ITEMS",
+  ["small item"] = "SMALL ITEMS",
+  ["stored item"] = "STORED ITEMS",
+  ["stored"] = "STORED ITEMS",
+}
+
+function equipment.good_category(c)
+  c = tostring(c):lower():gsub('s$', '')
+  if equipment.canonical_category[c] then
+    return c
+  end
+end
+
+function equipment.category(s)
+  local function strip_s(s)
+    if s:sub(-1) == 's' then
+      return s:sub(1, -2)
+    else
+      return s
+    end
+  end
+
+  return equipment.canonical_category[strip_s(tostring(s):lower())]
+end
+
+do -- set equipment.tablespec
+  local catspecs = { }
+  local function catspec(category)
+    return stringf('?^%s:(s|list(s))', category)
+  end
+  for category in pairs(equipment.canonical_category) do
+    table.insert(catspecs, catspec(category))
+    table.insert(catspecs, catspec(category .. 's'))
+  end
+  equipment.tablespec = stringf('{%s}', table.concat(catspecs, ', '))
+end
+
+vnames.equipment = 'equipment list'
+
+local sheet_validation = ([[
+
+  -- validation spec for a full character sheet
+
+  sheet${
+    CLASS:nonempty$s,
+    ?LEVEL:n[1..30],
+
+    ?DOCUMENT FONT:docfont$s,
+
+    ?CHARACTER NAME, ?PLAYER NAME, ?RACE, ?BACKGROUND, ?SENSES,
+
+    ABILITIES
+
+    ?MAX HP:n[1..],
+    ?ARMOR CLASS:n[1..],
+    ?PASSIVE PERCEPTION:n[1..],
+
+    ?SPELL DC:n,
+    ?DOMAIN SPELLS:n[1..],
+    ?SPELLS KNOWN:spellcount$s,
+    ?SPELLS PREPARED:spellcount$s,
+    ?CANTRIPS KNOWN:spellcount$s,
+    ?SORCERY POINTS:n,
+
+    ?AGE, ?DESCRIPTION, ?MOTIVATION, ?SPECIALTY, ?ALIGNMENT,
+    ?HIT DICE, ?INITIATIVE, ?SPEED, ?EXPERIENCE POINTS,
+    ?CURRENT HIT POINTS, ?PROFICIENCY BONUS:n,
+
+    ?CP:empty|n[0..],
+    ?SP:empty|n[0..],
+    ?EP:empty|n[0..],
+    ?GP:empty|n[0..],
+    ?PP:empty|n[0..],
+
+
+    ?GM NOTES,
+
+    ?PREGENERATED:b,
+    ?MAGIC SEPARATE:b,
+
+    ?%ATTACKS:ATTACKS@list(
+       attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
+    ?%FEATURES:FEATURES@list(described$feature@
+           {name,?description
+           ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b
+           ,?markers:b -- add "magic markers" to name (default false)?
+           ,?GM note:(b|s)
+           }),
+    ?%MAGIC:MAGIC@list(described$spell@{MAGICPROPNAMES}
+               |{acquired at level:n[1..20]}
+               |level$level-spec@{level:n[0..9],?slots:n[1..]}
+               |null
+               ),
+    ?%EQUIPMENT:equipment@(etable@EQUIPMENT_TABLE|list(eqline$string)),
+
+    ?FEATURES SPACE,
+    ?EQUIPMENT COLS:n[1..3],
+    ?EQUIPMENT LEFT:b,
+
+    ?STONES:b, -- use Alexandrian stones
+
+  --  ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|list(s|empty)),
+    ?%PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
+    ?SECONDARY PROFICIENCIES:list(s|empty|{proficiencies_skip:bool}|{*:list(s)}),
+
+    ?LAYOUT,
+    ?SHEET ORIGIN,
+    ?COLOR:b,
+    ?TRAITS:b,
+    ?SPELL ATTACK MODIFIER:n,
+    ?SPELLCASTING ABILITY,
+    ?SPELLCASTING ABILITY MODIFIER:n,
+
+    ?SUGGESTED NAMES:list(s),
+    ?SUGGESTED MOTIVATIONS:list(s),
+
+    ?OTHER:any,
+
+  }
+]]):gsub('%-%-.-\n', '')
+   :gsub('MAGICPROPNAMES', magicpropnames)
+   :gsub('EQUIPMENT_TABLE', equipment.tablespec)
+   :gsub('ABILITIES', ('STR DEX CON INT WIS CHA')
+        :gsub('%S+', '?%1:n[1..20], ?%1 SAVING:b, '))
+
+------- validators used in the sheet spec ----
+
+vnames.etable = 'categorized list of equipment'
+
+function validators.docfont(_, v)
+  if not v:find '^1[012]pt$' then
+    verrorf('The DOCUMENT FONT must be 10pt, 11pt, or 12pt; found %q', v)
+    return '10pt'
+  end
+end
+
+function validators.attack(context, v)
+  if not empty(v['AMMO COUNT']) and empty(v['AMMO TYPE']) then
+    verrorf(context, 'AMMO COUNT is specified without an AMMO TYPE')
+    return update(v, 'AMMO COUNT', nil)
+  end
+end
+
+local function description(thing)
+  return thing.description or thing.long or thing.abbrev
+end
+
+function validators.described(context, v)
+  if not description(v) then
+    verrorf(context, '%q has no description', v.name)
+    return update(v, 'description', '???')
+  end
+end
+
+function validators.level(context, v)
+  if v.level == 0 and v.slots then
+    verrorf(context, 'spec for cantrips (level 0) included slots, but cantrips have no slots')
+    return { level = 0 }
+  elseif v.level > 0 and not v.slots then
+    verrorf(context, 'spec for level %d is missing its slot count', v.level)
+    return { level = v.level, slots = 1 }
+  end
+end
+
+function validators.spellcount(context,v)
+  if v:find '^%s*%d+%s*$' then
+    return tonumber(v)
+  else
+    local n1, n2 = v:match '^%s*(%u+)%s+%+%s+(%u+)%s*$'
+    if not n1 then
+      verrorf(context, 'Expected formula for spells known or prepared; found %q', v)
+      return 3
+    else
+      return {n1, n2}
+    end
+  end
+end
+
+function validators.eqline(context, v)
+  local cat = v:match '^(.-):'
+  if cat and not equipment.good_category(cat) then
+    verrorf(context, 'equipment line %q uses an unknown category %q', v, cat)
+    return (v:gsub('%:', '---'))
+  end
+end
+
+function validators.nonempty(context, v)
+  if empty(v) then
+    verrorf(context, 'expected data but found %s', friendly(v))
+    return 'missing'
+  end
+end
+
+local ability_modifier
+
+local function eval_prepcount(sheet, s)
+  if can_be 'number' (s) then
+    return tonumber(s)
+  elseif type(s) == 'table' then
+    local total = 0
+    for _, what in ipairs(s) do
+      local n = what == 'LEVEL' and sheet.LEVEL or ability_modifier(sheet[what] or 10)
+      total = total + assert(tonumber(n))
+    end
+    return total
+  else
+    assert(false)
+  end
+end
+
+local function spellcounts(magic)
+  local level = 0
+  local cantrips, spells = 0, 0
+  for _, thing in ipairs(magic) do
+    if thing.level then
+      level = thing.level
+    elseif thing.name and not (thing.freebie or thing.domain) then
+      if level == 0 then
+        cantrips = cantrips + 1
+      else
+        spells = spells + 1
+      end
+    end
+  end
+  return cantrips, spells
+end
+
+-- Validation function
+function validators.sheet(context, sheet)
+  if not empty(sheet.WIS) and empty(sheet['PASSIVE PERCEPTION']) then
+    verrorf(context, 'WIS is present but PASSIVE PERCEPTION is missing')
+    -- no need to fix here; extend() handles it
+  end
+  for _, key in ipairs {'SPELLS PREPARED', 'SPELLS KNOWN', 'CANTRIPS KNOWN' } do
+--    eprintf('check %s == %s\n', key, friendly(sheet[key]))
+    if not empty(sheet[key]) then
+      local n = eval_prepcount(sheet, sheet[key])
+      local cantrips, spells = spellcounts(sheet.MAGIC or nothing)
+      local what     = key:find 'CANTRIPS' and 'cantrips' or 'spells'
+      local how_many = key:find 'CANTRIPS' and cantrips or spells
+      if n > how_many then
+        verrorf('character can know %d %s, but they only know %d', n, what, how_many)
+      elseif n < how_many then
+        verrorf('character can only know %d %s, but they know %d', n, what, how_many)
+      end
+    end
+  end
+end
+
+local function default_validator_meta(validator)
+  return { __index = function() return validator end }
+end
+  -- used to define partial validators
+
+
+local function check_validator_use()
+  local validators_used = { }
+  local methods = setmetatable({}, default_validator_meta(function() return false end))
+  function methods:validate(name, v)
+    validators_used[name] = true
+    return v
+  end
+  validate.parse(methods, sheet_validation)
+  for k in pairs(validators_used) do
+    if not validators[k] then
+      errorf('Function validators.%s is not defined\n', k)
+    end
+  end
+  for k in pairs(validators) do
+    if not validators_used[k] then
+      errorf('Function validators.%s is not used\n', k)
+    end
+  end
+end
+
+check_validator_use()
+
+-------------------------------------------------------------------------
+--
+-- Extending and changing the bare YAML
+
+--------------------------------------------------------------------------
+
+-- semantic predicates
+
+local function same_values(v1, v2) -- same strings, or strings denoting the same number
+  local s1, s2 = tostring(v1), tostring(v2)
+  return v1 == v2 or
+         s1:find '^%d+$' and s2 == '+' .. s1 or
+         s2:find '^%d+$' and s1 == '+' .. s2
+end
+
+
+-- D&D info and knowledge
+
+local abilities =
+  { STR = true, DEX = true, CON = true, INT = true, WIS = true, CHA = true }
+
+local saving_throw_proficiencies = {
+  Barbarian = { "Strength", "Constitution" },
+  Bard      = { "Dexterity", "Charisma" },
+  Cleric    = { "Wisdom", "Charisma" },
+  Druid     = { "Intelligence", "Wisdom" },
+  Fighter   = { "Strength", "Constitution" },
+  Monk      = { "Strength", "Dexterity" },
+  Paladin   = { "Wisdom", "Charisma" },
+  Ranger    = { "Strength", "Dexterity" },
+  Rogue     = { "Dexterity", "Intelligence" },
+  Sorcerer  = { "Constitution", "Charisma" },
+  Warlock   = { "Wisdom", "Charisma" },
+  Wizard    = { "Intelligence", "Wisdom" }
+}
+
+local casting_ability = {
+  Bard      = 'CHA',
+  Cleric    = 'WIS',
+  Druid     = 'WIS',
+  Paladin   = 'CHA',
+  Ranger    = 'WIS',
+  Sorcerer  = 'CHA',
+  Warlock   = 'CHA',
+  Wizard    = 'INT',
+}
+
+function ability_modifier(score)
+  return math.floor((score - 10) / 2)
+end
+
+local function proficiency_bonus(level)
+  return 2 + math.floor((level - 1) / 4)
+end
+
+local function passive_skill(sheet, stat, proficiency, expertise)
+  local prof_bonus = proficiency_bonus(sheet.LEVEL)
+  local skill_bonus = proficiency and (expertise and 2 * prof_bonus or prof_bonus) or 0
+  return 10 + ability_modifier(tonumber(sheet[stat])) + skill_bonus
+end
+
+local function spell_attack_modifier(level, mod)
+  return proficiency_bonus(level) + mod
+end
+
+local function spell_dc(level, mod)
+  return 8 + proficiency_bonus(level) + mod
+end
+
+
+-- Colon conversion
+--
+-- YAML interprets, e.g., `Language: Common` as a singleton table,
+-- but we want it to be a string.
+
+local function convert_colon_tables(v)
+  -- returns converted version of v, while converting any internal
+  -- colon tables
+  if islist(v) then
+    for i, e in ipairs(v) do
+      v[i] = convert_colon_tables(e)
+    end
+    return v
+  elseif not is_singleton_table(v) then
+    return v
+  else
+    local k, e = next(v)
+    if k == 'proficiencies_skip' and tostring(e) == 'true' then
+      return v
+    elseif type(k) == 'string' then
+      if isnull(e) then -- singleton table
+        return stringf('%s:', k)
+      elseif can_be 'string'(e) then
+        return stringf('%s: %s', k, tostring(e))
+      else
+        v[k] = convert_colon_tables(e)
+      end
+    end
+    return v
+  end
+  assert(false) -- luacheck: ignore
+end
+
+--- Add tags to the names of spells
+
+local magic_markers = {
+  concentration = 'C',
+  ritual = 'R',
+  bonus = 'B',
+  reaction = 'Rx',
+  domain = 'D',
+}
+
+local freebies = {
+  Druid = [[{\druidcircle}]],
+  Cleric = [[D]],
+}
+setmetatable(freebies, { __index = function() return 'F' end })
+
+local function add_magic_markers(name, thing, class)
+  if type(name) ~= 'string' then
+    return name
+  else
+    local tags = name:match '%b[]'
+    if tags and tags:find '^.[%u,x]+.$' then
+      return name
+    else
+      tags = { }
+      for property, tag in pairs(magic_markers) do
+        if not false_yaml(thing[property]) then
+          table.insert(tags, tag)
+        end
+      end
+      if thing.freebie and not thing.domain then
+        table.insert(tags, freebies[class or '?'])
+      end
+
+      if #tags > 0 then
+        table.sort(tags)
+        return stringf([[%s \upshape{[%s]}]], name, table.concat(tags, ','))
+      else
+        return name
+      end
+    end
+  end
+end
+
+local function string_note(thing)
+  local n = thing['GM note']
+  if type(n) == 'string' then
+    return n
+  end
+end
+
+local function skill_p_e(sheet, skill) -- return proficiency and expertise
+  local skill = skill:lower()
+  for _, t
+  in ipairs { sheet.PROFICIENCIES or nothing, sheet['SECONDARY PROFICIENCIES'] or nothing }
+  do
+    for p in scalarvalues(t) do
+      if type(p) == 'string' and p:lower():find(skill) then
+        return true, p:find('[E]', 1, true)
+      end
+    end
+  end
+end
+
+local function extend(sheet)
+
+  ----------- options  ---------------
+  if fields.nocolor then
+    sheet.COLOR = false
+  end
+
+  ----- infrastructure: confirm existing value or set new one  -----------
+  local function confirm_or_set(field, value) -- checks for consistency
+    local v = sheet[field]
+    if v and tostring(v):find '%S' and not same_values(v, value) then
+      verrorf('Value %s computed as %s, but input says %s\n',
+              field, tostring(value), tostring(v))
+    elseif not tostring(v):find '^%+' then
+      sheet[field] = value
+    end
+  end
+
+  ------------------ class and level -----------------
+
+  local class = assert(sheet.CLASS)
+  sheet.LEVEL = sheet.LEVEL or 1
+  local level = sheet.LEVEL
+
+  ---------- calculated fields -------------
+
+  do -- saving-throw profs
+    for _, prof in ipairs(saving_throw_proficiencies[class] or nothing) do
+      confirm_or_set(stringf('%s SAVING', prof:sub(1,3):upper()), true)
+    end
+  end
+
+  confirm_or_set('PROFICIENCY BONUS', proficiency_bonus(sheet.LEVEL))
+
+
+  do -- spellcasting ability, modifier, DC
+    local casting = casting_ability[class] or sheet['SPELLCASTING ABILITY']
+    if casting and tonumber(sheet[casting]) then
+      confirm_or_set('SPELLCASTING ABILITY', casting)
+      local mod = ability_modifier(tonumber(sheet[casting]))
+      confirm_or_set('SPELLCASTING ABILITY MODIFIER', stringf('%d', mod))
+      confirm_or_set('SPELL DC', spell_dc(level, mod))
+      confirm_or_set('SPELL ATTACK MODIFIER', stringf('%d', spell_attack_modifier(level, mod)))
+    end
+  end
+
+  do   -- passive skills
+    local function set_passive_skill(stat, skill)
+      if tonumber(sheet[stat]) then
+        confirm_or_set(stringf('PASSIVE %s', skill:upper()),
+                       passive_skill(sheet, stat, skill_p_e(sheet, skill)))
+      end
+    end
+
+    set_passive_skill('WIS', 'Perception')
+    set_passive_skill('WIS', 'Insight')
+  end
+
+  ---------------- improvements to display --------------
+
+  do -- put save abilities in \textsc
+    for thing in named_things(sheet) do
+      if type(thing.save) == 'string' and abilities[thing.save:upper()] then
+        thing.save = stringf([[\textsc{%s}]], thing.save:lower())
+      end
+    end
+  end
+
+  -------------------  tag spell levels  ---------------------------
+  if sheet.MAGIC then
+    local level = nil
+    for _, spell in ipairs(sheet.MAGIC) do
+      if type(spell) == 'table' then
+        if spell.level then
+          level = spell.level
+        end
+        if spell.name and not spell['acquired at level'] then
+          spell.level = spell.level or level
+          if tonumber(spell.level) then
+            spell.tagged_name =
+              stringf([[\atlevel{%s\/}{%d}]], spell.name, tonumber(spell.level))
+          end
+        end
+      end
+    end
+  end
+
+  -- add info markers to spell names
+  for thing in named_things(sheet) do
+    if thing.markers ~= false then
+      thing.name = add_magic_markers(thing.name, thing, sheet.CLASS)
+      if thing.tagged_name then
+        thing.tagged_name = add_magic_markers(thing.tagged_name, thing, sheet.CLASS)
+      end
+    end
+  end
+
+
+  --------------------- reactions and bonus actions for GM sheet -------------
+  do -- find bonus actions, for GM sheet
+    local function stripname(s)
+      return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
+              :gsub([[\footnotesize%s*]], '')
+              :gsub([[%s*\upshape{%b[]}]], '')
+              :gsub('%s+$', '')
+    end
+
+    local function things_with(field)
+      local things = { }
+      for thing in named_things(sheet) do
+        if thing[field] then
+          local name = stripname(thing.name)
+          local description =
+            string_note(thing) and stringf('%s [%s]', name, string_note(thing)) or name
+          table.insert(things, stringf([[\%s{%s}]], field, description))
+        end
+      end
+      return table.concat(things, '\\relax\n  ')
+    end
+
+    sheet['BONUS ACTIONS'] = things_with 'bonus'
+    sheet['REACTIONS'] = things_with 'reaction'
+  end
+
+  return sheet
+end
+
+----------------------------------- normalization --------------------------
+
+local function heuristic_category(_)
+  return 'SLOTTED ITEMS'
+end
+
+local function normalize_equipment(eq)
+  if not eq[1] then -- either empty or already in table form
+    return eq
+  else
+    local category = equipment.category
+    local normal =
+      setmetatable({}, { __index = function(t, k) local u = {} t[k] = u return u end })
+
+    local in_category = false
+    for _, line in ipairs(eq) do
+      if type(line) == 'string' and line:find '%S' then -- counting on validation to show error
+        if not line:find '^%s*%-%s' then
+          in_category = false
+        end
+        local block_header = line:match("^(.+):$")
+        if block_header then
+          in_category = category(block_header) or heuristic_category(block_header)
+          -- heuristic is used only if block header is invalid, which will have been flagged
+        elseif in_category then
+          table.insert(normal[in_category], (line:gsub('^%s*%-%s+', ''):gsub('%s+$', '')))
+        elseif line:find '^%S.*:' then -- inline "category: item"
+          local cat, item = assert(line:match '^(.-)%s*:%s*(.*)$')
+          table.insert(normal[category(cat) or heuristic_category(item)], item)
+        else
+          table.insert(normal[heuristic_category(line)], line)
+        end
+      end
+    end
+    return setmetatable(normal, nil)
+  end
+end
+
+local function normalize(sheet)
+  sheet.EQUIPMENT = sheet.EQUIPMENT and normalize_equipment(sheet.EQUIPMENT)
+
+  for _, rec in ipairs(sheet.ATTACKS or nothing) do
+    if can_be 'number'(rec.ATTACK) then
+      rec.ATTACK = stringf('%+d', tonumber(rec.ATTACK))
+    end
+  end
+
+  if sheet.MAGIC then
+    local magic = { }
+    for _, spell in ipairs(sheet.MAGIC) do
+      if type(spell) == 'table' and spell['acquired at level'] then
+        -- skip this one
+      else
+        table.insert(magic, spell)
+      end
+    end
+
+    sheet.MAGIC = magic
+  end
+
+end
+
+
+--------------------------------------------------------------------------
+---
+---         Rendering
+
+----- help with LaTeX
+
+local escape_tex
+
+do
+
+  local map = {
+  --  ["\\"] = [[\textbackslash{}]],
+  --  ["{"]  = [[\{]],
+  --  ["}"]  = [[\}]],
+    [' '] = '~',
+    ["&"]  = [[\&]],
+    ["%"]  = [[\%]],
+    ["$"]  = [[\$]],
+    ["#"]  = [[\#]],
+    ["_"]  = [[\_]],
+    ["~"]  = [[\textasciitilde{}]],
+    ["^"]  = [[\textasciicircum{}]],
+  }
+
+  escape_tex = function (s)
+    if isnull(s) then
+      return ''
+    else
+      return (tostring(s):gsub("[\\&%%$#_{}~^]", map)
+                         :gsub('([%s%d])%-(%d)', [[%1\textminus%2]])
+                         :gsub("−", [[\textminus{}]])
+      )
+    end
+  end
+end
+
+local function do_not_escape(s) return tostring(s) end
+
+local function setDND(k, v)
+  local fontbase = k:match('(.*) FONT$')
+  if fontbase then
+    return stringf([[\setDNDfont{%s}{%s}]], fontbase, do_not_escape(v))
+  else
+    return stringf([[\setDND{%s}{%s}]], k, do_not_escape(v))
+  end
+end
+
+local render = { }
+
+--- rendering table
+---
+--- two kinds of renderer:
+---     table entry, including top level, take (k, v)
+---     others take just v
+
+render.string  = setDND
+render.number  = setDND
+render.boolean = setDND
+render.signed  = function(k, v) return setDND(k, stringf('%+d', v)) end
+
+render['PROFICIENCY BONUS'] = render.signed
+render['INITIATIVE'] = render.signed
+
+function render.ipairs(render, vs, separator)
+  local items = {}
+  for _, v in ipairs(vs) do
+    table.insert(items, render(v))
+  end
+  return table.concat(items, separator or "\n")
+end
+
+function render.sorted_pairs(render, t, separator)
+  local keys = { }
+  for k in pairs(t) do
+    table.insert(keys, k)
+  end
+  table.sort(keys)
+  local items = {}
+  for _, k in ipairs(keys) do
+    table.insert(items, render(k, t[k]))
+  end
+  return table.concat(items, separator or "\n")
+end
+
+function render.ATTACKS(k, v)
+  return setDND(k, render.ipairs(render.keys, v))
+end
+
+function render.keys(v)
+  return stringf([[\dndkeys{%s}]], render.sorted_pairs(render.eqbinding, v, ','))
+end
+
+function render.eqbinding(k, v)
+  return stringf("%s={%s}", do_not_escape(k), do_not_escape(v))
+end
+
+function render.described(thing) -- describe a named thing
+  local suffix =
+    (thing.attack or thing.offense or thing.offensive or thing.save or thing.enemy)
+    and 'Colored{attacks}' or ''
+  return stringf([[\described%s{%s}{%s}]], suffix,
+                 do_not_escape(thing.name or ''), do_not_escape(description(thing) or ''))
+end
+
+function render.FEATURES(k, v)
+  return setDND(k, render.ipairs(render.described, v))
+end
+
+function render.MAGIC(k, v)
+  return setDND(k, render.ipairs(render.spell, v))
+end
+
+function render.spell(thing)
+  if thing.slots or thing.level == 0 and is_singleton_table(thing) then
+    return stringf([[\spellslevellabel{%s}{%d}]], thing.level, thing.slots or 0)
+  else
+    return render.described(thing)
+  end
+end
+
+function render.PROFICIENCIES(k, v)
+  return setDND(k, render.ipairs(render.proficiency, v))
+end
+
+render['SECONDARY PROFICIENCIES'] = render.PROFICIENCIES
+
+function render.proficiency(elem)
+  if type(elem) == 'string' then
+    return render.item(elem)
+  elseif empty(elem) or elem.proficiencies_skip then
+    return [[\profskip{}]]
+  else
+    local groups = { }
+    for category, profs in pairs(elem) do
+      outf(groups, [[\item %s: \begin{innerlist}%s\end{innerlist}]], category,
+           render.ipairs(render.proficiency, profs))
+    end
+    return table.concat(groups, '\n')
+  end
+end
+
+function render.item(s)
+  return stringf([[\item %s]], s)
+end
+
+equipment.category_order = {
+ "SHIELDS",
+ "LIGHT WEAPONS",
+ "NORMAL WEAPONS",
+ "HEAVY WEAPONS",
+ "LIGHT ARMOR",
+ "MEDIUM ARMOR",
+ "HEAVY ARMOR",
+ "HEAVY ITEMS",
+ "SLOTTED ITEMS",
+ "SMALL ITEMS",
+ "STORED ITEMS"
+}
+
+function render.EQUIPMENT(_, eq)
+  local encumbrance = { }
+  local flatlist = { } -- list of all items in inventory
+
+  local function strip_and_render(item)
+    return render.item((item:gsub('%s+%(%d+%s*stones?%)', '')))
+  end
+
+  for _, category in ipairs(equipment.category_order) do
+    local items = eq[category]
+    local r = (category:find 'WEAPONS' or category:find 'ARMOR')
+       and strip_and_render
+        or render.item
+    if items then -- don't want to insert a blank line into flatlist
+      table.insert(flatlist, render.ipairs(r, items))
+      table.insert(encumbrance, render.ipairs(app1(render.encumbrance, category), items))
+    end
+  end
+
+  return stringf('%s\n%s', table.concat(encumbrance, '\n'),
+                           setDND('EQUIPMENT', table.concat(flatlist, '\n')))
+end
+
+function render.encumbrance(category, item)
+  assert(category ~= 'UNCATEGORIZED')
+  local stripped, stones = item:match '^(.*)%s+%((%d+) stones?%)'
+  local optional = stones and stringf('[%d]', 10 * tonumber(stones)) or ''
+  if stripped and (category:find 'ARMOR' or category:find 'WEAPON') then
+    item = stripped
+  end
+  return stringf([[\addDNDitem%s{%s}{%s}]], optional, category:gsub('&', '+'), item)
+end
+
+render['VALIDATION ERRORS'] = function(k, v)
+  return setDND(k, render.ipairs(render.item, v))
+end
+
+function render.OTHER(k, v)
+  local function any(v)
+    if type(v) ~= 'table' then
+      return tostring(v)
+    elseif v[1] then
+      return render.ipairs(render.item, v)
+    else
+      return render.sorted_pairs(function(k, v) return stringf('{%s}={%s}', k, any(v)) end, v)
+    end
+  end
+
+  return setDND(k, any(v))
+end
+
+render.table = render.OTHER
+
+do -- defend against invalid inputs breaking rendering
+  for k, v in pairs(render) do
+    if type(v) == 'function' then
+      local function finish(ok, ...)
+        if ok then return ...
+        else return stringf('render.%s failed because of invalid input', k)
+        end
+      end
+      render[k] = function(...) return finish(pcall(v, ...)) end
+    end
+  end
+end
+
+local function render_sheet (map)
+  local lines = {}
+
+  for _, k in ipairs(sorted_keys(map)) do -- emit in predictable order
+    local v = map[k]
+    local t = type(v)
+    local renderer = render[k] or render[t] or
+                     errorf('Cannot render %s', require 'inspect'.image { key = k, value = v })
+    table.insert(lines, (renderer)(k, v))
+  end
+  return table.concat(lines, "\n")
+end
+
+
+------------ preprocessing YAML ---------------------------------
+
+local word_size_limit = 54
+
+local function has_overlong_word(v)
+  local start = 1
+  while start <= #v do
+    local i, j = v:find('%S+', start)
+    if i == nil then
+      return false
+    elseif j - i >= word_size_limit then -- fencepost not relevant here
+      return true
+    else
+      start = j + 1
+    end
+  end
+end
+
+local function split_overlong_words_in(s)
+  local function split_part(s)
+    local inner_parts = { }
+    for i = 1, #s, word_size_limit do
+      table.insert(inner_parts, s:sub(i, i+word_size_limit-1))
+    end
+    return table.concat(inner_parts, ' ')
+  end
+
+  local parts = { }
+  for part in s:gmatch '%S+%s*' do
+    table.insert(parts, #part <= word_size_limit and part or split_part(part))
+  end
+
+  return stringf([[\parbox{\linewidth}{\raggedright{}%s}]], table.concat(parts))
+end
+
+local function split_overlong_words_except(t, skip)
+  if t ~= skip then
+    for k, v in pairs(t) do
+      if type(v) == 'table' then
+        split_overlong_words_except(v, skip)
+      elseif type(v) == 'string' then
+        if has_overlong_word(v) then
+          t[k] = split_overlong_words_in(v)
+        end
+      end
+    end
+  end
+end
+
+local function preprocess(sheet)
+  for _, f in ipairs { 'EQUIPMENT', 'PROFICIENCIES', 'SECONDARY PROFICIENCIES',
+                       'AGE', 'DESCRIPTION', 'MOTIVATION', 'SPECIALTY', 'CLASS', 'GM NOTES',
+                     }
+  do
+    sheet[f] = convert_colon_tables(sheet[f])
+  end
+
+  -- work around parsing in javascript
+  for _, f in ipairs {'PROFICIENCIES', 'SECONDARY PROFICIENCIES'}
+  do
+    local t = sheet[f]
+    if islist(t) then
+      for i, l in ipairs (t) do
+        if l == '' then
+          t[i] = lyaml.null
+        end
+      end
+    end
+  end
+
+  do -- strip known, empty fields
+    local methods = setmetatable({}, default_validator_meta(function(v) return v end))
+    function methods:key(name, _, validator)
+      return { name = name, validator = validator }
+    end
+    function methods:table(keys)
+      return keys
+    end
+    function methods:validate(_, v)
+      return v
+    end
+    function methods:number(_)
+      return 'number'
+    end
+    local fields = validate.parse(methods, sheet_validation)
+    for _, field in ipairs(fields) do
+      if isnull(sheet[field.name])
+      or field.validator == 'number' and not tostring(sheet[field.name]):find '%S'
+      then
+        sheet[field.name] = nil
+      end
+    end
+  end
+
+  return sheet
+end
+
+------------ reading a sheet file ---------------------------------
+
+local function read_all(filename)
+  if filename == '-' or filename == '.' or not filename then
+    return io.stdin:read("*a")
+  else
+    local f = assert(io.open(filename, "r"))
+    local txt = f:read("*a"); f:close(); return txt
+  end
+end
+
+local write_output -- forward declaration
+
+
+local function sheet_of_file(pathname)
+  curfile = pathname
+  local yaml_text = read_all(pathname)
+  local ok, sheet, msg = pcall(lyaml.load, yaml_text)
+  if not ok or type(sheet) ~= 'table' then
+    eprintf('charsheet load failed %s\n', (not ok and sheet) or msg or 'YAML loaded as string')
+    os.exit(1)
+  end
+  assert(type(sheet) == 'table')
+
+  do -- break cycles, lest other code recur forever
+    local function break_cycles(t, visiting)
+      -- remove any value in t that cycles up
+      if type(t) == 'table' then
+        visiting = visiting or {}
+        visiting[t] = true
+        for k, v in pairs(t) do
+          if visiting[v] then
+            t[k] = 'cycle in YAML'
+          else
+            break_cycles(v, visiting)
+          end
+        end
+        visiting[t] = nil
+      end
+    end
+
+    break_cycles(sheet)
+  end
+
+  do -- look for unbalanced braces (security risk)
+    local bad = unbalanced_yaml_string(sheet)
+    if bad then
+      local replace =
+        { ['{'] = [[\lbrace{}]], ['}'] = [[\rbrace{}]], ['\\'] = [[\textbackslash{}]] }
+      local display = bad:gsub([=[[{}\]]=], replace)
+      write_output(bad_input_tex:gsub("%$BAD", display))
+      eprintf('Unbalanced braces in %s; not continuing\n', pathname)
+      os.exit(1)
+    end
+  end
+
+  -- Validate document before processing
+  preprocess(sheet)
+  sheet.CLASS = sheet.CLASS or fields.class
+  sheet = validate.validate(validate.context.new(pathname), sheet_validation, semantics, sheet) or sheet
+  sheet.CLASS = sheet.CLASS or next(saving_throw_proficiencies) -- avoid crash in extend()
+  extend(sheet)
+  normalize(sheet)
+  if #global_validation_errors > 0 then
+    if fields.strict then
+      eprintf("Validation failed in strict mode. Exiting.\n")
+      os.exit(1)
+    else
+      eprintf("Validation warnings encountered. Continuing...\n")
+      -- In non-strict mode, accumulate validation errors in the document
+      sheet['VALIDATION ERRORS'] = global_validation_errors
+    end
+  end
+
+  -- Protect against overlong words in LaTeX code.
+  -- VALIDATION ERRORS is trusted.
+  split_overlong_words_except(sheet, sheet['VALIDATION ERRORS'])
+
+  return sheet, sheet['DOCUMENT FONT']
+end
+
+
+-------------- I/O and shell utilities -----------------------
+
+local function contents(filename)
+  local f, msg = io.open(filename, 'r')
+  if not f then return f, msg end
+  local s, msg = f:read '*a'
+  if not s then return s, string.format('%s: %s', filename, msg) end
+  f:close()
+  return s
+end
+
+local function set_contents(filename, s)
+  local f, msg = io.open(filename, 'w')
+  if not f then return f, msg end
+  local s = assert(f:write(s))
+  f:close()
+  return s or true
+end
+
+local function double_percents(s)
+  return (s:gsub('%%', '%%%%'))
+end
+
+local runlatex = [=[
+pdflatex=$PDFLATEX
+output=$OUTPUT  # quoted using `os.quote` below
+templates=$TEMPLATES
+export TEXINPUTS=".:$templates//:$TEXINPUTS"
+rm -f "$output" # guarantees caller can see failure even in Lua 5.1
+
+dir="$(mktemp -d)"
+trap "rm -rf $dir" 0
+tee /tmp/debug > "$dir/sheet.tex"
+$pdflatex -output-directory "$dir" "$dir/sheet.tex"
+rc=$?
+
+if [[ $rc -ne 0 ]]; then
+  exit $rc
+elif [[ -r "$dir/sheet.pdf" ]]; then
+  cp "$dir/sheet.pdf" "$output"
+else
+  exit 1
+fi
+]=]
+
+---- placing LaTeX in a template, then running pdflatex
+
+local function fill_template(assignments, layout)
+  local pathname = stringf('%s/%s.tex', fields.templates, layout)
+  local template, msg = contents(pathname)
+  if not template then
+    io.stderr:write(msg, '\n') -- don't use eprintf, which leaks to web client
+    os.exit(1)
+  else
+    local images = { 'splash.png', 'merman.pdf', 'splash-nocolor.png' }
+    local filled = template:gsub('\n[ \t]*\\input%b{}', '\n' .. double_percents(assignments))
+    for _, image in ipairs(images) do
+      local pattern = image:gsub('%W', '%%%1')
+      local bracketed = stringf('{%s/%s}', fields.templates, image)
+      filled = filled:gsub('%{' .. pattern .. '%}', bracketed)
+    end
+    return filled
+  end
+end
+
+local function wrap_latex(latex, layout, font)
+  local output = fields.standalone and latex or fill_template(latex, layout)
+  if font then
+    output = output:gsub([[\documentclass.-%d+pt.-article]],
+      function(line1)
+        return (line1:gsub('%d+pt', font))
+      end)
+  end
+  return output
+end
+
+function write_output(output)
+  if not fields.output then
+    io.stdout:write(output, '\n')
+  elseif fields.output:find '%.tex$' then
+    set_contents(fields.output, output)
+  elseif fields.output:find '%.pdf$' then
+    local command = runlatex:gsub('%$PDFLATEX', shell_quote(pdflatex))
+                            :gsub('%$OUTPUT', shell_quote(fields.output))
+                            :gsub('%$TEMPLATES', shell_quote(fields.templates))
+    if output:find("[\128-\255]") then
+      command = command:gsub('pdflatex', 'xelatex') -- unicode inside
+    end
+    local fd = assert(io.popen(stringf('bash -c %s', shell_quote(command)), 'w'))
+    fd:write(output)
+    local ok, termination, code = fd:close()
+    if not ok then -- script's exit code preserved only in Lua 5.2
+      os.exit(termination == 'exit' and code or 1)
+    end
+    do -- In Lua5.1, fd:close() returns success even if the command failed.
+       -- In which case we check to see if we actually got output.
+      local fd = io.open(fields.output)
+      if fd then
+        fd:close()
+      else
+        os.exit(1)
+      end
+    end
+  end
+end
+
+
+-------------------- invoke logic determined by arg[0] -----------
+
+local scripts = { }
+
+---- character sheet
+
+function scripts.charsheet(arg)
+  local sheet, font = sheet_of_file(arg[1])
+  local layout = fields.layout or sheet.LAYOUT or default_layout
+  local latex = sanitize_control_sequences(escape_tex(render_sheet(sheet)))
+  write_output(wrap_latex(latex, layout, font))
+end
+
+---- GM's summary sheet
+
+local function plus_newline(s)
+  return s .. '\n'
+end
+
+local function namelt (t1, t2)
+  if t1.name == t2.name then
+    return t1.abbrev and not t2.abbrev
+  else
+    return t1.name < t2.name
+  end
+end
+local function nameeq (t1, t2) return t1.name == t2.name end
+
+local spellprops = { 'spelldc', 'sam', 'spellattack', 'profbonus', 'initial' }
+
+local function spelleq(s1, s2)
+  if s1.name ~= s2.name or any(function(p) return s1[p] ~= s2[p] end, spellprops) then
+    return false
+  else
+    return true
+  end
+end
+
+local function merge_spells(spells, i, limit)
+  if limit == i + 1 then
+    return spells[i]
+  else
+    for _, prop in ipairs(spellprops) do
+      local first = spells[i][prop]
+      if any(function(s) return s[prop] ~= first end, spells, i + 1, limit - 1) then
+        local parts = { }
+        for j = i, limit - 1 do
+          local spell = spells[j]
+          if spell[prop] then
+            local marker = prop == 'initial' and '' or spell.initial
+            table.insert(parts, spell[prop] .. marker)
+          end
+        end
+        local wrapper = prop == 'initial' and '' or [[\bracket]]
+        spells[i][prop] = stringf([[%s{%s}]], wrapper, table.concat(parts, ','))
+      end
+    end
+    return spells[i]
+  end
+end
+
+local function merge_spell_multiples(spells)
+  local i = 1
+  while i < #spells do
+    local j = i + 1
+    while j <= #spells and spells[i].name == spells[j].name do
+      j = j + 1
+    end
+    spells[i] = merge_spells(spells, i, j)
+    assert((spells[j] or nothing).name ~= spells[i].name)
+    for index = j - 1, i + 1, -1 do
+      table.remove(spells, index)
+    end
+    i = i + 1
+  end
+  return spells
+end
+
+
+
+function scripts.gmsheet(arg)
+  local latexes = { }
+  local docs = { }
+  local font
+  for i, playerfile in ipairs(arg) do
+    local sheet, f = sheet_of_file(playerfile)
+    font = font or f
+    table.insert(docs, sheet)
+    local defs = sanitize_control_sequences(escape_tex(render_sheet(sheet)))
+    table.insert(latexes, stringf(plus_newline [[\setDNDplayer{%d}{%s}]], i, defs))
+  end
+
+  do -- durable effects
+    local function dname(thing)
+      local s = thing.name
+      local concentration = ''
+      if thing.concentration or s:find('%b[]') and s:find('%AC%A') then
+        concentration = [[ \C]]
+      end
+      return s:gsub('%s+%b[]', ''):gsub([[\rlap%s*%b{}]], ''):gsub(',%s*$', '') ..
+             concentration
+    end
+
+    local durables = { }
+    for _, sheet in ipairs(docs) do
+      for thing in named_things(sheet) do
+        if thing.duration then
+          table.insert(durables, thing)
+        end
+      end
+    end
+    table.sort(durables, namelt)
+    rmdups(durables, nameeq)
+    local code = {}
+    local function outdurable(thing)
+      local duration = stringf([[\?%s]], thing.duration):gsub([[%\%?(%d%d)]], '%1')
+      outf(code, plus_newline [[  \durable{%s}{%s}%%]], dname(thing), duration)
+    end
+    local function outdurables(lo, hi)
+      outf(code, '%%\n {%%\n')
+      for i = lo, hi do
+        outdurable(durables[i])
+      end
+      outf(code, ' }')
+    end
+    do
+      outf(code, [[\def\durables{]])
+      local mid = math.ceil(#durables/2.0)
+      outdurables(1, mid)
+      outdurables(mid+1, #durables)
+      outf(code, '}%% \\durables\n')
+    end
+    do
+      outf(code, [[\def\durablestriple{]])
+      local second = math.ceil(#durables/3.0)
+      outdurables(1, second)
+      local third = second + math.ceil((#durables-second) / 2.0)
+      outdurables(second+1, third)
+      outdurables(third+1, #durables)
+      outf(code, '}%% triple\n')
+    end
+
+    table.insert(latexes, table.concat(code, ''))
+  end
+
+  do -- attack spells
+    local attacks = { }
+    for _, sheet in ipairs(docs) do
+      for spell in named_things(sheet) do
+        if spell.attack then
+          table.insert(attacks, spell)
+        end
+      end
+    end
+    table.sort(attacks, namelt)
+    for i, attack in ipairs(attacks) do
+      attacks[i] = stringf([[\attack{%s}]], attack.name)
+    end
+    rmdups(attacks)
+    table.insert(latexes,
+                 stringf([[\def\spellattacks]] .. '{%%\n  %s%%\n}%%\n',
+                         table.concat(attacks, '%\n  ')))
+  end
+
+  local function first_initial(sheet)
+    local first = (sheet['CHARACTER NAME'] or 'Nobody'):match '%u'
+    return first
+  end
+
+  local function firstname(sheet)
+    local first = (sheet['CHARACTER NAME'] or 'Nobody'):match '%u[%a%-]+' or ''
+    if first == '' then
+      first = sheet.CLASS or '?'
+    end
+    return first
+  end
+
+  do -- saving-throw spells
+    local savedocs = { } -- map spell name to list of docs
+    local savestats = { } -- and to stat
+    for _, sheet in ipairs(docs) do
+      for spell in named_things(sheet) do
+        if spell.save then
+          local name = spell.name:gsub('%s*%b[]', '')
+          savestats[name] = spell.save
+          savedocs[name] = savedocs[name] or {}
+          table.insert(savedocs[name], sheet)
+        end
+      end
+    end
+    for i, spellname in ipairs(sorted_keys(savedocs)) do
+      local dcs = { }
+      for _, sheet in ipairs(savedocs[spellname]) do
+        local dc = tonumber(sheet['SPELL DC'])
+        dcs[dc] = dcs[dc] or { }
+        table.insert(dcs[dc], sheet)
+      end
+      local suffix
+      if is_singleton_table(dcs) then
+        suffix = stringf([[\textsc{%s}~%d]], savestats[spellname], (next(dcs)))
+      else
+        local dclist = { }
+        for _, sheet in ipairs(savedocs[spellname]) do
+          local s = stringf('%s,~%d', first_initial(sheet), tonumber(sheet['SPELL DC']))
+          table.insert(dclist, s)
+        end
+        suffix =
+          stringf([[\textsc{%s}: %s]], savestats[spellname], table.concat(dclist, '; '))
+      end
+      savedocs[i] = stringf([[\savespell{%s}{%s}]], spellname, suffix)
+    end
+    table.insert(latexes,
+                 stringf([[\def\spellsaves]] .. '{%%\n  %s%%\n}%%\n',
+                         table.concat(savedocs, '%\n  ')))
+  end
+
+  do -- passives
+    local function gt(v1, v2) return v1 > v2 end
+    for _, skill in ipairs { 'Perception', 'Insight' } do
+      local players = { } -- map skill to list of players
+      for _, sheet in ipairs(docs) do
+        local passive_skill = tonumber(assert(sheet['PASSIVE ' .. skill:upper()]))
+        players[passive_skill] = players[passive_skill] or { }
+        table.insert(players[passive_skill], firstname(sheet))
+      end
+      local rows = { }
+      for _, passive in ipairs(sorted_keys(players, gt)) do
+        local ps = players[passive]
+        table.sort(ps)
+        local cmd = stringf([[\skillrow{%d}{%s}]], passive, table.concat(ps, ', '))
+        table.insert(rows, cmd)
+      end
+      local latex = stringf([[\setpassive{%s}{%%]] .. '\n  %s%%\n}\n',
+                            skill, table.concat(rows, '%\n  '))
+      table.insert(latexes, latex)
+    end
+  end
+
+  local layout = fields.layout or default_layout
+  write_output(wrap_latex(table.concat(latexes, '\n'), layout, font))
+end
+
+--- list of spells/features for GM reference
+
+
+
+local function gm_macro_defs(spell)
+  local defs = { }
+  for _, prop in ipairs(spellprops) do
+    if spell[prop] then
+      if prop == 'profbonus' then
+        table.insert(defs,  stringf([[\setDND{PROFICIENCY BONUS}{%s}]], tostring(spell.profbonus)))
+      else
+        table.insert(defs, stringf([[\def\%s{%s}]], prop, tostring(spell[prop])))
+      end
+    end
+  end
+  return table.concat(defs)
+end
+
+function scripts.gmspells(arg)
+  local docs = { }
+  local font
+  for _, path in ipairs(arg) do
+    local sheet, f = sheet_of_file(path)
+    font = font or f
+    table.insert(docs, sheet)
+  end
+  local spells = { } -- need a way to identify features
+  for _, sheet in ipairs(docs) do
+    local letter = sheet['CHARACTER NAME'] and sheet['CHARACTER NAME']:match '%a'
+                or sheet['CLASS'] and sheet['CLASS']:match '%a'
+    local initial = (letter or '?'):upper()
+    local props = { spelldc = sheet['SPELL DC'],
+                    sam = sheet['SPELLCASTING ABILITY MODIFIER'],
+                    spellattack = sheet['SPELL ATTACK MODIFIER'],
+                    profbonus = sheet['PROFICIENCY BONUS'],
+                    initial = initial,
+    }
+    for thing in named_things(sheet) do
+      if thing['GM note'] ~= false then
+        for k, v in pairs(props) do
+          thing[k] = v
+        end
+        table.insert(spells, thing)
+      end
+    end
+  end
+
+  local latexes = { }
+  local function latexf(...) table.insert(latexes, stringf(...)) end
+  table.sort(spells, namelt)
+  rmdups(spells, spelleq)
+  merge_spell_multiples(spells)
+  for _, spell in ipairs(spells) do
+    local note = string_note(spell) and stringf([[ \emph{%s}]], spell['GM note']) or ''
+    local description = spell.abbrev or spell.description or spell.long
+    local name = escape_tex(spell.tagged_name or spell.name)
+    if spell.components then
+      name = stringf([[%s {\footnotesize\upshape [%s]}]], name, spell.components)
+    end
+    local defs = gm_macro_defs(spell)
+    latexf([[\spell{{\let\rlap\relax{}%s\footnotesize\upshape{~(%s)}}}{{%s%s%s}}]],
+      name, spell.initial or '?', defs, escape_tex(description), note)
+  end
+
+  local layout = fields.layout or default_layout
+  write_output(wrap_latex(table.concat(latexes, '\n'), layout, font))
+end
+
+------------ finally, act on options / arguments  ------------
+
+if fields.fontable then
+  local methods = setmetatable({}, default_validator_meta())
+  function methods:key(name, props, _)
+    if props.fontable then
+      io.stdout:write(name, '\n')
+    end
+    return name
+  end
+  validate.parse(methods, sheet_validation)
+else
+  assert(scripts[basename])(arg)
+end
+
