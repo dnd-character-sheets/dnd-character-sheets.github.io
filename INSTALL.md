@@ -145,3 +145,105 @@ own YAML into a PDF.
 If you'd rather not install anything, the web form at
 [`https://dnd-character-sheets.github.io`](https://dnd-character-sheets.github.io)
 runs `charsheet` for you — see the [`README`](README.md).
+
+## Installing the web service on your own server (optional)
+
+Everything above runs `charsheet` from a shell.  This section is for
+hosting your *own* copy of the web form and its backend — the thing
+`https://dnd-character-sheets.github.io` does — on a server you
+control.  It needs everything above, working, on that server, plus a
+web server that can run CGI scripts (these instructions assume
+Apache).
+
+### 1. Deploy the backend, `www/render.cgi`
+
+Copy or symlink it into your web server's `cgi-bin`.  On Debian/Ubuntu
+with `apache2` and `mod_cgi`/`mod_cgid` enabled, that's typically
+`/usr/lib/cgi-bin/`:
+
+```sh
+sudo cp www/render.cgi /usr/lib/cgi-bin/
+```
+
+`render.cgi` runs `charsheet` (bare, found via the web server's own
+`$PATH`) by default.  A CGI environment's `$PATH` is usually much
+narrower than your login shell's, so unless `charsheet` is genuinely
+on it, set `$CHARSHEET_CMD` to an absolute path — `bin/charsheet` from
+this checkout, or a `bin/dndsheets` symlink (see Configure, above)
+works too:
+
+```sh
+export CHARSHEET_CMD=/path/to/charsheets/bin/charsheet
+```
+
+How you set that for the CGI process depends on your server; Apache's
+`SetEnv` directive, or a one-line wrapper script placed where
+`render.cgi` is (see the prefix-script pattern below), both work.
+
+Two more environment variables `render.cgi` reads, both optional:
+
+ - `MAX_YAML_BYTES` (default 2 MiB) — rejects larger request bodies
+   before doing anything with them.
+ - `RENDER_TIMEOUT_SECS` (default 30) — kills a `charsheet` run that's
+   still going after this long, and everything it spawned (it runs as
+   the leader of its own process group for exactly this reason).
+
+### 2. Serve the form
+
+The simplest setup serves `www/character-form.html` from the *same*
+origin as `render.cgi` (e.g. both under the same Apache vhost) — in
+that case there's nothing else to configure: same-origin requests
+aren't subject to CORS at all, and you can skip straight to step 3.
+
+If you'd rather use the version with pregenerated characters already
+loaded into it, `mk docs/index.html` builds that from
+`www/character-form.html`; either file works as the form.
+
+### 3. Point the form at your backend
+
+`www/character-form.html`'s `generatePDF()` function has one hardcoded
+URL, in its `fetch(...)` call — change it to wherever you put
+`render.cgi`:
+
+```js
+const response = await fetch('https://your-server.example/cgi-bin/render.cgi', {
+```
+
+**If you edit `character-form.html`, bump its `Version:` string** —
+this project's convention, from `AGENTS.md`: each version is named
+after a vegetable (or other food) one initial letter further into the
+alphabet than the last (eggplant → fennel → garlic, ...).
+
+### 4. Cross-origin access (only if the form isn't same-origin with `render.cgi`)
+
+`render.cgi`'s own `Access-Control-Allow-Origin` handling is a no-op
+by default (`*`, meaning "no Origin header to react to" — i.e. not a
+browser request at all) and it doesn't answer the CORS *preflight*
+`OPTIONS` request browsers send before a cross-origin
+`Content-Type: text/yaml` POST (which isn't a CORS-"simple" request,
+so the preflight isn't optional). Serving the form from a different
+origin than the backend therefore needs something to answer that
+`OPTIONS` request and compute a real origin allowlist.
+
+`www/halligan-prefix.sh` is the author's own version of that, meant to
+be concatenated in front of `render.cgi` at deploy time (see the
+`$REMOTE/render.cgi` target in `mkfile`) — it's a worked example to
+adapt, not something to use verbatim: its `allowed_origin()` allowlist
+and every path it exports (`$CHARSHEET_CMD`, `$LUA_PATH`, ...) are
+specific to the author's own machine, and the `$LUA_PATH`/`$CHARSHEETS`/
+`$TEXINPUTS` exports it sets are no longer needed at all now that
+`charsheet` locates those itself (see Configure, above) — a prefix
+script for a fresh deployment only needs an `allowed_origin()` matching
+your own domain(s), the `OPTIONS` handling around it, and
+`$CHARSHEET_CMD`.
+
+### A privacy note
+
+`render.cgi` keeps the most recently submitted sheet at
+`/tmp/last-charsheet.yaml` (and, on a failed render, the raw
+stderr/stdout too) for local debugging — written safely against
+symlink attacks, but still every submitter's character sheet, in the
+clear, on your server. Decide whether that's acceptable for your
+deployment before you put it in front of real users; the `README`'s
+privacy expectations for the author's own instance won't automatically
+apply to yours.
