@@ -18,21 +18,18 @@ useful summaries for a Game Master to use at the table.
    apt install lua5.1
    ```
  - `luarocks`, to install one Lua package:
-    ```
+
+    ````
     apt install luarocks
-    ```
+    ````
  - A Lua binding for YAML parsing:
    ```
    luarocks install lyaml
    ```
  - The TeX Live distribution from 2024.  Later distributions may work,
    but new TeX Live distributions often introduce incompatibilities.
-
    A full or nearly-full TeXLive install covers the packages the
-   templates need.  If you're using a minimal one, `./configure`
-   (below) reads `templates/*.tex` and `templates/*.sty` itself and
-   tells you if any of the packages they ask for are missing, rather
-   than you having to track the list by hand.
+   templates need.
 
 Lua, `luarocks`, and TeXLive should all be easy to install with your
 distribution's package manager.
