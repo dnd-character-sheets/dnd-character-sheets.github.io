@@ -2,8 +2,6 @@
 title: Running character-sheet software on your own machine
 ---
 
-# Running character-sheet software locally
-
 These instructions let you run `charsheet`
 on your own machine, turning a character's YAML into a PDF without
 using the web form.
