@@ -45,21 +45,6 @@ local binname = assert((real ~= '' and real or arg[0]):match '^(.*)/[^/]*$',
                          arg[0] .. ': not invoked through a bin/ directory')
 local rootname = binname:gsub('/bin$', '')
 
-local luaversion = assert(_VERSION:match '^Lua (5%.[12])$',
-                          'unsupported ' .. _VERSION)
-
-do -- path settings
-
-  local defaults = { path = package.path, cpath = package.cpath }
-
-  package.path = stringf('%s/lib/lua/?.lua;%s', rootname, defaults.path)
-
-  local rockspath  = capture(stringf('luarocks --lua-version=%s path --lr-path',  luaversion))
-  local rockscpath = capture(stringf('luarocks --lua-version=%s path --lr-cpath', luaversion))
-  package.path  = stringf('%s/lib/lua/?.lua;%s;%s', rootname, rockspath, defaults.path)
-  package.cpath = stringf('%s;%s', rockscpath, defaults.cpath)
-end
-
 local function eprintf(...)
   return io.stderr:write(basename, ': ', stringf(...))
 end
