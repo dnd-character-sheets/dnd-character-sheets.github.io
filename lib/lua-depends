@@ -1,0 +1,83 @@
+#!/usr/bin/env lua5.2
+
+------------------ classic print functions ---------------------
+local stringf = string.format
+local function printf(...) return io.stdout:write(stringf(...)) end
+----------------------------------------------------------------
+
+local fields = require 'flags'.parser()
+  :string_list('exclude as x')
+  :parse(arg)
+
+
+
+local iox = require 'iox'
+
+local excluded = { }
+for _, modname in ipairs(fields.exclude) do
+  excluded[modname] = true
+end
+
+local dependstab = { } -- map modname to modname set
+
+local depends
+
+local function addfile(path, d)
+  local contents = iox.contents(path)
+  local function emit(required)
+    if not _ENV[required] and not excluded[required] then
+      d[required] = true
+      depends(required)
+    end
+  end
+  contents:gsub('%b[]', ''):gsub([=[require%s*['"](.-)['"]]=], emit)
+end
+
+depends = function(modname)
+  if not dependstab[modname] then
+    local path = package.searchpath(modname, package.path)
+    local d = { }
+    dependstab[modname] = d
+    if path then
+      addfile(path, d)
+    end
+  end
+  return dependstab[modname]
+end
+
+local root = { }
+for _, path in ipairs(arg) do
+  addfile(path, root)
+end
+
+if dependstab.table then -- break a cycle
+  dependstab.table.set = nil
+end
+
+local function standalone()
+  for k, v in pairs(dependstab) do
+    if next(v) == nil then
+      return k
+    end
+  end
+end
+
+local function drain()
+  while next(dependstab) ~= nil do
+    local remove = standalone()
+    if not remove then
+      require 'inspect'.show(dependstab)
+      assert(false, 'the graph has a cycle')
+    end
+    printf('%s\n', remove)
+    dependstab[remove] = nil
+    for k, v in pairs(dependstab) do
+      v[remove] = nil
+    end
+  end
+end
+
+drain()
+
+-- require 'inspect'.show{root=root, depends=dependstab}
+
