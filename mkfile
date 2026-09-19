@@ -16,7 +16,6 @@ TEMPLATES_TEX=${TEMPLATES:%=templates/%.tex}
 BGBASES=splash.png splash-nocolor.png merman.pdf
 BGS=${BGBASES:%=templates/%}
 
-CODE=bin/charsheet $TEMPLATES_TEX
 CSS=https://www.cs.tufts.edu/cs/106/course.css
 
 S=samples
@@ -25,7 +24,7 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: bin/exported-charsheet samples test github ${PREVIEWS:%=%-preview.png}
+all:V: bin/exported-charsheet samples githubdocs ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
@@ -34,7 +33,7 @@ qstest:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 
 export:V: bin/exported-charsheet
 
-bin/exported-charsheet:V: bin/charsheet
+bin/exported-charsheet:D: bin/charsheet
 	amalg -o bin/exported-charsheet -s bin/charsheet $(lib/lua-depends -x lyaml bin/charsheet)
 	chmod +x bin/exported-charsheet
 
@@ -81,12 +80,12 @@ local-cgi:V: /usr/lib/cgi-bin/render.cgi
 docs/index.html:D: yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS lib/insert-pregen-yamls www/character-form.html
 	lib/insert-pregen-yamls -html www/character-form.html -o $target yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS
 
-bundle:V: docs/index.html docs/charsheet.css
-	cp -auvL $BGS bin/charsheet templates/charsheet.sty $TEMPLATES_TEX $LUAFILES $PUBLISH
+bundle:V: docs/index.html docs/charsheet.css bin/exported-charsheet
+	cp -auvL $BGS bin/exported-charsheet templates/charsheet.sty $TEMPLATES_TEX $PUBLISH
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
 
-publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
+publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css bin/exported-charsheet
 	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
 	rsync -avP -L $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $LUAFILES \
                       $REMOTEHOST:$REMOTEWEBPATH/charsheet/
@@ -96,7 +95,7 @@ publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 GITDOCS=index.html README.html YAML.html QUICKSTART.html CHANGELOG.html \
         mario.pdf mario-preview.png gmsheet.pdf gmsheet-preview.png
 
-github:V: ${GITDOCS:%=docs/%}
+githubdocs:V: ${GITDOCS:%=docs/%}
 
 docs/&.html:D: &.md
 	set -o pipefail
