@@ -14,6 +14,14 @@ charsheet=$here/bin/charsheet
 note() { echo "$arg0: $*" 1>&2; }
 fail() { echo "$arg0: $*" 1>&2; exit 1; }
 
+# ---- realpath -----------------------------------------------------------
+# bin/charsheet uses realpath, when present, to resolve a symlink to
+# itself (from anywhere, under any of its three names) back to this
+# checkout.  Without it, only same-directory symlinks and direct/$PATH
+# invocations work
+command -v realpath >/dev/null 2>&1 \
+  || note "warning: no symlinks -- realpath not found on \$PATH; symlinks to bin/charsheet won't work unless they're in bin/ itself (e.g. 'apt install coreutils')"
+
 # ---- Lua interpreter, luarocks, lyaml ------------------------
 # charsheet runs under either Lua 5.1 or 5.2.  A version only counts as
 # working if lyaml loads from its luarocks tree.
@@ -115,27 +123,6 @@ $err"
 fi
 rm -f "$pdf"
 note "bin/charsheet runs, via '${run[*]}'"
-
-# ---- a dispatcher for $PATH, so charsheet/gmsheet/gmspells don't need
-# ---- $here/bin on $PATH -- just symlinks to this file under those
-# ---- names, from any directory that's already on $PATH.
-cat > "$here/bin/dndsheets" <<EOF
-#!/bin/ksh
-
-dir="$here/bin"
-EOF
-cat >> "$here/bin/dndsheets" <<'EOF'
-cmd="$(basename "$0")"
-
-case $# in
-  0) exec "$dir/$cmd" ;;
-  *) exec "$dir/$cmd" "$@" ;;
-esac
-EOF
-
-chmod +x "$here/bin/dndsheets"
-
-note "created bin/dndsheets, pointing at $here"
 
 note "configured.  charsheet finds its own templates/, Lua modules, and"
 note "TeX search path; just put $here/bin on \$PATH, or symlink"

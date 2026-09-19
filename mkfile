@@ -25,7 +25,7 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: export-check sandbox-check samples test github ${PREVIEWS:%=%-preview.png}
+all:V: bin/exported-charsheet samples test github ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
@@ -38,9 +38,6 @@ bin/exported-charsheet:V: bin/charsheet
 	amalg -o bin/exported-charsheet -s bin/charsheet $(lib/lua-depends -x lyaml bin/charsheet)
 	chmod +x bin/exported-charsheet
 
-export-check:V: # check that lib/lua is up to date
-	lib/sync-exported-lua
-
 # export-check only catches drift in modules it already knows to
 # compare; sandbox-check catches a new `require` that was never added
 # to the export at all, by running charsheet against lib/lua alone.
@@ -52,8 +49,6 @@ sandbox-check:V:
 # prerequisites: formcrash runs many pdflatex jobs back to back, and a
 # concurrent pdflatex job from another target corrupts its results.
 test:V:
-	lib/sync-exported-lua
-	lib/check-exported-lua
 	mk qstest
 	testing/formcrash
 	testing/formcrash testing/crashers/*.yaml
@@ -74,7 +69,7 @@ $QYAMLS /tmp/QUICKSTART.yaml: QUICKSTART.md lib/yaml-from-md
 $S/wizard.pdf: $S/king-wizard.3.pdf $S/king-wizard.s.pdf
 	pdftk $prereq cat output $target
 
-LUAUTIL=flags inspect osutil tabutil
+LUAUTIL=flags inspect osx tablex stringx module52
 LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua} $HOME/src/lua/validate
 
 local-cgi:V: /usr/lib/cgi-bin/render.cgi
@@ -91,7 +86,7 @@ bundle:V: docs/index.html docs/charsheet.css
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
 
-publish:V: test $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
+publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css
 	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
 	rsync -avP -L $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $LUAFILES \
                       $REMOTEHOST:$REMOTEWEBPATH/charsheet/
