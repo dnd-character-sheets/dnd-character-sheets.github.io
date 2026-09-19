@@ -1613,6 +1613,8 @@ end
 local runlatex = [=[
 pdflatex=$PDFLATEX
 output=$OUTPUT  # quoted using `os.quote` below
+templates=$TEMPLATES
+export TEXINPUTS=".:$templates//:$TEXINPUTS"
 rm -f "$output" # guarantees caller can see failure even in Lua 5.1
 
 dir="$(mktemp -d)"
@@ -1669,6 +1671,7 @@ function write_output(output)
   elseif fields.output:find '%.pdf$' then
     local command = runlatex:gsub('%$PDFLATEX', shell_quote(pdflatex))
                             :gsub('%$OUTPUT', shell_quote(fields.output))
+                            :gsub('%$TEMPLATES', shell_quote(fields.templates))
     if output:find("[\128-\255]") then
       command = command:gsub('pdflatex', 'xelatex') -- unicode inside
     end
