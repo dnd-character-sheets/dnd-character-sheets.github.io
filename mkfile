@@ -33,7 +33,11 @@ qstest:V: /tmp/QUICKSTART.yaml ${QCHARS:%=%.test} ${QCHARS:%=/tmp/%-test.pdf}
 
 export:V: bin/exported-charsheet
 
-bin/exported-charsheet:D: bin/charsheet
+LUADEPENDS=`lib/lua-depends -x lyaml bin/charsheet`
+LUADEPENDSSRC=`lua-searchpath $LUADEPENDS`
+
+
+bin/exported-charsheet:D: bin/charsheet $LUADEPENDSSRC
 	amalg -o bin/exported-charsheet -s bin/charsheet $(lib/lua-depends -x lyaml bin/charsheet)
 	chmod +x bin/exported-charsheet
 
