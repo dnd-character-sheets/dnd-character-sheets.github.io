@@ -103,29 +103,40 @@ if [[ -n $shebang_lua ]] && [[ " ${working[*]} " == *" $shebang_lua "* ]]; then
 else
   run=("${working[0]}" "$charsheet")
 fi
-if ! err=$(CHARSHEETS="$here/templates" "${run[@]}" -o /dev/null -s "$here/yaml/mario.yaml" 2>&1); then
+# Neither $CHARSHEETS nor $TEXINPUTS is set here: charsheet finds
+# templates/ itself from rootname and sets $TEXINPUTS for pdflatex
+# itself, so a real PDF (not just -s -o /dev/null, which never
+# actually runs pdflatex) confirms both of those still work.
+pdf=$(mktemp -u --suffix=.pdf)
+trap 'rm -f "$pdf"' EXIT
+if ! err=$("${run[@]}" -o "$pdf" "$here/yaml/mario.yaml" 2>&1) || [[ ! -s $pdf ]]; then
   fail "bin/charsheet still doesn't run (via '${run[*]}'):
 $err"
 fi
+rm -f "$pdf"
 note "bin/charsheet runs, via '${run[*]}'"
 
-cat > bin/dndsheets <<EOF
+# ---- a dispatcher for $PATH, so charsheet/gmsheet/gmspells don't need
+# ---- $here/bin on $PATH -- just symlinks to this file under those
+# ---- names, from any directory that's already on $PATH.
+cat > "$here/bin/dndsheets" <<EOF
 #!/bin/ksh
 
-dir="$(pwd)"
+dir="$here/bin"
 EOF
-cat >> bin/dndsheets <<'EOF'
+cat >> "$here/bin/dndsheets" <<'EOF'
 cmd="$(basename "$0")"
 
-case $# in 
+case $# in
   0) exec "$dir/$cmd" ;;
   *) exec "$dir/$cmd" "$@" ;;
 esac
 EOF
 
-chmod +x bin/dndsheets
+chmod +x "$here/bin/dndsheets"
 
-note 'created bin/dndsheets'
+note "created bin/dndsheets, pointing at $here"
 
-note "configured.  Put $here/bin on \$PATH, and set \$CHARSHEETS and"
-note "\$TEXINPUTS as INSTALL.md describes, or run from $here."
+note "configured.  charsheet finds its own templates/, Lua modules, and"
+note "TeX search path; just put $here/bin on \$PATH, or symlink"
+note "bin/dndsheets as INSTALL.md describes."

@@ -47,18 +47,20 @@ cd charsheets
 ## Configure
 
 `charsheet` finds its own dependencies at run time, so there's nothing
-to build or generate.  It locates `lib/lua/` — the small pure-Lua
-modules it ships with — from how it was invoked (`argv[0]`), as long
-as the path used to run it contains a `bin/` component:
-`./bin/charsheet`, an absolute path, or a bare `charsheet` found via
-`$PATH` all work.  And it asks `luarocks` directly, at startup, where
-`lyaml` is — wherever *your* `luarocks` put it, a per-user tree under
-`$HOME/.luarocks`, a system tree under `/usr/local`, or somewhere else
-again, `charsheet` finds it itself.
+to build or generate.  It locates both `lib/lua/` — the small pure-Lua
+modules it ships with — and `templates/` from how it was invoked
+(`argv[0]`), as long as the path used to run it contains a `bin/`
+component: `./bin/charsheet`, an absolute path, or a bare `charsheet`
+found via `$PATH` all work.  It asks `luarocks` directly, at startup,
+where `lyaml` is — wherever *your* `luarocks` put it, a per-user tree
+under `$HOME/.luarocks`, a system tree under `/usr/local`, or
+somewhere else again, `charsheet` finds it itself.  And it sets
+`$TEXINPUTS` for `pdflatex`/`xelatex` itself, from that same
+self-located `templates/`, before running them.
 
-So `./configure` doesn't need to write anything.  It just checks, once
-from the top of the checkout, that this machine actually has what
-`charsheet` is about to go looking for:
+So `./configure` doesn't need to write anything into `charsheet`
+itself.  It just checks, once from the top of the checkout, that this
+machine actually has what `charsheet` is about to go looking for:
 
 ```sh
 ./configure
@@ -68,33 +70,42 @@ It tries Lua 5.1 and 5.2, confirms `lyaml` loads for at least one of
 them, and checks for `pdflatex`, `xelatex`, and whatever TeX packages
 `templates/*.tex` and `templates/*.sty` actually `\usepackage` or
 `\RequirePackage` — then finishes with a real end-to-end run of
-`charsheet`.  It prints what it's checking as it goes, and tells you
+`charsheet`, rendering an actual PDF with nothing but `$PATH` set, to
+confirm the self-location and `$TEXINPUTS` really do work without any
+further setup.  It prints what it's checking as it goes, and tells you
 what to install if something's missing.  Re-run it whenever you
 reinstall Lua or Lua packages on this machine, or after a template
 starts using a new package; nothing here goes stale the way a
 written-out config file or list would.
 
-A few other things depend on where *you* keep the checkout, rather
-than on the machine, so `configure` leaves them to you:
+`configure` also (re)generates `bin/dndsheets`, a small dispatcher
+that `exec`s whichever of `bin/charsheet`, `bin/gmsheet`, or
+`bin/gmspells` it was invoked as, from this checkout, wherever that
+checkout lives.  That gives you two ways to make `charsheet`,
+`gmsheet`, and `gmspells` typeable from anywhere, without needing
+`$CHARSHEETS` or `$TEXINPUTS` at all:
 
 ```sh
 export PATH="$(pwd)/bin:$PATH"
-export CHARSHEETS="$(pwd)/templates"
-export TEXINPUTS=".:$(pwd)/templates//:"
 ```
 
- - `PATH` lets you type `charsheet`, `gmsheet`, `gmspells` from any
-   directory.
- - `CHARSHEETS` is where `charsheet` looks for its templates; without
-   it, `charsheet` falls back to
-   `$HOME/etc/dnd/resources/character-sheets/templates`, which is only
-   right if you happen to have cloned there.  `-templates DIR`
-   overrides it for one invocation instead.
- - `TEXINPUTS` is how `pdflatex`/`xelatex` find `charsheet.sty`.
+or, if you'd rather not put the whole checkout on `$PATH`, symlink the
+one dispatcher under each name from a directory that's already there
+(`~/bin`, say):
 
-(Put these three lines in your shell's rc file, or in a small
-`charsheets-env.sh` you `source` before use, so you don't retype them
-every session.)
+```sh
+ln -s "$(pwd)/bin/dndsheets" ~/bin/charsheet
+ln -s "$(pwd)/bin/dndsheets" ~/bin/gmsheet
+ln -s "$(pwd)/bin/dndsheets" ~/bin/gmspells
+```
+
+Either way, this only needs doing once (or again if you move the
+checkout and re-run `./configure`, which rewrites `bin/dndsheets`'
+notion of where it lives) — put the `export` line in your shell's rc
+file if you go that route, so you don't retype it every session.  If
+you ever do need to point at a different templates directory than the
+one in this checkout — a customized fork, say — `$CHARSHEETS` or
+`-templates DIR` still override the default.
 
 ## Verify
 
@@ -117,9 +128,8 @@ gmsheet -o /tmp/mario-gm.pdf yaml/mario.yaml
 gmspells -o /tmp/mario-spells.pdf yaml/mario.yaml
 ```
 
-If `charsheet` complains about a missing Lua module, run `./configure`
-to see what it's missing; if `pdflatex`/`xelatex` can't find
-`charsheet.sty`, double check `TEXINPUTS`.
+If `charsheet` complains about a missing Lua module or can't find
+`charsheet.sty`, run `./configure` to see what it's missing.
 
 ## What you *don't* need, unless you're rebuilding the project's own site
 
