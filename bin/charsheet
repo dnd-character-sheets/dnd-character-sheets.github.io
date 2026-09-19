@@ -11,32 +11,48 @@
 ------------------ classic print functions ---------------------
 
 
-local luaversion = assert(_VERSION:match '^Lua (5%.[12])$',
-                          'unsupported ' .. _VERSION)
-
 local stringf = string.format
 
-local rootname, basename = assert(arg[0]:match '^(.*)/bin/(.-)$')
+local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what isn't quoted
+local function shell_quote(s)
+  if s:find(quote_me) or s == '' then
+    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
+  else
+    return s
+  end
+end
+
+local function capture(cmd)
+  local f = assert(io.popen(cmd, 'r'))
+  local s = assert(f:read('*a'))
+  f:close()
+  s = s:gsub('^%s+', '')
+  s = s:gsub('%s+$', '')
+  s = s:gsub('[\n\r]+', ' ')
+  return s
+end
+
+-- basename picks behavior (charsheet/gmsheet/gmspells) and has to come
+-- from how we were invoked -- e.g. a symlink's own name -- so it is
+-- read from arg[0] as given, never resolved.  rootname only needs to
+-- find this checkout, so resolving symlinks there (via realpath, when
+-- present) lets a symlink to bin/charsheet work from anywhere, not
+-- just from alongside the real file; without realpath, only the old,
+-- unresolved arg[0] is available, same as before.
+local basename = arg[0]:gsub('^.*/', '')
+local real = capture(stringf('realpath -- %s 2>/dev/null', shell_quote(arg[0])))
+local binname = assert((real ~= '' and real or arg[0]):match '^(.*)/[^/]*$',
+                         arg[0] .. ': not invoked through a bin/ directory')
+local rootname = binname:gsub('/bin$', '')
+
+local luaversion = assert(_VERSION:match '^Lua (5%.[12])$',
+                          'unsupported ' .. _VERSION)
 
 do -- path settings
 
   local defaults = { path = package.path, cpath = package.cpath }
 
   package.path = stringf('%s/lib/lua/?.lua;%s', rootname, defaults.path)
-
-  local function capture(cmd, raw)
-    local function cook_output(s)
-      s = string.gsub(s, '^%s+', '')
-      s = string.gsub(s, '%s+$', '')
-      s = string.gsub(s, '[\n\r]+', ' ')
-      return s
-    end
-
-    local f = assert(io.popen(cmd, 'r'))
-    local s = assert(f:read('*a'))
-    f:close()
-    return raw and s or cook_output(s)
-  end
 
   local rockspath  = capture(stringf('luarocks --lua-version=%s path --lr-path',  luaversion))
   local rockscpath = capture(stringf('luarocks --lua-version=%s path --lr-cpath', luaversion))
@@ -1073,7 +1089,7 @@ local function extend(sheet)
     local function stripname(s)
       return s:gsub([[\rlap%b{}]], function(t) return t:sub(7,-2) end)
               :gsub([[\footnotesize%s*]], '')
-              :gsub('%s*%b[]', '')
+              :gsub([[%s*\upshape{%b[]}]], '')
               :gsub('%s+$', '')
     end
 
@@ -1595,15 +1611,6 @@ local function set_contents(filename, s)
   local s = assert(f:write(s))
   f:close()
   return s or true
-end
-
-local quote_me = '[^%w%+%-%=%@%_%/%.%:]' -- easier to complement what doesn't need quotes
-local function shell_quote(s)
-  if s:find(quote_me) or s == '' then
-    return "'" .. string.gsub(s, "'", [['"'"']]) .. "'"
-  else
-    return s
-  end
 end
 
 local function double_percents(s)
