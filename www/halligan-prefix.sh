@@ -53,6 +53,7 @@ DEBUG="PATH=$PATH
 LUA_PATH=$LUA_PATH
 LUA_CPATH=$LUA_CPATH
 which lua.51: $(type lua5.1)"
+DROPDIR=/h/nr/www/charsheet/drop
 
 lua="$(which lua5.1)"
 

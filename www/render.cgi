@@ -8,6 +8,7 @@ INPUT="$TMPDIR/input.yaml"
 OUTPUT="$TMPDIR/output.pdf"
 STDERR="$TMPDIR/stderr.txt"
 STDOUT="$TMPDIR/stdout.txt"
+DROPDIR=${DROPDIR:-/tmp}
 
 # ORIGIN is normally computed by a deployment prefix like halligan-prefix.sh.
 # If not set it falls back to `*`, which means no Origin header
@@ -89,7 +90,7 @@ capture_debug() {
 }
 
 # Keep the last submitted sheet around for local inspection.
-capture_debug "$INPUT" /tmp/last-charsheet.yaml || true
+capture_debug "$INPUT" $DROPDIR/last-charsheet.yaml || true
 
 # run_with_timeout SECS TIMED_OUT_VAR CMD [ARGS...]
 # Runs CMD as the leader of its own process group, so a single signal
@@ -159,8 +160,8 @@ if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   # only known messages back to the client.  The full, unfiltered
   # stderr/stdout are saved where only local inspection can see them.
 
-  capture_debug "$STDERR" /tmp/last-charsheet.stderr.txt || true
-  capture_debug "$STDOUT" /tmp/last-charsheet.stdout.txt || true
+  capture_debug "$STDERR" $DROPDIR/last-charsheet.stderr.txt || true
+  capture_debug "$STDOUT" $DROPDIR/last-charsheet.stdout.txt || true
 
   safe_stderr="$(tagged_messages "$STDERR" "$(basename "$CHARSHEET_CMD")")"
 
@@ -176,6 +177,10 @@ if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   else
     echo "An internal error occurred while rendering. This has been logged for review."
   fi
+  echo "==== $STDERR ===" 
+  cat $STDERR
+  echo "==== $STDOUT ===" 
+  cat $STDOUT
   exit 0
 fi
 
