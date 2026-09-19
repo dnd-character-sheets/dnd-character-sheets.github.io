@@ -100,7 +100,7 @@ githubdocs:V: ${GITDOCS:%=docs/%}
 docs/&.html:D: &.md
 	set -o pipefail
 	pandoc -s -t html -c charsheet.css $prereq |
-        sed -E -e 's/(QUICKSTART|README|YAML)\.md/\1.html/g' |
+        sed -E -e 's/(QUICKSTART|README|YAML|INSTALL)\.md/\1.html/g' |
 	cat > $target
 
 docs/&.pdf:D: &.pdf
