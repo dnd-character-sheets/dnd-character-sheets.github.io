@@ -151,6 +151,11 @@
          \expandafter\ifnum\rawgetDND{LEVEL}<5
            \node [at=(hitdice.north),anchor=north] 
                 {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+         \else
+           \expandafter\ifnum\rawgetDND{LEVEL}<9
+             \node [below=-0.5mm of hitdice.north] 
+                  {\expandafter\smallstackslots\expandafter{\rawgetDND{LEVEL}+1}};
+           \fi
          \fi
      }
 

@@ -222,7 +222,7 @@
     \begin{tikzpicture}[baseline=(circle-base), thick,inner sep=0pt, outer sep=0pt]
       \ifnum#2>0
         % Create first circle node
-        \node[circle, draw, minimum size=3.2mm] (circle-1) at (0,1.6mm) {};
+        \node[circle, draw, minimum size=\slotcirclesize] (circle-1) at (0,1.6mm) {};
         \path (circle-1.south) +(0mm,1pt) coordinate (circle-base); % looks better
         \def\prevnode{circle-1}%
         \ifnum#2>1
@@ -231,7 +231,7 @@
             % Create circle node positioned relative to previous node
             \edef\go{%  avoid speculating about just how tikz expands
             \noexpand\node (circle-\i)
-                  [circle, draw, minimum size=3.2mm, right=#1 of \prevnode] {};
+                  [circle, draw, minimum size=\slotcirclesize, right=#1 of \prevnode] {};
             }%
             \go
             
@@ -245,12 +245,23 @@
   }%
 }
 
+\newdimen\slotcirclesize
+\slotcirclesize=3.2mm
+
+
 
 \newcounter{slotcounter}
 \newcounter{slotstemp}
 \newcommand{\slots}[1]{%
   \setcounter{slotstemp}{#1}%
   \expandafter\slotsliteral\expandafter{\value{slotstemp}}\relax%
+}
+\newcommand{\smallslots}[1]{%
+  \begingroup
+    \slotcirclesize=0.7\slotcirclesize
+    \setcounter{slotstemp}{#1}%
+    \@expandArg{\slotsliteral[1.1mm]}{\value{slotstemp}}\relax%
+  \endgroup
 }
 
 %%%%%%%%%%%%
@@ -308,8 +319,15 @@
   \ifnum\value{slotcounter}=0
     \hbox{}%
   \else
-    \vbox{\buildoptimalrows{\arabic{slotcounter}}}%
+    \vbox{\offinterlineskip\buildoptimalrows{\arabic{slotcounter}}}%
   \fi
+}
+
+\newcommand{\smallstackslots}[1]{%
+  \begingroup
+     \let\slots=\smallslots
+     \stackslots{#1}%
+  \endgroup
 }
 
 
@@ -317,7 +335,7 @@
 % Build optimal row composition using same recursive logic
 \newcommand{\buildoptimalrows}[1]{%
   \setcounter{buildrows}{#1}%
-  \ifthenelse{\value{buildrows}<5}{%
+  \ifthenelse{\value{buildrows}<5}{% the last row
     % Base case: 1-4 slots in single row
     \hbox to 0pt{\hss
       \ifthenelse{\value{buildrows}=4}{\fourslots}{\slots{\arabic{buildrows}}}%
@@ -328,9 +346,11 @@
     \setminrowsresult{\value{buildrows}}%
     \iffirstisfour
        \hbox to 0pt{\hss\fourslots\hss}%
+       \vskip 2pt
        \buildoptimalrows{\value{buildrows}-4}%
     \else
        \hbox to 0pt{\hss\slots{3}\hss}%
+       \vskip 2pt
        \buildoptimalrows{\value{buildrows}-3}%
     \fi
   }%
