@@ -151,10 +151,11 @@ class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#c
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> <span class="st">&quot;</span><span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span><span class="st">/bin/gmsheet&quot;</span>   ~/bin/gmsheet</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> <span class="st">&quot;</span><span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span><span class="st">/bin/gmspells&quot;</span>  ~/bin/gmspells</span></code></pre></div></li>
 </ul>
-<p>The scripts <em>cannot</em> successfully be <em>copied</em> to
-another location; they rely on the <code>templates</code> and
-<code>lib</code> directories being siblings to the <code>bin</code>
-directory.</p>
+<p>If you want to copy the scripts to another location, you will have to
+let them know where to find their LaTeX templates: Either set the
+<code>CHARSHEETS</code> environment variable to point to the
+<code>templates</code> directory, or use the <code>-templates</code>
+option when invoking the scripts.</p>
 <h2 id="verify">Verify</h2>
 <p>As a test, run</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">charsheet</span> <span class="at">-o</span> /tmp/mario.pdf yaml/mario.yaml</span></code></pre></div>
@@ -171,5 +172,14 @@ include YAML files for each of the characters in your party, as in these
 examples:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gmspells</span> <span class="at">-o</span> /tmp/spells.pdf yaml/king-barbarian.yaml yaml/king-cleric.yaml yaml/king-wizard.yaml yaml/king-rogue.yaml</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gmsheet</span> <span class="at">-o</span> /tmp/sheet.pdf yaml/king-barbarian.yaml yaml/king-cleric.yaml yaml/king-wizard.yaml yaml/king-rogue.yaml</span></code></pre></div>
+<h2 id="altering-the-code">Altering the code</h2>
+<p>The main <code>bin/charsheet</code> script is actually derived from
+<code>bin/original-charsheet</code> using the <a
+href="https://github.com/siffiejoe/lua-amalg">Lua-amalg</a> program.
+This program pulls in a half dozen or so custom libraries, which are
+prepended to the original code. The amalgamation process is not easily
+reversed, but if you want the libraries, send an email to <a
+href="mailto:nr@cs.tufts.edu">me</a>. Or you can just edit the code,
+libraries and all.</p>
 </body>
 </html>
