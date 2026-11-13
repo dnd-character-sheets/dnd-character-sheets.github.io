@@ -236,7 +236,9 @@
      {\def\where{anchor=south east,at=(current bounding box.south -| magic.east)}
       \featurespostspace=3pt
      }
-     {\def\where{below right corner=of attacks}%
+     {\ifDNDnonempty{MAGIC SPACE}%
+          {\def\where{below right corner=\rawgetDND{MAGIC SPACE} of attacks}}%
+          {\def\where{below right corner=of attacks}}%
       \advance\featurespostspace by 2pt
      }%
    \whenDNDdefined{FEATURES SPACE}{\featurespostspace=\rawgetDND{FEATURES SPACE}}

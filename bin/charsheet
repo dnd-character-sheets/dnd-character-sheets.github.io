@@ -603,6 +603,7 @@ local sheet_validation = ([[
 
     ?PREGENERATED:b,
     ?MAGIC SEPARATE:b,
+    ?MAGIC SPACE:s,
 
     ?%ATTACKS:ATTACKS@list(
        attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
