@@ -607,6 +607,7 @@ local sheet_validation = ([[
 
     ?%ATTACKS:ATTACKS@list(
        attack${ NAME, ATTACK, DAMAGE, TYPE, ?RANGE, ?AMMO TYPE, ?AMMO COUNT:n, ?NOTES}),
+    ?FEATURES BOTTOM:b,
     ?%FEATURES:FEATURES@list(described$feature@
            {name,?description
            ,?abbrev,?bonus:b,?enemy:b,?save,?attack:b,?long,?duration,?reaction:b

@@ -239,6 +239,8 @@
      {\ifDNDnonempty{MAGIC SPACE}%
           {\def\where{below right corner=\rawgetDND{MAGIC SPACE} of attacks}}%
           {\def\where{below right corner=of attacks}}%
+      \whenDNDtrue{FEATURES BOTTOM}
+          {\def\where{anchor=south east,at=(current page.south -| attacks.east)}}%
       \advance\featurespostspace by 2pt
      }%
    \whenDNDdefined{FEATURES SPACE}{\featurespostspace=\rawgetDND{FEATURES SPACE}}
