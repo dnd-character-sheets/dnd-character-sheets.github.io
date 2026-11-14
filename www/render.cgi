@@ -129,6 +129,9 @@ set +e
 run_with_timeout "$RENDER_TIMEOUT_SECS" timed_out \
   "$CHARSHEET_CMD" -q -o "$OUTPUT" "$INPUT" 2> "$STDERR" > "$STDOUT"
 rc=$?
+
+#run_with_timeout "$RENDER_TIMEOUT_SECS" timed_out \
+#  "$CHARSHEET_CMD" -q -o "$DROPDIR/last-charsheet.tex" "$INPUT" 2> /dev/null > /dev/null
 set -e
 
 if (( timed_out )); then
