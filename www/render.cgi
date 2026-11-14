@@ -154,14 +154,15 @@ tagged_messages() {
   ' "$file"
 }
 
+capture_debug "$STDERR" $DROPDIR/last-charsheet.stderr.txt || true
+capture_debug "$STDOUT" $DROPDIR/last-charsheet.stdout.txt || true
+
+
 if (( rc != 0 )) || [[ ! -s "$OUTPUT" ]]; then
   # Error messages should not be allowed to leak server paths or
   # software versions.  So stderr is filtered aggressively to allow
   # only known messages back to the client.  The full, unfiltered
   # stderr/stdout are saved where only local inspection can see them.
-
-  capture_debug "$STDERR" $DROPDIR/last-charsheet.stderr.txt || true
-  capture_debug "$STDOUT" $DROPDIR/last-charsheet.stdout.txt || true
 
   safe_stderr="$(tagged_messages "$STDERR" "$(basename "$CHARSHEET_CMD")")"
 
