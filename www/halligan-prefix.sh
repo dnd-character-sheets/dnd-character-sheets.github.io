@@ -42,7 +42,7 @@ if [[ "$REQUEST_METHOD" = OPTIONS ]]; then
 fi
 
 
-export CHARSHEET_CMD=/h/nr/www/charsheet/charsheet
+export CHARSHEET_CMD=/h/nr/www/charsheet/exported-charsheet
 export CHARSHEETS=/h/nr/www/charsheet/
 export TEXINPUTS=.:/h/nr/www/charsheet/:
 export PATH="/usr/local/bin:/home/nr/bin:/usr/sup/bin:/usr/local/texlive/2025/bin/x86_64-linux:$PATH"
