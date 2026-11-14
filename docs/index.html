@@ -297,6 +297,10 @@
         <!-- Features Section -->
         <div class="section sheet-section features">
             <h2>Features</h2>
+            <div style="margin-bottom: 1em;">
+                    <input type="checkbox" id="features-bottom" name="features-bottom">
+                    Force Features to bottom of page
+            </div>  
             <div class="field-group render-options" style="margin-bottom: 1em;">
                 <span>Render:</span>
                 <div style="margin-top: 0.5em;">
@@ -321,6 +325,11 @@
         <div class="section sheet-section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
+                <div>
+                        <input type="checkbox" id="equipment-left" name="equipment-left">
+                        Force equipment to left of page
+                </div>  
+
                 <p>Enter one equipment item per line. Or you scan specify categories:</p>
                 <ul style="font-size: 0.9em; margin: 0.5em 0; color: #666;">
                     <li><code>Heavy weapon: Greatsword</code> (single item)</li>
@@ -1589,6 +1598,8 @@
             // Checkboxes
             checkboxField('COLOR', '#color', true),
             checkboxField('PREGENERATED', '#pregenerated', false),
+            checkboxField('FEATURES BOTTOM', '#features-bottom', false),
+            checkboxField('EQUIPMENT LEFT', '#equipment-left', false),
             checkboxField('STONES', '#stones', false),
             
             // Class/Level complex logic

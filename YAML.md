@@ -503,6 +503,13 @@ FEATURES:
     description: "Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes."
 ```
 
+#### `FEATURES BOTTOM`
+
+A Boolean, defaulting to `false`.  If true, force the FEATURES section 
+to the bottom of the page, leaving a gap above.
+Applies only to the _Silverpine Watch_ layout.
+
+
 #### `FEATURES SPACE`
 
 In the default layout, an amount of vertical space that is placed
@@ -664,6 +671,14 @@ MAGIC:
     reaction: true
     duration: 1 round
 ```
+
+
+#### `MAGIC SPACE`
+
+A string, normally empty.  If nonempty, it is an amount of space to
+put below the magic section.  The amount of space must be a [length
+intelligible to
+LaTeX](https://www.overleaf.com/learn/latex/Lengths_in_LaTeX), e.g., `2cm`.
 
 
 #### `MAGIC SEPARATE`
