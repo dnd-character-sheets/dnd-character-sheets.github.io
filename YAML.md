@@ -685,7 +685,6 @@ LaTeX](https://www.overleaf.com/learn/latex/Lengths_in_LaTeX), e.g., `2cm`.
 
 If `true` or similar value, the rendering engine puts the magic section on its own page.
 Otherwise the magic section goes with the other sections.
-(This feature is not yet implemented.)
 
 - `MAGIC SEPARATE: true` (magic on separate page)
 - `MAGIC SEPARATE: 1` (magic on separate page)

@@ -141,7 +141,7 @@
 
 
 \newenvironment{charsheet}[1][]
-  {\begin{tikzpicture}[x=1cm,y=1cm, node distance=5pt,outer sep=0pt,
+  {\noindent\begin{tikzpicture}[x=1cm,y=1cm, node distance=5pt,outer sep=0pt,
     #1]
    \useasboundingbox (0,0) rectangle (\textwidth,\textheight);
    \path (current bounding box.north) coordinate (top)

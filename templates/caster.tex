@@ -28,6 +28,10 @@
      text width=,
      font=\sffamily\footnotesize,
   },
+  fullcolumn/.style={
+    widecolumn,
+    text width=\textwidth-\textmargin,
+  },
   widecolumn/.style={
     labeled decorated stub rectangle,
     text width=134mm-2\textmargin,
@@ -67,22 +71,7 @@
 \newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
 
 
-\begin{document}
-
-
-
-
-\input{stats}
-
-\DNDinit
-
-\ifDNDfalse{COLOR}{\newcommand\splashfile{splash-nocolor.png}\dndnocolor}
-                  {\newcommand\splashfile{splash.png}}
-
-\noindent
-\begin{charsheet}
-  \tikzset{node distance=\mynodedistance}
-
+\newcommand\splashheader{%
   \node [dndbox,height=20mm,fill=playername,below=of top] (splash) 
      {\includegraphics[width=\textwidth]{\splashfile}};
 
@@ -124,6 +113,25 @@
       ;
     }
     {}
+
+}
+\begin{document}
+
+
+
+
+\input{stats}
+
+\DNDinit
+
+\ifDNDfalse{COLOR}{\newcommand\splashfile{splash-nocolor.png}\dndnocolor}
+                  {\newcommand\splashfile{splash.png}}
+
+\noindent
+\begin{charsheet}
+  \tikzset{node distance=\mynodedistance}
+
+  \splashheader
 
 \Large
 
@@ -220,7 +228,7 @@
 
 % \node (attacks) at (hpbackground.south west) {A};
 
-\ifDNDdefined{MAGIC}
+\andpp\ifDNDdefined{MAGIC}\ifDNDfalse{MAGIC SEPARATE}
 {
   \node (magic) [widecolumn,below=of attacks,fill=magic]
     {\nodepart{label}MAGIC\nodepart{text}
@@ -473,6 +481,32 @@
 
 
 \end{charsheet}
+
+
+\whenDNDtrue{MAGIC SEPARATE}{
+\begin{charsheet}
+  \tikzset{node distance=\mynodedistance}
+
+  \splashheader
+
+\endgroup
+
+  \node (magic) [fullcolumn,below right corner=of splash,fill=magic]
+    {\nodepart{label}MAGIC\nodepart{text}
+     \featurespostspace=2pt
+     \tabcolsep=2\tabcolsep
+     \centering
+     \useDNDfont{MAGIC}
+     \newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
+     \begin{featurestab}
+     \rawgetDND{MAGIC}
+     \end{featurestab}
+    }
+  ;
+
+\end{charsheet}
+
+}% MAGIC SEPARATE
 
 
 \whenDNDtrue{STONES}{
