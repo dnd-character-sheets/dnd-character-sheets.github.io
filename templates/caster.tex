@@ -304,10 +304,10 @@
    \setnodewidth\sectionwidth[widecolumn]
    \ifDNDdefined{MAGIC}
         {\def\where{left of lower corner=of features}
-         \setdeltax\sectionwidth{magic.west}{stats background.west}
+         \setdeltax\sectionwidth{features.west}{stats background.west}
          \advance\sectionwidth by -\mynodedistance
         }
-        {\ifDNDnonempty{EQUIPMENT LEFT}
+        {\orpp\ifDNDnonempty{EQUIPMENT LEFT}\ifDNDtrue{FEATURES BOTTOM}%
             {\def\where{left of lower corner=of features}
              \setdeltax\sectionwidth{features.west}{stats background.west}
              \advance\sectionwidth by -\mynodedistance
