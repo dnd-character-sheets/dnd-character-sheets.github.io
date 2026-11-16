@@ -497,10 +497,11 @@
      \tabcolsep=2\tabcolsep
      \centering
      \useDNDfont{MAGIC}
-     \newcommand\spellslevellabel[2]{\multicolumn2{@{}l@{}}{\spellslevel[#2]{#1}}\\}%
-     \begin{featurestab}
+     % Two columns, breaking only before spell-level headers
+     \newcommand\spellslevellabel[2]{\featuresection{\spellslevel[#2]{#1}}}%
+     \begin{featurestab*}{2}
      \rawgetDND{MAGIC}
-     \end{featurestab}
+     \end{featurestab*}
     }
   ;
 

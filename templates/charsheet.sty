@@ -12,6 +12,7 @@
 \RequirePackage{colortbl}
 \RequirePackage{environ}
 \RequirePackage{tabularx}
+\RequirePackage{multicol}
 \RequirePackage{booktabs}
 \RequirePackage{calc}
 \RequirePackage{ifthen}
@@ -508,10 +509,41 @@
 \newdimen\featuresnamewidth % space on left for name of a feature
 \featuresnamewidth=28mm
 
-\newenvironment{featurestab}
+\newenvironment{featurestab}[1][c] % optional arg is vertical position, as for tabular
   {\def\arraystretch{1.0}\setlength{\my@xa}{\hsize-\featuresnamewidth-3\tabcolsep}%
-   \begin{tabular}{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
+   \begin{tabular}[#1]{@{}>{\raggedright\arraybackslash\itshape}p{\featuresnamewidth}>{\raggedright\arraybackslash}p{\my@xa}<{\strut}@{}}}
   {\end{tabular}}
+
+% featurestab* is featurestab set in #1 balanced columns.  A column may
+% break before any \featuresection{heading} but never right after one;
+% a break between other rows costs \featuresrowpenalty (default: never).
+% Each row is its own one-row featurestab, so multicols can split between rows.
+% A row's height above a strut becomes space above the row, which is
+% discarded at the top of a column, so column tops line up.
+\newcount\featuresrowpenalty
+\featuresrowpenalty=10000
+\newcount\features@penalty % penalty before the next row
+\newbox\features@box
+\long\def\features@row#1{%
+  \setbox\features@box=\hbox{\begin{featurestab}[t]#1\end{featurestab}}%
+  \par\penalty\features@penalty
+  \vskip\dimexpr\ht\features@box-\ht\strutbox\relax
+  \ht\features@box=\ht\strutbox
+  \nointerlineskip\noindent\box\features@box\par
+  \features@penalty=\featuresrowpenalty}
+\newenvironment{featurestab*}[1]
+  {\let\features@described=\described
+   \let\features@describedColored=\describedColored
+   \long\def\described##1##2{\features@row{\features@described{##1}{##2}}}%
+   \long\def\describedColored##1##2##3{\features@row{\features@describedColored{##1}{##2}{##3}}}%
+   \def\featuresection##1{%
+     \features@penalty=\z@
+     \features@row{\multicolumn2{@{}l@{}}{##1}\\}%
+     \features@penalty=\@M}%
+   \features@penalty=\@M
+   \parskip=\z@ \multicolsep=\z@ \raggedcolumns \raggedright
+   \begin{multicols}{#1}}
+  {\end{multicols}}
 
 \newcommand\atlevel[2]{#1}
 
