@@ -15,7 +15,7 @@
     <div style="text-align: center; font-size: 0.8em; color: #555; margin-bottom: 1em;">
         <A style="padding: 2em;" href="README.html">(Read about the project)</A>
         
-        <span style="padding: 2em;">Version: jicama</span>
+        <span style="padding: 2em;">Version: kale</span>
     </div>
 
         <div style="margin-bottom: 0.5em;">
@@ -26,7 +26,7 @@
         </div>
         <div style="margin-bottom: 0.5em;">
             <button type="button" id="generate-pdf-button" class="generate-button" onclick="generatePDF()" disabled>Generate PDF</button>
-            <div style="display: inline-block; margin-left: 1em; vertical-align: top; text-align: left;">
+            <div id="sheet-options" style="display: inline-block; margin-left: 1em; vertical-align: top; text-align: left;">
                 <div style="margin-bottom: 0.3em;">
                     <label>
                         <input type="radio" name="layout" value="silverpine" checked>
@@ -855,14 +855,9 @@
         }
 
         function setupChangeTracking() {
-            // Remove existing listeners first
-            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
-                el.removeEventListener('input', markDirty);
-                el.removeEventListener('change', markDirty);
-            });
-            
-            // Add listeners to all form elements
-            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select').forEach(el => {
+            // Changes to the sheet options above the form also count as unsaved.
+            // Re-adding a listener is a no-op, so repeated calls are harmless.
+            document.querySelectorAll('#character-form input, #character-form textarea, #character-form select, #sheet-options input').forEach(el => {
                 el.addEventListener('input', markDirty);
                 el.addEventListener('change', markDirty);
                 // Update button text when character name or class changes
