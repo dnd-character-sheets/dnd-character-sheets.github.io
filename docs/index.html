@@ -15,7 +15,7 @@
     <div style="text-align: center; font-size: 0.8em; color: #555; margin-bottom: 1em;">
         <A style="padding: 2em;" href="README.html">(Read about the project)</A>
         
-        <span style="padding: 2em;">Version: iceberg</span>
+        <span style="padding: 2em;">Version: jicama</span>
     </div>
 
         <div style="margin-bottom: 0.5em;">
@@ -32,6 +32,22 @@
                         <input type="radio" name="layout" value="silverpine" checked>
                         Two unequal columns (Silverpine Watch style)
                     </label>
+                    <!-- Options used only by caster.tex (silverpine); charsheet.css
+                         shows them only while this layout is selected -->
+                    <div class="layout-options">
+                        <label>
+                            <input type="checkbox" id="features-bottom" name="features-bottom">
+                            Force Features to bottom of page
+                        </label>
+                        <label>
+                            <input type="checkbox" id="equipment-left" name="equipment-left">
+                            Force Equipment to left of page
+                        </label>
+                        <label>
+                            <input type="checkbox" id="magic-separate" name="magic-separate">
+                            Put Magic on a page of its own
+                        </label>
+                    </div>
                 </div>
                 <div style="margin-bottom: 0.3em;">
                     <label>
@@ -278,11 +294,6 @@
                         <label>
                             <input type="radio" name="magic-render" value="footnotesize"> in an even smaller font
                         </label>
-<!--
-                        <label style="display: block; margin-bottom: 0.3em; font-weight: normal;">
-                            <input type="radio" name="magic-render" value="separate"> on a page of its own
--->
-                        </label>
                     </div>
                 </div>
                 <div id="magic-levels">
@@ -297,10 +308,6 @@
         <!-- Features Section -->
         <div class="section sheet-section features">
             <h2>Features</h2>
-            <div style="margin-bottom: 1em;">
-                    <input type="checkbox" id="features-bottom" name="features-bottom">
-                    Force Features to bottom of page
-            </div>  
             <div class="field-group render-options" style="margin-bottom: 1em;">
                 <span>Render:</span>
                 <div style="margin-top: 0.5em;">
@@ -325,11 +332,6 @@
         <div class="section sheet-section equipment">
             <h2>Equipment</h2>
             <div class="field-group">
-                <div>
-                        <input type="checkbox" id="equipment-left" name="equipment-left">
-                        Force equipment to left of page
-                </div>  
-
                 <p>Enter one equipment item per line. Or you scan specify categories:</p>
                 <ul style="font-size: 0.9em; margin: 0.5em 0; color: #666;">
                     <li><code>Heavy weapon: Greatsword</code> (single item)</li>
@@ -1553,7 +1555,7 @@
             };
 
         // Font field factory - creates handlers for YAML font fields with radio button groups
-        function fontField(yamlKey, buttonGroupName, skipValues = []) {
+        function fontField(yamlKey, buttonGroupName) {
             return {
                 populate(data) {
                     const fontValue = data[yamlKey];
@@ -1572,7 +1574,7 @@
                 },
                 capture(data) {
                     const renderOption = document.querySelector(`input[name="${buttonGroupName}"]:checked`)?.value;
-                    if (renderOption && !skipValues.includes(renderOption)) {
+                    if (renderOption) {
                         data[yamlKey] = '\\' + renderOption;
                     }
                 }
@@ -1600,6 +1602,7 @@
             checkboxField('PREGENERATED', '#pregenerated', false),
             checkboxField('FEATURES BOTTOM', '#features-bottom', false),
             checkboxField('EQUIPMENT LEFT', '#equipment-left', false),
+            checkboxField('MAGIC SEPARATE', '#magic-separate', false),
             checkboxField('STONES', '#stones', false),
             
             // Class/Level complex logic
@@ -1694,7 +1697,7 @@
             attacksField(),
             nameDescPairs('FEATURES', '.feature-item', addFeature),
             fontField('FEATURES FONT', 'features-render'),
-            fontField('MAGIC FONT', 'magic-render', ['separate']),
+            fontField('MAGIC FONT', 'magic-render'),
             magicField()
         ];
 

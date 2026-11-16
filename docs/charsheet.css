@@ -281,6 +281,30 @@ kbd {
     font-weight: normal;
 }
 
+/* Options for one layout sit indented under its radio button
+   and appear only while that layout is selected */
+.layout-options {
+    margin: 0.2em 0 0 1.5em;
+}
+
+.layout-options label {
+    display: block;
+    font-weight: normal;
+}
+
+div.layout-options {
+  margin-left: 3em;
+}
+
+div.layout-options {
+    font-weight: normal;
+    font-size: 80%;
+}
+
+label:has(> input[type="radio"]:not(:checked)) + .layout-options {
+    display: none;
+}
+
 /* All sections and their contents are left-aligned */
 .sheet-section,
 .sheet-section * {
@@ -300,3 +324,4 @@ button:disabled,
     cursor: not-allowed !important;
     opacity: 0.6 !important;
 }
+
