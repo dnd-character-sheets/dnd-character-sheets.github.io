@@ -13,19 +13,23 @@ Work incrementally. Work on a new git branch called `browser-only`.  Use `git wo
 3. Identify a common preamble that can be shared among {caster,3col,tropical}.tex.
    This preamble should load packages only; it should not define any macros or tikz styles.  Refactor these three files to use the common preamble.
 
-3. **Build custom formats.** Experiment with [`mylatexformat`](https://ctan.org/pkg/mylatexformat) to preload the document class, TikZ, and other fixed dependencies. Build separate pdfTeX and XeTeX formats. Verify that they compile the baseline documents correctly.
+4. **Build custom formats.** Experiment with [`mylatexformat`](https://ctan.org/pkg/mylatexformat) to preload the document class, TikZ, and other fixed dependencies. Build separate pdfTeX and XeTeX formats. Verify that they compile the baseline documents correctly.
 
-4. **Identify runtime dependencies.** Use TeX's `-recorder` option and `.fls` files to identify resources still needed after loading the formats. These resources will certainly include templates/*.png.  Construct the smallest practical resource bundle.
+5. **Identify runtime dependencies.** Use TeX's `-recorder` option and `.fls` files to identify resources still needed after loading the formats. These resources will certainly include templates/*.png.  Construct the smallest practical resource bundle.
 
-5. **Evaluate Wasm engines.** Start with BusyTeX and SwiftLaTeX. Determine whether each supports custom format files, both pdfTeX and XeTeX, and the required fonts and packages. Check licensing compatibility.
+6. **Evaluate Wasm engines.** Start with BusyTeX and SwiftLaTeX. Determine whether each supports custom format files, both pdfTeX and XeTeX, and the required fonts and packages. Check licensing compatibility.
 
-6. **Build a standalone browser prototype.** When the TeX run succeeds, return a PDF Blob. On failure, return a text blob containing the console output from TeX.  Demonstrate the prototype by compiling a representative generated `.tex` file entirely in a Web Worker, using the custom format and bundled resources. No server-side compilation is permitted.
+7. **Extend the charsheet script.**  Extend `bin/charsheet` with a `-from-lua` option whereby the character sheet is represented not in YAML but as a Lua table that can be loaded with Lua `loadstring`.  Define a standalone `yaml-to-lua` script that uses `lyaml` to turn YAML into a Lua table, then externalize the table using the `filetable` module.  Connect the two together and confirm that `charsheet` can convert YAML via this path with no regressions.
 
-7. **Measure and validate.** Compare output against the baseline, including layout, fonts, TikZ graphics, and page breaks. Measure initial download size, cold compilation time, and warm compilation time. Test offline operation after assets have been cached.
+8. **Port the charsheet script to WASM**.  Using the Lua sources in ~/net/lua-5.1.5, compile Lua to WASM.  Using the amalgamated `bin/exported-charsheet`, create a web page based on character-form.html, except that instead of invoking a server to produce PDF, the page simply produces the `.tex` needed to render the character sheet.
 
-8. **Integrate with the application.** Replace the server request with browser-side compilation. Preserve the existing ASCII/non-ASCII engine selection unless measurements justify using XeTeX unconditionally. Provide useful compilation errors and PDF download/preview behavior.
+9. **Build a standalone browser prototype.** When the TeX run succeeds, return a PDF Blob. On failure, return a text blob containing the console output from TeX.  Demonstrate the prototype by compiling a representative generated `.tex` file entirely in a Web Worker, using the custom format and bundled resources. No server-side compilation is permitted.
 
-9. **Prepare deployment.** Bundle and cache Wasm engines, formats, fonts, and resources for GitHub Pages. Ensure that version changes invalidate incompatible cached formats.
+10. **Measure and validate.** Compare output against the baseline, including layout, fonts, TikZ graphics, and page breaks. Measure initial download size, cold compilation time, and warm compilation time. Test offline operation after assets have been cached.
+
+11. **Integrate with the application.** Replace the server request with browser-side compilation. Preserve the existing ASCII/non-ASCII engine selection unless measurements justify using XeTeX unconditionally. Provide useful compilation errors and PDF download/preview behavior.
+
+12. **Prepare deployment.** Bundle and cache Wasm engines, formats, fonts, and resources for GitHub Pages. Ensure that version changes invalidate incompatible cached formats.
 
 ## Constraints
 
