@@ -1610,7 +1610,9 @@ rm -f "$output" # guarantees caller can see failure even in Lua 5.1
 
 dir="$(mktemp -d)"
 trap "rm -rf $dir" 0
-tee /tmp/debug > "$dir/sheet.tex"
+# sheet.tex stays inside private $dir; a copy at a fixed public path
+# could be redirected through a planted symlink
+cat > "$dir/sheet.tex"
 $pdflatex -output-directory "$dir" "$dir/sheet.tex"
 rc=$?
 
