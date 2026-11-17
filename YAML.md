@@ -19,6 +19,9 @@ A couple of other notes:
  - The only required key is `CLASS`.
  - If a top-level key is given with no value at all, it is as if the
    key were not given.
+ - Write a Boolean as `true` or `false`.  Unquoted `yes`, `no`,
+   `on`, and `off` are Booleans to `charsheet` but text to the web
+   form, so the two disagree.  To mean the word, quote it: `"yes"`.
 
 
 # What you can write: Beyond plain text

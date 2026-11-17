@@ -106,6 +106,10 @@ optional.</p>
 <li>The only required key is <code>CLASS</code>.</li>
 <li>If a top-level key is given with no value at all, it is as if the
 key were not given.</li>
+<li>Write a Boolean as <code>true</code> or <code>false</code>. Unquoted
+<code>yes</code>, <code>no</code>, <code>on</code>, and <code>off</code>
+are Booleans to <code>charsheet</code> but text to the web form, so the
+two disagree. To mean the word, quote it: <code>"yes"</code>.</li>
 </ul>
 <h1 id="what-you-can-write-beyond-plain-text">What you can write: Beyond
 plain text</h1>
@@ -527,6 +531,10 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Bardic Inspiration 2/day&quot;</span></span>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Grant an ally within 60 ft. +1d6 inspiration they can use on any one check within 10 minutes.&quot;</span></span></code></pre></div>
+<h4 id="features-bottom"><code>FEATURES BOTTOM</code></h4>
+<p>A Boolean, defaulting to <code>false</code>. If true, force the
+FEATURES section to the bottom of the page, leaving a gap above. Applies
+only to the <em>Silverpine Watch</em> layout.</p>
 <h4 id="features-space"><code>FEATURES SPACE</code></h4>
 <p>In the default layout, an amount of vertical space that is placed
 after each feature in the <code>FEATURES</code> section. Defaults
@@ -678,10 +686,15 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>      No damage from \emph{magic missile}.</span>
 <span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">reaction</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
 <span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">duration</span><span class="kw">:</span><span class="at"> 1 round</span></span></code></pre></div>
+<h4 id="magic-space"><code>MAGIC SPACE</code></h4>
+<p>A string, normally empty. If nonempty, it is an amount of space to
+put below the magic section. The amount of space must be a <a
+href="https://www.overleaf.com/learn/latex/Lengths_in_LaTeX">length
+intelligible to LaTeX</a>, e.g., <code>2cm</code>.</p>
 <h4 id="magic-separate"><code>MAGIC SEPARATE</code></h4>
 <p>If <code>true</code> or similar value, the rendering engine puts the
 magic section on its own page. Otherwise the magic section goes with the
-other sections. (This feature is not yet implemented.)</p>
+other sections.</p>
 <ul>
 <li><code>MAGIC SEPARATE: true</code> (magic on separate page)</li>
 <li><code>MAGIC SEPARATE: 1</code> (magic on separate page)</li>
