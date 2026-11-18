@@ -1,0 +1,58 @@
+# Markup that sheets may use in their text, gathered in one sheet so
+# that tracing it (browser/texlive-files) finds the fonts such text needs.
+# charsheet escapes ^ and _, so mathematics has no scripts.
+CHARACTER NAME: Marcus Markup
+CLASS: Wizard
+LEVEL: 5
+RACE: Human
+BACKGROUND: Sage
+STR: 8
+DEX: 14
+CON: 13
+INT: 17
+WIS: 12
+CHA: 10
+PASSIVE PERCEPTION: 11
+DESCRIPTION: >-
+  Plain, \textbf{bold}, \emph{emphasized}, \textit{italic},
+  \textbf{\textit{bold italic}}, \textsc{Small Caps}, \textsf{sans serif},
+  \textsf{\textbf{bold sans}}, \textsf{\textit{italic sans}},
+  \texttt{typewriter}, \texttt{\textbf{bold typewriter}};
+  ``quoted'' text---with dashes--and\ldots{} symbols \S{} \P{} \dag{} \ddag{}
+  \copyright{} \textdegree{} \textonehalf{} \textbullet{}.
+FEATURES:
+  - name: Sizes
+    description: >-
+      {\tiny tiny \textbf{b} \textit{i} \(x\)} {\scriptsize scriptsize \textbf{b}
+      \textit{i} \(x\)} {\footnotesize footnotesize \textbf{b} \textit{i} \(x\)}
+      {\small small \textbf{b} \textit{i} \(x\)} {\normalsize normalsize
+      \textbf{b} \textit{i} \(x\)}
+  - name: Large sizes
+    description: >-
+      {\large large \textbf{b} \(x\)} {\Large Large \textbf{b} \(x\)}
+      {\LARGE LARGE \(x\)} {\huge huge} {\Huge Huge}
+  - name: Mathematics
+    description: >-
+      \(\frac{1}{2} + x \ge \sqrt{y} \le \lceil z \rceil \times
+      \lfloor w \rfloor \pm 3 \circ \bullet \alpha \beta \Delta \mathbf{v}
+      \cdot \neq \approx \infty \rightarrow\) and \(\textstyle\sum i\)
+  - name: Small mathematics
+    description: >-
+      {\small \(\frac{a}{b} \ge c\)} {\footnotesize \(\frac{a}{b} \le c\)}
+      {\scriptsize \(\frac{a}{b} \times c\)}
+  - name: Spell numbers
+    description: "Attack \\psatk, DC \\spelldc, DC \\statdc{CON}, modifier \\psam."
+MAGIC FONT: \small
+MAGIC:
+  - level: 0
+  - name: Fire Bolt
+    description: "\\textsc{Ranged} spell attack \\psatk, \\(1d10\\) fire."
+    attack: true
+  - level: 1
+    slots: 4
+  - name: Magic Missile
+    description: "Three darts, \\texttt{1d4+1} force each; \\(3 \\times 3.5\\) on average."
+  - name: Shield
+    description: "\\textsf{Reaction}; \\(+5\\) AC until the start of your next turn."
+    reaction: true
+    duration: "1 round"

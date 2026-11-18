@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
 # texlive-files -- list the TeX Live files that browser character sheets need
 #
-# usage: texlive-files [-o FILE] formats|sheets
+# usage: texlive-files [-o FILE] formats|sheets|extras
 #
 # Builds the formats and typesets every baseline case with them, using
-# native TeX under strace, and prints each file opened from a TeX Live
-# tree while building the formats or while typesetting the sheets,
-# relative to that tree (e.g. tex/latex/base/size11.clo), one per line,
-# sorted.  Configuration that TeX Live generates (language.dat, font
-# maps, texmf.cnf, ls-R) is omitted; browser/texmf supplies its own.
+# native TeX under strace, and prints TeX Live files relative to their
+# tree (e.g. tex/latex/base/size11.clo), one per line, sorted:
+#
+#   formats  files opened while building the formats
+#   sheets   files opened while typesetting the sheets
+#   extras   files a sheet's text might need that the sheets did not
+#            open: the rest of each font directory they opened (for
+#            OpenType, the rest of each font family) and of each
+#            directory of font definition (.fd) files
+#
+# Configuration that TeX Live generates (language.dat, font maps,
+# texmf.cnf, ls-R) is omitted; browser/texmf supplies its own.
 
 set -euo pipefail
 arg0=$(basename "$0")
 root=$(cd "$(dirname "$0")/.." && pwd)
 out=/dev/stdout
-usage() { echo "usage: $arg0 [-o FILE] formats|sheets" >&2; exit 2; }
+usage() { echo "usage: $arg0 [-o FILE] formats|sheets|extras" >&2; exit 2; }
 
 while getopts o: opt; do
   case $opt in
@@ -23,7 +30,7 @@ while getopts o: opt; do
   esac
 done
 shift $((OPTIND - 1))
-[[ $# -eq 1 && ( $1 == formats || $1 == sheets ) ]] || usage
+[[ $# -eq 1 && ( $1 == formats || $1 == sheets || $1 == extras ) ]] || usage
 stage=$1
 
 tmp=$(mktemp -d)
@@ -35,10 +42,39 @@ trace sheets \
   "$root/browser/record-baseline" -f "$tmp/fmt" -d "$tmp/sheets" "$root/browser/baseline/cases" > /dev/null
 
 mapfile -t trees < <(grep -v '^#' "$root/browser/texlive-trees")
-sed -nE 's/.*open(at)?\([^"]*"([^"]*)".* = [0-9]+$/\2/p' "$tmp/$stage.strace" |
-  sed -nE "s#^($(IFS='|'; echo "${trees[*]}"))/##p" |
-  grep -v -e '^web2c/' -e '/language\.dat' -e '^fonts/map/' -e '^ls-R$' |
-  sort -u |
-  while read -r f; do
-    for t in "${trees[@]}"; do [[ -f $t/$f ]] && { echo "$f"; break; }; done
-  done > "$out"
+
+# opened STAGE: the TeX Live files opened during STAGE (formats or sheets)
+opened() {
+  sed -nE 's/.*open(at)?\([^"]*"([^"]*)".* = [0-9]+$/\2/p' "$tmp/$1.strace" |
+    sed -nE "s#^($(IFS='|'; echo "${trees[*]}"))/##p" |
+    grep -v -e '^web2c/' -e '/language\.dat' -e '^fonts/map/' -e '^ls-R$' |
+    sort -u |
+    while read -r f; do
+      for t in "${trees[@]}"; do [[ -f $t/$f ]] && { echo "$f"; break; }; done
+    done
+}
+
+# relatives FILE...: files in each FILE's directory that are related to it
+relatives() {
+  local f d base
+  for f; do
+    d=$(dirname "$f") base=$(basename "$f")
+    for t in "${trees[@]}"; do
+      [[ -d $t/$d ]] || continue
+      case $f in
+        fonts/opentype/*) ls "$t/$d" | grep "^${base%%[0-9-]*}[0-9-]" ;;
+        fonts/*)          ls "$t/$d" ;;
+        *.fd)             ls "$t/$d" | grep '\.fd$' ;;
+      esac | sed "s#^#$d/#"
+      break
+    done
+  done
+}
+
+if [[ $stage == extras ]]; then
+  opened sheets > "$tmp/sheets.files"
+  mapfile -t related < <(grep -e '^fonts/' -e '\.fd$' "$tmp/sheets.files")
+  relatives "${related[@]}" | sort -u | comm -23 - "$tmp/sheets.files" > "$out"
+else
+  opened "$stage" > "$out"
+fi

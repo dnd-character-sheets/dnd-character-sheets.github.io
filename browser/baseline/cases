@@ -30,3 +30,12 @@ mario-tropical-10pt    tropical  sed '1i DOCUMENT FONT: 10pt' yaml/mario.yaml
 king-wizard            -         cat yaml/king-wizard.yaml
 king-fighter-12pt      -         sed '1i DOCUMENT FONT: 12pt' yaml/king-fighter.yaml
 silver-king-cleric     -         lib/un3ify yaml/king-cleric.yaml
+
+# Markup from browser/baseline/markup.yaml, which finds the fonts that
+# sheets' text may need; the unicode variants use XeTeX
+markup                 -         cat browser/baseline/markup.yaml
+markup-3col            3col      cat browser/baseline/markup.yaml
+markup-tropical        tropical  cat browser/baseline/markup.yaml
+markup-unicode         -         sed 's/^CHARACTER NAME: Marcus/CHARACTER NAME: Márcus/; s/^RACE: Human/RACE: Human (Æsir) — “quoted” ‘single’ … café/' browser/baseline/markup.yaml
+markup-unicode-3col    3col      sed 's/^CHARACTER NAME: Marcus/CHARACTER NAME: Márcus/; s/^RACE: Human/RACE: Human (Æsir) — “quoted” ‘single’ … café/' browser/baseline/markup.yaml
+markup-unicode-tropical tropical sed 's/^CHARACTER NAME: Marcus/CHARACTER NAME: Márcus/; s/^RACE: Human/RACE: Human (Æsir) — “quoted” ‘single’ … café/' browser/baseline/markup.yaml
