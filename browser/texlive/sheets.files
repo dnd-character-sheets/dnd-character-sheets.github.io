@@ -1,6 +1,11 @@
 dvipdfmx/dvipdfmx.cfg
 dvipdfmx/dvipdfmx-paper.cfg
 fonts/enc/dvips/base/8r.enc
+fonts/map/dvipdfmx/ckx.map
+fonts/map/fontname/texfonts.map
+fonts/map/glyphlist/glyphlist.txt
+fonts/map/glyphlist/pdfglyphlist.txt
+fonts/map/glyphlist/texglyphlist.txt
 fonts/misc/xetex/fontmapping/base/tex-text.tec
 fonts/opentype/public/lm/lmmono10-regular.otf
 fonts/opentype/public/lm/lmmono9-regular.otf

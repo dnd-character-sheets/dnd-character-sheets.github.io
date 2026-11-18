@@ -14,7 +14,7 @@
 #            OpenType, the rest of each font family) and of each
 #            directory of font definition (.fd) files
 #
-# Configuration that TeX Live generates (language.dat, font maps,
+# Configuration that TeX Live generates (language.dat, updmap font maps,
 # texmf.cnf, ls-R) is omitted; browser/texmf supplies its own.
 
 set -euo pipefail
@@ -47,7 +47,7 @@ mapfile -t trees < <(grep -v '^#' "$root/browser/texlive-trees")
 opened() {
   sed -nE 's/.*open(at)?\([^"]*"([^"]*)".* = [0-9]+$/\2/p' "$tmp/$1.strace" |
     sed -nE "s#^($(IFS='|'; echo "${trees[*]}"))/##p" |
-    grep -v -e '^web2c/' -e '/language\.dat' -e '^fonts/map/' -e '^ls-R$' |
+    grep -v -e '^web2c/' -e '/language\.dat' -e '^fonts/map/.*/updmap/' -e '^ls-R$' |
     sort -u |
     while read -r f; do
       for t in "${trees[@]}"; do [[ -f $t/$f ]] && { echo "$f"; break; }; done
@@ -61,10 +61,11 @@ relatives() {
     d=$(dirname "$f") base=$(basename "$f")
     for t in "${trees[@]}"; do
       [[ -d $t/$d ]] || continue
+      find "$t/$d" -maxdepth 1 -type f -printf '%f\n' |
       case $f in
-        fonts/opentype/*) ls "$t/$d" | grep "^${base%%[0-9-]*}[0-9-]" ;;
-        fonts/*)          ls "$t/$d" ;;
-        *.fd)             ls "$t/$d" | grep '\.fd$' ;;
+        fonts/opentype/*) grep "^${base%%[0-9-]*}[0-9-]" ;;
+        fonts/*)          cat ;;
+        *.fd)             grep '\.fd$' ;;
       esac | sed "s#^#$d/#"
       break
     done
@@ -73,7 +74,7 @@ relatives() {
 
 if [[ $stage == extras ]]; then
   opened sheets > "$tmp/sheets.files"
-  mapfile -t related < <(grep -e '^fonts/' -e '\.fd$' "$tmp/sheets.files")
+  mapfile -t related < <(grep -e '^fonts/' -e '\.fd$' "$tmp/sheets.files" | grep -v '^fonts/map/')
   relatives "${related[@]}" | sort -u | comm -23 - "$tmp/sheets.files" > "$out"
 else
   opened "$stage" > "$out"

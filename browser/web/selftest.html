@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- A page for browser-test: selftest(CASES) typesets each [name, yaml]
+     in CASES, in order, with typeset-worker.js, and returns one result
+     per case: { name, ms, timings, error } or { name, ms, timings, pdf },
+     where pdf is base64. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Typesetter self-test</title>
+<script>
+'use strict';
+const worker = new Worker('typeset-worker.js');
+const replies = [];
+const statuses = [];   // the worker's progress reports, for diagnosis
+let wake = () => {};
+worker.onmessage = ({ data }) => {
+  if (data.status) return void statuses.push(data.status);
+  replies.push(data);
+  wake();
+};
+worker.onerror = e => { replies.push({ error: `worker: ${e.message} (${e.filename}:${e.lineno})` }); wake(); };
+const reply = () => new Promise(resolve => {
+  const deliver = () => {
+    if (!replies.length) return void (wake = deliver);
+    wake = () => {};
+    resolve(replies.shift());
+  };
+  deliver();
+});
+
+async function base64(blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+async function selftest(cases) {
+  const results = [];
+  for (const [name, yaml] of cases) {
+    const t0 = performance.now();
+    worker.postMessage({ yaml });
+    const r = await reply();
+    results.push({ name, ms: performance.now() - t0, timings: r.timings,
+                   ...(r.pdf ? { pdf: await base64(r.pdf) } : { error: r.error }) });
+  }
+  return results;
+}
+</script>
+</head>
+<body>Typesetter self-test; see browser/browser-test.</body>
+</html>
