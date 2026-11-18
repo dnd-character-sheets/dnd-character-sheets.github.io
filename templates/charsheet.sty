@@ -1,28 +1,9 @@
-\RequirePackage[margin=7mm,top=4mm]{geometry}
-\RequirePackage{tikz}
-\RequirePackage{iftex}
-\ifPDFTeX
-  \RequirePackage{times}
-\else
-  \RequirePackage{fontspec}
+\RequirePackage{charsheet-packages}
+\ifPDFTeX\else  % a format cannot hold these fonts, so they are chosen here
   \setmainfont{TeX Gyre Termes}[Ligatures=TeX]
   \setsansfont{TeX Gyre Heros}[Ligatures=TeX]
 \fi
-\RequirePackage{xcolor}
-\RequirePackage{colortbl}
-\RequirePackage{environ}
-\RequirePackage{tabularx}
-\RequirePackage{multicol}
-\RequirePackage{booktabs}
-\RequirePackage{calc}
-\RequirePackage{ifthen}
-\RequirePackage{suffix}
-\RequirePackage{xstring}
-\RequirePackage{ifmtarg}
-\usetikzlibrary{calc}
-\usetikzlibrary{positioning}
-\usetikzlibrary{shapes}
-\usepgflibrary{intersections}
+\RequirePackage{booktabs}  % measures in em as it loads, so after the type size
 
 \newcommand\@expandArg[2]{\expandafter\@applyExpanded\expandafter{#2}{#1}}
 \newcommand\@applyExpanded[2]{#2{#1}}

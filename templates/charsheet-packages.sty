@@ -1,0 +1,35 @@
+% charsheet-packages.sty -- the packages that charsheet.sty and the
+% character-sheet layouts need.  It loads packages only, so a
+% precompiled format can hold everything it loads.  A layout chooses
+% its type size after loading these packages, so packages that measure
+% lengths in em or ex as they load (booktabs) are left to charsheet.sty.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{charsheet-packages}[2026/11/17 packages for character sheets]
+
+\RequirePackage[margin=7mm,top=4mm]{geometry}
+\RequirePackage{tikz}
+\RequirePackage{iftex}
+\ifPDFTeX
+  \RequirePackage{times}
+\else
+  \RequirePackage{fontspec}
+\fi
+\RequirePackage{xcolor}
+\RequirePackage{colortbl}
+\RequirePackage{environ}
+\RequirePackage{tabularx}
+\RequirePackage{multicol}
+\RequirePackage{calc}
+\RequirePackage{ifthen}
+\RequirePackage{suffix}
+\RequirePackage{xstring}
+\RequirePackage{ifmtarg}
+\RequirePackage{amsmath}
+\RequirePackage{enumitem}
+\RequirePackage{articlesize}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes}
+\usetikzlibrary{fit}
+\usepgflibrary{intersections}

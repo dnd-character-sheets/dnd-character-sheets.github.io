@@ -13,6 +13,8 @@ SILVERKINGYAMLS=${KINGS:%=yaml/silver-king-%.yaml}
 
 TEMPLATES=silverpine 3col tropical
 TEMPLATES_TEX=${TEMPLATES:%=templates/%.tex}
+STYBASES=charsheet charsheet-packages articlesize
+STYS=${STYBASES:%=templates/%.sty}
 BGBASES=splash.png splash-nocolor.png merman.pdf
 BGS=${BGBASES:%=templates/%}
 
@@ -85,7 +87,7 @@ docs/index.html:D: yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS lib/insert-pregen
 	lib/insert-pregen-yamls -html www/character-form.html -o $target yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS
 
 bundle:V: docs/index.html docs/charsheet.css bin/exported-charsheet
-	cp -auvL $BGS bin/exported-charsheet templates/charsheet.sty $TEMPLATES_TEX $PUBLISH
+	cp -auvL $BGS bin/exported-charsheet $STYS $TEMPLATES_TEX $PUBLISH
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
 
@@ -132,10 +134,10 @@ yaml/silver-king-%.yaml:D: yaml/king-%.yaml lib/un3ify
 
 ###################
 
-$S/king-%.s.pdf: yaml/silver-king-%.yaml bin/charsheet templates/caster.tex templates/charsheet.sty
+$S/king-%.s.pdf: yaml/silver-king-%.yaml bin/charsheet templates/caster.tex $STYS
 	bin/charsheet -t silverpine -o $target yaml/silver-king-$stem.yaml
 
-$S/%.3.pdf: yaml/%.yaml bin/charsheet templates/3col.tex templates/charsheet.sty
+$S/%.3.pdf: yaml/%.yaml bin/charsheet templates/3col.tex $STYS
 	bin/charsheet -t 3col -o $target yaml/$stem.yaml
 
 $S/samples.pdf: mario.pdf $S/mario.3.pdf ${KINGS:%=$S/king-%.s.pdf} ${KINGS:%=$S/king-%.3.pdf}
@@ -161,10 +163,10 @@ $S/ssamples1.pdf: ${KINGS:%=$S/king-%.s.pdf}
 $S/ssamples.pdf: ${KINGS:%=$S/king-%.s.pdf}
 	pdftk $prereq cat output $target
 
-$S/mario.3.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet.sty
+$S/mario.3.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX $STYS
 	bin/charsheet -t 3col -o $target yaml/mario.yaml
 
-mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX templates/charsheet.sty
+mario.pdf: bin/charsheet yaml/mario.yaml $TEMPLATES_TEX $STYS
 	bin/charsheet -o $target yaml/mario.yaml
 
 &-preview.png: &.pdf

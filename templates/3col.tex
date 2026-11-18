@@ -1,11 +1,8 @@
-\documentclass[10pt]{article}
+\documentclass{article}
+\usepackage{charsheet-packages}
+\csname endofdump\endcsname
+\articlesize{10pt}
 \usepackage[nostatshield]{charsheet}
-\usepackage{multicol}
-\usepackage{amsmath}
-\usepackage{enumitem}
-\usepackage{tabularx}
-\usetikzlibrary{fit}
-%\usepackage{amsmath}
 \colorlet{grayed out}{white!70!black}
 
 \newcommand*\getscale[1]{%
@@ -25,8 +22,6 @@
 \newcommand\scrm[1]{\textrm{\textsc{#1}}}
 
 \newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
-
-\usepackage{pgfkeys}
 
 \def\mynodedistance{7pt}
 

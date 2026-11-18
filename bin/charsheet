@@ -1645,13 +1645,18 @@ local function fill_template(assignments, layout)
   end
 end
 
+-- DOCUMENT FONT replaces the type size that a template states, in the
+-- preamble, so that lengths measured in em see the new size:
+-- \articlesize{..} in character-sheet layouts, \documentclass in others
+local size_statements = { [[\articlesize{%d+pt}]], '\\documentclass[^\n]-%d+pt[^\n]-article' }
+
 local function wrap_latex(latex, layout, font)
   local output = fields.standalone and latex or fill_template(latex, layout)
   if font then
-    output = output:gsub([[\documentclass.-%d+pt.-article]],
-      function(line1)
-        return (line1:gsub('%d+pt', font))
-      end)
+    local function resized(statement) return (statement:gsub('%d+pt', font)) end
+    for _, pattern in ipairs(size_statements) do
+      output = output:gsub(pattern, resized)
+    end
   end
   return output
 end

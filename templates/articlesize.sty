@@ -1,0 +1,57 @@
+% articlesize.sty -- choose the article class's size option after the class
+%
+% In the preamble, \articlesize{11pt} gives exactly the size-dependent
+% parameters that \documentclass[11pt]{article} would have given.  So
+% do 10pt and 12pt; any other size means 10pt, as an unknown class
+% option does.  The page layout (text width and height, margins) is
+% left alone, so a layout set by geometry survives.  Packages that
+% measure lengths in em or ex as they load should load afterward.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{articlesize}[2026/11/17 article size option after the class]
+
+\newcommand\articlesize[1]{%
+  \def\articlesize@arg{#1}%
+  \renewcommand\@ptsize{0}%
+  \ifx\articlesize@arg\articlesize@eleven \renewcommand\@ptsize{1}\fi
+  \ifx\articlesize@arg\articlesize@twelve \renewcommand\@ptsize{2}\fi
+  \edef\articlesize@restore{%
+    \textwidth=\the\textwidth \textheight=\the\textheight
+    \oddsidemargin=\the\oddsidemargin \evensidemargin=\the\evensidemargin
+    \topmargin=\the\topmargin
+    \marginparwidth=\the\marginparwidth \marginparsep=\the\marginparsep
+    \catcode`\noexpand\@=\the\catcode`\@\relax}%
+  % the .clo file makes \normalsize robust only if it is not robust already
+  \expandafter\let\csname normalsize\space\endcsname\@undefined
+  \makeatletter
+  \input{size1\@ptsize.clo}%
+  \articlesize@restore
+  \articlesize@class}
+
+\def\articlesize@eleven{11pt}
+\def\articlesize@twelve{12pt}
+
+% what article.cls sets, after reading the .clo file, from the size
+\def\articlesize@class{%
+  \if@twocolumn
+    \setlength\leftmargini  {2em}%
+  \else
+    \setlength\leftmargini  {2.5em}%
+  \fi
+  \leftmargin  \leftmargini
+  \setlength\leftmarginii  {2.2em}%
+  \setlength\leftmarginiii {1.87em}%
+  \setlength\leftmarginiv  {1.7em}%
+  \if@twocolumn
+    \setlength\leftmarginv  {.5em}%
+    \setlength\leftmarginvi {.5em}%
+  \else
+    \setlength\leftmarginv  {1em}%
+    \setlength\leftmarginvi {1em}%
+  \fi
+  \setlength  \labelsep  {.5em}%
+  \setlength  \labelwidth{\leftmargini}%
+  \addtolength\labelwidth{-\labelsep}%
+  \setlength\tabbingsep{\labelsep}%
+  \skip\@mpfootins = \skip\footins
+  \setlength\bibindent{1.5em}}
