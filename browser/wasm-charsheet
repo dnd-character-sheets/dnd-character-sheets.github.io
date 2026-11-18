@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+// wasm-charsheet -- run the browser build of charsheet under Node, as bin/charsheet -wasm
+//
+// usage: wasm-charsheet ARG...
+//
+// Runs browser/build/lua/charsheet.lua (see build-lua) in the Wasm Lua
+// as /charsheet/bin/charsheet, so its default templates directory is
+// /charsheet/templates, which holds the layout templates.  The run also
+// sees copies of the current directory and of each host directory an
+// argument names; files it creates or changes there are copied back.
+
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { directories, mirrored } = require('./mirror.cjs');
+
+const build = path.join(__dirname, 'build/lua');
+const templates = path.join(__dirname, '../templates');
+const args = process.argv.slice(2);
+
+(async () => {
+  const createLua = require(path.join(build, 'lua.js'));
+  const M = await createLua({
+    noInitialRun: true,
+    print: s => process.stdout.write(s + '\n'),
+    printErr: s => process.stderr.write(s + '\n'),
+  });
+  M.FS.mkdirTree('/charsheet/bin');
+  M.FS.mkdirTree('/charsheet/templates');
+  M.FS.writeFile('/charsheet/bin/charsheet', fs.readFileSync(path.join(build, 'charsheet.lua')));
+  for (const f of fs.readdirSync(templates).filter(f => f.endsWith('.tex')))
+    M.FS.writeFile('/charsheet/templates/' + f, fs.readFileSync(path.join(templates, f)));
+  const status = mirrored(M.FS, directories(args),
+                          () => M.callMain(['/charsheet/bin/charsheet', '-wasm', ...args]));
+  process.exit(status);
+})();

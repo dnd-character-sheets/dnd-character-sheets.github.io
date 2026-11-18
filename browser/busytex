@@ -15,57 +15,10 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { directories, copyIn, mirrored } = require('./mirror.cjs');
 
 const [applet, ...args] = process.argv.slice(2);
-const busytexDir = process.env.BUSYTEX;
-const tree = process.env.TEXMFTREE;
 const programs = { pdflatex: 'pdftex', xelatex: 'xetex' };   // program name -> applet
-
-// directories to mirror: [host path, recursive?]
-function mirrored() {
-  const dirs = new Map([[process.cwd(), false]]);
-  for (const v of ['TEXINPUTS', 'TEXFORMATS'])
-    for (const entry of (process.env[v] || '').split(':'))
-      if (entry.startsWith('/')) dirs.set(entry.replace(/\/+$/, ''), entry.endsWith('//'));
-  for (const a of args) {
-    const p = path.resolve(a.replace(/^-+[a-z-]+=/, ''));
-    if (fs.existsSync(p)) dirs.set(fs.statSync(p).isDirectory() ? p : path.dirname(p), false);
-  }
-  return [...dirs].filter(([d]) => fs.existsSync(d) && fs.statSync(d).isDirectory());
-}
-
-// copy host directory `from` to `to` in FS; returns map of copied file -> bytes
-function copyIn(FS, from, to, recursive, copied = new Map()) {
-  FS.mkdirTree(to);
-  for (const e of fs.readdirSync(from, { withFileTypes: true })) {
-    const [src, dst] = [path.join(from, e.name), path.posix.join(to, e.name)];
-    if (e.isFile()) { const b = fs.readFileSync(src); FS.writeFile(dst, b); copied.set(dst, b); }
-    else if (e.isDirectory() && recursive) copyIn(FS, src, dst, true, copied);
-  }
-  return copied;
-}
-
-// write back files in FS directory `dir` that are new or changed
-function copyOut(FS, dir, copied) {
-  for (const name of FS.readdir(dir)) {
-    const p = path.posix.join(dir, name);
-    if (!FS.isFile(FS.stat(p).mode)) continue;
-    const b = FS.readFile(p);
-    const old = copied.get(p);
-    if (!old || Buffer.compare(Buffer.from(b), old) !== 0) fs.writeFileSync(p, b);
-  }
-}
-
-// with no -ini or -no-pdf, xetex makes an XDV file that xdvipdfmx turns into PDF
-function xdvJob() {
-  if (programs[applet] !== 'xetex' && applet !== 'xetex') return null;
-  if (args.some(a => /^--?(ini|no-pdf)$/.test(a))) return null;
-  const opt = name => { const i = args.findIndex(a => a.replace(/^--?/, '').startsWith(name)); return i < 0 ? null
-                        : args[i].includes('=') ? args[i].split('=')[1] : args[i + 1]; };
-  const input = args[args.length - 1];
-  const job = opt('jobname') || path.basename(input).replace(/\.tex$/, '');
-  return path.join(path.resolve(opt('output-directory') || '.'), job);
-}
 
 const env = {
   TEXMFCNF: '/texmf/web2c', TEXMF: '/texmf', TEXMFDBS: '', TEXMFVAR: '/tmp/texmf-var',
@@ -74,31 +27,37 @@ const env = {
 for (const v of ['TEXINPUTS', 'TEXFORMATS', 'SOURCE_DATE_EPOCH', 'FORCE_SOURCE_DATE'])
   if (process.env[v] !== undefined) env[v] = process.env[v];
 
+// with no -ini or -no-pdf, xetex makes an XDV file that xdvipdfmx turns into PDF
+function xdvJob() {
+  if ((programs[applet] || applet) !== 'xetex') return null;
+  if (args.some(a => /^--?(ini|no-pdf)$/.test(a))) return null;
+  const opt = name => { const i = args.findIndex(a => a.replace(/^--?/, '').startsWith(name)); return i < 0 ? null
+                        : args[i].includes('=') ? args[i].split('=')[1] : args[i + 1]; };
+  const input = args[args.length - 1];
+  const job = opt('jobname') || path.basename(input).replace(/\.tex$/, '');
+  return path.join(path.resolve(opt('output-directory') || '.'), job);
+}
+
 (async () => {
-  const busytex = require(path.join(busytexDir, 'busytex.js'));
+  const busytex = require(path.join(process.env.BUSYTEX, 'busytex.js'));
   const config = {
     preRun: [() => Object.assign(config.ENV, env)],  // the environment is fixed at startup
     noInitialRun: true,
     thisProgram: '/bin/busytex',
-    wasmBinary: fs.readFileSync(path.join(busytexDir, 'busytex.wasm')),
+    wasmBinary: fs.readFileSync(path.join(process.env.BUSYTEX, 'busytex.wasm')),
     print: s => process.stdout.write(s + '\n'),
     printErr: s => process.stderr.write(s + '\n'),
   };
   const M = await busytex(config);
-  const FS = M.FS;
-  FS.mkdirTree('/bin');
-  FS.writeFile('/bin/busytex', '');  // kpathsea looks for the program's directory
-  copyIn(FS, tree, '/texmf', true);
-  const dirs = mirrored();
-  const copied = new Map();
-  for (const [d, recursive] of dirs) copyIn(FS, d, d, recursive, copied);
-  FS.chdir(process.cwd());
+  M.FS.mkdirTree('/bin');
+  M.FS.writeFile('/bin/busytex', '');  // kpathsea looks for the program's directory
+  copyIn(M.FS, process.env.TEXMFTREE, '/texmf', true);
 
   const xdv = xdvJob();
   const progname = programs[applet] ? ['-progname=' + applet] : [];
-  let status = M.callMain([programs[applet] || applet, ...progname, ...(xdv ? ['-no-pdf'] : []), ...args]);
-  if (status === 0 && xdv)
-    status = M.callMain(['xdvipdfmx', '-q', '-o', xdv + '.pdf', xdv + '.xdv']);
-  for (const [d] of dirs) copyOut(FS, d, copied);
+  const status = mirrored(M.FS, directories(args, ['TEXINPUTS', 'TEXFORMATS']), () => {
+    const s = M.callMain([programs[applet] || applet, ...progname, ...(xdv ? ['-no-pdf'] : []), ...args]);
+    return s === 0 && xdv ? M.callMain(['xdvipdfmx', '-q', '-o', xdv + '.pdf', xdv + '.xdv']) : s;
+  });
   process.exit(status);
 })();

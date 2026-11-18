@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# build-lua -- build Lua (with libyaml and lyaml) for the browser, and charsheet for it
+#
+# usage: build-lua [-d DIR]
+#
+# Writes DIR/lua.js and DIR/lua.wasm, Lua 5.1.5 with lyaml's C module
+# `yaml` built in (an Emscripten module whose factory is createLua), and
+# DIR/charsheet.lua, bin/charsheet with every Lua module it needs,
+# lyaml's included.  DIR defaults to browser/build/lua.  Lua comes from
+# $LUA_SRC (default ~/net/lua-5.1.5); libyaml and lyaml are downloaded
+# into browser/build/src if they are not there already.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+dir=$root/browser/build/lua
+lua_src=${LUA_SRC:-$HOME/net/lua-5.1.5}
+src=$root/browser/build/src
+
+while getopts d: opt; do
+  case $opt in
+    d) dir=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR]" >&2; exit 2 ;;
+  esac
+done
+mkdir -p "$dir" "$src"
+
+# fetch NAME URL: unpack a release tarball into $src/NAME unless present
+fetch() {
+  [[ -d $src/$1 ]] && return
+  echo "$arg0: downloading $1" >&2
+  mkdir -p "$src/$1"
+  curl -sSL "$2" | tar -xz -C "$src/$1" --strip-components=1
+}
+fetch libyaml https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz
+fetch lyaml https://github.com/gvvaughan/lyaml/archive/refs/tags/v6.2.9.tar.gz
+
+# Lua's standard libraries, plus lyaml's C module, which registers
+# itself as `yaml` like any library that luaL_openlibs opens
+sed -e 's/^#include "lauxlib.h"/&\nint luaopen_yaml(lua_State *L);/' \
+    -e 's/^  {NULL, NULL}/  {"yaml", luaopen_yaml},\n&/' "$lua_src/src/linit.c" > "$dir/linit.c"
+
+lua=()
+for f in "$lua_src"/src/*.c; do
+  case $f in */luac.c|*/print.c|*/linit.c) ;; *) lua+=("$f") ;; esac
+done
+echo "$arg0: compiling" >&2
+emcc -O2 -I"$lua_src/src" -I"$src/libyaml/include" -I"$src/lyaml/ext/include" \
+     -DYAML_VERSION_MAJOR=0 -DYAML_VERSION_MINOR=2 -DYAML_VERSION_PATCH=5 \
+     '-DYAML_VERSION_STRING="0.2.5"' '-DVERSION="6.2.9"' '-DPACKAGE="lyaml"' -DNDEBUG \
+     -Wno-everything \
+     -sMODULARIZE -sEXPORT_NAME=createLua -sINVOKE_RUN=0 -sALLOW_MEMORY_GROWTH \
+     -sENVIRONMENT=web,worker,node -sEXPORTED_RUNTIME_METHODS=callMain,FS \
+     "${lua[@]}" "$dir/linit.c" "$src"/libyaml/src/*.c "$src"/lyaml/ext/yaml/*.c \
+     -o "$dir/lua.js"
+
+echo "$arg0: amalgamating charsheet" >&2
+modules=$(lua5.2 "$root/lib/lua-depends" -x yaml "$root/bin/charsheet")
+# amalg runs under Lua 5.2, but lyaml is installed for Lua 5.1
+LUA_PATH="$(lua5.1 -e 'io.write(package.path)');;" \
+  amalg -o "$dir/charsheet.lua" -s "$root/bin/charsheet" $modules
