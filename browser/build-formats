@@ -4,9 +4,11 @@
 # usage: build-formats [-d DIR]
 #
 # Writes DIR/charsheet-pdftex.fmt and DIR/charsheet-xetex.fmt (default
-# DIR: browser/build/fmt-native) from browser/charsheet-format.tex.
-# Environment variables PDFTEX and XETEX name the engines; a format
-# must be built by the same engine build that will load it.
+# DIR: browser/build/fmt-native).  Each is built in two steps: a LaTeX
+# kernel format with only English hyphenation (browser/texmf), then
+# browser/charsheet-format.tex on top of it.  Environment variables
+# PDFTEX and XETEX name the engines; a format must be built by the same
+# engine build that will load it.
 
 set -euo pipefail
 arg0=$(basename "$0")
@@ -31,15 +33,22 @@ for layout in 3col tropical; do
     { echo "$arg0: $layout.tex does not start like caster.tex" >&2; exit 1; }
 done
 
-export TEXINPUTS=".:$root/browser:$root/templates//:"
+export TEXINPUTS=".:$root/browser/texmf//:$root/browser:$root/templates//:"
+export TEXFORMATS=.
 declare -A engines=([pdftex]=${PDFTEX:-pdftex} [xetex]=${XETEX:-xetex})
 declare -A latex=([pdftex]=pdflatex [xetex]=xelatex)
+
+# run ENGINE JOBNAME ARGS...: one -ini run, reporting failure
+run() {
+  local engine=$1 job=$2
+  shift 2
+  echo "$arg0: $job" >&2
+  "${engines[$engine]}" -ini -interaction=nonstopmode -halt-on-error -jobname=$job "$@" \
+    > $job.stdout 2>&1 < /dev/null ||
+    { echo "$arg0: $job failed; see $dir/$job.log" >&2; exit 1; }
+}
+
 for engine in pdftex xetex; do
-  echo "$arg0: $engine" >&2
-  if ! "${engines[$engine]}" -ini -interaction=nonstopmode -halt-on-error \
-         -jobname=charsheet-$engine "&${latex[$engine]}" mylatexformat.ltx charsheet-format.tex \
-         > charsheet-$engine.stdout 2>&1 < /dev/null; then
-    echo "$arg0: $engine failed; see $dir/charsheet-$engine.log" >&2
-    exit 1
-  fi
+  run $engine ${latex[$engine]} -etex ${latex[$engine]}.ini
+  run $engine charsheet-$engine "&${latex[$engine]}" mylatexformat.ltx charsheet-format.tex
 done

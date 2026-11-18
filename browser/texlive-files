@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# texlive-files -- list the TeX Live files that browser character sheets need
+#
+# usage: texlive-files [-o FILE] formats|sheets
+#
+# Builds the formats and typesets every baseline case with them, using
+# native TeX under strace, and prints each file opened from a TeX Live
+# tree while building the formats or while typesetting the sheets,
+# relative to that tree (e.g. tex/latex/base/size11.clo), one per line,
+# sorted.  Configuration that TeX Live generates (language.dat, font
+# maps, texmf.cnf, ls-R) is omitted; browser/texmf supplies its own.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+out=/dev/stdout
+usage() { echo "usage: $arg0 [-o FILE] formats|sheets" >&2; exit 2; }
+
+while getopts o: opt; do
+  case $opt in
+    o) out=$OPTARG ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND - 1))
+[[ $# -eq 1 && ( $1 == formats || $1 == sheets ) ]] || usage
+stage=$1
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+trace() { strace -f -qq -e trace=openat,open -o "$tmp/$1.strace" "${@:2}"; }
+trace formats "$root/browser/build-formats" -d "$tmp/fmt"
+PDFLATEX=$(command -v pdflatex) trace sheets \
+  "$root/browser/record-baseline" -f "$tmp/fmt" -d "$tmp/sheets" "$root/browser/baseline/cases" > /dev/null
+
+# TeX Live trees on Debian; texlive-files reports paths relative to them
+trees='/usr/share/texlive/texmf-dist|/usr/share/texmf'
+sed -nE 's/.*open(at)?\([^"]*"([^"]*)".* = [0-9]+$/\2/p' "$tmp/$stage.strace" |
+  sed -nE "s#^($trees)/##p" |
+  grep -v -e '^web2c/' -e '/language\.dat' -e '^fonts/map/' -e '^ls-R$' |
+  sort -u |
+  while read -r f; do
+    for t in ${trees//|/ }; do [[ -f $t/$f ]] && { echo "$f"; break; }; done
+  done > "$out"

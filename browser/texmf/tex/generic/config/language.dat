@@ -1,0 +1,8 @@
+% Hyphenation patterns in the browser formats: English only, numbered
+% as in TeX Live's language.dat
+english hyphen.tex
+=usenglish
+=USenglish
+=american
+dumylang	dumyhyph.tex
+nohyphenation	zerohyph.tex
