@@ -1,0 +1,32 @@
+# Baseline character sheets.  Each line is
+#
+#     NAME  LAYOUT  COMMAND
+#
+# where LAYOUT is passed as `charsheet -t` (or `-` for the sheet's own
+# LAYOUT) and COMMAND, run by bash from the repository root, writes the
+# YAML to stdout.  Non-ASCII output selects XeTeX, as in bin/charsheet;
+# mario.yaml and king-*.yaml contain U+00A0, and the `ascii` variants
+# replace it with a space so that pdfTeX is used.
+
+# pdfTeX
+mario-ascii            -         LC_ALL=C sed 's/\xc2\xa0/ /g' yaml/mario.yaml
+mario-ascii-3col       3col      LC_ALL=C sed 's/\xc2\xa0/ /g' yaml/mario.yaml
+mario-ascii-tropical   tropical  LC_ALL=C sed 's/\xc2\xa0/ /g' yaml/mario.yaml
+mario-ascii-nocolor    -         LC_ALL=C sed 's/\xc2\xa0/ /g; s/^COLOR: true/COLOR: false/' yaml/mario.yaml
+mario-ascii-separate   -         LC_ALL=C sed 's/\xc2\xa0/ /g; 1i MAGIC SEPARATE: true' yaml/mario.yaml
+mario-ascii-12pt       -         LC_ALL=C sed 's/\xc2\xa0/ /g; 1i DOCUMENT FONT: 12pt' yaml/mario.yaml
+mario-ascii-tropical-10pt tropical LC_ALL=C sed 's/\xc2\xa0/ /g; 1i DOCUMENT FONT: 10pt' yaml/mario.yaml
+mario-ascii-3col-12pt  3col      LC_ALL=C sed 's/\xc2\xa0/ /g; 1i DOCUMENT FONT: 12pt' yaml/mario.yaml
+core-scalars           -         cat testing/valid-yamls/core-scalars.yaml
+bad-magic              -         cat testing/invalid-yamls/bad-magic.yaml
+
+# XeTeX
+mario                  -         cat yaml/mario.yaml
+mario-3col             3col      cat yaml/mario.yaml
+mario-tropical         tropical  cat yaml/mario.yaml
+mario-nocolor          -         sed 's/^COLOR: true/COLOR: false/' yaml/mario.yaml
+mario-12pt             -         sed '1i DOCUMENT FONT: 12pt' yaml/mario.yaml
+mario-tropical-10pt    tropical  sed '1i DOCUMENT FONT: 10pt' yaml/mario.yaml
+king-wizard            -         cat yaml/king-wizard.yaml
+king-fighter-12pt      -         sed '1i DOCUMENT FONT: 12pt' yaml/king-fighter.yaml
+silver-king-cleric     -         lib/un3ify yaml/king-cleric.yaml

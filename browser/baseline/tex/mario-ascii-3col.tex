@@ -1,0 +1,1081 @@
+\documentclass[10pt]{article}
+\usepackage[nostatshield]{charsheet}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usetikzlibrary{fit}
+%\usepackage{amsmath}
+\colorlet{grayed out}{white!70!black}
+
+\newcommand*\getscale[1]{%
+  \begingroup
+    \pgfgettransformentries{\scaleA}{\scaleB}{\scaleC}{\scaleD}{\whatevs}{\whatevs}%
+    \pgfmathsetmacro{#1}{sqrt(abs(\scaleA*\scaleD-\scaleB*\scaleC))}%
+    \expandafter
+  \endgroup
+  \expandafter\def\expandafter#1\expandafter{#1}%
+}
+
+
+\newcommand\savemark[1]{{\Large\ifDNDfalse{#1 SAVING}{\(\circ\)}{\(\bullet\)}}}
+
+\newcommand\fboxzero[1]{{\fboxsep=0pt \fbox{#1}}}
+
+\newcommand\scrm[1]{\textrm{\textsc{#1}}}
+
+\newcommand\bigstrut{\vrule width 0pt height 16pt depth 0pt }
+
+\usepackage{pgfkeys}
+
+\def\mynodedistance{7pt}
+
+\newlength\colwidth
+\newlength\colgap
+\colgap=10pt
+\colgap=\mynodedistance
+\setlength\colwidth{(\textwidth-2\colgap)/3}
+
+
+\newlength\hpwidth
+\setlength\hpwidth{\colwidth-12pt}
+
+\newdimen\textmargin % amount subtracted from each side to get `text width`
+\textmargin=8pt
+
+\tikzset{%
+  yseparated/.style={
+%     outer ysep=2.5pt,
+  },
+  every label node part/.style={
+     text width=,
+     font=\sffamily\footnotesize,
+  },
+  columnbox/.style={
+    labeled decorated stub rectangle,
+    text width=\colwidth-2\textmargin,
+    inner xsep=8pt,
+    align=justify,
+    font={\rightskip=0pt plus 2em},
+    inner ysep=6pt,
+    outer xsep=0pt, % x placement is happening by hand
+    yseparated,
+    draw, line width=1.2pt,
+  },
+  narrowcolumnbox/.style={
+    columnbox,
+    text width=36mm-2\textmargin,
+  },
+  initiative/.style={
+    labeled decorated clipped rectangle,
+    minimum width=\hpwidth/3-10pt,
+    draw, line width=1.2pt,
+    fill=white,
+    font=\LARGE,
+    yseparated,
+    outer xsep=3pt,
+    minimum height=17mm,
+  },
+  dnd max hp2/.style={
+    dnd max hp,
+    labeled decorated clipped rectangle,
+    minimum height=20mm,
+  },
+  dnd hit dice/.style={
+    dnd max hp2,
+    yseparated,
+    minimum width=\hpwidth/2-5pt,
+    minimum height=18mm,
+    font=\footnotesize,
+  },
+%  statbox/.style={ % 
+%    dndbox,
+%    decorated stub rectangle,
+%    stub radius=1.5mm,
+%    stub inset fraction=0.6,
+%    minimum width=18mm,
+%    minimum height=20mm,
+%    fill=none,
+%  },
+}
+
+\begingroup
+  \tikzset{dndbox}%
+  \pgfkeysgetvalue{/tikz/stub radius}{\srtmp}%
+  \xdef\dndStubRadius{\srtmp}
+\endgroup
+
+
+\renewcommand\weaponname[1]{\leavevmode\parbox[t]{4em}{#1}}
+
+\begin{document}
+
+
+\newcommand\nextstatloc{inside north west corner=of stats background}
+
+
+\setDNDlabel{SECONDARY PROFICIENCIES}{\scriptsize WEAPON, ARMOR, \&\ LANGUAGE PROFICIENCIES}
+\setDNDlabel{PROFICIENCIES}{PROFICIENCIES}
+
+
+\setDND{AGE}{400}
+\setDND{ALIGNMENT}{Chaotic good}
+\setDND{ARMOR CLASS}{17}
+\setDND{ATTACKS}{\dndkeys{ATTACK={+11},DAMAGE={1d8+5},NAME={Black-hilt Rapier},NOTES={Magical},RANGE={5 ft.},TYPE={piercing}}
+\dndkeys{AMMO COUNT={6},AMMO TYPE={daggers},ATTACK={+11},DAMAGE={1d4+5},NAME={Throwing Dagger},RANGE={20/60 ft.},TYPE={piercing}}
+\dndkeys{AMMO COUNT={20},AMMO TYPE={bolts},ATTACK={+11},DAMAGE={1d6+5},NAME={Hand Crossbow},RANGE={30/120 ft.},TYPE={piercing}}}
+\setDND{BACKGROUND}{Criminal}
+\setDND{BONUS ACTIONS}{\bonus{Cunning Action}\relax
+  \bonus{Master of Tactics}}
+\setDND{CHA}{16}
+\setDND{CHARACTER NAME}{Mario Greymist}
+\setDND{CLASS}{Rogue}
+\setDND{COLOR}{true}
+\setDND{CON}{14}
+\setDND{CP}{8}
+\setDND{CURRENT HIT POINTS}{}
+\setDND{DESCRIPTION}{A nondescript Dragaeran male who can blend into any crowd.  Has a round face like a Teckla, but also has a noble's point.  Resembles a friendly and somewhat elderly merchant.}
+\setDND{DEX}{20}
+\setDND{DEX SAVING}{true}
+\addDNDitem{LIGHT WEAPONS}{Throwing Daggers}
+\addDNDitem{NORMAL WEAPONS}{Black-hilt Rapier}
+\addDNDitem{NORMAL WEAPONS}{Hand Crossbow}
+\addDNDitem{LIGHT ARMOR}{Glamoured Studded Leather Armor}
+\addDNDitem{LIGHT ARMOR}{Cloak of Protection}
+\addDNDitem{LIGHT ARMOR}{Boots of Elvenkind}
+\addDNDitem{SLOTTED ITEMS}{Crossbow Bolts}
+\addDNDitem{SLOTTED ITEMS}{Potion of Invisibility}
+\addDNDitem{SLOTTED ITEMS}{Fine Clothes}
+\addDNDitem{SLOTTED ITEMS}{Forged Papers}
+\addDNDitem{SLOTTED ITEMS}{Poison Vials (3)}
+\addDNDitem{SLOTTED ITEMS}{Marked Cards}
+\addDNDitem{SLOTTED ITEMS}{Thieves' Tools}
+\addDNDitem{SLOTTED ITEMS}{Disguise Kit}
+\addDNDitem{SLOTTED ITEMS}{Forgery Kit}
+\addDNDitem{SMALL ITEMS}{Ring of Mind Shielding}
+\addDNDitem{SMALL ITEMS}{Sending Stone}
+\addDNDitem{SMALL ITEMS}{Blackmail Ledger}
+\setDND{EQUIPMENT}{\item Throwing Daggers
+\item Black-hilt Rapier
+\item Hand Crossbow
+\item Glamoured Studded Leather Armor
+\item Cloak of Protection
+\item Boots of Elvenkind
+\item Crossbow Bolts
+\item Potion of Invisibility
+\item Fine Clothes
+\item Forged Papers
+\item Poison Vials (3)
+\item Marked Cards
+\item Thieves' Tools
+\item Disguise Kit
+\item Forgery Kit
+\item Ring of Mind Shielding
+\item Sending Stone
+\item Blackmail Ledger}
+\setDND{EQUIPMENT COLS}{2}
+\setDNDfont{EQUIPMENT}{\scriptsize}
+\setDND{EQUIPMENT LEFT}{true}
+\setDND{FEATURES}{\describedColored{attacks}{Sneak Attack}{Once per turn, Mario deals an extra 10d6 damage to a creature he hits with a finesse or ranged weapon attack when he has advantage or an ally threatens the target.}
+\described{Cunning Action \upshape{[B]}}{Mario may Dash, Disengage, or Hide as a bonus action.}
+\described{Uncanny Dodge \upshape{[Rx]}}{When an attacker Mario can see hits him with an attack, he may halve the attack's damage.}
+\described{Evasion}{When subjected to an effect allowing a Dexterity saving throw for half damage, Mario instead takes no damage on a success and only half damage on a failure.}
+\described{Reliable Talent}{Any ability check using a proficient skill or tool treats rolls lower than 10 as a 10.}
+\described{Blindsense}{Mario is aware of hidden or invisible creatures within 10 feet.}
+\described{Slippery Mind}{Mario gains proficiency in Wisdom saving throws.}
+\described{Elusive}{No attack roll has advantage against Mario while he is conscious.}
+\describedColored{attacks}{Stroke of Luck}{Once per short rest, Mario may turn a missed attack into a hit or treat a failed ability check as a natural 20.}
+\described{Master of Intrigue}{Mario mimics speech patterns and accents easily and excels at maintaining false identities.}
+\described{Master of Tactics \upshape{[B]}}{Mario may use the Help action as a bonus action at a range of 30 feet.}
+\described{Insightful Manipulator}{After observing or conversing with someone for one minute, Mario can assess whether the creature surpasses him in Intelligence, Wisdom, Charisma, or class levels.}
+\describedColored{attacks}{Misdirection \upshape{[Rx]}}{When targeted by an attack while another creature is nearby, Mario may cause the attack to target the other creature instead.}
+\described{Soul of Deceit}{Mario's thoughts cannot be read by telepathy unless he allows it, and he presents false thoughts when magically compelled.}}
+\setDNDfont{FEATURES}{\footnotesize}
+\setDND{FEATURES SPACE}{3pt}
+\setDND{GP}{320}
+\setDND{HIT DICE}{d8}
+\setDND{INITIATIVE}{+11}
+\setDND{INT}{12}
+\setDND{INT SAVING}{true}
+\setDND{LAYOUT}{silverpine}
+\setDND{LEVEL}{20}
+\setDND{MAX HP}{143}
+\setDND{MOTIVATION}{Avenge insults to his beloved.}
+\setDND{PASSIVE INSIGHT}{18}
+\setDND{PASSIVE PERCEPTION}{18}
+\setDND{PLAYER NAME}{Steve}
+\setDND{PP}{12}
+\setDND{PROFICIENCIES}{\item Perception
+\item Sleight of Hand
+\item Acrobatics
+\item Deception
+\item Insight
+\item Investigation
+\item Persuasion
+\item Stealth
+\profskip{}
+\item Thieves' Tools
+\item Disguise Kit
+\item Forgery Kit
+\item Poisoner's Kit
+\profskip{}
+\item Daggers
+\item Hand Crossbows
+\item Longswords
+\item Rapiers
+\item Shortswords
+\profskip{}
+\item Common
+\item Dragaeran
+\item Eastern
+\item Thieves' Cant}
+\setDND{PROFICIENCY BONUS}{+6}
+\setDND{RACE}{Dragaeran}
+\setDND{REACTIONS}{\reaction{Uncanny Dodge}\relax
+  \reaction{Misdirection}}
+\setDND{SENSES}{Darkvision 60 ft.}
+\setDND{SHEET ORIGIN}{Mario Greymist (Jhereg assassin)}
+\setDND{SP}{15}
+\setDND{SPECIALTY}{Assassin}
+\setDND{SPEED}{30}
+\setDND{STR}{10}
+\setDND{WIS}{15}
+
+\DNDinit
+
+\ifDNDfalse{COLOR}{\dndnocolor}{}
+
+
+\noindent
+\begin{charsheet}
+  \tikzset{node distance=\mynodedistance}
+
+  %%%%% banner at top
+
+  \node [dndbox,yseparated,height=20mm,fill=playername,below=of top] (splash) 
+     {\includegraphics[width=\textwidth]{templates/splash.png}};
+
+  \colorlet{splashgray}{white!85.765!black}
+
+  \begingroup\sffamily
+
+  \newcommand\namestrut{\vrule width 0pt depth 1pt\relax}
+
+  \path ($(splash.south west)+(88mm,18.75mm)$) coordinate  (class field sw);
+  \path ($(splash.south west)+(88mm,9.7mm)$) coordinate  (race field sw);
+  \path ($(splash.south west)+(48mm,16mm)$) coordinate  (charname center);
+  \path ($(splash.south west)+(40mm,24mm)$) coordinate  (pregen left);
+ 
+
+  \ifDNDfalse{PREGENERATED}%
+    {\node [fill=splashgray,width=42mm,height=5mm,anchor=south west,at=(pregen left)] {};}
+    {}
+
+
+  \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(class field sw)] {};
+  \node [fill=splashfield,width=97mm,height=6mm,anchor=south west,at=(race field sw)] {};
+
+  \path (class field sw) +(0mm,0.6mm) coordinate (class sw);
+  \path (race field sw) +(0mm,0.6mm) coordinate (race sw);
+
+  \setDND{CLASS + LEVEL}{\getDND{CLASS} \getDND{LEVEL}} % use legacy layout below
+
+  \writesplash[at=(class sw)]{34mm}{CLASS + LEVEL}
+  \writesplash[right of base=1mm of CLASS + LEVEL]{28mm}{BACKGROUND}
+  \writesplash[right of base=1mm of BACKGROUND]{34mm}{PLAYER NAME}
+
+  \writesplash[at=(race sw)]{34mm}{RACE}
+  \writesplash[right of base=1mm of RACE]{34mm}{ALIGNMENT}
+  \writesplash[right of base=1mm of ALIGNMENT]{34mm}{EXPERIENCE POINTS}
+
+  \ifDNDdefined{CHARACTER NAME}
+{\node[at=(charname center),font={\rmfamily\LARGE\itshape},anchor=center]
+      {\getDND{CHARACTER NAME}\ifDNDnonempty{AGE}{ \Large (\getDND{AGE})}{}}
+      ;
+    }
+    {}
+
+  \path (splash.south |- bottom right) coordinate (bottom center);
+
+  %%% central column: hit-point thing, equipment, attacks fill
+
+\Large
+
+      \node (hpbackground) 
+        [stub rectangle,yseparated,fill=hit points background,below=of splash,width=\colwidth, minimum height=87mm] 
+       { };
+
+\begin{scope}[node distance=\mynodedistance]
+
+      \node (initiative)
+            [initiative,below=of hpbackground.north] 
+         {\nodepart{label}\footnotesize INITIATIVE\nodepart{ctext}\getDND*{INITIATIVE}}
+         ;
+
+       \node (ac) [initiative,shield,inner shield,draw,ultra thick,left=of initiative,width=12mm,
+                   font=\Large,
+            ]
+      {\getDND*{ARMOR CLASS}}
+      ;
+
+      \node [above=3pt of ac.south] {\tinystacklabel{ARMOR}{CLASS}};
+
+      \node (speed) [initiative,right=of initiative]
+         {\nodepart{ctext}\getDND*{SPEED}\nodepart{label}SPEED}
+         ;
+
+%      \draw [thick,black,fill=yellow] (speed.labeltop) circle [radius=5pt];
+
+      \node [dnd max hp2,decorated labeled downward rectangle A,below=of initiative,width=\hpwidth] 
+         (maxhp)
+         {\nodepart{label}CURRENT HIT POINTS}
+         ;
+      \node [below=of maxhp.north,font=\scriptsize] {%
+         \hbox to \hpwidth{%
+             ~~~Maximum Hit Points~~\rlap{\raisebox{4pt}{\smash{\normalsize~~~\getDND*{MAX HP}}}}%
+               \hrulefill~~~}}
+       ;
+
+      \node[dnd max hp2,decorated labeled upward rectangle A,below=of maxhp,minimum height=20mm,width=\hpwidth]
+        (temphp)
+        {\nodepart{label}TEMPORARY HIT POINTS}
+        ;
+
+
+
+      \node (hitdice)
+             [dnd hit dice,below left corner=of temphp] 
+         {\nodepart{label}HIT DICE\nodepart{ctext}
+            \vrule height 8mm width 0pt\Large\getDND*{HIT DICE}}
+         ;
+
+     \whenDNDdefined{LEVEL}{
+         \expandafter\ifnum\rawgetDND{LEVEL}<5
+           \node [at=(hitdice.north),anchor=north] 
+                {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+         \fi
+     }
+
+      \node (death saves)
+            [dnd hit dice,below right corner=of temphp,font=\small] 
+         { \nodepart{label}DEATH SAVES\nodepart{ctext}
+            \tiny\begin{tabular}{@{}r@{\hskip1pt}l@{}}
+            \raisebox{1pt}{SUCCESSES}&\slotsliteral3\\[2pt]
+            \vrule width 0pt depth 5pt\raisebox{1pt}{FAILURES}&\slotsliteral3\\
+            \end{tabular}
+          }
+         ;
+
+
+%\node [draw,above=of initiative] % {\slotsliteral7};
+%              {\expandafter\stackslots\expandafter{\rawgetDND{LEVEL}+1}};
+
+
+\end{scope}
+
+  \endgroup
+
+
+\makeatletter
+\renewcommand\attackkeys[1]{%
+  \gdef\@attackname{}%
+  \gdef\@attackattack{}%
+  \gdef\@attackdamage{}%
+  \gdef\@attacktype{}%
+  \gdef\@attackrange{}%
+  \gdef\@attackammo{}%
+  \pgfkeys{/attacks/.cd, #1}%
+  \small \@attackname&\@attackattack&\@attackdamage\ \small\@attacktype\\
+}
+\makeatother
+
+
+\newdimen\attacksInnerSep
+\attacksInnerSep=4pt
+
+
+
+\node[columnbox,anchor=north east] (motivation) at (splash.east |- hpbackground.north)
+   {\nodepart{label}DESCRIPTION \&\ PERSONALITY
+    \nodepart{text}%
+    \large\sffamily
+    \newcommand\hangpar{\hangindent=1em \hangafter=1 \par}%
+    \smallskip
+    Motivation:\\
+    \getDND*{MOTIVATION}
+    \hangpar
+    \medskip
+    \ifDNDnonempty{SUGGESTED MOTIVATIONS}{%
+       Suggested motivations:
+       \begin{itemize}[nosep,leftmargin=1.5em]\getDND{SUGGESTED MOTIVATIONS}
+       \end{itemize}
+       \medskip
+    }{}
+    \ifDNDnonempty{SUGGESTED NAMES}{%
+       Suggested names:
+       \begin{itemize}[nosep,leftmargin=1.5em]\getDND{SUGGESTED NAMES}
+       \end{itemize}
+       \medskip
+    }{}
+    \hrule height 0pt depth 0pt % retain skips
+   }
+;
+
+
+
+\newif\ifspellListOpen
+\spellListOpenfalse
+
+\newenvironment{itemize spells}
+  {\clubpenalty=10000
+   \widowpenalty=10000
+   \begin{itemize}[topsep=0pt,itemsep=0pt,leftmargin=6pt,parsep=0pt,labelsep=2pt]
+   \spellListOpentrue
+  }%
+  {\end{itemize}}
+
+\setdeltay\sectionheight{motivation.south}{bottom right}
+
+
+\whenDNDdefined{FEATURES}{%
+  %%% XXX drops below bottom right
+  \ifDNDnonempty{MAGIC}{\def\myfill{magic}}{\def\myfill{features}}%
+  \node (features) [columnbox,height=\sectionheight-\mynodedistance,fill=\myfill,below=of motivation]  {
+    \nodepart{label}{FEATURES \&\ TRAITS}\nodepart{text}%
+    \raggedright
+    \useDNDfont*{FEATURES}%
+    \long\def\described#1#2{\strut\emph{#1:} #2\par\smallskip}%
+    \long\def\describedColored#1#2#3{\described{#1}{#2}}%
+    \getDND{FEATURES}
+    \whenDNDnonempty{SENSES}{\described{Senses}{\getDND{SENSES}}}
+    \whenDNDnonempty{MAGIC}{%
+      \smallskip
+      \footnotesize
+      \useDNDfont*{MAGIC}%
+      \newcommand\spellslevellabel[2]{%
+        \ifnum#1=0
+           \emph{\normalsize Cantrips:} You can cast these spells as often as you like using 1~action.
+        \else
+           \ifspellListOpen
+             \end{itemize spells}
+           \fi
+           \smallskip
+           \emph{\normalsize Level~#1 spells:} Cast these spells in any combination%
+           \ifnum#2>0\relax
+              \ #2~times per long rest.
+           \else
+              .
+           \fi
+          Casting is 1~action unless noted.
+        \fi
+        \begin{itemize spells}
+      }
+      \long\def\described#1#2{%
+        \ifspellListOpen\else\begin{itemize spells}\fi
+        \item #1: #2}%
+      \long\def\describedColored#1#2#3{%
+            \ifspellListOpen\else\begin{itemize spells}\fi
+            \item \hspace*{-\fboxsep}{\colorbox{#1}{#2:} #3}%
+      }
+      \getDND{MAGIC}
+      \ifspellListOpen
+        \end{itemize spells}
+      \fi
+    }
+  }
+  ;
+}
+
+
+
+
+\setnodewidth\sectionwidth[statbox]
+\node (stats background) 
+      [stub rectangle,stub radius=6pt,fill=stats,width=\sectionwidth+4mm,height=163mm,anchor=north west]
+      at (splash.west |- hpbackground.north)
+ { };
+
+\path (stats background.north west) ++(2mm,-2.2mm) coordinate (first stat);
+\renewcommand\nextstatloc{anchor=north west,at=(first stat)}
+
+
+
+\dndstat{STRENGTH}{STR}
+\dndstat{DEXTERITY}{DEX}
+\dndstat{CONSTITUTION}{CON}
+\dndstat{INTELLIGENCE}{INT}
+\dndstat{WISDOM}{WIS}
+\dndstat{CHARISMA}{CHA}
+
+\node (dummy left column) [columnbox,shape=rectangle,draw=none,anchor=west] 
+   at (stats background.west)
+   {}
+   ;
+
+\path (dummy left column.east |- stats background.north)
+      ++(0,-1mm) % don't let box stick out too much
+       coordinate (inspo right)
+    ; 
+
+\setdeltax\sectionwidth{inspo right}{stats background.east}
+\advance\sectionwidth by -\mynodedistance
+
+\node (inspiration)
+      [fill=white,draw,line width=1.2pt,decorated stub rectangle,width=\sectionwidth-5mm,
+      height=8mm,
+      anchor=north east, at=(inspo right)
+      ]
+   {}
+   ;
+\node [anchor=west,proficiencies,fill=white,stub rectangle,
+       width=10mm,height=10mm,line width=1.5pt,draw]
+       at ($(inspiration.west)+(-5mm,0mm)$)
+      (inspo box)
+      {};
+
+\node  [fill=none,stub rectangle,
+       width=10mm,stub radius=2.5mm,height=10mm,line width=0.5pt,scale=0.85,draw]
+       at (inspo box)
+      {};
+
+% center the name in the visible space
+\setdeltax\tmpwidth{inspiration.east}{inspo box.east}
+
+\path (inspo box.east) ++(0.5\tmpwidth,0) node
+      {\small\textsf{INSPIRATION}};
+
+
+\node[columnbox,text width=,width=\sectionwidth,% width=38.002mm,
+      fill=stats!75!white,below right corner=3.5mm of inspiration,align=center,
+      height=35mm,
+    ]
+    (saving throws)
+    {\nodepart{label}SAVING THROWS\nodepart{text}%
+     \vspace*{3pt}
+     \renewcommand\arraystretch{1.15}%
+     \tabcolsep=2pt
+     \scshape
+     \begin{tabular}{@{}rll@{}}
+      \dndsavingthrow{STR}&\normalsize Strength    &\savemark{STR}\\
+      \dndsavingthrow{DEX}&\normalsize Dexterity   &\savemark{DEX}\\
+      \dndsavingthrow{CON}&\normalsize Constitution&\savemark{CON}\\
+      \dndsavingthrow{INT}&\normalsize Intelligence&\savemark{INT}\\
+      \dndsavingthrow{WIS}&\normalsize Wisdom      &\savemark{WIS}\\
+      \dndsavingthrow{CHA}&\normalsize Charisma    &\savemark{CHA}\\
+    \end{tabular}}
+  ;
+\node (proficiency bonus)
+      [proficiencies,decorated stub rectangle,width=\sectionwidth-2mm,height=8mm,
+       below right corner=4mm of saving throws]
+   {\hbox to 0pt{\hss\hspace*{6.2mm}\scriptsize\textsf{PROFICIENCY BONUS}\hss}}
+   ;
+\node (proficiency circle) [anchor=west,proficiencies,circle,inner circle,
+       width=10mm,height=10mm,line width=1.5pt,draw]
+       at ($(proficiency bonus.west)+(-2mm,0mm)$)
+      {\large\textsf{+\arabic{proficiency bonus}}};
+
+\newcommand\getxxx[1]{\ifDNDnonempty{#1}{\getDND{#1}}{}}
+
+  \setdeltay\sectionheight{proficiency bonus.south}{stats background.south}
+  \advance\sectionheight by -3mm
+  \node (proficiencies) [columnbox,text width=\sectionwidth-2\textmargin,fill=proficiencies,height=\sectionheight,
+        anchor=south east,at=(stats background.south -| saving throws.east)]
+   {\nodepart{label}PROFICIENCIES\nodepart{text}%
+\begin{proflist}
+  \ifDNDnonempty{PROFICIENCIES}
+     {\getDND{PROFICIENCIES}}
+     {\item (No proficiencies listed.)}
+\end{proflist}
+   }
+   ;
+
+%\draw [red,fill=green] (proficiencies.north east) circle [radius=3.5pt];
+%\draw [red,fill=blue!10!white] (proficiencies.south west) circle [radius=3.5pt];
+%\draw [red,fill=yellow] (proficiencies.text) circle [radius=3.5pt];
+%\draw [red,fill=red!20!white] (proficiencies.label) circle [radius=3.5pt];
+%
+%\draw [fill=red] (prof bot fit) circle [radius=5pt];
+%\draw [fill=red] (prof top fit) rectangle ++(5pt,5pt);
+
+%\node (motivation) [below=of proficiencies] 
+%  {\parbox{36mm}{\Large\centering\textit{\getDND*{MOTIVATION}}}}
+%  ;
+
+
+\ifDNDdefined{EQUIPMENT}{%
+
+  \node (equipment) [columnbox,decorated labeled clipped rectangle,fill=equipment,
+                     minimum height=124pt, % make enough room for coins
+                     anchor=south,at=(bottom center)]
+   {%
+     \nodepart{label}EQUIPMENT\nodepart{text}
+     \medskip
+     \noindent
+     \hspace*{21mm}%
+     \begin{minipage}{\hsize-21mm}
+     \small
+      \begin{eqlist}%
+     \ifDNDnonempty{EQUIPMENT}{}{%
+       \item \noindent\vrule width 0pt height 0pt depth 8\baselineskip (Placeholder: Equipment will go here.)
+     }%
+     \useDNDfont{EQUIPMENT}%
+     \getDND{EQUIPMENT}
+    \end{eqlist}%
+     \end{minipage}%
+   }
+  ;
+}
+{\node (equipment) [at=(bottom center)] {};
+}
+
+\path (equipment.south west) +(5mm,40mm) coordinate (coin top left);
+
+
+\coin{cp}{Cu}{\color{grayed out}\getDND*{CP}}
+\coin{sp}{Ag}{\color{grayed out}\getDND*{SP}}
+\coin{gp}{Au}{\color{grayed out}\getDND*{GP}}
+\coin{pp}{Pt}{\color{grayed out}\getDND*{PP}}
+  
+%%%%%% attacks
+
+\newenvironment{attackstab*}
+  {\renewcommand\arraystretch{1.3}%
+   \def\notesheader{\multicolumn3{@{}l}{\vrule width 0pt height 18pt\small\textsf{\textit{NOTES}}}\\}%
+   \renewcommand\attacknote[2]{\small ##1:&\multicolumn2{@{}l@{ }}{\small##2}\\}%
+   \renewcommand\attacknote[2]{}%
+   \renewcommand\notesheader{}%
+   \tabcolsep=0.5\tabcolsep
+   \normalsize
+   \let\dndkeys=\attackkeys
+   \noindent
+   \hspace*{\attacksInnerSep}%   
+   \begin{tabular*}{\hsize-2\attacksInnerSep}{@{}lcl@{}}
+   \textsf{\footnotesize NAME}&
+   \hspace*{-0.3em}%
+   \textsf{\scriptsize 
+      {\def\arraystretch{0.9}\begin{tabular}[b]{c}ATTACK\\BONUS\end{tabular}}%
+   }%
+   \hspace*{-0.3em}%
+   &
+   \textsf{\scriptsize DAMAGE/TYPE}\\
+   \midrule
+  }
+  {\end{tabular*}\hspace*{\attacksInnerSep}\par}
+
+\node (attacks bottom) [above=of equipment] {};
+
+\setdeltay\sectionheight{hpbackground.south}{attacks bottom.north}
+
+
+  \node (attacks) [columnbox,fill=attacks,height=\sectionheight,
+                   below=of hpbackground,
+%at={(0,0)},
+%   anchor=north,at=(hpbackground.south),
+]
+   {
+    \nodepart{label}ATTACKS\nodepart{text}%
+    \centering
+    \useDNDfont*{ATTACKS}
+    \begin{attackstab*}
+    \getDND*{ATTACKS}
+    \end{attackstab*}
+
+    \medskip
+
+    \begin{minipage}{\hsize-2\attacksInnerSep}
+    \small
+    \renewcommand\attacknote[2]{}
+    \def\notesheader{}
+    \useDNDfont*{ATTACKS}
+    \let\weaponname\relax
+    \DNDranges{rangeparagraphs}\rangeparagraph
+    \renewenvironment{attacknotes}{}{}
+    \renewcommand\attacknote[2]{%
+      {{\raggedright\smallskip\noindent\emph{#1:} {#2}\hangindent=1.5em \hangafter=1\par}}%
+    }
+    \DNDattacknotes
+    \end{minipage}
+    \vfill
+   }
+;
+
+%\draw (hpbackground.south) [red] circle [radius=3pt];
+%\draw (equipment.north) [red] circle [radius=3pt];
+%
+%\draw (attacks.south) [blue] circle [radius=3pt];
+%\draw (attacks.north) [blue] circle [radius=3pt];
+%
+%\path [fill=white] (attacks.south) circle [radius=0.5pt];
+
+
+
+
+%%% left-hand column
+
+\node (passive perception)
+      [decorated stub rectangle,width=\colwidth-8mm,height=8mm,
+       line width=1.2pt,draw,
+       below right corner=of proficiencies]
+   {\hbox to 0pt{\hss\footnotesize\textsf{PASSIVE WISDOM (PERCEPTION)}\hss}}
+   ;
+
+\node (perception box)
+      [anchor=east,chamfered rectangle,chamfered rectangle angle=60,fill=white,
+       width=10mm,height=9mm,line width=2.0pt,draw]
+       at ($(passive perception.west)+(+4mm,0mm)$)
+      {\ifDNDnonempty{PASSIVE PERCEPTION}
+         {\large\textsf{\rawgetDND{PASSIVE PERCEPTION}}}
+         {?}
+      }
+      ;
+% because angles, no way this geometry can look good:
+% need different scales in x and y to get proper inset
+% (hey) node [chamfered rectangle,chamfered rectangle angle=60,width=10mm,height=9mm,line width=0.5pt,blue,scale=0.8,draw,fill=none]  {}
+
+\node [fill=none,draw,line width=0.5pt,chamfered rectangle,
+       chamfered rectangle angle=60,width=9.6mm,height=7.4mm] 
+      at (perception box)
+      {}
+      ;
+
+
+\node (secondary proficiencies top) [below=of passive perception] { };
+
+\setdeltay\sectionheight{secondary proficiencies top}{bottom left}
+
+\node [anchor=south west,columnbox,minimum height=\sectionheight,
+       fill=proficiencies,
+      ]
+   (secondary proficiencies)
+   at (stats background.west |- bottom center)
+  {\nodepart{label}\getDNDlabel{SECONDARY PROFICIENCES}
+   \nodepart{text}%
+   \ifDNDnonempty{SECONDARY PROFICIENCIES}{%
+       \multicolsep=0pt
+      \begin{multicols}{2}
+      \begin{proflist}
+      \itemsep=1pt
+      \getDND*{SECONDARY PROFICIENCIES}
+      \end{proflist}
+      \end{multicols}
+   }{%
+     (No secondary proficiencies specified.)
+   }
+  }
+  ;
+
+\end{charsheet}
+
+\whenDNDtrue{STONES}
+{
+
+% Equipment Weight Summary Page
+\clearpage
+
+\begin{charsheet}
+
+\sffamily
+
+
+% Define colors for capacity boxes
+\colorlet{carrying}{white}
+\colorlet{encumbered}{proficiencies}  % Use existing yellow from charsheet.sty
+\colorlet{heavilyencumbered}{magic}   % Use existing red from charsheet.sty
+\colorlet{unencumbered}{equipment}
+
+% Define height per tenth of stone for equipment slots
+\newdimen\tenthstoneheight
+\tenthstoneheight=8pt
+
+% Calculate carrying capacity thresholds (in tenths of stones)
+\newcounter{carryingCapacity}
+\newcounter{encumberedThreshold}
+\newcounter{heavilyEncumberedThreshold}
+
+\ifDNDnonempty{STR}{%
+  % Carrying capacity = STR score in stones (convert to tenths)
+  \setcounter{carryingCapacity}{\numexpr\rawgetDND{STR} * 10\relax}
+  
+  % Encumbered = 1/3 of carrying capacity, rounded down
+  \setcounter{encumberedThreshold}{\numexpr\rawgetDND{STR} * 10 / 3\relax}
+  
+  % Heavily encumbered = 2/3 of carrying capacity, rounded down  
+  \setcounter{heavilyEncumberedThreshold}{\numexpr\rawgetDND{STR} * 20 / 3\relax}
+}{%
+  % No STR defined - leave counters at zero
+}
+
+\node (banner) [below=of top]
+      {\LARGE{\textsf{\textbf{Equipment and Encumbrance by Stones%
+        \ifDNDnonempty{CHARACTER NAME}{ (\getDND{CHARACTER NAME})}{}}}}};
+
+% Calculate total weight (in tenths of stones)
+\newcounter{significantWeight}
+\withitemweight{\setcounter{significantWeight}}{HEAVY WEAPONS}
+\withitemweight{\addtocounter{significantWeight}}{NORMAL WEAPONS}
+\withitemweight{\addtocounter{significantWeight}}{SHIELDS}
+\withitemweight{\addtocounter{significantWeight}}{HEAVY ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{MEDIUM ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{LIGHT ARMOR}
+\withitemweight{\addtocounter{significantWeight}}{HEAVY ITEMS}
+
+\newcounter{remainingCapacity}
+\ifDNDnonempty{STR}{%
+  % Remaining = carrying capacity - significant weight (in tenths of stones)
+  \setcounter{remainingCapacity}{\numexpr\rawgetDND{STR} * 10 - \value{significantWeight}\relax}
+  % Convert to stones and multiply by 5 for line count
+  \setcounter{remainingCapacity}{\numexpr\value{remainingCapacity} * 5 / 10\relax}
+}{%
+  \setcounter{remainingCapacity}{0}
+}
+
+% Equipment slots box on the left with three-color backgrounds
+% First calculate positions for color transitions in terms of \tenthstoneheight
+\newcounter{greenLines}
+\newcounter{yellowLines}  
+\newcounter{redLines}
+
+\ifDNDnonempty{STR}{%
+  % Calculate how many lines each color region should have
+  % Total lines = 5 * remaining capacity (in stones)
+  % Use PGF arithmetic for truncation instead of \numexpr rounding
+  % \pgfmathtruncatemacro truncates toward zero, giving us floor division for positive numbers
+
+  %% use at most 43 slots
+  \pgfmathtruncatemacro{\greenlines}{
+    min(43, floor(((\value{encumberedThreshold}-\value{significantWeight})*5)/10))
+  }
+  % Clamp yellow to what's left
+  \pgfmathtruncatemacro{\yellowlines}{
+    max(0, min(43-\greenlines, floor(((\value{heavilyEncumberedThreshold}-\value{significantWeight})*5)/10)))
+  }
+  % Clamp red to what's left after green+yellow
+  \pgfmathtruncatemacro{\redlines}{
+    max(0, min(43-\greenlines-\yellowlines, ((\value{carryingCapacity}-\value{heavilyEncumberedThreshold})*5)/10))
+  }
+  \setcounter{greenLines}{\greenlines}
+  \setcounter{yellowLines}{\yellowlines}
+  \setcounter{redLines}{\redlines}
+}{%
+  \setcounter{greenLines}{0}%
+  \setcounter{yellowLines}{0}%
+  \setcounter{redLines}{0}%
+}
+
+% Calculate heights for each color region
+\newdimen\greenheight
+\newdimen\yellowheight
+\newdimen\redheight
+
+\greenheight=\numexpr2*\value{greenLines}\relax\tenthstoneheight
+\yellowheight=\numexpr2*\value{yellowLines}\relax\tenthstoneheight  
+\redheight=\numexpr2*\value{redLines}\relax\tenthstoneheight
+
+
+\path (top left) 
+ ++(0, -13mm)
+  node (slotstitle)
+    [slotblock,anchor=north west,fill=blue!10!white,minimum height=28pt] 
+  {\Large\textbf{Slotted Items}}
+  ;
+
+% Three capacity boxes centered below top
+\path (slotstitle.north east) ++(20pt,0)
+ node (carrying) [dndencumbrance,fill=carrying,anchor=north west]
+  {\nodepart{label}CARRYING CAPACITY\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\leq\renderstones{\arabic{carryingCapacity}}}$}{}
+  };
+
+\node (encumbered) [dndencumbrance,fill=encumbered,right=5mm of carrying] 
+  {\nodepart{label}ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq\renderstones{\arabic{encumberedThreshold}}}$}{emptyb
+  STR?}};
+
+\node (heavily) [dndencumbrance,fill=heavilyencumbered,right=5mm of encumbered]
+  {\nodepart{label}HEAVILY ENCUMBERED\nodepart{ctext}
+   \Large\ifDNDnonempty{STR}{$\mathbf{\geq \renderstones{\arabic{heavilyEncumberedThreshold}}}$}{}
+  };
+
+
+\node (e warning) [below=of encumbered] {\small(Speed drops by 10~ft)};
+\node (h warning) [below=of heavily,inner sep=2pt] {%
+  \hspace*{3mm}%
+  \begin{minipage}{40mm}\raggedright
+   \small
+   (Speed drops by 20~ft;
+   Disadvantage on ability checks, saving throws, and attack rolls that use \scrm{str}, \scrm{dex}, or \scrm{con}.)
+   \end{minipage}}
+  ;
+
+
+\path (slotstitle) coordinate (slotsbottom);
+
+\ifdim\greenheight>0pt
+
+  \node (slotgreen) [slotblock,fill=unencumbered,anchor=north west,
+                     minimum height=\greenheight]
+    at (slotstitle.south west) {} ;
+
+  \path (slotgreen.south west) coordinate (slotsbottom);
+
+
+  \ifdim\yellowheight>0pt
+
+     \node (slotyellow) [slotblock,fill=encumbered,anchor=north west,
+                        minimum height=\yellowheight]
+       at (slotgreen.south west) {} ;
+
+     \path (slotyellow.south west) coordinate (slotsbottom);
+
+
+     \ifdim\redheight>0pt
+
+        \node (slotred) [slotblock,fill=heavilyencumbered,anchor=north west,
+                           minimum height=\redheight]
+          at (slotyellow.south west) {} ;
+
+        \path (slotred.south west) coordinate (slotsbottom);
+
+
+
+     \fi
+  \fi
+\fi
+
+\foreach \deltay in {1,2,...,\numexpr\value{greenLines}+\value{yellowLines}+\value{redLines}\relax} {
+  \draw (slotstitle.south west)
+    ++(8pt,-\deltay*2*\tenthstoneheight)
+    -- ++(\slotblockwidth-2\textmargin,0)
+   ;
+}
+
+\path (slotstitle.south west) ++(5pt,2pt) coordinate (lastslot);
+
+\begingroup
+  \newcommand\DNDitem[2]{%
+     \path (lastslot)
+       ++(0,-2\tenthstoneheight)
+       node [anchor=base west] (thisslot) {\color{grayed out}#1};
+     \path (thisslot.base west) coordinate (lastslot);
+  }
+  \doDNDitems{LIGHT WEAPONS}
+  \doDNDitems{SLOTTED ITEMS}
+\endgroup
+
+\path (slotsbottom) ++(1pt,2pt) coordinate (decor ll)
+      (slotstitle.north east) ++(-1pt,-2pt) coordinate (decor ur)
+  ;
+
+\node [draw,decorated stub rectangle,thick,
+    stub radius=\dndStubRadius,
+    line width=1.2pt,
+        fit=(decor ll) (decor ur),
+      ]
+  (slots decoration)
+  {};
+
+
+%
+%  \foreach \thing in {{fish},{fowl},{fury}} {
+%     \node [anchor=north] at (lastslot.south) (thisslot) {\thing};
+%     \path (thisslot.south) coordinate (lastslot);
+%  }
+%
+
+
+%%%%    \node [dndbox,slotblock,below=5mm of heavy equipment,fill=equipment,inner sep=15pt] 
+%%%%       (worn items)
+%%%%    {
+%%%%      \def\arraystretch{1.32}%
+%%%%    %  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\crcr}%
+%%%%      \newcommand{\DNDitem}[2]{#1\crcr}%
+%%%%      \begin{tabular}{l}
+%%%%      \multicolumn1{c}{\bigstrut \Large \textbf{Worn Items}}\\[5pt]
+%%%%      % Local definition of \DNDitem for display
+%%%%      % Display all significant equipment items
+%%%%      \doDNDitems{WORN ITEMS}%
+%%%%    %  Z\crcr
+%%%%    %  \midrule
+%%%%    %  \doDNDitems{SLOTTED ITEMS}%
+%%%%    %  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
+%%%%      \end{tabular}%
+%%%%    };
+
+%\path (heavily.east |- h warning.south) coordinate (h warning r);
+
+\node [dndbox,slotblock,anchor=south east,at=(heavily.east |- slots decoration.south),
+       fill=equipment,minimum height= 74\tenthstoneheight]
+  (small items)
+  { }
+;
+
+\node [below top=5mm of small items,minimum width=\slotblockwidth] (smalltitle) {\Large\textbf{Small Items}};
+
+\foreach \deltay in {1,2,...,34} {
+  \draw (smalltitle.south west)
+    ++(12pt,-\deltay*2*\tenthstoneheight)
+    -- ++(\slotblockwidth-24pt,0)
+   ;
+}
+
+\begingroup
+  \path (smalltitle.south west) ++(9pt, 2pt) coordinate (lastslot);
+  \newcommand\DNDitem[2]{%
+     \path (lastslot)
+       ++(0,-2\tenthstoneheight)
+       node [anchor=base west] (thisslot) {\color{black!30!white}#1};
+     \path (thisslot.base west) coordinate (lastslot);
+  }
+  \doDNDitems{SMALL ITEMS}
+\endgroup
+
+
+% Equipment weight breakdown table
+\node [dndbox,anchor=north west,at=(carrying.west |- small items.north),fill=equipment,inner sep=15pt] 
+   (heavy equipment)
+{
+  \def\arraystretch{1.32}%
+  \newcommand{\DNDitem}[2]{#1&$\mathbf{\renderstones{#2}}$&\stonesplural{#2}\\}%
+  \begin{tabular}{lr@{~}l}
+  \multicolumn3{c}{\bigstrut \Large \textbf{Heavy Equipment}}\\[5pt]
+  \doDNDitems{HEAVY WEAPONS}%
+  \doDNDitems{NORMAL WEAPONS}%
+  \doDNDitems{SHIELDS}%
+  \doDNDitems{HEAVY ARMOR}%
+  \doDNDitems{MEDIUM ARMOR}%
+  \doDNDitems{LIGHT ARMOR}%
+  \doDNDitems{HEAVY ITEMS}%
+  \midrule
+  Total&$\mathbf{\renderstones{\value{significantWeight}}}$&\stonesplural{\value{significantWeight}}\\
+  \end{tabular}%
+};
+
+
+
+
+\node [slotblock,anchor=south west,inner sep=0pt]
+  at (slots decoration.south -| heavy equipment.west)
+  {\Large\begin{tabular}{@{}l@{ = }l@{}}
+   1 Slot &Bundle of up to 20\\
+   \multicolumn1{@{}l@{}}{}&identical items, \emph{or}\\[3pt]
+   \multicolumn1{@{}l@{}}{}&150~coins, \emph{or}\\[3pt]
+   \multicolumn1{@{}l@{}}{}&1 stowed weapon\\[8pt]
+   5 Slots&1 Stone\\
+  \end{tabular}}
+;
+   
+
+
+  
+\end{charsheet}
+}
+
+\whenDNDtrue{VALIDATION ERRORS}
+{
+\section{Validation errors}
+\begin{itemize}
+\getDND{VALIDATION ERRORS}
+\end{itemize}
+}
+
+\end{document}

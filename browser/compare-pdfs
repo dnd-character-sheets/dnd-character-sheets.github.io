@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# compare-pdfs -- compare same-named PDFs in two directories
+#
+# usage: compare-pdfs [-r DPI] OLD-DIR NEW-DIR [NAME...]
+#
+# For each NAME (default: every OLD-DIR/*.pdf) prints a tab-separated line
+#
+#     NAME  VERDICT  DETAIL
+#
+# where VERDICT is `identical` (same bytes once the PDF /ID, which
+# depends on the output path, is zeroed), `same-pixels` (every page
+# renders identically at DPI, default 100), or `DIFFERENT`, with DETAIL
+# giving page counts or the number of differing pixels on each page.
+# Exits nonzero if any pair is DIFFERENT or missing.
+
+set -euo pipefail
+arg0=$(basename "$0")
+dpi=100
+while getopts r: opt; do
+  case $opt in
+    r) dpi=$OPTARG ;;
+    *) echo "usage: $arg0 [-r DPI] OLD-DIR NEW-DIR [NAME...]" >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+old=$1 new=$2
+shift 2
+names=("$@")
+if [[ ${#names[@]} -eq 0 ]]; then
+  for f in "$old"/*.pdf; do names+=("$(basename "$f" .pdf)"); done
+fi
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+without_id() {
+  perl -0777 -pe 's{(/ID\s*\[\s*<)[0-9A-Fa-f]+(>\s*<)[0-9A-Fa-f]+>}{$1 . "0" x 32 . $2 . "0" x 32 . ">"}ge' "$1"
+}
+pages() { pdfinfo "$1" | awk '/^Pages:/ { print $2 }'; }
+
+status=0
+for name in "${names[@]}"; do
+  a=$old/$name.pdf b=$new/$name.pdf
+  if [[ ! -r $a || ! -r $b ]]; then
+    printf '%s\tDIFFERENT\tmissing PDF\n' "$name"; status=1; continue
+  fi
+  if cmp -s <(without_id "$a") <(without_id "$b"); then
+    printf '%s\tidentical\t\n' "$name"; continue
+  fi
+  pa=$(pages "$a") pb=$(pages "$b")
+  if [[ $pa != "$pb" ]]; then
+    printf '%s\tDIFFERENT\t%s vs %s pages\n' "$name" "$pa" "$pb"; status=1; continue
+  fi
+  pdftoppm -r "$dpi" -png "$a" "$tmp/a"
+  pdftoppm -r "$dpi" -png "$b" "$tmp/b"
+  detail=() differs=0
+  for pa in "$tmp"/a-*.png; do
+    pb=$tmp/b-${pa##*/a-}
+    n=$(compare -metric AE "$pa" "$pb" null: 2>&1 || true)
+    detail+=("${n%% *}")
+    [[ ${n%% *} != 0 ]] && differs=1
+  done
+  rm -f "$tmp"/*.png
+  if ((differs)); then
+    printf '%s\tDIFFERENT\tpixels per page: %s\n' "$name" "${detail[*]}"; status=1
+  else
+    printf '%s\tsame-pixels\t\n' "$name"
+  fi
+done
+exit $status

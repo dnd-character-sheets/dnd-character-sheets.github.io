@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# record-baseline -- typeset baseline character sheets and time them
+#
+# usage: record-baseline [-d DIR] [-n RUNS] CASES-FILE...
+#
+# For each case (format described in browser/baseline/cases), writes
+# DIR/NAME.{yaml,tex,pdf,fls,log} and prints a tab-separated line
+#
+#     NAME  ENGINE  LUA-SECONDS  TEX-SECONDS  PAGES  PDF-BYTES
+#
+# on stdout, where TEX-SECONDS is the fastest of RUNS (default 1) runs.
+# The engine and its flags are those of `bin/charsheet -q`.
+# PDFs are reproducible (fixed timestamps), so reruns can be compared
+# with cmp.  Environment variables PDFLATEX and XELATEX name the engines.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+dir=$root/browser/build/baseline
+runs=1
+
+while getopts d:n: opt; do
+  case $opt in
+    d) dir=$OPTARG ;;
+    n) runs=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR] [-n RUNS] CASES-FILE..." >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+mkdir -p "$dir"
+dir=$(cd "$dir" && pwd)
+
+export FORCE_SOURCE_DATE=1 SOURCE_DATE_EPOCH=1700000000
+export TEXINPUTS=".:$root/templates//:"
+flags=(-interaction=nonstopmode -halt-on-error -file-line-error -no-shell-escape -recorder)
+declare -A engines=([pdftex]=${PDFLATEX:-pdflatex} [xetex]=${XELATEX:-xelatex})
+
+now() { echo "${EPOCHREALTIME/./}"; }                    # microseconds
+seconds() { printf '%d.%03d' $(($1 / 1000000)) $(($1 % 1000000 / 1000)); }
+
+cd "$root"
+failed=0
+for cases in "$@"; do
+  while read -r name layout command; do
+    [[ -z $name || $name == \#* ]] && continue
+    echo "$arg0: $name" >&2
+    layout_args=()
+    [[ $layout != - ]] && layout_args=(-t "$layout")
+
+    bash -c "$command" > "$dir/$name.yaml"
+    t0=$(now)
+    bin/charsheet -templates templates "${layout_args[@]}" \
+                  -o "$dir/$name.tex" "$dir/$name.yaml" 2> "$dir/$name.charsheet-stderr" || true
+    lua=$(($(now) - t0))
+    engine=pdftex
+    LC_ALL=C grep -q $'[\x80-\xff]' "$dir/$name.tex" && engine=xetex
+    best=0
+    for ((run = 0; run < runs; run++)); do
+      t1=$(now)
+      if ! "${engines[$engine]}" "${flags[@]}" -output-directory "$dir" "$dir/$name.tex" \
+             > "$dir/$name.stdout" 2>&1 < /dev/null; then
+        echo "$arg0: $name: $engine failed; see $dir/$name.log" >&2
+        failed=1
+        continue 2
+      fi
+      t2=$(now)
+      ((best == 0 || t2 - t1 < best)) && best=$((t2 - t1))
+    done
+    pages=$(pdfinfo "$dir/$name.pdf" | awk '/^Pages:/ { print $2 }')
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$name" "$engine" \
+           "$(seconds $lua)" "$(seconds $best)" "$pages" \
+           "$(wc -c < "$dir/$name.pdf")"
+  done < "$cases"
+done
+exit $failed

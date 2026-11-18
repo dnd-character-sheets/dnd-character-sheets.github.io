@@ -20,3 +20,4 @@ node_modules/
 /samples/wizard.pdf
 /reports
 /bin/dndsheets
+/browser/build/
