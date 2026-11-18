@@ -1,4 +1,5 @@
 dvipdfmx/dvipdfmx.cfg
+dvipdfmx/dvipdfmx-paper.cfg
 fonts/enc/dvips/base/8r.enc
 fonts/misc/xetex/fontmapping/base/tex-text.tec
 fonts/opentype/public/lm/lmroman10-bold.otf

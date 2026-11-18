@@ -99,6 +99,7 @@ tex/generic/pgf/utilities/pgfkeyslibraryfiltered.code.tex
 tex/generic/pgf/utilities/pgfrcs.code.tex
 tex/generic/pgf/utilities/pgfutil-common.tex
 tex/generic/pgf/utilities/pgfutil-latex.def
+tex/generic/tex-ini-files/pdftexconfig.tex
 tex/generic/unicode-data/CaseFolding.txt
 tex/generic/unicode-data/GraphemeBreakProperty.txt
 tex/generic/unicode-data/load-unicode-data.tex

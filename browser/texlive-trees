@@ -1,0 +1,4 @@
+# TeX Live trees on this machine, in kpathsea search order
+/var/lib/texmf
+/usr/share/texmf
+/usr/share/texlive/texmf-dist

@@ -36,7 +36,7 @@ trap 'rm -rf "$tmp"' EXIT
 without_id() {
   perl -0777 -pe 's{(/ID\s*\[\s*<)[0-9A-Fa-f]+(>\s*<)[0-9A-Fa-f]+>}{$1 . "0" x 32 . $2 . "0" x 32 . ">"}ge' "$1"
 }
-pages() { pdfinfo "$1" | awk '/^Pages:/ { print $2 }'; }
+pages() { pdfinfo "$1" 2>/dev/null | awk '/^Pages:/ { print $2 }' || true; }
 
 status=0
 for name in "${names[@]}"; do
@@ -48,6 +48,9 @@ for name in "${names[@]}"; do
     printf '%s\tidentical\t\n' "$name"; continue
   fi
   pa=$(pages "$a") pb=$(pages "$b")
+  if [[ -z $pa || -z $pb ]]; then
+    printf '%s\tDIFFERENT\tunreadable PDF\n' "$name"; status=1; continue
+  fi
   if [[ $pa != "$pb" ]]; then
     printf '%s\tDIFFERENT\t%s vs %s pages\n' "$name" "$pa" "$pb"; status=1; continue
   fi
