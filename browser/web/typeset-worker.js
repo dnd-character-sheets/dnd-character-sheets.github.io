@@ -3,26 +3,40 @@
 // Message in: { yaml }.  Messages out: { status } while working, then
 // either { pdf: Blob, timings } or { error: string, timings }, where the
 // error holds the console output of charsheet and TeX.  The engines and
-// files load once, when the worker starts, and serve every request.
+// files load once, when the worker starts, and serve every request;
+// each format loads when a sheet first needs it.
+//
+// Every file NAME this worker loads is served gzipped, as NAME.gz, so
+// that it downloads compressed from any server, and it is gunzipped
+// here unless the server has done so already.
 
 'use strict';
-importScripts('busytex.js', 'lua.js');
 
 const say = status => postMessage({ status });
 
-// fetched(NAME): the bytes of NAME, gunzipped if NAME ends in .gz
-async function fetched(name) {
-  const response = await fetch(name);
+// unzipped(NAME, RESPONSE): RESPONSE's body, the contents of NAME
+function unzipped(name, response) {
   if (!response.ok) throw new Error(`${name}: ${response.status} ${response.statusText}`);
-  const body = name.endsWith('.gz') ? response.body.pipeThrough(new DecompressionStream('gzip'))
-                                    : response.body;
-  return new Uint8Array(await new Response(body).arrayBuffer());
+  return response.headers.has('Content-Encoding') ? response.body
+                                                  : response.body.pipeThrough(new DecompressionStream('gzip'));
 }
 
-// compiled(NAME): the compiled WebAssembly module in NAME
+// fetched(NAME): the bytes of NAME
+async function fetched(name) {
+  return new Uint8Array(await new Response(unzipped(name, await fetch(name + '.gz'))).arrayBuffer());
+}
+
+// compiled(NAME): the WebAssembly module in NAME, compiled as it downloads
 async function compiled(name) {
-  try { return await WebAssembly.compileStreaming(fetch(name)); }
-  catch (e) { return WebAssembly.compile(await fetched(name)); }   // server without application/wasm
+  const wasm = unzipped(name, await fetch(name + '.gz'));
+  return WebAssembly.compileStreaming(new Response(wasm, { headers: { 'Content-Type': 'application/wasm' } }));
+}
+
+// imported(NAME): runs the script NAME
+async function imported(name) {
+  const url = URL.createObjectURL(new Blob([await fetched(name)], { type: 'text/javascript' }));
+  importScripts(url);
+  URL.revokeObjectURL(url);
 }
 
 // untarred(TAR): the regular files in a ustar archive, as [path, bytes] pairs
@@ -38,15 +52,19 @@ function untarred(tar) {
   return files;
 }
 
+const formats = {};   // engine -> promise of its format
+const format = engine => formats[engine] ??= fetched(`charsheet-${engine}.fmt`);
+
 const started = performance.now();
 const assets = (async () => {
   say('loading');
-  const [busytexModule, luaModule, charsheet, core, pdftexFmt, xetexFmt] = await Promise.all([
-    compiled('busytex.wasm'), compiled('lua.wasm'), fetched('charsheet.lua'),
-    fetched('core.tar.gz'), fetched('charsheet-pdftex.fmt.gz'), fetched('charsheet-xetex.fmt.gz'),
+  format('xetex');   // most sheets are typeset by XeTeX
+  const [busytexModule, luaModule, charsheet, core] = await Promise.all([
+    compiled('busytex.wasm'), compiled('lua.wasm'), fetched('charsheet.lua'), fetched('core.tar'),
+    imported('busytex.js'), imported('lua.js'),
   ]);
   return { busytexModule, luaModule, charsheet, files: untarred(core), extras: null,
-           formats: { pdftex: pdftexFmt, xetex: xetexFmt }, loaded: performance.now() - started };
+           loaded: performance.now() - started };
 })();
 
 // an Emscripten module made by FACTORY from compiled MODULE, collecting its output in LOG
@@ -94,7 +112,7 @@ async function sheetPDF(a, tex, log) {
   FS.mkdirTree('/bin'); FS.writeFile('/bin/busytex', '');   // kpathsea looks for the program's directory
   install(FS, a.files);
   if (a.extras) install(FS, a.extras);
-  FS.mkdirTree('/formats'); FS.writeFile(`/formats/charsheet-${engine}.fmt`, a.formats[engine]);
+  FS.mkdirTree('/formats'); FS.writeFile(`/formats/charsheet-${engine}.fmt`, await format(engine));
   FS.mkdirTree('/work'); FS.chdir('/work');
   FS.writeFile('/work/sheet.tex', tex);
   const flags = ['-interaction=nonstopmode', '-halt-on-error', '-no-shell-escape'];
@@ -140,7 +158,7 @@ async function result(yaml, log, timings) {
   let pdf = await sheetPDF(a, tex, log);
   if (!pdf && !a.extras) {   // perhaps a font that only the extras hold
     say('loading more fonts');
-    a.extras = untarred(await fetched('extras.tar.gz'));
+    a.extras = untarred(await fetched('extras.tar'));
     log.push('', '--- again, with more fonts ---', '');
     pdf = await sheetPDF(a, tex, log);
   }

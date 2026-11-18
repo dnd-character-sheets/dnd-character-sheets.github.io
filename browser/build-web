@@ -6,8 +6,10 @@
 # Writes DIR/in-browser.html, the character form with its Generate PDF
 # button typesetting in the browser, and DIR/in-browser/, the files it
 # loads: BusyTeX, Lua with charsheet, the formats, the TeX Live files
-# that sheets need (core.tar.gz, with the templates), and the rest of
-# their font families (extras.tar.gz).  DIR defaults to browser/build/web.
+# that sheets need (core.tar, with the templates), and the rest of their
+# font families (extras.tar).  The worker loads each file NAME as
+# NAME.gz, compressed by pigz -11 (zopfli), so that it downloads
+# compressed from any server.  DIR defaults to browser/build/web.
 # Run build-lua, build-texmf (with all three lists in browser/texlive),
 # and build-formats (with BusyTeX, into browser/build/fmt-busytex) first.
 
@@ -29,8 +31,14 @@ mkdir -p "$assets"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-cp "$build"/engines/busytex/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua" \
-   "$root"/browser/web/* "$root/docs/charsheet.css" "$assets/"
+cp "$root"/browser/web/* "$root/docs/charsheet.css" "$assets/"
+
+# zipped FILE NAME: compress FILE into $assets/NAME.gz
+zipped() { pigz -11 -c "$1" > "$assets/$2.gz"; }
+
+for f in "$build"/engines/busytex/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua"; do
+  zipped "$f" "$(basename "$f")"
+done
 
 # stage DIR LIST...: copy the files in each LIST from the TeX tree into DIR/texmf
 stage() {
@@ -46,13 +54,15 @@ mkdir -p "$tmp/core/charsheet/templates"
 cp -L "$root"/templates/{charsheet,charsheet-packages,articlesize}.sty \
       "$root"/templates/{splash.png,splash-nocolor.png,merman.pdf} \
       "$root"/templates/{caster,silverpine,3col,tropical}.tex "$tmp/core/charsheet/templates/"
-tar --format=ustar -C "$tmp/core" -cf - texmf charsheet | gzip -9 > "$assets/core.tar.gz"
+tar --format=ustar -C "$tmp/core" -cf "$tmp/core.tar" texmf charsheet
+zipped "$tmp/core.tar" core.tar
 
 stage "$tmp/extras" "$root/browser/texlive/extras.files"
-tar --format=ustar -C "$tmp/extras" -cf - texmf | gzip -9 > "$assets/extras.tar.gz"
+tar --format=ustar -C "$tmp/extras" -cf "$tmp/extras.tar" texmf
+zipped "$tmp/extras.tar" extras.tar
 
 for engine in pdftex xetex; do
-  gzip -9 -c "$build/fmt-busytex/charsheet-$engine.fmt" > "$assets/charsheet-$engine.fmt.gz"
+  zipped "$build/fmt-busytex/charsheet-$engine.fmt" "charsheet-$engine.fmt"
 done
 
 # the form, with sample sheets as in docs/index.html, typesetting in the browser
