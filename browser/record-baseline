@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # record-baseline -- typeset baseline character sheets and time them
 #
-# usage: record-baseline [-d DIR] [-n RUNS] CASES-FILE...
+# usage: record-baseline [-d DIR] [-n RUNS] [-f FMTDIR] CASES-FILE...
 #
 # For each case (format described in browser/baseline/cases), writes
 # DIR/NAME.{yaml,tex,pdf,fls,log} and prints a tab-separated line
@@ -9,7 +9,8 @@
 #     NAME  ENGINE  LUA-SECONDS  TEX-SECONDS  PAGES  PDF-BYTES
 #
 # on stdout, where TEX-SECONDS is the fastest of RUNS (default 1) runs.
-# The engine and its flags are those of `bin/charsheet -q`.
+# The engine and its flags are those of `bin/charsheet -q`; with -f, the
+# engine also loads FMTDIR/charsheet-ENGINE.fmt.
 # PDFs are reproducible (fixed timestamps), so reruns can be compared
 # with cmp.  Environment variables PDFLATEX and XELATEX name the engines.
 
@@ -18,12 +19,14 @@ arg0=$(basename "$0")
 root=$(cd "$(dirname "$0")/.." && pwd)
 dir=$root/browser/build/baseline
 runs=1
+fmtdir=
 
-while getopts d:n: opt; do
+while getopts d:n:f: opt; do
   case $opt in
     d) dir=$OPTARG ;;
     n) runs=$OPTARG ;;
-    *) echo "usage: $arg0 [-d DIR] [-n RUNS] CASES-FILE..." >&2; exit 2 ;;
+    f) export TEXFORMATS="$(cd "$OPTARG" && pwd):"; fmtdir=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR] [-n RUNS] [-f FMTDIR] CASES-FILE..." >&2; exit 2 ;;
   esac
 done
 shift $((OPTIND - 1))
@@ -54,10 +57,12 @@ for cases in "$@"; do
     lua=$(($(now) - t0))
     engine=pdftex
     LC_ALL=C grep -q $'[\x80-\xff]' "$dir/$name.tex" && engine=xetex
+    fmt=()
+    [[ -n $fmtdir ]] && fmt=(-fmt="charsheet-$engine")
     best=0
     for ((run = 0; run < runs; run++)); do
       t1=$(now)
-      if ! "${engines[$engine]}" "${flags[@]}" -output-directory "$dir" "$dir/$name.tex" \
+      if ! "${engines[$engine]}" "${fmt[@]}" "${flags[@]}" -output-directory "$dir" "$dir/$name.tex" \
              > "$dir/$name.stdout" 2>&1 < /dev/null; then
         echo "$arg0: $name: $engine failed; see $dir/$name.log" >&2
         failed=1

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# build-formats -- build the pdfTeX and XeTeX character-sheet formats
+#
+# usage: build-formats [-d DIR]
+#
+# Writes DIR/charsheet-pdftex.fmt and DIR/charsheet-xetex.fmt (default
+# DIR: browser/build/fmt-native) from browser/charsheet-format.tex.
+# Environment variables PDFTEX and XETEX name the engines; a format
+# must be built by the same engine build that will load it.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+dir=$root/browser/build/fmt-native
+
+while getopts d: opt; do
+  case $opt in
+    d) dir=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR]" >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+mkdir -p "$dir"
+cd "$dir"
+
+# The format holds caster.tex's preamble up to \endofdump, so every
+# layout must start with those same lines, comments aside.
+prefix() { sed '/endofdump/q' "$root/templates/$1.tex" | grep -v '^[[:space:]]*\(%.*\)\?$'; }
+for layout in 3col tropical; do
+  cmp -s <(prefix caster) <(prefix $layout) ||
+    { echo "$arg0: $layout.tex does not start like caster.tex" >&2; exit 1; }
+done
+
+export TEXINPUTS=".:$root/browser:$root/templates//:"
+declare -A engines=([pdftex]=${PDFTEX:-pdftex} [xetex]=${XETEX:-xetex})
+declare -A latex=([pdftex]=pdflatex [xetex]=xelatex)
+for engine in pdftex xetex; do
+  echo "$arg0: $engine" >&2
+  if ! "${engines[$engine]}" -ini -interaction=nonstopmode -halt-on-error \
+         -jobname=charsheet-$engine "&${latex[$engine]}" mylatexformat.ltx charsheet-format.tex \
+         > charsheet-$engine.stdout 2>&1 < /dev/null; then
+    echo "$arg0: $engine failed; see $dir/charsheet-$engine.log" >&2
+    exit 1
+  fi
+done

@@ -1,5 +1,6 @@
 \RequirePackage{charsheet-packages}
-\ifPDFTeX\else  % a format cannot hold these fonts, so they are chosen here
+\ifPDFTeX\else  % a XeTeX format cannot hold OpenType fonts
+  \RequirePackage{fontspec}
   \setmainfont{TeX Gyre Termes}[Ligatures=TeX]
   \setsansfont{TeX Gyre Heros}[Ligatures=TeX]
 \fi

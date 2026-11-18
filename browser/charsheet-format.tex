@@ -1,0 +1,21 @@
+% Source of the character-sheet formats, for use as
+%
+%     ENGINE -ini "&LATEX" mylatexformat.ltx charsheet-format.tex
+%
+% The format holds a layout template's preamble up to \endofdump, which
+% the layouts share.  XeTeX cannot dump OpenType fonts, so under XeTeX
+% the default font is a TFM font while the class and packages load, the
+% usual default is restored in place of mylatexformat's font preloading,
+% and each job starts by selecting it.
+\makeatletter
+\ifdefined\XeTeXversion
+  \let\charsheet@encodingdefault\encodingdefault
+  \let\charsheet@familydefault\familydefault
+  \def\encodingdefault{OT1}\def\familydefault{cmr}\normalfont
+  \def\MYLATEX@fontpreloading{%
+    \let\encodingdefault\charsheet@encodingdefault
+    \let\familydefault\charsheet@familydefault}
+  \everyjob\expandafter{\the\everyjob\normalfont}
+\fi
+\makeatother
+\input{caster.tex}
