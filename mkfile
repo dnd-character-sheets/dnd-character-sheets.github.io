@@ -1,11 +1,7 @@
 MKSHELL=/bin/ksh
 
-PUBLISH=/usr/local/charsheet
 REMOTEHOST=homework
-REMOTE=$REMOTEHOST-clone
 REMOTEWEBPATH=/h/nr/www
-CHARSHEET_DIR=/h/nr/www
-REMOTECGINAME=render-charsheet.cgi
 
 KINGS=fighter barbarian cleric paladin rogue monk wizard sorcerer
 KINGYAMLS=${KINGS:%=yaml/king-%.yaml}
@@ -26,7 +22,7 @@ QYAMLS=${QCHARS:%=/tmp/%.yaml}
 PREVIEWS=mario gmsheet
 
 
-all:V: bin/exported-charsheet samples githubdocs ${PREVIEWS:%=%-preview.png}
+all:V: bin/exported-charsheet typesetter samples githubdocs ${PREVIEWS:%=%-preview.png}
 samples:V: $S/samples.pdf demo
 demo:V: $S/wizard.pdf
 draft:V: /tmp/README.html /tmp/YAML.html /tmp/QUICKSTART.html ${PREVIEWS:%=/tmp/%-preview.png}
@@ -74,29 +70,50 @@ $QYAMLS /tmp/QUICKSTART.yaml: QUICKSTART.md lib/yaml-from-md
 $S/wizard.pdf: $S/king-wizard.3.pdf $S/king-wizard.s.pdf
 	pdftk $prereq cat output $target
 
-LUAUTIL=flags inspect osx tablex stringx module52
-LUAFILES=${LUAUTIL:%=$HOME/src/lua/%.lua} $HOME/src/lua/validate
-
-local-cgi:V: /usr/lib/cgi-bin/render.cgi
-	sudo systemctl reload apache2
-
-/usr/lib/cgi-bin/render.cgi: render.cgi
-	sudo cp $prereq $target
-
 docs/index.html:D: yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS lib/insert-pregen-yamls www/character-form.html
 	lib/insert-pregen-yamls -html www/character-form.html -o $target yaml/mario.yaml $KINGYAMLS $SILVERKINGYAMLS
 
-bundle:V: docs/index.html docs/charsheet.css bin/exported-charsheet
-	cp -auvL $BGS bin/exported-charsheet $STYS $TEMPLATES_TEX $PUBLISH
+bundle:V: docs/index.html docs/charsheet.css typesetter
 	cp -auvL docs/index.html $HOME/www/charsheet.html
 	cp -auvL docs/charsheet.css $HOME/www/
+	rsync -a --delete $TYPESETTER/ $HOME/www/typesetter/
 
-publish:V: $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css bin/exported-charsheet
-	rsync -avP $PUBLISH $REMOTEHOST:$CHARSHEET_DIR
-	rsync -avP -L $REMOTE/index.html $REMOTE/render.cgi $REMOTE/charsheet.css $LUAFILES \
-                      $REMOTEHOST:$REMOTEWEBPATH/charsheet/
-	rsync -avP $REMOTE/render.cgi $REMOTEHOST:$REMOTEWEBPATH/cgi-bin/render-charsheet.cgi
-	rsync -avP $REMOTE/render.cgi $REMOTEHOST:www/cgi-bin/$REMOTECGINAME
+publish:V: docs/index.html docs/charsheet.css typesetter
+	rsync -avP docs/index.html docs/charsheet.css $REMOTEHOST:$REMOTEWEBPATH/charsheet/
+	rsync -avP --delete $TYPESETTER/ $REMOTEHOST:$REMOTEWEBPATH/charsheet/typesetter/
+
+# The typesetter that the form loads from typesetter/ beside it: charsheet
+# and TeX compiled to WebAssembly (browser/README.md).  The first build of
+# BusyTeX takes most of an hour.
+B=browser/build
+TYPESETTER=$B/typesetter
+BUSYTEX=$B/engines/busytex-slim
+TEXLISTS=browser/texlive/formats.files browser/texlive/sheets.files browser/texlive/extras.files
+
+typesetter:V: $TYPESETTER/typeset-worker.js
+
+$TYPESETTER/typeset-worker.js:D: browser/build-typesetter browser/web/typeset-worker.js browser/web/selftest.html \
+        $BUSYTEX/busytex.wasm $B/lua/charsheet.lua $B/fmt-busytex/charsheet-xetex.fmt \
+        $B/texmf/web2c/texmf.cnf $STYS $TEMPLATES_TEX $BGS
+	browser/build-typesetter -d $TYPESETTER
+
+$BUSYTEX/busytex.wasm: browser/build-busytex browser/icu-data.keep
+	browser/build-busytex -d $BUSYTEX
+
+$B/lua/charsheet.lua:D: browser/build-lua bin/charsheet $LUADEPENDSSRC
+	browser/build-lua -d $B/lua
+
+$B/texmf/web2c/texmf.cnf:D: browser/build-texmf $TEXLISTS
+	browser/build-texmf -d $B/texmf $TEXLISTS
+
+$B/fmt-busytex/charsheet-xetex.fmt:D: browser/build-formats browser/charsheet-format.tex $STYS $TEMPLATES_TEX \
+        $BUSYTEX/busytex.wasm $B/texmf/web2c/texmf.cnf
+	BUSYTEX=$PWD/$BUSYTEX TEXMFTREE=$PWD/$B/texmf PDFTEX=$PWD/browser/wasm-bin/pdftex \
+	  XETEX=$PWD/browser/wasm-bin/xetex browser/build-formats -d $B/fmt-busytex
+
+# after the templates or TeX Live change
+texlive-lists:V:
+	for s in formats sheets extras; do browser/texlive-files -o browser/texlive/$s.files $s; done
 
 GITDOCS=index.html README.html YAML.html QUICKSTART.html CHANGELOG.html INSTALL.html \
         mario.pdf mario-preview.png gmsheet.pdf gmsheet-preview.png
@@ -115,19 +132,9 @@ docs/&.pdf:D: &.pdf
 docs/&.png:D: &.png
 	cp $prereq $target
 
-push:V: test ${GITDOCS:%=docs/%}
-	git commit -m 'updated web page' -- $prereq
+push:V: test typesetter ${GITDOCS:%=docs/%}
+	git commit -m 'updated web page' -- ${GITDOCS:%=docs/%}
 	git push
-
-$REMOTE/index.html: docs/index.html mkfile
-	cat docs/index.html > $target
-
-$REMOTE/render.cgi: www/halligan-prefix.sh www/render.cgi
-	cat $prereq > $target
-        chmod 755 $target 
-
-$REMOTE/charsheet.css:	docs/charsheet.css
-	/bin/cp $prereq $target
 
 yaml/silver-king-%.yaml:D: yaml/king-%.yaml lib/un3ify
 	lib/un3ify yaml/king-$stem.yaml > $target

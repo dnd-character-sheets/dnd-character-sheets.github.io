@@ -15,7 +15,7 @@
     <div style="text-align: center; font-size: 0.8em; color: #555; margin-bottom: 1em;">
         <A style="padding: 2em;" href="README.html">(Read about the project)</A>
         
-        <span style="padding: 2em;">Version: okra</span>
+        <span style="padding: 2em;">Version: parsnip</span>
     </div>
 
         <div style="margin-bottom: 0.5em;">
@@ -1788,30 +1788,31 @@
             URL.revokeObjectURL(url);
         }
         
-        async function generatePDF() {
-            try {
-                // Generate YAML content using the shared function
-                const yamlContent = createYAMLContent();
-                
-                // Send YAML directly to server (not as parameter)
-                const server = 'https://www.cs.tufts.edu/~nr/cgi-bin/render-charsheet.cgi';
-                const response = await fetch(server, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/yaml; charset=utf-8',
-                    },
-                    body: yamlContent
-                });
-                
-                // Get the blob and open it in a new window
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert(`Failed to generate PDF: ${error.message}. Please check that the server is running and accessible.`);
+        // The typesetter (typesetter/typeset-worker.js, see browser/README.md)
+        // runs charsheet and TeX in the browser.  It starts loading as the page
+        // loads, and it answers each YAML sheet with a PDF, or with the console
+        // output that explains why there is none.
+        const typesetter = new Worker('typesetter/typeset-worker.js');
+        const typesetterTabs = [];   // tabs awaiting results, in request order; null if blocked
+        typesetter.onmessage = ({ data }) => {
+            if (data.status) return console.log('typesetter:', data.status);
+            console.log('typesetter timings (ms):', data.timings);
+            const tab = typesetterTabs.shift();
+            const result = data.pdf || new Blob([data.error], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(result);
+            if (tab) tab.location = url;
+            else window.open(url, '_blank');
+        };
+
+        function generatePDF() {
+            // A tab opened during the click is not blocked as a pop-up; one opened later may be.
+            const tab = window.open('', '_blank');
+            if (tab) {
+                tab.document.title = 'Typesetting';
+                tab.document.body.textContent = 'Typesetting your character sheet…';
             }
+            typesetterTabs.push(tab);
+            typesetter.postMessage({ yaml: createYAMLContent() });
         }
 
         // ===============================================

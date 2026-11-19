@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# build-typesetter -- assemble the files that the form's typesetter loads
+#
+# usage: build-typesetter [-d DIR]
+#
+# Fills DIR (default browser/build/typesetter), which the form expects
+# as typesetter/ beside it, with the worker (typeset-worker.js), BusyTeX,
+# Lua with charsheet, the formats, the TeX Live files that sheets need
+# (core.tar, with the templates), the rest of their font families
+# (extras.tar), and selftest.html for browser-test.  The worker loads
+# each file NAME as NAME.gz, compressed by pigz -11 (zopfli), so that it
+# downloads compressed from any server.  Environment variable BUSYTEX
+# names the directory holding busytex.js and busytex.wasm (default
+# browser/build/engines/busytex-slim).  Run build-busytex, build-lua,
+# build-texmf (with all three lists in browser/texlive), and
+# build-formats (with the same BusyTeX, into browser/build/fmt-busytex)
+# first.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+build=$root/browser/build
+dir=$build/typesetter
+
+while getopts d: opt; do
+  case $opt in
+    d) dir=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR]" >&2; exit 2 ;;
+  esac
+done
+mkdir -p "$dir"
+find "$dir" -mindepth 1 -maxdepth 1 -type f -delete
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+cp "$root"/browser/web/* "$dir/"
+
+# zipped FILE NAME: compress FILE into $dir/NAME.gz
+zipped() { pigz -11 -c "$1" > "$dir/$2.gz"; }
+
+for f in "${BUSYTEX:-$build/engines/busytex-slim}"/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua"; do
+  zipped "$f" "$(basename "$f")"
+done
+
+# stage DIR LIST...: copy the files in each LIST from the TeX tree into DIR/texmf
+stage() {
+  local d=$1
+  shift
+  sort -u "$@" | while read -r f; do install -D -m 644 "$build/texmf/$f" "$d/texmf/$f"; done
+}
+
+stage "$tmp/core" "$root/browser/texlive/sheets.files" \
+      <(cd "$build/texmf" && find web2c fonts/map/pdftex fonts/conf -type f) \
+      <(cd "$root/browser/texmf" && find . -type f | sed 's#^\./##')
+mkdir -p "$tmp/core/charsheet/templates"
+cp -L "$root"/templates/{charsheet,charsheet-packages,articlesize}.sty \
+      "$root"/templates/{splash.png,splash-nocolor.png,merman.pdf} \
+      "$root"/templates/{caster,silverpine,3col,tropical}.tex "$tmp/core/charsheet/templates/"
+tar --format=ustar -C "$tmp/core" -cf "$tmp/core.tar" texmf charsheet
+zipped "$tmp/core.tar" core.tar
+
+stage "$tmp/extras" "$root/browser/texlive/extras.files"
+tar --format=ustar -C "$tmp/extras" -cf "$tmp/extras.tar" texmf
+zipped "$tmp/extras.tar" extras.tar
+
+for engine in pdftex xetex; do
+  zipped "$build/fmt-busytex/charsheet-$engine.fmt" "charsheet-$engine.fmt"
+done

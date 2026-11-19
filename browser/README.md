@@ -1,15 +1,17 @@
 # Typesetting character sheets in the browser
 
-The form `in-browser.html` makes PDFs with no server: `bin/charsheet`
-and TeX run in the browser, compiled to WebAssembly, in a Web Worker.
+The character form (`www/character-form.html`, deployed as
+`docs/index.html`) makes PDFs with no server: `bin/charsheet` and TeX
+run in the browser, compiled to WebAssembly, in a Web Worker whose
+files the form finds in `typesetter/` beside it.
 The PDFs are identical to those that `bin/charsheet` makes with TeX
 Live 2025.
 
 ## How a sheet is typeset
 
 ```
-page (in-browser.html + generate-pdf.js)
-  │  YAML text, from the form's createYAMLContent()
+form (generatePDF in character-form.html)
+  │  YAML text, from createYAMLContent()
   ▼
 Web Worker (typeset-worker.js)
   1. Lua 5.1 + lyaml (lua.wasm) runs charsheet.lua -wasm   YAML → sheet.tex
@@ -84,10 +86,14 @@ pdfTeX, XeTeX, xdvipdfmx, and kpsewhich, and with only the ICU data in
 C module and amalgamates `charsheet.lua`.  `charsheet -wasm` runs no
 other programs and writes TeX only.
 
-**Web files.**  `build-web` assembles `in-browser.html` (the form, with
-sample sheets, plus `web/generate-pdf.js`) and `in-browser/`.
+**Typesetter files.**  `build-typesetter` fills `browser/build/typesetter`
+with the worker, the compressed engines, formats, and TeX files, and
+`web/selftest.html`.
 
 ## Building
+
+`mk typesetter` runs these steps as needed; `mk bundle` installs the
+form and `typesetter/` in `~/www` to try them locally.
 
 ```
 browser/build-busytex                      # once; about 50 minutes
@@ -96,12 +102,12 @@ browser/build-texmf browser/texlive/*.files
 BUSYTEX=$PWD/browser/build/engines/busytex-slim TEXMFTREE=$PWD/browser/build/texmf \
   PDFTEX=$PWD/browser/wasm-bin/pdftex XETEX=$PWD/browser/wasm-bin/xetex \
   browser/build-formats -d browser/build/fmt-busytex
-browser/build-web -d DIR                   # writes DIR/in-browser.html and DIR/in-browser/
+browser/build-typesetter -d browser/build/typesetter
 ```
 
 `browser/wasm-bin` holds links to `busytex` named for the programs it
-runs.  Regenerate `browser/texlive/*.files` with `texlive-files` when
-templates or TeX Live change.
+runs.  When the templates or TeX Live change, regenerate
+`browser/texlive/*.files` with `mk texlive-lists`.
 
 Build needs: emscripten, gcc, cmake, gperf, perl, python3, git, wget,
 pigz, strace, native TeX Live, Lua 5.1 and 5.2 with lyaml, `amalg`, and
@@ -116,6 +122,9 @@ Node 20.  The page needs WebAssembly, Web Workers, and
 | `compare-pdfs` | PDFs alike: same bytes (ignoring `/ID`), else same pixels |
 | `busytex`, `wasm-charsheet` | run the Wasm builds under Node as native commands, so the scripts above can drive them |
 | `browser-test` | typesets YAML files in headless Chrome or Firefox (`web/selftest.html`) and times first, warm, and reloaded runs |
+
+`baseline/timings.tsv` times native TeX Live; `baseline/browser-timings.tsv`
+times Chrome and Firefox, with files from a local web server.
 
 All baseline sheets, the markup sheets, and private sheets kept out of
 the repository render identically to native TeX Live in Node, Chrome,
