@@ -2,6 +2,7 @@
 // busytex -- run a BusyTeX applet under Node as if it were a native command
 //
 // usage: busytex APPLET ARG...
+//        APPLET ARG...     (through a link named APPLET, as in browser/wasm-bin)
 //
 // APPLET is pdftex, xetex, xdvipdfmx, or kpsewhich; pdflatex and xelatex
 // mean pdftex and xetex with that program name.  Environment variable
@@ -17,7 +18,8 @@ const fs = require('fs');
 const path = require('path');
 const { directories, copyIn, mirrored } = require('./mirror.cjs');
 
-const [applet, ...args] = process.argv.slice(2);
+const invoked = path.basename(process.argv[1]);
+const [applet, ...args] = invoked === 'busytex' ? process.argv.slice(2) : [invoked, ...process.argv.slice(2)];
 const programs = { pdflatex: 'pdftex', xelatex: 'xetex' };   // program name -> applet
 
 const env = {
