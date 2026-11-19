@@ -1,0 +1,17 @@
+# The ICU data that the browser's BusyTeX keeps (see build-busytex); the
+# rest of ICU's 21 MB is converters, collation, locales, and other data
+# that XeTeX does not use.  One shell pattern per line.
+#
+# XeTeX's font manager opens converters macintosh, UTF16BE, and UTF8
+cnvalias.icu
+macos-0_2-10.2.cnv
+# resource bundles, and the properties that line-break rules use
+pool.res
+res_index.res
+root.res
+uemoji.icu
+ulayout.icu
+# line breaking for \XeTeXlinebreaklocale, without the CJK, Thai, Lao,
+# Khmer, and Burmese dictionaries
+brkitr/*.res
+brkitr/*.brk

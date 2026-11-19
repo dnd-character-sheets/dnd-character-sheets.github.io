@@ -10,8 +10,11 @@
 # font families (extras.tar).  The worker loads each file NAME as
 # NAME.gz, compressed by pigz -11 (zopfli), so that it downloads
 # compressed from any server.  DIR defaults to browser/build/web.
-# Run build-lua, build-texmf (with all three lists in browser/texlive),
-# and build-formats (with BusyTeX, into browser/build/fmt-busytex) first.
+# Environment variable BUSYTEX names the directory holding busytex.js and
+# busytex.wasm (default browser/build/engines/busytex-slim).
+# Run build-busytex, build-lua, build-texmf (with all three lists in
+# browser/texlive), and build-formats (with the same BusyTeX, into
+# browser/build/fmt-busytex) first.
 
 set -euo pipefail
 arg0=$(basename "$0")
@@ -36,7 +39,7 @@ cp "$root"/browser/web/* "$root/docs/charsheet.css" "$assets/"
 # zipped FILE NAME: compress FILE into $assets/NAME.gz
 zipped() { pigz -11 -c "$1" > "$assets/$2.gz"; }
 
-for f in "$build"/engines/busytex/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua"; do
+for f in "${BUSYTEX:-$build/engines/busytex-slim}"/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua"; do
   zipped "$f" "$(basename "$f")"
 done
 

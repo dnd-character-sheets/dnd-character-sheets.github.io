@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# build-busytex -- build BusyTeX with only what the browser needs
+#
+# usage: build-busytex [-d DIR]
+#
+# Builds BusyTeX (github.com/busytex/busytex) at the commit of its
+# release build_wasm_4499aa6..., linking only pdfTeX, XeTeX, xdvipdfmx,
+# and kpsewhich, and only the ICU data in browser/icu-data.keep, and
+# writes DIR/busytex.js and DIR/busytex.wasm (default
+# browser/build/engines/busytex-slim).  Source and build trees live in
+# browser/build/src/busytex.  Needs git, wget, emscripten, gcc, cmake,
+# gperf, perl, and python3.  The first build takes most of an hour.
+
+set -euo pipefail
+arg0=$(basename "$0")
+root=$(cd "$(dirname "$0")/.." && pwd)
+dir=$root/browser/build/engines/busytex-slim
+src=$root/browser/build/src/busytex
+commit=4499aa69fd3cf77ad86a47287d9a5193cf5ad993
+
+while getopts d: opt; do
+  case $opt in
+    d) dir=$OPTARG ;;
+    *) echo "usage: $arg0 [-d DIR]" >&2; exit 2 ;;
+  esac
+done
+
+[[ -d $src ]] || git clone -q https://github.com/busytex/busytex "$src"
+git -C "$src" checkout -q $commit
+
+settings=(
+  # TeX Live 2023 predates errors that GCC 14 and Clang 16 raise by default
+  CFLAGS_OPT_native='-O3 -fpermissive'
+  CFLAGS_OPT_wasm='-Oz -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=implicit-int'
+  # only pdfTeX, XeTeX, xdvipdfmx, and kpsewhich
+  OPTS_BUSYTEX_COMPILE_wasm='-DBUSYTEX_KPSE -DBUSYTEX_XDVIPDFMX -DBUSYTEX_XETEX -DBUSYTEX_PDFTEX'
+  OBJ_LUAHBTEX= OBJ_BIBTEX= OBJ_MAKEINDEX=
+)
+
+# Native tools translate TeX's WEB sources to C and build ICU's data for Wasm.
+goals=()
+for target in native wasm; do
+  goals+=(build/$target/fonts.conf build/$target/texlive.configured build/$target/texlivedependencies
+          build/$target/texlive/texk/kpathsea/.libs/libkpathsea.a build/$target/texlive/texk/web2c/lib/lib.a)
+  [[ $target == wasm ]] &&
+    goals+=(build/wasm/texlive/texk/kpathsea/busytex_{kpsewhich,kpsestat,kpseaccess,kpsereadlink}.o
+            build/wasm/texlive/texk/dvipdfm-x/busytex_xdvipdfmx.a)
+  goals+=(build/$target/texlive/texk/web2c/busytex_libxetex.a build/$target/texlive/texk/web2c/busytex_libpdftex.a)
+done
+
+cd "$src"
+for goal in "${goals[@]}"; do
+  echo "$arg0: $goal" >&2
+  make -j"$(nproc)" "${settings[@]}" "$goal" >&2
+done
+
+# Replace ICU's 21 MB of data with the items in browser/icu-data.keep.
+# The line-break rules refer to dictionaries that are left out; without
+# them, ICU breaks lines in CJK and Southeast Asian text by rule alone.
+echo "$arg0: ICU data" >&2
+bin=build/native/texlive/libs/icu/icu-build/bin
+lib=build/wasm/texlive/libs/icu/icu-build/lib
+work=$src/build/wasm/icudata
+dat=source/texlive/libs/icu/icu-src/source/data/in/icudt72l.dat
+mkdir -p "$work"
+mapfile -t keep < <(grep -v '^#' "$root/browser/icu-data.keep" | grep .)
+"$bin/icupkg" -l "$dat" | while read -r item; do
+  for pattern in "${keep[@]}"; do [[ $item == $pattern ]] && continue 2; done
+  echo "$item"
+done > "$work/remove.txt"   # icupkg reads a list only from a file named *.txt
+"$bin/icupkg" --ignore-deps -r "$work/remove.txt" "$dat" "$work/icudt72l.dat" \
+  2> >(grep -v 'depends on missing item' >&2)
+"$bin/genccode" -d "$work" "$work/icudt72l.dat" > /dev/null
+sed -i 's/} icudt72l_dat={/} icudt72_dat={/' "$work/icudt72l_dat.c"   # the name ICU looks for
+emcc -c -Oz -Isource/texlive/libs/icu/icu-src/source/common "$work/icudt72l_dat.c" -o "$work/icudt72l_dat.o"
+[[ -f $lib/libicudata-full.a ]] || mv "$lib/libicudata.a" "$lib/libicudata-full.a"
+rm -f "$lib/libicudata.a"
+emar crs "$lib/libicudata.a" "$work/icudt72l_dat.o"
+
+echo "$arg0: build/wasm/busytex.js" >&2
+rm -f build/wasm/busytex.js build/wasm/busytex.wasm
+make -j"$(nproc)" "${settings[@]}" build/wasm/busytex.js >&2
+mkdir -p "$dir"
+cp build/wasm/busytex.js build/wasm/busytex.wasm "$dir/"
