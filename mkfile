@@ -84,7 +84,7 @@ publish:V: docs/index.html docs/charsheet.css typesetter
 
 # The typesetter that the form loads from typesetter/ beside it: charsheet
 # and TeX compiled to WebAssembly (browser/README.md).  The first build of
-# BusyTeX takes most of an hour.
+# BusyTeX takes about half an hour.
 B=browser/build
 TYPESETTER=$B/typesetter
 BUSYTEX=$B/engines/busytex-slim

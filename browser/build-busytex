@@ -9,7 +9,8 @@
 # writes DIR/busytex.js and DIR/busytex.wasm (default
 # browser/build/engines/busytex-slim).  Source and build trees live in
 # browser/build/src/busytex.  Needs git, wget, emscripten, gcc, cmake,
-# gperf, perl, and python3.  The first build takes most of an hour.
+# gperf, perl, and python3.  The first build takes about half an hour;
+# later ones rebuild only what changed.
 
 set -euo pipefail
 arg0=$(basename "$0")

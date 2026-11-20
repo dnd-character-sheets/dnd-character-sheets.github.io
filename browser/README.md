@@ -104,7 +104,7 @@ hashed names, `manifest.json`, `web/pdf-server.js`, and
 form and `typesetter/` in `~/www` to try them locally.
 
 ```
-browser/build-busytex                      # once; about 50 minutes
+browser/build-busytex                      # first time about 30 minutes
 browser/build-lua
 browser/build-texmf browser/texlive/*.files
 BUSYTEX=$PWD/browser/build/engines/busytex-slim TEXMFTREE=$PWD/browser/build/texmf \
@@ -132,7 +132,8 @@ Node 20.  The page needs WebAssembly, Web Workers, and
 | `browser-test` | typesets YAML files in headless Chrome or Firefox (`web/selftest.html`) and times first, warm, and reloaded runs |
 
 `baseline/timings.tsv` times native TeX Live; `baseline/browser-timings.tsv`
-times Chrome and Firefox, with files from a local web server.
+times Chrome and Firefox with files from a local web server, and
+`baseline/live-timings.tsv` with files from dnd-character-sheets.github.io.
 
 All baseline sheets, the markup sheets, and private sheets kept out of
 the repository render identically to native TeX Live in Node, Chrome,
