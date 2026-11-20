@@ -20,7 +20,10 @@ Web Worker (typeset-worker.js)
                           or  xetex -no-pdf, xdvipdfmx     sheet.tex → .xdv → .pdf
   │  PDF Blob, or a text Blob holding the console output of charsheet and TeX
   ▼
-new tab (opened during the click, so pop-up blockers allow it)
+new tab, opened during the click so that pop-up blockers allow it; a PDF
+shows at typesetter/pdf/NAME.pdf, which the service worker pdf-server.js
+serves from the browser's cache with the headers a server would send,
+so that the browser shows it and saves it as NAME.pdf
 ```
 
 Each run gets a fresh Wasm instance, so it starts from a clean address
@@ -49,10 +52,14 @@ parallel, everything but the pdfTeX format and the extra fonts:
 | `charsheet-pdftex.fmt` | 3.4 MB | when an ASCII sheet first needs it |
 | `extras.tar` | 3.6 MB | when TeX fails without it; the run is then retried |
 
-Every file `NAME` is served as `NAME.gz` and gunzipped by the worker
-(unless the server has already done so), so files download compressed
-from any server, and the worker compiles Wasm as it downloads whatever
-Content-Type the server sends.  Once loaded, files serve every later
+Every file is served gzipped, so it downloads compressed from any
+server, and the worker gunzips it unless the server has.  The served
+names include a hash of the contents, as listed in `manifest.json`,
+which the worker rechecks with the server whenever it starts: browsers
+may cache files indefinitely, engines and formats from different builds
+never meet, and returning visitors download only files that changed.
+The worker compiles Wasm as it downloads, whatever Content-Type the
+server sends.  Once loaded, files serve every later
 sheet.  A sheet then takes about 0.2 to 1.3 s, median 0.7 s, in Chrome
 and Firefox.
 
@@ -87,7 +94,8 @@ C module and amalgamates `charsheet.lua`.  `charsheet -wasm` runs no
 other programs and writes TeX only.
 
 **Typesetter files.**  `build-typesetter` fills `browser/build/typesetter`
-with the worker, the compressed engines, formats, and TeX files, and
+with the worker, the compressed engines, formats, and TeX files under
+hashed names, `manifest.json`, `web/pdf-server.js`, and
 `web/selftest.html`.
 
 ## Building

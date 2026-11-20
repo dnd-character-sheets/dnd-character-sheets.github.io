@@ -7,9 +7,11 @@
 # as typesetter/ beside it, with the worker (typeset-worker.js), BusyTeX,
 # Lua with charsheet, the formats, the TeX Live files that sheets need
 # (core.tar, with the templates), the rest of their font families
-# (extras.tar), and selftest.html for browser-test.  The worker loads
-# each file NAME as NAME.gz, compressed by pigz -11 (zopfli), so that it
-# downloads compressed from any server.  Environment variable BUSYTEX
+# (extras.tar), pdf-server.js, and selftest.html for browser-test.
+# Each file NAME the worker loads is stored as NAME-HASH.gz, compressed
+# by pigz -11 (zopfli) so that it downloads compressed from any server,
+# with HASH from its contents so that each URL always means the same
+# bytes; manifest.json maps NAME to NAME-HASH.gz.  Environment variable BUSYTEX
 # names the directory holding busytex.js and busytex.wasm (default
 # browser/build/engines/busytex-slim).  Run build-busytex, build-lua,
 # build-texmf (with all three lists in browser/texlive), and
@@ -35,8 +37,15 @@ trap 'rm -rf "$tmp"' EXIT
 
 cp "$root"/browser/web/* "$dir/"
 
-# zipped FILE NAME: compress FILE into $dir/NAME.gz
-zipped() { pigz -11 -c "$1" > "$dir/$2.gz"; }
+# zipped FILE NAME: compress FILE into $dir/NAME-HASH.gz and add it to the manifest
+manifest=()
+zipped() {
+  pigz -11 -c "$1" > "$tmp/zipped"
+  local hash
+  hash=$(sha256sum "$tmp/zipped" | cut -c1-12)
+  mv "$tmp/zipped" "$dir/$2-$hash.gz"
+  manifest+=("\"$2\": \"$2-$hash.gz\"")
+}
 
 for f in "${BUSYTEX:-$build/engines/busytex-slim}"/busytex.{js,wasm} "$build"/lua/lua.{js,wasm} "$build/lua/charsheet.lua"; do
   zipped "$f" "$(basename "$f")"
@@ -66,3 +75,5 @@ zipped "$tmp/extras.tar" extras.tar
 for engine in pdftex xetex; do
   zipped "$build/fmt-busytex/charsheet-$engine.fmt" "charsheet-$engine.fmt"
 done
+
+printf '{\n%s\n}\n' "$(printf '  %s,\n' "${manifest[@]}" | sed '$ s/,$//')" > "$dir/manifest.json"

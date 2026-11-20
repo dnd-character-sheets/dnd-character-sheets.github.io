@@ -1723,16 +1723,45 @@
         // loads, and it answers each YAML sheet with a PDF, or with the console
         // output that explains why there is none.
         const typesetter = new Worker('typesetter/typeset-worker.js');
-        const typesetterTabs = [];   // tabs awaiting results, in request order; null if blocked
-        typesetter.onmessage = ({ data }) => {
+        const typesetterTabs = [];   // { tab, name } awaiting results, in request order; tab null if blocked
+        typesetter.onmessage = async ({ data }) => {
             if (data.status) return console.log('typesetter:', data.status);
             console.log('typesetter timings (ms):', data.timings);
-            const tab = typesetterTabs.shift();
-            const result = data.pdf || new Blob([data.error], { type: 'text/plain; charset=utf-8' });
-            const url = URL.createObjectURL(result);
+            const { tab, name } = typesetterTabs.shift();
+            const url = await resultURL(data, name);
             if (tab) tab.location = url;
             else window.open(url, '_blank');
         };
+
+        // A PDF opens from typesetter/pdf/NAME, where the service worker
+        // typesetter/pdf-server.js serves it with the headers a server would
+        // send, so that the browser shows it and saves it as NAME.
+        // (The form is outside the worker's scope, so navigator.serviceWorker.ready
+        // never resolves; the registration's own worker must become active.)
+        const pdfServer = navigator.serviceWorker?.register('typesetter/pdf-server.js')
+            .then(registration => new Promise(resolve => {
+                const worker = registration.installing || registration.waiting;
+                if (registration.active || !worker) return resolve(registration);
+                worker.addEventListener('statechange', () => {
+                    if (worker.state === 'activated') resolve(registration);
+                });
+            }))
+            .catch(e => console.log('no PDF server:', e));
+
+        // resultURL(DATA, NAME): a URL showing the typesetter's result, as file NAME if a PDF
+        async function resultURL(data, name) {
+            if (!data.pdf || !await pdfServer) {
+                return URL.createObjectURL(data.pdf || new Blob([data.error], { type: 'text/plain; charset=utf-8' }));
+            }
+            const url = new URL('typesetter/pdf/' + name, location).href;
+            const pdfs = await caches.open('typeset-pdfs');
+            for (const old of await pdfs.keys()) await pdfs.delete(old);
+            await pdfs.put(url, new Response(data.pdf, { headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `inline; filename="${name}"`,
+            } }));
+            return url;
+        }
 
         function generatePDF() {
             // A tab opened during the click is not blocked as a pop-up; one opened later may be.
@@ -1741,7 +1770,7 @@
                 tab.document.title = 'Typesetting';
                 tab.document.body.textContent = 'Typesetting your character sheet…';
             }
-            typesetterTabs.push(tab);
+            typesetterTabs.push({ tab, name: getCharacterFilename('pdf') });
             typesetter.postMessage({ yaml: createYAMLContent() });
         }
 

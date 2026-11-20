@@ -6,16 +6,25 @@
 // files load once, when the worker starts, and serve every request;
 // each format loads when a sheet first needs it.
 //
-// Every file NAME this worker loads is served gzipped, as NAME.gz, so
-// that it downloads compressed from any server, and it is gunzipped
-// here unless the server has done so already.
+// Every file NAME this worker loads is served gzipped, so that it
+// downloads compressed from any server, under the name that
+// manifest.json gives, which includes a hash of its contents: browsers
+// may cache it indefinitely, and engines and formats from different
+// builds never meet.  The worker asks the server about manifest.json
+// every time it starts, and gunzips each file unless the server has.
 
 'use strict';
 
 const say = status => postMessage({ status });
 
-// unzipped(NAME, RESPONSE): RESPONSE's body, the contents of NAME
-function unzipped(name, response) {
+const manifest = fetch('manifest.json', { cache: 'no-cache' }).then(response => {
+  if (!response.ok) throw new Error(`manifest.json: ${response.status} ${response.statusText}`);
+  return response.json();
+});
+
+// contents(NAME): a stream of NAME's bytes
+async function contents(name) {
+  const response = await fetch((await manifest)[name]);
   if (!response.ok) throw new Error(`${name}: ${response.status} ${response.statusText}`);
   return response.headers.has('Content-Encoding') ? response.body
                                                   : response.body.pipeThrough(new DecompressionStream('gzip'));
@@ -23,13 +32,13 @@ function unzipped(name, response) {
 
 // fetched(NAME): the bytes of NAME
 async function fetched(name) {
-  return new Uint8Array(await new Response(unzipped(name, await fetch(name + '.gz'))).arrayBuffer());
+  return new Uint8Array(await new Response(await contents(name)).arrayBuffer());
 }
 
 // compiled(NAME): the WebAssembly module in NAME, compiled as it downloads
 async function compiled(name) {
-  const wasm = unzipped(name, await fetch(name + '.gz'));
-  return WebAssembly.compileStreaming(new Response(wasm, { headers: { 'Content-Type': 'application/wasm' } }));
+  const wasm = new Response(await contents(name), { headers: { 'Content-Type': 'application/wasm' } });
+  return WebAssembly.compileStreaming(wasm);
 }
 
 // imported(NAME): runs the script NAME
