@@ -1,0 +1,11 @@
+{
+  "busytex.js": "busytex.js-84548d8b4119.gz",
+  "busytex.wasm": "busytex.wasm-1fb12b444937.gz",
+  "lua.js": "lua.js-f9706856d930.gz",
+  "lua.wasm": "lua.wasm-f0d10676914e.gz",
+  "charsheet.lua": "charsheet.lua-4bf3dadf8af5.gz",
+  "core.tar": "core.tar-85a209f217cd.gz",
+  "extras.tar": "extras.tar-597403ad8964.gz",
+  "charsheet-pdftex.fmt": "charsheet-pdftex.fmt-8a873654f518.gz",
+  "charsheet-xetex.fmt": "charsheet-xetex.fmt-45cc0c297ddd.gz"
+}
