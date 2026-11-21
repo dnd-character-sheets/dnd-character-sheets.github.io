@@ -15,7 +15,7 @@
     <div style="text-align: center; font-size: 0.8em; color: #555; margin-bottom: 1em;">
         <A style="padding: 2em;" href="README.html">(Read about the project)</A>
         
-        <span style="padding: 2em;">Version: quinoa</span>
+        <span style="padding: 2em;">Version: radish</span>
     </div>
 
         <div style="margin-bottom: 0.5em;">
@@ -1799,9 +1799,27 @@
             console.log('typesetter timings (ms):', data.timings);
             const { tab, name } = typesetterTabs.shift();
             const url = await resultURL(data, name);
-            if (tab) tab.location = url;
-            else window.open(url, '_blank');
+            const view = tab || window.open('', '_blank');
+            if (!view) return;
+            view.location = url;
+            if (!url.startsWith('blob:')) bypassViewerExtension(view, url, data.pdf);
         };
+
+        // An extension that replaces the PDF viewer, such as Google Scholar PDF
+        // Reader, puts its viewer (an extension page) in a frame in VIEW, and that
+        // viewer fetches URL from outside the service worker, which fails.  If such
+        // a frame appears, VIEW shows PDF from a blob URL instead.
+        function bypassViewerExtension(view, url, pdf) {
+            const deadline = Date.now() + 10000;
+            const watch = setInterval(() => {
+                let doc;
+                try { doc = view.document; } catch (e) { return clearInterval(watch); }  // closed or another origin
+                if (doc.URL === url && doc.querySelector('iframe[src*="-extension:"]')) {
+                    clearInterval(watch);
+                    view.location = URL.createObjectURL(pdf);
+                } else if (Date.now() > deadline) clearInterval(watch);
+            }, 50);
+        }
 
         // A PDF opens from typesetter/pdf/NAME, where the service worker
         // typesetter/pdf-server.js serves it with the headers a server would
